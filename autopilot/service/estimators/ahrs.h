@@ -32,7 +32,7 @@
 
 #include "../geometry/quat.h"
 #include "../hardware/util/marg_data.h"
-#include "../control/util/adams4.h"
+#include "../util/math/adams5.h"
 
 
 typedef enum
@@ -50,7 +50,7 @@ typedef struct
    float beta_end;
    ahrs_type_t type; /* AHRS_ACC_MAG or AHRS_ACC */
    quat_t quat; /* quaternion of sensor frame relative to auxiliary frame */
-   adams4_t adams4;
+   adams5_t adams5;
 }
 ahrs_t;
 

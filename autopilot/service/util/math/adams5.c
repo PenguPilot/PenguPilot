@@ -25,81 +25,63 @@
  GNU General Public License for more details. */
 
 
-
 #include <malloc.h>
 
-#include "adams4.h"
+#include <util.h>
+
+#include "adams5.h"
 
 
-int adams4_init(adams4_t *a, const size_t dim)
+int adams5_init(adams5_t *a, const size_t dim)
 {
    a->dim = dim;
-   a->f0 = malloc((dim + 1) * sizeof(float));
-   a->f1 = malloc((dim + 1) * sizeof(float));
-   a->f2 = malloc((dim + 1) * sizeof(float));
-   a->f3 = malloc((dim + 1) * sizeof(float));
-   a->f4 = malloc((dim + 1) * sizeof(float));
-
-   adams4_reset(a);
+   a->f = (float **)malloc(5 * sizeof(float *));
+   FOR_N(i, 5)
+      a->f[i] = (float *)malloc((dim + 1) * sizeof(float));
+   adams5_reset(a);
    return 1;
 }
 
 
-void adams4_reset(adams4_t *a)
+void adams5_reset(adams5_t *a)
 {
-   for (size_t i = 0; i < a->dim + 1; i++)
-   {  
-      a->f0[i] = 0.0;
-      a->f1[i] = 0.0;
-      a->f2[i] = 0.0;
-      a->f3[i] = 0.0;
-      a->f4[i] = 0.0;
-   }
+   FOR_N(d, a->dim + 1)
+      FOR_N(c, 5)
+         a->f[c][d] = 0.0;
 }
 
 
-void adams4_term(adams4_t *a)
+void adams5_term(adams5_t *a)
 {
-   free(a->f0);
-   free(a->f1);
-   free(a->f2);
-   free(a->f3);
-   free(a->f4);
+   FOR_N(c, 5)
+      free(a->f[c]);
+   free(a->f);
 }
 
 
-/*
- * x_(k+1) = x_(k) + Ts*(55 * x_(k) - 59 * x_(k-1) + 37 * x_(k-2) - 9 * x_(k-3))/24
-*/
-void adams4_run(adams4_t *a, float *out, float *in, float ts, int enabled)
+void adams5_run(adams5_t *a, float *out, float *in, float ts, int enabled)
 { 
-   /* rotate ring buffer; TS: is it correct not to include this in (enabled)? */ 
-   float *temp = a->f4;
-   a->f4 = a->f3;
-   a->f3 = a->f2;
-   a->f2 = a->f1;
-   a->f1 = a->f0;
-   a->f0 = temp;
+   /* rotate ring buffer */ 
+   float *temp = a->f[4];
+   FOR_N(c, 4)  
+      a->f[4 - c] = a->f[3 - c];
+   a->f[0] = temp;
  
    if (enabled)
    {
-      /* set f0 and run adams4 integrator: */
-      for (size_t i = 0; i < a->dim; i++)
+      /* set f0 and run adams5 integrator: */
+      for (size_t d = 0; d < a->dim; d++)
       {
-         a->f0[i] = in[i];
-         a->f0[a->dim] = ts;
+         a->f[0][d] = in[d];
+         a->f[0][a->dim] = ts;
 
          const float coeff[5] = { 1901.0f / 720.0f,
                                  -1387.f / 360.0f,
                                   109.0f / 30.0f,
                                  -637.0f / 360.0f,
                                   251.0f / 720.0f};
-
-         out[i] += coeff[0] * a->f0[i] * a->f0[a->dim];
-         out[i] += coeff[1] * a->f1[i] * a->f1[a->dim];
-         out[i] += coeff[2] * a->f2[i] * a->f2[a->dim];
-         out[i] += coeff[3] * a->f3[i] * a->f3[a->dim];
-         out[i] += coeff[4] * a->f4[i] * a->f4[a->dim];
+         FOR_N(c, 5)
+            out[d] += coeff[c] * a->f[c][d] * a->f[d][a->dim] /* dt */;
       }
    }
 }

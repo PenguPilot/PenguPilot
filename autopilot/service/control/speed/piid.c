@@ -35,10 +35,10 @@
 #include <opcd_interface.h>
 
 #include "piid.h"
-#include "../util/adams4.h"
 #include "../util/pid.h"
 #include "../../filters/filter.h"
 #include "../../util/logger/logger.h"
+#include "../../util/math/adams5.h"
 
 
 /* configuration parameters: */
@@ -59,8 +59,8 @@ static tsfloat_t tmc;
 Filter2 filters[3];
 
 /* integrators: */
-static adams4_t int_err1;
-static adams4_t int_err2;
+static adams5_t int_err1;
+static adams5_t int_err2;
 
 /* filters: */
 static Filter1 filter_lp_err;
@@ -138,8 +138,8 @@ void piid_init(float Ts)
    filter2_init(&filters[2], a, b, Ts, 1);
 
    /* initialize multistep integrator: */
-   adams4_init(&int_err1, 3);
-   adams4_init(&int_err2, 3);
+   adams5_init(&int_err1, 3);
+   adams5_init(&int_err2, 3);
 
    /* initialize error and reference signal filters: */
    filter1_lp_init(&filter_lp_err, tsfloat_get(&filt_fg), Ts, 3);
@@ -167,8 +167,8 @@ void piid_int_enable(int val)
 void piid_reset(void)
 {
    int_enable = 0;
-   adams4_reset(&int_err1);
-   adams4_reset(&int_err2);
+   adams5_reset(&int_err1);
+   adams5_reset(&int_err2);
    pid_reset(&yaw_ctrl);
 }
 
@@ -235,10 +235,10 @@ void piid_run(float u_ctrl[4], float gyro[3], float rc[3], float dt)
    filter1_run(&filter_lp_err, error, error);
 
    /* 1st error integration: */
-   adams4_run(&int_err1, xi_err, error, dt, int_enable);
+   adams5_run(&int_err1, xi_err, error, dt, int_enable);
 
    /* 2nd error integration: */
-   adams4_run(&int_err2, xii_err, xi_err, dt, int_enable);
+   adams5_run(&int_err2, xii_err, xi_err, dt, int_enable);
 
    /* attitude feedback: */
    FOR_N(i, 2)
