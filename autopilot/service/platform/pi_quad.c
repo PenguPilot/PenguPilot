@@ -31,8 +31,10 @@
 #include <malloc.h>
 #include <math.h>
 
+#include <logger.h>
 #include <util.h>
 #include <i2c/i2c.h>
+
 #include "platform.h"
 #include "generic_platform.h"
 #include "inv_coupling.h"
@@ -41,7 +43,6 @@
 #include "../sensors/i2cxl/i2cxl_reader.h"
 #include "../sensors/ms5611/ms5611_reader.h"
 #include "../actuators/afroi2c_pwms/afroi2c_pwms.h"
-#include "../util/logger/logger.h"
 #include "../util/math/quat.h"
 
 

@@ -30,10 +30,10 @@
 #include <util.h>
 #include <opcd_interface.h>
 #include <threadsafe_types.h>
+#include <logger.h>
 
 #include "yaw_ctrl.h"
 #include "../util/pid.h"
-#include "../../util/logger/logger.h"
 
 
 static pid_controller_t controller;

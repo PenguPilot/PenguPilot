@@ -33,10 +33,10 @@
 #include <util.h>
 #include <threadsafe_types.h>
 #include <opcd_interface.h>
+#include <logger.h>
 
 #include "piid.h"
 #include "../../filters/filter.h"
-#include "../../util/logger/logger.h"
 #include "../../util/math/adams5.h"
 
 

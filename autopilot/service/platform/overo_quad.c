@@ -33,6 +33,8 @@
 
 #include <util.h>
 #include <i2c/i2c.h>
+#include <logger.h>
+
 #include "inv_coupling.h"
 #include "overo_quad.h"
 #include "platform.h"
@@ -42,7 +44,6 @@
 #include "../sensors/i2cxl/i2cxl_reader.h"
 #include "../sensors/ms5611/ms5611_reader.h"
 #include "../actuators/omap3_pwms/omap3_pwms.h"
-#include "../util/logger/logger.h"
 
 
 #define N_MOTORS 4

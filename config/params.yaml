@@ -109,11 +109,12 @@ rc_cal:
       max: 1.0
 
 
-autopilot:
+logger:
+   level: 3
+   details: 2
 
-   logger:
-      level: 3
-      details: 2
+
+autopilot:
 
    main:
       acc_fg: 0.03 # accelerometer low-pass filter

@@ -36,6 +36,7 @@
 #include <threadsafe_types.h>
 #include <physics.h>
 #include <interval.h>
+#include <logger.h>
 
 #include "mon.h"
 #include "control_mode.h"
@@ -44,7 +45,6 @@
 #include "../interface/interface.h"
 #include "../util/math/conv.h"
 #include "../util/algo.h"
-#include "../util/logger/logger.h"
 #include "../estimators/cal_ahrs.h"
 #include "../estimators/pos.h"
 #include "../platform/platform.h"
@@ -134,7 +134,7 @@ void main_init(int argc, char *argv[])
    
    /* initialize logger: */
    syslog(LOG_INFO, "opening logger");
-   if (logger_open() != 0)
+   if (logger_open("autopilot") != 0)
    {
       syslog(LOG_CRIT, "could not open logger");
       die();

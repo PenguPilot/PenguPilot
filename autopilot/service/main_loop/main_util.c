@@ -27,8 +27,9 @@
 #include <signal.h>
 #include <unistd.h>
 
+#include <logger.h>
+
 #include "main_util.h"
-#include "../util/logger/logger.h"
 
 
 void die(void)

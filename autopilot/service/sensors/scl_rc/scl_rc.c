@@ -35,9 +35,9 @@
 #include <msgpack.h>
 #include <interval.h>
 #include <remote.h>
+#include <logger.h>
 
 #include "scl_rc.h"
-#include "../../util/logger/logger.h"
 
 
 #define THREAD_NAME       "scl_rc_reader"

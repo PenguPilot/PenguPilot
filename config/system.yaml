@@ -24,10 +24,14 @@
 # GNU General Public License for more details.
 
 
-- name: logger
+- name: log_proxy
   sockets:
    - log_data: pull
-   - log_data_out: pub
+   - log_data_pub: pub
+
+- name: logger
+  sockets:
+   - log_data_pub: sub
 
 - name: mavlink
   sockets:
@@ -67,7 +71,7 @@
 
 - name: console_logger
   sockets:
-  - log_data_out: sub
+  - log_data_pub: sub
 
 - name: remote
   sockets:

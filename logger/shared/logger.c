@@ -29,39 +29,32 @@
 #include <malloc.h>
 #include <zmq.h>
 #include <syslog.h>
+#include <msgpack.h>
 
 #include <scl.h>
 #include <threadsafe_types.h>
 #include <opcd_interface.h>
-#include <log_data.pb-c.h>
 
 #include "logger.h"
 #include "util.h"
 
 
 static void *log_socket = NULL;
-static tsint_t loglevel;
-static tsint_t details;
+msgpack_sbuffer sbuf;
+msgpack_packer pk;
+size_t name_len = 0;
+const char *name = NULL;
 
 
-int logger_open(void)
+int logger_open(const char *_name)
 {
    ASSERT_ONCE();
-   
-   opcd_param_t params[] =
-   {
-      {"level", &loglevel},
-      {"details", &details},
-      OPCD_PARAMS_END
-   };
-   opcd_params_apply("logger.", params);
-   
+   name = _name;
+   name_len = strlen(name);
+   msgpack_sbuffer_init(&sbuf);
+   msgpack_packer_init(&pk, &sbuf, msgpack_sbuffer_write);
    log_socket = scl_get_socket("log_data");
-   if (log_socket == NULL)
-   {
-      return -1;
-   }
-   return 0;
+   return (log_socket == NULL) ? -1 : 0;
 }
 
 
@@ -69,46 +62,27 @@ void logger_write(char *file, loglevel_t level, unsigned int line, char *format,
 {
    ASSERT_NOT_NULL(log_socket);
    ASSERT_NOT_NULL(file);
+   
+   /* set-up buffer for varg-message: */
+   char message_buffer[1024];
+   va_list ap;
+   va_start(ap, format);
+   size_t msg_len = vsnprintf(message_buffer, sizeof(message_buffer), format, ap);
+   va_end(ap);
 
-   if (level <= (unsigned int)tsint_get(&loglevel))
-   {
-      LogData log_data = LOG_DATA__INIT;
+   /* fill message: */
+   msgpack_sbuffer_clear(&sbuf);
+   msgpack_pack_array(&pk, 5); /* quintuple */
+   msgpack_pack_raw(&pk, name_len);
+   msgpack_pack_raw_body(&pk, name, name_len); /* 0: component name */
+   msgpack_pack_int(&pk, level); /* 1: level */
+   size_t file_len = strlen(file);
+   msgpack_pack_raw(&pk, file_len);
+   msgpack_pack_raw_body(&pk, file, file_len); /* 2: file */
+   msgpack_pack_int(&pk, level); /* 3: line */
+   msgpack_pack_raw(&pk, msg_len);
+   msgpack_pack_raw_body(&pk, message_buffer, msg_len); /* 4: message */
 
-      /* fill log_data scalars #1: */
-      log_data.level = level;
-      log_data.file = file;
-      log_data.line = line;
-      log_data.details = (unsigned int)tsint_get(&details);
-
-      /* set-up buffer for varg-message: */
-      char message_buffer[1024];
-      log_data.msg = message_buffer;
-
-      /* fill log_data scalars #2: */
-      va_list ap;
-      va_start(ap, format);
-      vsnprintf(message_buffer, sizeof(message_buffer), format, ap);
-      va_end(ap);
-
-      /* publish: */
-      unsigned int log_data_len = (unsigned int)log_data__get_packed_size(&log_data);
-      void *buffer = malloc(log_data_len);
-      if (buffer != NULL)
-      {
-         log_data__pack(&log_data, buffer);
-         scl_send_dynamic(log_socket, buffer, log_data_len, ZMQ_NOBLOCK);
-      }
-      else
-      {
-         syslog(LOG_CRIT, "malloc() failed in module logger");
-      }
-   }
-}
-
-
-int logger_close(void)
-{
-   ASSERT_NOT_NULL(log_socket);
-   return zmq_close(log_socket);
+   scl_copy_send_dynamic(log_socket, sbuf.data, sbuf.size);
 }
 

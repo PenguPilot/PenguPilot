@@ -57,7 +57,7 @@ loglevel_t;
 /*
  * opens the logger, sets up connection using SCL
  */
-int logger_open(void);
+int logger_open(const char *name);
 
 
 /*

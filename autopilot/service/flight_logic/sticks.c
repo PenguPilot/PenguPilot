@@ -30,9 +30,9 @@
 #include <threadsafe_types.h>
 #include <opcd_interface.h>
 #include <linfunc.h>
+#include <logger.h>
 
 #include "../util/math/conv.h"
-#include "../util/logger/logger.h"
 
 #include "sticks.h"
 

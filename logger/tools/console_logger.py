@@ -26,32 +26,25 @@
  GNU General Public License for more details. """
 
 
-import log_data_pb2
 import sys
 from scl import generate_map
 from os.path import basename
+from msgpack import loads
 
 
 def logdata_2_string(log_data):
    LOG_LEVEL_NAMES = ["ERROR", " WARN", " INFO", "DEBUG"];
-   level_name = LOG_LEVEL_NAMES[log_data.level]
-   file = basename(log_data.file)
-   if log_data.details == 1:
-      return "[%s] %s: %s" % (level_name, file, log_data.msg)
-   elif log_data.details == 2:
-      return "[%s] %s,%d: %s" % (level_name, file, log_data.line, log_data.msg)
-   else:
-      return "[%s] %s" % (level_name, log_data.msg)
+   level_name = LOG_LEVEL_NAMES[log_data[1]]
+   file = basename(log_data[2])
+   return "[%s] %s: %s,%d: %s" % (level_name, log_data[0], file, log_data[3], log_data[4])
 
 
 
 if __name__ == '__main__':
-   socket = generate_map('console_logger')['log_data_out']
+   socket = generate_map('console_logger')['log_data_pub']
    while True:
       try:
-         log_data = log_data_pb2.log_data()
-         raw_data = socket.recv()
-         log_data.ParseFromString(raw_data)
+         log_data = loads(socket.recv())
          print logdata_2_string(log_data)
       except KeyboardInterrupt:
          break

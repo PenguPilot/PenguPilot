@@ -38,7 +38,7 @@
 #include <threadsafe_types.h>
 
 #include "pos.h"
-#include "../util/logger/logger.h"
+#include <logger.h>
 #include "../util/math/mat.h"
 
 

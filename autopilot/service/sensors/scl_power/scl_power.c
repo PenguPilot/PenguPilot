@@ -30,9 +30,9 @@
 #include <simple_thread.h>
 #include <msgpack.h>
 #include <scl.h>
+#include <logger.h>
 
 #include "scl_power.h"
-#include "../../util/logger/logger.h"
 
 
 #define THREAD_PRIORITY 98
