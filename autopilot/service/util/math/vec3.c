@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- 3D Vector Implementation
+ 3D Vectors Implementation
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -24,31 +24,26 @@
  GNU General Public License for more details. */
 
 
-#include <string.h>
-#include <math.h>
 
-#include <util.h>
+#include <string.h>
+
 #include "vec3.h"
 
 
-void vec3_copy(vec3_t *vo, const vec3_t *vi)
+void vec3_init(vec3_t *vec)
 {
-   memcpy(vo, vi, sizeof(vec3_t));   
+   vec->dim = 3;
+   vec->ve = (real_t *)&vec->data;
+   memset(vec->ve, 0, sizeof(real_t) * vec->dim);
 }
 
 
-void vec3_mul_scalar(vec3_t *out, const vec3_t *in, const float scalar)
+void vec3_set(vec3_t *vec, real_t x, real_t y, real_t z)
 {
-   FOR_N(i, 3)
-      out->vec[i] = in->vec[i] * scalar;
-}
-
-
-float vec3_len(const vec3_t *in)
-{
-   float sum = 0.0f;
-   FOR_N(i, 3)
-      sum += in->vec[i] * in->vec[i];
-   return sqrt(sum);
+   vec->dim = 3;
+   vec->ve = (real_t *)&vec->data;
+   vec->x = x;
+   vec->y = y;
+   vec->z = z;
 }
 

@@ -30,7 +30,9 @@
 #define __AHRS_H__
 
 
+#include "../geometry/quat.h"
 #include "../hardware/util/marg_data.h"
+
 
 typedef enum
 {
@@ -58,7 +60,7 @@ void ahrs_init(ahrs_t *ahrs, ahrs_type_t type, float beta_start, float beta_step
  *          1 if the ahrs became ready
  *          0 on normal operation
  */
-int ahrs_update(ahrs_t *ahrs, marg_data_t *marg_data, float dt);
+int ahrs_update(ahrs_t *ahrs, const marg_data_t *marg_data, const float dt);
 
 
 #endif /* __AHRS_H__ */

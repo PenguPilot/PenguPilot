@@ -89,10 +89,10 @@ void att_ctrl_step(vec2_t *ctrl, vec2_t *err, const float dt, const vec2_t *pos,
    float tmp[2];
    FOR_EACH(i, controllers)
    {
-      float error = setp->vec[i] + deg2rad(tsfloat_get(&biases[i])) - pos->vec[i];
-      err->vec[i] = error;
-      tmp[i] = pid_control(&controllers[i], error, speed->vec[i], dt);
+      float error = setp->ve[i] + deg2rad(tsfloat_get(&biases[i])) - pos->ve[i];
+      err->ve[i] = error;
+      tmp[i] = pid_control(&controllers[i], error, speed->ve[i], dt);
    }
-   filter1_run(&filter, tmp, ctrl->vec);
+   filter1_run(&filter, tmp, ctrl->ve);
 }
 

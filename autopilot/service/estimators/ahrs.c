@@ -128,7 +128,7 @@ static void ahrs_update_imu(ahrs_t *ahrs, float gx, float gy, float gz,
 
 
 
-int ahrs_update(ahrs_t *ahrs, marg_data_t *marg_data, float dt)
+int ahrs_update(ahrs_t *ahrs, const marg_data_t *marg_data, const float dt)
 {
    int ret;
    if (ahrs->beta > ahrs->beta_end)

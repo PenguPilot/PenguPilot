@@ -38,6 +38,7 @@
 #define DATA_DEFINITION() \
    float channels[MAX_CHANNELS]; \
    marg_data_t marg_data; \
+   marg_data_init(&marg_data); \
    float dt; \
    float ultra_z; \
    float baro_z; \
