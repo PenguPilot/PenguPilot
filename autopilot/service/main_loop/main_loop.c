@@ -37,6 +37,7 @@
 #include "main_loop.h"
 #include "main_util.h"
 #include "../util/time/interval.h"
+#include "../util/math/conv.h"
 #include "../util/logger/logger.h"
 #include "../interface/interface.h"
 #include "../estimators/ahrs.h"
@@ -356,6 +357,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    quat_to_euler(&euler, &ahrs_quat);
    euler_t imu_euler;
    quat_to_euler(&imu_euler, &imu.quat);
+   //EVERY_N_TIMES(20, printf("ATT %f %f %f\n", rad2deg(euler.yaw), rad2deg(imu_euler.pitch), rad2deg(imu_euler.roll)));
 
    if (ahrs_state < 0 || !cal_complete(&gyro_cal))
       goto out;

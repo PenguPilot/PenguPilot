@@ -83,10 +83,10 @@ pilot:
    controllers:
 
       stabilizing:
-         att_kp:  4.19227650348e-01
-         att_ki:  3.13780298778e+00
+         att_kp: 4.19227650348e-01
+         att_ki: 3.13780298778e+00
          att_kii: 3.45789342669e+00
-         att_kd:  2.94830266817e-02
+         att_kd: 2.94830266817e-02
          yaw_kp: 0.08384553006960001 
          yaw_ki: 0.6275605975560001
          yaw_kii: 0.691578685338
@@ -105,8 +105,8 @@ pilot:
          i: 0.0005
          i_max: 1.0
          d: 0.1
-         pitch_bias: 0.0
-         roll_bias: 0.0
+         pitch_bias: 0.02
+         roll_bias: -0.02
  
       altitude:
          manual: false
