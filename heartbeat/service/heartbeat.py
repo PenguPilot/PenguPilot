@@ -45,13 +45,13 @@ def gps():
    socket = socket_map['gps']
    i = 0
    while True:
-      with gps_lock:
-         data = socket.recv()
-         if i == 5:
-            i = 0
+      data = socket.recv()
+      if i == 5:
+         i = 0
+         with gps_lock:
             gps_data = GpsData()
             gps_data.ParseFromString(data)
-         i += 1
+      i += 1
 
 def cpuavg():
    global load
@@ -115,13 +115,15 @@ def main(name):
       try:
          data = [BCAST, HEARTBEAT, int(voltage * 10), int(current * 10), int(load), mem_used()]
          with gps_lock:
-            if gps_data.fix >= 2:
-               data += [gps_data.lon, gps_data.lat]
+            try:
+               if gps_data.fix >= 2:
+                  data += [gps_data.lon, gps_data.lat]
+            except:
+               pass
          socket.send(packer.pack(data))
       except Exception, e:
          pass
       sleep(1.0)
-         
-
+ 
 daemonize('heartbeat', main)
 
