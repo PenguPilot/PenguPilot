@@ -138,7 +138,7 @@ static float stick_dz(float g, float d)
 static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos, float u_ultra_pos)
 {
    float dz = tsfloat_get(&gas_deadzone);
-   if (fabs(gas_stick) > dz || u_ultra_pos < 1.0)
+   if (1) //fabs(gas_stick) > dz || u_ultra_pos < 1.0)
    {
       float vmax = tsfloat_get(&vert_speed_max);
       cm_u_set_spd(stick_dz(gas_stick, dz) * vmax);
@@ -163,7 +163,7 @@ static void set_pitch_roll_rates(float pitch, float roll)
 
 static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t *ne_gps_pos, float u_ultra_pos)
 {
-   if (sqrt(pitch * pitch + roll * roll) > tsfloat_get(&gps_deadzone) || u_ultra_pos < 1.0)
+   if (1) //sqrt(pitch * pitch + roll * roll) > tsfloat_get(&gps_deadzone) || u_ultra_pos < 1.0)
    {
       /* set GPS speed based on sticks input: */
       float vmax_sqrt = sqrt(tsfloat_get(&horiz_speed_max));
@@ -206,7 +206,7 @@ static void emergency_landing(bool gps_valid, vec2_t *ne_gps_pos, float u_ultra_
 }
 
 
-bool man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos, float f_max, float mass)
+bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos, float f_max, float mass)
 {
    float pitch = channels[CH_PITCH];
    float roll = channels[CH_ROLL];
@@ -216,8 +216,9 @@ bool man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANN
    float sw_r = channels[CH_SWITCH_R];
    bool gps_valid = (sensor_status & GPS_VALID) ? true : false;
 
-   if (!(sensor_status & RC_VALID))
+   /*if (!(sensor_status & RC_VALID))
       emergency_landing(gps_valid, ne_gps_pos, u_ultra_pos);
+   */
 
    cm_yaw_set_spd(stick_dz(yaw_stick, 0.075) * deg2rad(tsfloat_get(&yaw_speed_max))); /* the only applied mode in manual operation */
    man_mode_t man_mode = channel_to_man_mode(sw_r);
@@ -251,7 +252,8 @@ bool man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANN
          break;
       }
    }
+   *hard_off = !((sensor_status & RC_VALID) && sw_l < 0.5);
 
-   return (sensor_status & RC_VALID) && sw_l < 0.5;
+   return gas_stick > 0.1;
 }
 

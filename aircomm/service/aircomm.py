@@ -78,7 +78,7 @@ class ACIReader(Thread):
                   print 'message for me:', msg_tail
                   #self.scl_socket.send(dumps(msg_tail))
 
-               if msg[0] != THIS_SYS_ID:
+               if msg[0] != THIS_SYS_ID and msg[1] != THIS_SYS_ID:
                   print 'broadcasting message'
                   self.aci.send(crypt_data)
 
