@@ -44,7 +44,7 @@ int drotek_marg_read(marg_data_t *data, drotek_marg_t *marg)
    THROW_BEGIN();
    THROW_ON_ERR(itg3200_read_gyro(data->gyro.ve, &marg->itg));
    THROW_ON_ERR(bma180_read_acc(data->acc.ve, &marg->bma));
-   THROW_ON_ERR(hmc5883_read_mag(data->mag.ve, &marg->hmc));
+   THROW_ON_ERR(hmc5883_read_mag(&data->mag, &marg->hmc));
    THROW_END();
 }
 

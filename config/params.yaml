@@ -76,20 +76,20 @@ pilot:
       yaw_beta: 0.2
       beta_step: 1.0
       beta_start: 5.0
-
+   
    cal:
-      acc_bias_x: 0.316767353077
-      acc_bias_y: 0.0899030422653
-      acc_bias_z: 0.892697600942
-      acc_scale_x: 9.81305830535
-      acc_scale_y: 9.81799913559
-      acc_scale_z: 10.0498586409
-      mag_bias_x: 43.342298502
-      mag_bias_y: -51.0308879804
-      mag_bias_z: 8.27840648943
-      mag_scale_x: 555.414388374
-      mag_scale_y: 570.737903657
-      mag_scale_z: 565.604213821
+      acc_bias_x: 0.313252937548
+      acc_bias_y: 0.168026474259
+      acc_bias_z: 0.218608441262
+      acc_scale_x: 9.87794649866
+      acc_scale_y: 9.83300152686
+      acc_scale_z: 10.0003835985
+      mag_bias_x: 0.0498902542405
+      mag_bias_y: -0.0437473939547
+      mag_bias_z: 0.0159657398081
+      mag_scale_x: 0.361097461536
+      mag_scale_y: 0.40723533953
+      mag_scale_z: 0.428943700944
 
    cmc:
       scale_x: -0.027021850383100038

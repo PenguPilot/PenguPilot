@@ -104,7 +104,8 @@ static float sens_conv_tab[8] =
 
 int hmc5883_init(hmc5883_t *hmc, i2c_bus_t *bus)
 {
-   hmc->gain = HMC5883_B_GN_1_3;
+   vec3_init(&hmc->prev);
+   hmc->gain = HMC5883_B_GN_4_0;
    THROW_BEGIN();
    i2c_dev_init(&hmc->i2c_dev, bus, HMC5883_ADDRESS);
    uint8_t id[3];
@@ -117,20 +118,26 @@ int hmc5883_init(hmc5883_t *hmc, i2c_bus_t *bus)
 }
 
 
-int hmc5883_read_mag(float mag[3], const hmc5883_t *hmc)
+int hmc5883_read_mag(vec3_t *mag, const hmc5883_t *hmc)
 {
    THROW_BEGIN();
    THROW_ON_ERR(i2c_read_reg(&hmc->i2c_dev, HMC5883_STATUS));
    if (!(THROW_PREV & HMC5883_STATUS_RDY))
-      return -EAGAIN;
-   
+   {
+      THROW_PREV = 0;
+      goto out; /* no new data; use previous measurement at "out" label */
+   }
+
+   /* update device data if we have new data: */
    uint8_t data[6];
    THROW_ON_ERR(i2c_read_block_reg(&hmc->i2c_dev, HMC5883_MAGX_H, data, sizeof(data)));
-   mag[0] = (int16_t)((data[0] << 8) | data[1]);
-   mag[2] = (int16_t)((data[2] << 8) | data[3]);
-   mag[1]= (int16_t)((data[4] << 8) | data[5]);
+   hmc->prev.ve[0] = (int16_t)((data[0] << 8) | data[1]);
+   hmc->prev.ve[2] = (int16_t)((data[2] << 8) | data[3]);
+   hmc->prev.ve[1] = (int16_t)((data[4] << 8) | data[5]);
    FOR_N(i, 3)
-      mag[i] *= sens_conv_tab[hmc->gain >> 5];
+      hmc->prev.ve[i] *= sens_conv_tab[hmc->gain >> 5];
+out:
+   vec_copy(mag, &hmc->prev);
    THROW_END();
 }
 

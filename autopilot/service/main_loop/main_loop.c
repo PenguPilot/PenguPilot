@@ -301,7 +301,6 @@ void main_step(const float dt,
    /* apply current magnetometer compensation: */
    cmc_apply(&cal_marg_data.mag, current);
 
-   printf("%f %f %f\n", cal_marg_data.mag.x, cal_marg_data.mag.y, cal_marg_data.mag.z);
    
    /* determine flight state: */
    bool flying = flight_state_update(&cal_marg_data.acc.ve[0]);
