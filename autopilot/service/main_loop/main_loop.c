@@ -184,7 +184,7 @@ void main_init(int override_hw)
    LOG(LL_INFO, "initializing command interface");
    cmd_init();
 
-   motors_state_init(0.12f, 0.8f);
+   motors_state_init();
    blackbox_socket = scl_get_socket("blackbox");
 
    /* send blackbox header: */
@@ -288,7 +288,7 @@ void main_step(float dt,
    flight_state = flight_state_update(&marg_data->acc.vec[0], pos_estimate.ultra_u.pos);
    
    /* execute flight logic (sets cm_x parameters used below): */
-   flight_logic_run(sensor_status, channels, euler.yaw, &pos_estimate.ne_pos, pos_estimate.baro_u.pos, pos_estimate.ultra_u.pos);
+   flight_logic_run(sensor_status, flight_state == FS_FLYING, channels, euler.yaw, &pos_estimate.ne_pos, pos_estimate.baro_u.pos, pos_estimate.ultra_u.pos);
    
    /* RUN U POSITION AND SPEED CONTROLLER: */
    float u_err = 0.0f;
@@ -305,12 +305,12 @@ void main_step(float dt,
    if (cm_u_is_spd())
       u_speed_sp = cm_u_setp();
    
-   float f_d = u_speed_step(u_speed_sp, pos_estimate.baro_u.speed, dt);
+   float f_d_rel = u_speed_step(u_speed_sp, pos_estimate.baro_u.speed, dt);
    if (cm_u_is_acc())
-      f_d = cm_u_setp();
+      f_d_rel = cm_u_setp();
 
-   f_d = fmin(f_d, cm_u_acc_limit());
-   f_d *= platform.max_thrust_n;
+   f_d_rel = fmin(f_d_rel, cm_u_acc_limit());
+   float f_d = f_d_rel * platform.max_thrust_n;
 
    vec2_t speed_sp = {{0.0f, 0.0f}};
    if (cm_att_is_gps_pos())
@@ -373,25 +373,28 @@ void main_step(float dt,
    /* computation of rpm ^ 2 out of the desired forces */
    inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
    
-   /* compute motor set points out of rpm ^ 2: */
-   piid_int_enable(platform_ac_calc(setpoints, cm_motors_enabled(), voltage, rpm_square));
-   if (!cm_motors_enabled())
+   /* update motors state: */
+   motors_state_update(flight_state, dt, cm_motors_enabled());
+
+   if (motors_starting())
    {
-      memset(setpoints, 0, sizeof(float) * platform.n_motors);
       piid_reset(); /* reset piid integrators so that we can move the device manually */
       att_ctrl_reset();
    }
-   else
-   {
-      /* notify any cpu-consuming applications to stop processing */
-      
-      goto out;
-   }
 
+   if (!motors_controllable())
+   {
+      FOR_N(i, platform.n_motors)
+         rpm_square[i] = 100;
+   }
+   
+   /* compute motor set points out of rpm ^ 2: */
+   piid_int_enable(platform_ac_calc(setpoints, motors_spinning(), voltage, rpm_square));
+   
    /* write motors: */
    if (!override_hw)
    {
-      //platform_write_motors(setpoints);
+      platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */

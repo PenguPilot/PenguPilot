@@ -34,13 +34,13 @@ static bool horiz_pos_locked = true;
 static calibration_t rc_cal;
 static Filter1 rc_valid_filter;
 static interval_t rc_lost_interval;
-
+static float rc_lost_timer  = 0.0f;
 
 void man_logic_init(void)
 {
    interval_init(&rc_lost_interval);
    cal_init(&rc_cal, 3, 500);
-   filter1_lp_init(&rc_valid_filter, 0.5, REALTIME_PERIOD, 1);
+   filter1_lp_init(&rc_valid_filter, 0.5f, REALTIME_PERIOD, 1);
 
    opcd_param_t params[] =
    {
@@ -57,8 +57,8 @@ void man_logic_init(void)
 
 static man_mode_t channel_to_man_mode(float sw)
 {
-   float a = 0.333;
-   float b = 0.666;
+   float a = 1.0f / 3.0f;
+   float b = 2.0f / 3.0f;
 
    if (sw <= a)
    {
@@ -84,7 +84,7 @@ static void handle_mode_update(man_mode_t mode)
 
 static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos)
 {
-   if (fabs(gas_stick) > 0.2)
+   if (fabs(gas_stick) > 0.2f)
    {
       float vmax = tsfloat_get(&vert_speed_max);
       cm_u_set_spd(gas_stick * vmax);
@@ -109,7 +109,7 @@ static void set_pitch_roll_rates(float pitch, float roll)
 static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t *ne_gps_pos)
 {
    float vmax_sqrt = sqrt(tsfloat_get(&stick_pitch_roll_p));
-   if (sqrt(pitch * pitch + roll * roll) > 0.01)
+   if (sqrt(pitch * pitch + roll * roll) > 0.1f)
    {
       vec2_t local_spd_sp = {{vmax_sqrt * pitch, vmax_sqrt * roll}};
       vec2_t global_spd_sp;
@@ -146,17 +146,18 @@ static void emergency_landing(bool gps_valid, vec2_t *ne_gps_pos, float u_ultra_
 }
 
 
-void man_logic_run(uint16_t sensor_status, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos)
+void man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos)
 {
    float rc_valid_f = (sensor_status & RC_VALID) ? 1.0f : 0.0f;
    filter1_run(&rc_valid_filter, &rc_valid_f, &rc_valid_f);
    if (rc_valid_f < 0.5f)
    {
-      if (interval_measure(&rc_lost_interval) > 1.0f)
+      rc_lost_timer += interval_measure(&rc_lost_interval);
+      if (rc_lost_timer > 1.0f)
          emergency_landing(sensor_status & GPS_VALID, ne_gps_pos, u_ultra_pos);
       return;
    }
-   interval_init(&rc_lost_interval);
+   rc_lost_timer = 0.0f;
 
    float cal_channels[3] = {channels[CH_PITCH], channels[CH_ROLL], channels[CH_YAW]};
    cal_sample_apply(&rc_cal, cal_channels);
@@ -166,8 +167,6 @@ void man_logic_run(uint16_t sensor_status, float channels[MAX_CHANNELS], float y
    float gas_stick = channels[CH_GAS];
    float sw_l = channels[CH_SWITCH_L];
    float sw_r = channels[CH_SWITCH_R];
-
-   cm_enable_motors(sw_l > 0.5 ? true : false);
 
    cm_yaw_set_spd(yaw_stick); /* the only applied mode in manual operation */
    man_mode_t man_mode = channel_to_man_mode(sw_r);
