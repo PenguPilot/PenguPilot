@@ -82,6 +82,12 @@ int platform_read_voltage(float *voltage)
 }
 
 
+int platform_ac_calc(float *setpoints, const int enabled, const float voltage, const float *forces)
+{
+   return ac_calc(setpoints, &platform.ac, enabled, voltage, forces);
+}
+
+
 uint16_t platform_read_sensors(marg_data_t *marg_data, gps_data_t *gps_data, float *ultra, float *baro, float *voltage, float channels[MAX_CHANNELS])
 {
    uint16_t status = 0;

@@ -9,11 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Force to Motor Setpoint Converter Implementation
+ holger quad platform implementation
 
- Copyright (C) 2012 Benjamin Jahn, Ilmenau University of Technology
- Copyright (C) 2012 Alexander Barth, Ilmenau University of Technology
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -26,45 +24,49 @@
  GNU General Public License for more details. */
 
 
-#include "force_to_setpoint.h"
-
 #include <math.h>
 #include <util.h>
 
+#include "quad.h"
+#include "holger_quad.h"
+#include "../hardware/drivers/holger_blmc/holger_blmc.h"
 
-static int force_to_setpoint(force_to_setpoint_t *ftos, float *setpoint, float voltage, float force)
+
+                                     /* m0    m1    m2    m3 */
+static uint8_t motor_addrs[N_MOTORS] = {0x29, 0x2a, 0x2b, 0x2c};
+
+
+static int write_motors(float *setpoints)
 {
-   int int_enable;
-   float sp = powf((force / ftos->a * powf(voltage, -1.5f)), 1.0f / ftos->b);
-   if (sp > ftos->sp_max)
-   {   
-      sp = ftos->sp_max;
-      int_enable = 0;
-   }
-   else if (sp < ftos->sp_min)
+   uint8_t rpm[N_MOTORS];
+   uint8_t u8setp[N_MOTORS];
+   FOR_N(i, N_MOTORS)
    {
-      sp = ftos->sp_min;
-      int_enable = 0;
+      u8setp[i] = round(setpoints[i]);
    }
-   else
-   {
-      int_enable = 1;   
-   }
-   *setpoint = sp;
-   return int_enable;
+   holger_blmc_write_read(u8setp, rpm);
+   return 0; // TODO implement
 }
 
 
-int forces_to_setpoints(force_to_setpoint_t *ftos, float *setpoints, float voltage, float *forces, int n_motors)
+static float force_to_blmc(float force, float voltage)
 {
-   int int_enable = 1;
-   FOR_N(i, n_motors)
-   {
-      if (force_to_setpoint(ftos, &setpoints[i], voltage, forces[i]) == 0)
-      {
-         int_enable = 0;   
-      }
-   }
-   return int_enable;
+   float a = 609.6137f;
+   float b = 1.3154f;
+   return powf((force / a * powf(voltage, -1.5f)), 1.0f / b);
+}
+
+
+int holger_quad_init(platform_t *plat, float f_c)
+{
+   ASSERT_ONCE();
+
+   /* set-up actuator characteristics: */
+   ac_init(&plat->ac, HOLGER_I2C_MIN, HOLGER_I2C_MAX, 12.0, 17.0, f_c, N_MOTORS, force_to_blmc, 0);
+    
+   /* set-up motors driver: */
+   holger_blmc_init((i2c_bus_t *)plat->priv, motor_addrs, N_MOTORS);
+   plat->write_motors = write_motors;
+   return 0;
 }
 

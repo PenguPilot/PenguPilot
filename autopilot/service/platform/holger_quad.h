@@ -9,12 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- ARCADE Quadrotor Platform Interface
+ holger quad platform interface
 
- Copyright (C) 2012 Alexander Barth, Ilmenau University of Technology
- Copyright (C) 2012 Benjamin Jahn, Ilmenau University of Technology
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
-
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -27,15 +24,15 @@
  GNU General Public License for more details. */
 
 
-#ifndef __ARCADE_QUADRO_H__
-#define __ARCADE_QUADRO_H__
+#ifndef __HOLGER_QUAD_H__
+#define __HOLGER_QUAD_H__
 
 
 #include "platform.h"
 
 
-int arcade_quadro_init(platform_t *platform, int override_hw);
+int holger_quad_init(platform_t *plat, float f_c);
 
 
-#endif /* __ARCADE_QUADRO_H__ */
+#endif /* __HOLGER_QUAD_H__ */
 

@@ -28,11 +28,11 @@
 #define __PLATFORM_H__
 
 #include "../hardware/util/gps_data.h"
-#include "../hardware/util/force_to_setpoint.h"
 #include "../hardware/util/rc_channels.h"
 #include "../hardware/util/marg_data.h"
 #include "../geometry/quat.h"
 #include "inv_coupling.h"
+#include "ac.h"
 
 
 typedef struct
@@ -43,7 +43,7 @@ typedef struct
    float imtx3;
    float rpm_square_min;
    float rpm_square_max;
-   force_to_setpoint_t ftos;
+   ac_t ac;
    float max_thrust_n;
    float mass_kg;
    inv_coupling_t inv_coupling;
@@ -59,6 +59,9 @@ typedef struct
    
    /* actuators: */
    int (*write_motors)(float *setpoints);
+
+   /* private data: */
+   void *priv;
 }
 platform_t;
 
@@ -82,6 +85,9 @@ int platform_read_baro(float *baro);
 
 
 int platform_read_voltage(float *voltage);
+
+
+int platform_ac_calc(float *setpoints, const int enabled, const float voltage, const float *forces);
 
 
 #define GYRO_VALID    0x01

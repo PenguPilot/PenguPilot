@@ -33,6 +33,8 @@
 
 #include <util.h>
 #include "inv_coupling.h"
+#include "quad.h"
+#include "arcade_quad.h"
 #include "platform.h"
 #include "../util/logger/logger.h"
 
@@ -42,17 +44,13 @@
 #include "../hardware/drivers/i2cxl/i2cxl_reader.h"
 #include "../hardware/drivers/ms5611/ms5611_reader.h"
 #include "../hardware/drivers/rc_dsl/rc_dsl_reader.h"
-#include "../hardware/drivers/holger_blmc/holger_blmc.h"
 #include "../hardware/drivers/scl_voltage/scl_voltage.h"
 #include "../hardware/util/rc_channels.h"
 #include "drotek_marg2.h"
+#include "holger_quad.h"
+#include "pwm_quad.h"
 
 
-/* number of motors we can control: */
-#define N_MOTORS (4)
-
-                                     /* m0    m1    m2    m3 */
-static uint8_t motor_addrs[N_MOTORS] = {0x29, 0x2a, 0x2b, 0x2c};
 static i2c_bus_t i2c_3;
 static deadzone_t deadzone;
 static rc_channels_t rc_channels;
@@ -61,31 +59,16 @@ static float channel_scale[MAX_CHANNELS] =  {1.0f, -1.0f, -1.0f, 1.0f, 1.0f};
 static drotek_marg2_t marg;
 
 
-static int write_motors(float *setpoints)
-{
-   /* write motors and read rpm: */
-   uint8_t rpm[N_MOTORS];
-   uint8_t u8setp[N_MOTORS];
-   FOR_N(i, N_MOTORS)
-   {
-      u8setp[i] = round(setpoints[i]);
-   }
-   holger_blmc_write_read(u8setp, rpm);
-   return 0;
-}
-
-
 static int read_rc(float channels[MAX_CHANNELS])
 {
-   /*float dsl_channels[RC_DSL_CHANNELS];
+   float dsl_channels[RC_DSL_CHANNELS];
    int ret = rc_dsl_reader_get(dsl_channels);
    int c;
    for (c = 0; c < MAX_CHANNELS; c++)
    {
       channels[c] = rc_channels_get(&rc_channels, dsl_channels, c);
    }
-   return ret;*/
-   return -1;
+   return ret;
 }
 
 
@@ -95,7 +78,7 @@ static int read_marg(marg_data_t *marg_data)
 }
 
 
-int arcade_quadro_init(platform_t *plat, int override_hw)
+int arcade_quad_init(platform_t *plat, int override_hw)
 {
    ASSERT_ONCE();
    THROW_BEGIN();
@@ -133,11 +116,7 @@ int arcade_quadro_init(platform_t *plat, int override_hw)
   
    LOG(LL_INFO, "setting platform parameters");
    
-   plat->ftos.sp_min = HOLGER_I2C_MIN;
-   plat->ftos.sp_max = HOLGER_I2C_MAX;
-   plat->ftos.a = 609.6137f;
-   plat->ftos.b = 1.3154f;
-   
+  
    plat->max_thrust_n = 28.0f;
    plat->mass_kg = 0.95f;
    plat->n_motors = N_MOTORS;
@@ -146,6 +125,7 @@ int arcade_quadro_init(platform_t *plat, int override_hw)
    {
       LOG(LL_INFO, "initializing i2c bus");
       THROW_ON_ERR(i2c_bus_open(&i2c_3, "/dev/i2c-3"));
+      plat->priv = &i2c_3;
 
       LOG(LL_INFO, "initializing MARG sensor cluster");
       THROW_ON_ERR(drotek_marg2_init(&marg, &i2c_3));
@@ -161,23 +141,33 @@ int arcade_quadro_init(platform_t *plat, int override_hw)
 
       LOG(LL_INFO, "initializing inverse coupling matrix");
       inv_coupling_init(&plat->inv_coupling, N_MOTORS, inv_coupling_matrix);
-
-      /* set-up motors driver: */
-      LOG(LL_INFO, "initializing motor drivers");
-      holger_blmc_init(&i2c_3, motor_addrs, N_MOTORS);
-      plat->write_motors = write_motors;
-    
+   
+      /* initialize motors: */
+      int holger_blmc = 0;
+      float f_c = 1.5866e-007f;
+      if (holger_blmc)
+      {
+         LOG(LL_INFO, "initializing holger motors");
+         holger_quad_init(plat, f_c);
+      }
+      else
+      {
+         LOG(LL_INFO, "initializing pwm motors");
+         pwm_quad_init(plat, f_c);
+      }
+ 
+   
       /* set-up gps driver: */
       scl_gps_init();
       plat->read_gps = scl_gps_read;
 
       /* set-up dsl reader: */
       LOG(LL_INFO, "initializing DSL reader");
-      /*if (rc_dsl_reader_init() < 0)
+      if (rc_dsl_reader_init() < 0)
       {
          LOG(LL_ERROR, "could not initialize dsl reader");
          exit(1);
-      }*/
+      }
       deadzone_init(&deadzone, 0.01f, 1.0f, 1.0f);
       rc_channels_init(&rc_channels, channel_mapping, channel_scale, &deadzone);
       plat->read_rc = read_rc;

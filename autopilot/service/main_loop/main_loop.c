@@ -41,8 +41,9 @@
 #include "../interface/interface.h"
 #include "../estimators/ahrs.h"
 #include "../estimators/pos.h"
+#include "../platform/ac.h"
 #include "../platform/platform.h"
-#include "../platform/arcade_quadro.h"
+#include "../platform/arcade_quad.h"
 #include "../control/stabilizing/piid.h"
 #include "../hardware/util/acc_mag_cal.h"
 #include "../hardware/util/calibration.h"
@@ -214,7 +215,7 @@ void main_init(int override_hw)
    LOG(LL_INFO, "autopilot initializing");
 
    LOG(LL_INFO, "initializing platform");
-   if (arcade_quadro_init(&platform, override_hw) < 0)
+   if (arcade_quad_init(&platform, override_hw) < 0)
    {
       LOG(LL_ERROR, "could not initialize platform");
       die();
@@ -290,6 +291,7 @@ void main_init(int override_hw)
 
 void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ultra, float baro, float voltage, float channels[MAX_CHANNELS], uint16_t sensor_status, int override_hw)
 {
+   override_hw = 1;
    /*******************************************
     * read sensor data and calibrate sensors: *
     *******************************************/
@@ -509,7 +511,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    
    if (motors_state_safe())
    {
-      motors_enabled = 0;
+      //motors_enabled = 0;
    }
 
    /* run convex optimization: */
@@ -526,15 +528,15 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
    
    /* compute motor set points out of rpm ^ 2: */
-   if (1) //motors_enabled)
+   if (motors_enabled)
    {
-      piid_int_enable(forces_to_setpoints(&platform.ftos, setpoints, voltage, rpm_square, platform.n_motors));
-      //printf("%f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]);
+      piid_int_enable(platform_ac_calc(setpoints, motors_enabled, voltage, rpm_square));
    }
    else
    {
       piid_int_enable(0);   
    }
+   printf("%f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]);
 
    /* write motors: */
    if (!override_hw)
