@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Motors State Tracking
+ Timer-based Motors State Tracking
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -48,7 +48,6 @@ static etimer_t timer;
 static void *spinning_socket = NULL;
 
 
-/* initializes motor state */
 void motors_state_init(void)
 {
    ASSERT_ONCE();
@@ -60,28 +59,24 @@ void motors_state_init(void)
 }
 
 
-/* indicates if the motors are starting */
 bool motors_starting(void)
 {
    return (state & MOTORS_STARTING) ? true : false;
 }
 
 
-/* indicates if the motors are stopping */
-bool motors_stopping(void)
+bool motors_output_is_disabled(void)
 {
-   return (state & MOTORS_STOPPING) ? true : false;
+   return (state & (MOTORS_STOPPING | MOTORS_STOPPED)) ? true : false;
 }
 
 
-/* indicates if the motors are spinning */
 bool motors_spinning(void)
 {
    return (state & (MOTORS_STARTING | MOTORS_SPINNING | MOTORS_STOPPING)) ? true : false;
 }
 
 
-/* indicates if the controller inputs are used  */
 bool motors_controllable(void)
 {
    return (state & MOTORS_SPINNING) ? true : false;
