@@ -235,18 +235,10 @@ void piid_run(float u_ctrl[4], float gyro[3], float rc[3], float dt)
    filter1_run(&filter_lp_err, error, error);
 
    /* 1st error integration: */
-   FOR_N(i, 3)
-   {
-      int_err1.f0[i] = error[i];
-   }
-   adams4_run(&int_err1, xi_err, dt, int_enable);
+   adams4_run(&int_err1, xi_err, error, dt, int_enable);
 
    /* 2nd error integration: */
-   FOR_N(i, 3)
-   {
-      int_err2.f0[i] = xi_err[i];
-   }
-   adams4_run(&int_err2, xii_err, dt, int_enable);
+   adams4_run(&int_err2, xii_err, xi_err, dt, int_enable);
 
    /* attitude feedback: */
    FOR_N(i, 2)
