@@ -8,10 +8,10 @@
  |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
-  
- File Purpose
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Periodic Fixed-Priority Threads Implementation
+
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -23,19 +23,10 @@
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details. */
 
-/*
- * periodic_thread.h
- *
- * periodic, fixed-priority threads
- *
- *
- *  Created on: 15.06.2010
- *      Author: tobi
- */
 
 
-#ifndef PERIODIC_THREAD_H
-#define PERIODIC_THREAD_H
+#ifndef __PERIODIC_THREAD_H__
+#define __PERIODIC_THREAD_H__
 
 
 #include <time.h>
@@ -99,4 +90,5 @@ void periodic_thread_init_period(periodic_thread_t *thread);
 int periodic_thread_wait_for_next_period(periodic_thread_t *thread);
 
 
-#endif /* PERIODIC_THREAD_H */
+#endif /* __PERIODIC_THREAD_H__ */
+

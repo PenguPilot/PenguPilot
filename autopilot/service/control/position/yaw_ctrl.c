@@ -44,7 +44,6 @@ static tsfloat_t i;
 static tsfloat_t i_max;
 static tsfloat_t d;
 static tsfloat_t pid_lim;
-static tsint_t manual;
 
 
 static float circle_err(float pos, float dest)

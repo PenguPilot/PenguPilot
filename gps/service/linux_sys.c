@@ -52,6 +52,6 @@ void linux_sys_set_timezone(float lat_dest, float lon_dest)
    }
    char cmd[1024];
    sprintf(cmd, "cp /usr/share/zoneinfo/%s /etc/localtime", tzname);
-   system(cmd);
+   if (system(cmd)){};
 }
 

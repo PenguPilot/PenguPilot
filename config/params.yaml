@@ -121,7 +121,6 @@ pilot:
          d: 0.1
  
       altitude:
-         manual: false
          init_setpoint: 2.0
          init_mode_is_ground: True
 
@@ -132,7 +131,6 @@ pilot:
          speed_imax: 1.0
 
       yaw:
-         manual: false
          p: 0.24
          i: 0.7
          i_max: 0.5

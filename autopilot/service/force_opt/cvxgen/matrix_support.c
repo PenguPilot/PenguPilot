@@ -10,9 +10,12 @@
 #include "solver.h"
 
 void multbymA(float *lhs, float *rhs) {
+(void)lhs;
+(void)rhs;
 }
 
 void multbymAT(float *lhs, float *rhs) {
+  (void)rhs;
   lhs[0] = 0;
   lhs[1] = 0;
   lhs[2] = 0;

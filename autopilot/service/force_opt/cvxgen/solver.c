@@ -272,7 +272,7 @@ void better_start(void) {
   /* Calculates a better starting point, using a similar approach to CVXOPT. */
   /* Not yet speed optimized. */
   int i;
-  float *x, *s, *z, *y;
+  float *x, *z, *y;
   float alpha;
 
   work.block_33[0] = -1;
@@ -288,7 +288,6 @@ void better_start(void) {
   /* Don't do any refinement for now. Precision doesn't matter too much. */
 
   x = work.lhs_aff;
-  s = work.lhs_aff + 4;
   z = work.lhs_aff + 12;
   y = work.lhs_aff + 20;
 
