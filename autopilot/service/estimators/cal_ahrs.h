@@ -27,11 +27,10 @@
 #ifndef __CAL_AHRS_H__
 #define __CAL_AHRS_H__
 
-
-#include "../geometry/euler.h"
+#include "../util/math/euler.h"
 #include "../hardware/util/marg_data.h"
 
-#include "ahrs.h"
+
 
 
 void cal_ahrs_init(float beta_start, float beta_step);

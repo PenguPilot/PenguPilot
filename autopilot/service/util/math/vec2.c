@@ -35,7 +35,7 @@ void vec2_init(vec2_t *vec)
 {
    assert(vec);
    vec->dim = 2;
-   vec->ve = (real_t *)&vec->data;
+   vec->ve = vec->data;
    memset(vec->ve, 0, sizeof(real_t) * vec->dim);
 }
 
@@ -44,7 +44,7 @@ void vec2_set(vec2_t *vec, real_t x, real_t y)
 {
    assert(vec);
    vec->dim = 2;
-   vec->ve = (real_t *)&vec->data;
+   vec->ve = vec->data;
    vec->x = x;
    vec->y = y;
 }
