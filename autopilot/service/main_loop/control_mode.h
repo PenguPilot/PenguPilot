@@ -40,16 +40,17 @@
 
 bool cm_motors_enabled(void);
 void cm_enable_motors(bool enabled);
+void cm_disable_motors_persistent(void);
 
 
 /*******************
  * U CONTROL MODES *
  *******************/
 
-void cm_u_ultra_pos_set(float pos);
-void cm_u_baro_pos_set(float pos);
-void cm_u_spd_set(float spd);
-void cm_u_acc_set(float acc);
+void cm_u_set_ultra_pos(float pos);
+void cm_u_set_baro_pos(float pos);
+void cm_u_set_spd(float spd);
+void cm_u_set_acc(float acc);
 
 /* true, if in u pos hold mode */
 bool cm_u_is_pos(void);

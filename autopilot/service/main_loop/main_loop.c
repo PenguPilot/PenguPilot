@@ -231,8 +231,8 @@ void main_step(float dt,
    
    /* read sensor data and calibrate sensors: */
    pos_in.dt = dt;
-   pos_in.ultra_z = ultra;
-   pos_in.baro_z = baro;
+   pos_in.ultra_u = ultra;
+   pos_in.baro_u = baro;
    
    if (!(sensor_status & MARG_VALID))
    {
@@ -285,10 +285,10 @@ void main_step(float dt,
    /* compute next 3d position estimate: */
    pos_t pos_estimate;
    pos_update(&pos_estimate, &pos_in);
-   flight_state = flight_state_update(&marg_data->acc.vec[0], pos_estimate.ultra_z.pos);
+   flight_state = flight_state_update(&marg_data->acc.vec[0], pos_estimate.ultra_u.pos);
    
    /* execute flight logic (sets cm_x parameters used below): */
-   flight_logic_run(sensor_status, channels, euler.yaw);
+   flight_logic_run(sensor_status, channels, euler.yaw, &pos_estimate.ne_pos, pos_estimate.baro_u.pos, pos_estimate.ultra_u.pos);
    
    /* RUN U POSITION AND SPEED CONTROLLER: */
    float u_err = 0.0f;
@@ -296,16 +296,16 @@ void main_step(float dt,
    if (cm_u_is_pos())
    {
       if (cm_u_is_baro_pos())
-         u_err = cm_u_setp() - pos_estimate.baro_z.pos;
+         u_err = cm_u_setp() - pos_estimate.baro_u.pos;
       else
-         u_err = cm_u_setp() - pos_estimate.ultra_z.pos;
+         u_err = cm_u_setp() - pos_estimate.ultra_u.pos;
       u_speed_sp = u_ctrl_step(u_err);
    }
    
    if (cm_u_is_spd())
       u_speed_sp = cm_u_setp();
    
-   float f_d = u_speed_step(u_speed_sp, pos_estimate.baro_z.speed, dt);
+   float f_d = u_speed_step(u_speed_sp, pos_estimate.baro_u.speed, dt);
    if (cm_u_is_acc())
       f_d = cm_u_setp();
 
@@ -414,11 +414,11 @@ out:
    PACKFV(euler.vec, 3);
    PACKFV(pos_in.acc.vec, 3);
    PACKF(pos_in.pos_e); PACKF(pos_in.pos_n);
-   PACKF(pos_in.ultra_z); PACKF(pos_in.baro_z);
+   PACKF(pos_in.ultra_u); PACKF(pos_in.baro_u);
    PACKFV(pos_estimate.ne_pos.vec, 2);
-   PACKF(pos_estimate.ultra_z.pos); PACKF(pos_estimate.baro_z.pos);
+   PACKF(pos_estimate.ultra_u.pos); PACKF(pos_estimate.baro_u.pos);
    PACKFV(pos_estimate.ne_speed.vec, 2);
-   PACKF(pos_estimate.ultra_z.speed); PACKF(pos_estimate.baro_z.speed);
+   PACKF(pos_estimate.ultra_u.speed); PACKF(pos_estimate.baro_u.speed);
    PACKF(0.0f);
    PACKFV(pitch_roll_sp.vec, 2);
    PACKI(flight_state);

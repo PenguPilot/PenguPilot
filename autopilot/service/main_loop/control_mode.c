@@ -29,6 +29,7 @@
 
 
 static bool motors_enabled = false;
+static bool persistent_disabled = false;
 
 bool cm_motors_enabled(void)
 {
@@ -37,7 +38,13 @@ bool cm_motors_enabled(void)
 
 void cm_enable_motors(bool enabled)
 {
-   motors_enabled = enabled;   
+   if (!persistent_disabled)
+      motors_enabled = enabled;   
+}
+
+void cm_disable_motors_persistent(void)
+{
+   persistent_disabled = true;
 }
 
 
@@ -52,25 +59,25 @@ u_mode = U_ACC;
 static float u_setp = 0.0;
 static float u_acc_limit = 1.0;
 
-void cm_u_ultra_pos_set(float pos)
+void cm_u_set_ultra_pos(float pos)
 {
    u_mode = U_ULTRA_POS;
    u_setp = pos;
 }
 
-void cm_u_baro_pos_set(float pos)
+void cm_u_set_baro_pos(float pos)
 {
    u_mode = U_BARO_POS;
    u_setp = pos;
 }
 
-void cm_u_spd_set(float spd)
+void cm_u_set_spd(float spd)
 {
    u_mode = U_SPEED;
    u_setp = spd;
 }
 
-void cm_u_acc_set(float acc)
+void cm_u_set_acc(float acc)
 {
    u_mode = U_ACC;
    u_setp = acc;   
