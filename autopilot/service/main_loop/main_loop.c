@@ -443,7 +443,7 @@ void main_step(const float dt,
    /* write motors: */
    if (!override_hw)
    {
-      //EVERY_N_TIMES(20, printf("%f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]));
+      //EVERY_N_TIMES(20, printf("%f %f %f\n", euler.yaw, euler.pitch, euler.roll));
       platform_write_motors(setpoints);
    }
 

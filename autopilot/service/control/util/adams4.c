@@ -72,7 +72,15 @@ void adams4_term(adams4_t *a)
  * x_(k+1) = x_(k) + Ts*(55 * x_(k) - 59 * x_(k-1) + 37 * x_(k-2) - 9 * x_(k-3))/24
 */
 void adams4_run(adams4_t *a, float *out, float *in, float ts, int enabled)
-{
+{ 
+   /* rotate ring buffer; TS: is it correct not to include this in (enabled)? */ 
+   float *temp = a->f4;
+   a->f4 = a->f3;
+   a->f3 = a->f2;
+   a->f2 = a->f1;
+   a->f1 = a->f0;
+   a->f0 = temp;
+ 
    if (enabled)
    {
       /* set f0 and run adams4 integrator: */
@@ -81,7 +89,7 @@ void adams4_run(adams4_t *a, float *out, float *in, float ts, int enabled)
          a->f0[i] = in[i];
          a->f0[a->dim] = ts;
 
-         const float coeff[5] = { 191.0f / 720.0f,
+         const float coeff[5] = { 1901.0f / 720.0f,
                                  -1387.f / 360.0f,
                                   109.0f / 30.0f,
                                  -637.0f / 360.0f,
@@ -94,12 +102,5 @@ void adams4_run(adams4_t *a, float *out, float *in, float ts, int enabled)
          out[i] += coeff[4] * a->f4[i] * a->f4[a->dim];
       }
    }
-   /* rotate ring buffer; TS: is it correct not to include this in (enabled)? */
-   float *temp = a->f4;
-   a->f4 = a->f3;
-   a->f3 = a->f2;
-   a->f2 = a->f1;
-   a->f1 = a->f0;
-   a->f0 = temp;
 }
 
