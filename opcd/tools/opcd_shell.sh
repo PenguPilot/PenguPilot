@@ -24,5 +24,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-cd "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+s=`realpath "$0"`
+dir=`dirname $s`
+cd $dir
 PYTHONSTARTUP=opcd_shell.py python

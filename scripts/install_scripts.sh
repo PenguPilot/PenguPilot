@@ -25,6 +25,18 @@
 # GNU General Public License for more details.
 
 
-sudo ln -f -s $PENGUPILOT_PATH/svctrl/svctrl.py /usr/local/bin/pp_svctrl
-sudo ln -f -s $PENGUPILOT_PATH/autopilot/service/general_logger.py /usr/local/bin/pp_general_logger
-sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/convert_txt.py /usr/local/bin/pp_convert_txt
+cd /usr/local/bin
+sudo ln -f -s $PENGUPILOT_PATH/blackbox/tools/filter_txt_col.py pp_filter_txt_col
+sudo ln -f -s $PENGUPILOT_PATH/blackbox/tools/msgpack_to_txt.py pp_msgpack_to_txt
+sudo ln -f -s $PENGUPILOT_PATH/blackbox/tools/compare_msgpack.py pp_compare_msgpack
+sudo ln -f -s $PENGUPILOT_PATH/opcd/tools/opcd_shell.sh pp_opcd_shell
+sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/replay.py pp_replay
+sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/shell/pilot_shell.sh pp_pilot_shell
+sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/calibration/print_cal.py pp_print_cal
+sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/calibration/acc_mag_cal.py pp_acc_mag_cal
+sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/logger.py pp_logger
+sudo ln -f -s $PENGUPILOT_PATH/scripts/clear_pidfiles.sh pp_clear_pidfiles
+sudo ln -f -s $PENGUPILOT_PATH/svctrl/svctrl.py pp_svctrl
+sudo ln -f -s $PENGUPILOT_PATH/gps/tools/gps_debug.py pp_gps_debug
+sudo ln -f -s $PENGUPILOT_PATH/icarus/tools/icarus_shell.sh pp_icarus_shell
+

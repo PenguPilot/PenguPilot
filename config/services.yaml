@@ -40,7 +40,7 @@ autopilot:
   depends: [opcd, gps_sensor, powerman]
 
 blackbox:
-  binary: 'autopilot/service/blackbox.py'
+  binary: 'blackbox/service/blackbox.py'
 
 remote:
   binary: 'remote/service/remote'

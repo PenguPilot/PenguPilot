@@ -24,5 +24,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-cd "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+script=`realpath "$0"`
+dir=`dirname $script`
+cd $dir
 PYTHONSTARTUP=pilot_shell.py python
