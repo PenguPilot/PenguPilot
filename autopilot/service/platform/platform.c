@@ -87,10 +87,10 @@ int platform_read_baro(float *baro)
 }
 
 
-int platform_read_voltage(float *voltage)
+int platform_read_power(float *voltage, float *current)
 {
-   CHECK_DEV(platform.read_voltage);
-   return platform.read_voltage(voltage);
+   CHECK_DEV(platform.read_power);
+   return platform.read_power(voltage, current);
 }
 
 
@@ -100,7 +100,13 @@ int platform_ac_calc(float *setpoints, const int enabled, const float voltage, c
 }
 
 
-uint16_t platform_read_sensors(marg_data_t *marg_data, gps_data_t *gps_data, float *ultra, float *baro, float *voltage, float channels[MAX_CHANNELS])
+uint16_t platform_read_sensors(marg_data_t *marg_data,
+                               gps_data_t *gps_data, 
+                               float *ultra, 
+                               float *baro, 
+                               float *voltage, 
+                               float *current, 
+                               float channels[MAX_CHANNELS])
 {
    uint16_t status = 0;
    if (platform_read_marg(marg_data) == 0)
@@ -126,9 +132,9 @@ uint16_t platform_read_sensors(marg_data_t *marg_data, gps_data_t *gps_data, flo
       status |= BARO_VALID;
    }
    
-   if (platform_read_voltage(voltage) == 0)
+   if (platform_read_power(voltage, current) == 0)
    {
-      status |= VOLTAGE_VALID;
+      status |= POWER_VALID;
    }
    
    if (platform_read_rc(channels) == 0)

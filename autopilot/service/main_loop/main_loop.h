@@ -42,7 +42,9 @@
    float ultra_z; \
    float baro_z; \
    float voltage; \
-   gps_data_t gps_data
+   float current; \
+   gps_data_t gps_data; \
+   uint16_t sensor_status
 
 
 typedef struct
@@ -57,7 +59,16 @@ stick_t;
 
 void main_init(int argc, char *argv[]);
 
-void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ultra, float baro, float voltage, float channels[MAX_CHANNELS], uint16_t sensor_status, bool override_hw);
+void main_step(float dt,
+               marg_data_t *marg_data,
+               gps_data_t *gps_data,
+               float ultra,
+               float baro,
+               float voltage,
+               float current,
+               float channels[MAX_CHANNELS],
+               uint16_t sensor_status,
+               bool override_hw);
 
 void main_calibrate(int enabled);
 

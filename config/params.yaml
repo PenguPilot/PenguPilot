@@ -100,10 +100,10 @@ pilot:
          att_ki: 3.13780298778e+00
          att_kii: 3.45789342669e+00
          att_kd: 2.94830266817e-02
-         yaw_kp: 0.08384553006960001 
-         yaw_ki: 0.6275605975560001
-         yaw_kii: 0.691578685338
-         yaw_kd: 0.00589660533634
+         yaw_kp: 0.0417780282447742
+         yaw_ki: 0.3259955464790617
+         yaw_kii: 0.3710534021821698
+         yaw_kd: 0.002657035449808173                                                                                                                                   
          filt_fg: 10.0
          filt_d: 0.95
          jxx_jyy: 0.0097
@@ -111,26 +111,27 @@ pilot:
          tmc: 0.06
 
       ne_speed:
-         p: 0.4
-         i: 0.01
+         p: 0.5
+         i: 0.0
          i_max: 0.3
-         angle_max: 12.0
-     
+
       attitude:
-         p: 2.0
-         i: 0.01
-         i_max: 0.7
-         d: 0.1
- 
-      altitude:
-         init_setpoint: 2.0
-         init_mode_is_ground: True
+         p: 5.8
+         i: 0.2
+         i_max: 1.5
+         d: 0.5
 
       u_speed:
          p: 0.2
-         d: 0.05
-         i: 0.01
+         i: 0.0
+         imax: 0.0
+         d: 0.0
+      
+      u_pos:
+         p: 0.2 
+         i: 0.001                                                                                                                                                       
          imax: 0.2
+         d: 0.05                                                                                                                                                        
 
       yaw:
          p: 0.24
@@ -149,12 +150,11 @@ pilot:
          pos_i: 0.015
          pos_i_max: 5.0
          ortho_p: 0.0
-         direct_speed_ctrl: 1
 
    kalman_pos:
-      ultra_noise: 0.1
-      baro_noise: 1.0
-      gps_noise: 1.0
+      ultra_noise: 0.02
+      baro_noise: 0.1
+      gps_noise: 0.1
       process_noise: 1.0e-6
 
    sensors:

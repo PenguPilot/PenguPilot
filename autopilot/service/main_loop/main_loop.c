@@ -158,6 +158,7 @@ void main_init(int argc, char *argv[])
    ne_speed_ctrl_init();
    att_ctrl_init();
    yaw_ctrl_init();
+   u_ctrl_init(platform.mass_kg * 10.0f / platform.max_thrust_n);
    u_speed_init(platform.mass_kg * 10.0f / platform.max_thrust_n);
    navi_init();
 
@@ -198,11 +199,12 @@ void main_step(float dt,
                float ultra,
                float baro,
                float voltage,
+               float current,
                float channels[MAX_CHANNELS],
                uint16_t sensor_status,
                bool override_hw)
 {
-   blackbox_record(dt, marg_data, gps_data, ultra, baro, voltage, channels, sensor_status);
+   blackbox_record(dt, marg_data, gps_data, ultra, baro, voltage, current, channels, sensor_status);
    if (calibrate)
    {
       ONCE(LOG(LL_INFO, "publishing calibration data; actuators disabled"));
@@ -286,48 +288,60 @@ void main_step(float dt,
    
    /* RUN U POSITION AND SPEED CONTROLLER: */
    float u_err = 0.0f;
-   float u_speed_sp = 0.0f;
+   float f_d_rel = 0.0f;
    if (cm_u_is_pos())
    {
       if (cm_u_is_baro_pos())
+      {
+         f_d_rel = u_ctrl_step(cm_u_setp(), pos_est.baro_u.pos, pos_est.baro_u.speed, dt);
          u_err = cm_u_setp() - pos_est.baro_u.pos;
+      }
       else
+      {
+         f_d_rel = u_ctrl_step(cm_u_setp(), pos_est.ultra_u.pos, pos_est.ultra_u.speed, dt);
          u_err = cm_u_setp() - pos_est.ultra_u.pos;
-      u_speed_sp = u_ctrl_step(u_err);
+      }
    }
-   
-   if (cm_u_is_spd())
-      u_speed_sp = cm_u_setp();
-
-   float f_d_rel = u_speed_step(0.4, pos_est.ultra_u.pos, pos_est.ultra_u.speed, dt);
-   if (cm_u_is_acc())
+   else if (cm_u_is_spd())
+   {
+      f_d_rel = u_speed_step(cm_u_setp(), pos_est.baro_u.speed, 0.0f, dt);
+   }
+   else
+   {
       f_d_rel = cm_u_setp();
-   
+   }
    f_d_rel = fmin(f_d_rel, channels[CH_GAS] /*cm_u_acc_limit()*/);
    float f_d = f_d_rel * platform.max_thrust_n;
 
-   vec2_t speed_sp = {{0.0f, 0.0f}};
+   vec2_t ne_speed_sp = {{0.0f, 0.0f}};
    if (cm_att_is_gps_pos())
    {
       navi_set_dest(cm_att_setp());
-      navi_run(&speed_sp, &pos_est.ne_pos, dt); /* attitude navigation control */
+      navi_run(&ne_speed_sp, &pos_est.ne_pos, dt); /* attitude navigation control */
+   }
+   else if (cm_att_is_gps_spd())
+   {
+      ne_speed_sp = cm_att_setp(); /* direct attitude speed control */
    }
 
-   if (cm_att_is_gps_spd())
-      speed_sp = cm_att_setp(); /* direct attitude speed control */
-
    /* RUN ATT NORTH/EAST SPEED CONTROLLER: */
-   vec2_t f_ne;
-   ne_speed_ctrl_run(&f_ne, &speed_sp, dt, &pos_est.ne_speed, euler.yaw);
-   vec3_t f_ned = {{f_ne.vec[0], f_ne.vec[1], f_d}};
+   vec2_t f_sw;
+   ne_speed_ctrl_run(&f_sw, &ne_speed_sp, dt, &pos_est.ne_speed);
+   
+   /* rotate global forces into local forces: */
+   vec2_t f_pr;
+   vec2_rotate(&f_pr, &f_sw, euler.yaw);
+   vec3_t f_prd = {{f_pr.x, f_pr.y, f_d}};
 
    vec2_t pitch_roll_sp;
    float thrust;
-   att_thrust_calc(&pitch_roll_sp, &thrust, &f_ned, platform.max_thrust_n, 0);
+   att_thrust_calc(&pitch_roll_sp, &thrust, &f_prd, platform.max_thrust_n, 0);
 
    if (cm_att_is_angles())
+   {
       pitch_roll_sp = cm_att_setp(); /* direct attitude angle control */
- 
+   }
+
    /* RUN ATT ANGLE CONTROLLER: */
    vec2_t att_err;
    vec2_t pitch_roll_speed = {{marg_data->gyro.y, marg_data->gyro.x}};
@@ -356,8 +370,10 @@ void main_step(float dt,
       yaw_speed_sp = yaw_ctrl_step(&yaw_err, sp, euler.yaw, marg_data->gyro.z, dt);
    }
    else
+   {
       yaw_speed_sp = cm_yaw_setp(); /* direct yaw speed control */
-   
+   }
+
    piid_sp[PIID_YAW] = yaw_speed_sp;
 
    /* RUN STABLIZING PIID CONTROLLER: */
@@ -368,7 +384,7 @@ void main_step(float dt,
    inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
 
    /* update motors state: */
-   motors_state_update(flight_state, dt, (sensor_status & RC_VALID) && channels[CH_SWITCH_L] < 0.5 && channels[CH_GAS] > 0.1);
+   motors_state_update(flight_state, dt, (sensor_status & RC_VALID) && channels[CH_SWITCH_L] < 0.5 && channels[CH_GAS] > 0.12);
 
    if (!motors_controllable())
    {
@@ -382,7 +398,7 @@ void main_step(float dt,
    /* write motors: */
    if (!override_hw)
    {
-      //platform_write_motors(setpoints);
+      platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */
