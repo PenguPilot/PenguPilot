@@ -113,18 +113,19 @@ PERIODIC_THREAD_END
 
 static char *blackbox_spec[] = {"dt",                      /*  1      */
    "gyro_x", "gyro_y", "gyro_z",                           /*  2 -  4 */
-   "acc_x", "acc_y", "acc_z",                              /*  5 -  7 */
-   "mag_x", "mag_y", "mag_z",                              /*  8 - 10 */
-   "q0", "q1", "q2", "q3",                                 /* 11 - 14 */
-   "yaw", "pitch", "roll",                                 /* 15 - 17 */
-   "acc_e", "acc_n", "acc_u",                              /* 18 - 20 */
-   "raw_e", "raw_n", "raw_ultra_u", "raw_baro_u",          /* 21 - 24 */
-   "pos_e", "pos_n", "pos_ultra_u", "pos_baro_u",          /* 25 - 28 */
-   "speed_e",  "pos_n", "speed_ultra_u", "pos_ultra_u",    /* 29 - 32 */
-   "yaw_sp", "pitch_sp", "roll_sp",                        /* 33 - 35 */
-   "flight_state", "rc_valid",                             /* 36 - 37 */
-   "rc_pitch", "rc_roll", "rc_yaw", "rc_gas", "rc_switch", /* 38 - 42 */
-   "sensor_status", "init", "voltage"                      /* 43 - 45 */
+   "sp_rate_x", "sp_rate_y", "sp_rate_z",                  /*  5 -  7 */
+   "acc_x", "acc_y", "acc_z",                              /*  8 - 10 */
+   "mag_x", "mag_y", "mag_z",                              /* 11 - 13 */
+   "q0", "q1", "q2", "q3",                                 /* 14 - 17 */
+   "yaw", "pitch", "roll",                                 /* 18 - 20 */
+   "acc_e", "acc_n", "acc_u",                              /* 21 - 23 */
+   "raw_e", "raw_n", "raw_ultra_u", "raw_baro_u",          /* 24 - 27 */
+   "pos_e", "pos_n", "pos_ultra_u", "pos_baro_u",          /* 28 - 31 */
+   "speed_e",  "pos_n", "speed_ultra_u", "pos_ultra_u",    /* 32 - 35 */
+   "yaw_sp", "pitch_sp", "roll_sp",                        /* 36 - 38 */
+   "flight_state", "rc_valid",                             /* 39 - 40 */
+   "rc_pitch", "rc_roll", "rc_yaw", "rc_gas", "rc_switch", /* 41 - 45 */
+   "sensor_status", "init", "voltage"                      /* 46 - 48 */
 };
 
 
@@ -164,12 +165,12 @@ static enum
    M_ATT_ABS, /* absolute attitude control (aka acc-mode) */
    M_ATT_GPS_SPEED /* stick defines GPS speed for local coordinate frame */
 }
-manual_mode = M_ATT_REL;
+manual_mode = M_ATT_ABS;
 
 static tsfloat_t stick_pitch_roll_p;
 static tsfloat_t stick_pitch_roll_angle_max;
 static tsfloat_t stick_yaw_p;
-
+static int marg_err = 0;
 
 #define STICK_GPS_SPEED_MAX 5.0
 
@@ -311,11 +312,22 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    pos_in.baro_z = baro;
    
    if (!(sensor_status & MARG_VALID))
+   {
+      marg_err += 1;
+      if (marg_err > 5)
+      {
+         /* we are in serious trouble */
+         memset(setpoints, 0, sizeof(float) * platform.n_motors);
+         platform_write_motors(setpoints);
+         die();
+      }
       goto out;
+   }
+   marg_err = 0;
    
    float rc_valid_f = (sensor_status & RC_VALID) ? 1.0f : 0.0f;
    filter1_run(&rc_valid_filter, &rc_valid_f, &rc_valid_f);
-   int rc_valid = rc_valid_f > 0.75f;
+   int rc_valid = rc_valid_f > 0.5f;
    if (!rc_valid)
    {
       memset(channels, 0, sizeof(channels));   
@@ -335,6 +347,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
          LOG(LL_ERROR, "gyro moved during calibration, retrying");
       cal_reset(&gyro_cal);
    }
+   marg_data->gyro.y *= -1.0;
 
    if (sensor_status & GPS_VALID)
    {
@@ -367,7 +380,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    quat_to_euler(&euler, &ahrs_quat);
    euler_t imu_euler;
    quat_to_euler(&imu_euler, &imu.quat);
-   //EVERY_N_TIMES(20, printf("ATT %f %f %f\n", rad2deg(euler.yaw), rad2deg(imu_euler.pitch), rad2deg(imu_euler.roll)));
+
 
    if (ahrs_state < 0 || !cal_complete(&gyro_cal))
       goto out;
@@ -376,7 +389,8 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    
    /* local ACC to global ACC rotation: */
    transform_local_global(&pos_in.acc, &marg_data->acc, &ahrs_quat);
-   
+   //EVERY_N_TIMES(20, printf("%f %f %f\n", pos_in.acc.x, pos_in.acc.y, pos_in.acc.z));
+
    /* compute next 3d position estimate: */
    pos_t pos_estimate;
    pos_update(&pos_estimate, &pos_in);
@@ -392,7 +406,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    auto_stick.gas = z_ctrl_step(&z_err, pos_estimate.ultra_z.pos,
                                 pos_estimate.baro_z.pos, pos_estimate.baro_z.speed, dt);
    
-   vec2_t speed_sp;
+   vec2_t speed_sp = {{0.0f, 0.0f}};
    if (mode == CM_MANUAL && manual_mode == M_ATT_GPS_SPEED)
    {
       /* direct speed control via stick: */
@@ -419,9 +433,11 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    if (mode == CM_MANUAL && manual_mode == M_ATT_ABS)
    {
       /* interpret sticks as pitch and roll setpoints: */
-      pitch_roll_sp.x = -tsfloat_get(&stick_pitch_roll_angle_max) * channels[CH_PITCH];
+      pitch_roll_sp.x = tsfloat_get(&stick_pitch_roll_angle_max) * channels[CH_PITCH];
       pitch_roll_sp.y = tsfloat_get(&stick_pitch_roll_angle_max) * channels[CH_ROLL];
    }
+   pitch_roll_sp.x = 0.0f;
+   pitch_roll_sp.y = 0.0f;
    vec2_t att_err;
    vec2_t pitch_roll_speed = {{marg_data->gyro.y, marg_data->gyro.x}};
    vec2_t pitch_roll_ctrl;
@@ -438,7 +454,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
 
    if (mode >= CM_SAFE_AUTO || (mode == CM_MANUAL && manual_mode == M_ATT_ABS))
    {
-      piid_sp[PIID_PITCH] = -auto_stick.pitch;
+      piid_sp[PIID_PITCH] = auto_stick.pitch;
       piid_sp[PIID_ROLL] = auto_stick.roll;
    }
 
@@ -449,11 +465,14 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
       norm_gas = auto_stick.gas;
    }
 
-   if (mode == CM_MANUAL && manual_mode == M_ATT_REL && rc_valid)
+   if (mode == CM_MANUAL && rc_valid)
    {
-      piid_sp[PIID_PITCH] = tsfloat_get(&stick_pitch_roll_p) * channels[CH_PITCH];
-      piid_sp[PIID_ROLL] = tsfloat_get(&stick_pitch_roll_p) * channels[CH_ROLL];
-      piid_sp[PIID_YAW] = -tsfloat_get(&stick_yaw_p) * channels[CH_YAW];
+      if (manual_mode == M_ATT_REL)
+      {
+         piid_sp[PIID_PITCH] = tsfloat_get(&stick_pitch_roll_p) * channels[CH_PITCH];
+         piid_sp[PIID_ROLL] = tsfloat_get(&stick_pitch_roll_p) * channels[CH_ROLL];
+      }
+      piid_sp[PIID_YAW] = tsfloat_get(&stick_yaw_p) * channels[CH_YAW];
       norm_gas = channels[CH_GAS];
    }
 
@@ -461,7 +480,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    {
       piid_sp[PIID_PITCH] += tsfloat_get(&stick_pitch_roll_p) * channels[CH_PITCH];
       piid_sp[PIID_ROLL] += tsfloat_get(&stick_pitch_roll_p) * channels[CH_ROLL];
-      piid_sp[PIID_YAW] -= tsfloat_get(&stick_yaw_p) * channels[CH_YAW];
+      piid_sp[PIID_YAW] = tsfloat_get(&stick_yaw_p) * channels[CH_YAW];
       norm_gas = limit(norm_gas, 0.0f, channels[CH_GAS]);
    }
 
@@ -482,7 +501,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
     * run feed-forward system and stabilizing PIID controller: *
     ************************************************************/
 
-   float gyro_vals[3] = {marg_data->gyro.x, -marg_data->gyro.y, -marg_data->gyro.z};
+   float gyro_vals[3] = {marg_data->gyro.x, marg_data->gyro.y, marg_data->gyro.z};
    piid_run(&f_local.vec[1], gyro_vals, piid_sp);
 
    /********************
@@ -491,9 +510,9 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
 
    /* requirements specification for take-off: */
    int common_require = sensor_status & (VOLTAGE_VALID | ULTRA_VALID);
-   int manual_require = common_require && (manual_mode == M_ATT_GPS_SPEED ? (sensor_status & GPS_VALID) : 1) && rc_valid && channels[CH_SWITCH] > 0.75;
+   int manual_require = common_require && (manual_mode == M_ATT_GPS_SPEED ? (sensor_status & GPS_VALID) : 1) && rc_valid && channels[CH_SWITCH] > 0.5;
    int full_auto_require = common_require && (sensor_status & (BARO_VALID | GPS_VALID));
-   int safe_auto_require = full_auto_require && rc_valid && channels[CH_SWITCH] > 0.75;
+   int safe_auto_require = full_auto_require && rc_valid && channels[CH_SWITCH] > 0.5;
    
    int satisfied = 0; /* initial value applies to CM_DISABLED */
    if (mode == CM_MANUAL)
@@ -515,7 +534,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    int motors_enabled = 0;
    if (rc_valid && mode != CM_FULL_AUTO)
    {
-      motors_enabled = mode == CM_MANUAL && channels[CH_SWITCH] > 0.75;
+      motors_enabled = mode == CM_MANUAL && channels[CH_SWITCH] > 0.5;
    }
    
    if (motors_state_safe())
@@ -542,6 +561,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    {
       memset(setpoints, 0, sizeof(float) * platform.n_motors);
       piid_reset(); /* reset piid integrators so that we can move the device manually */
+      att_ctrl_reset();
    }
 
    /* write motors: */
@@ -559,6 +579,7 @@ out:
    #define PACKFV(ptr, n) FOR_N(i, n) PACKF(ptr[i]) /* pack float vector */
    PACKF(dt);
    PACKFV(marg_data->gyro.vec, 3);
+   PACKFV(piid_sp, 3);
    PACKFV(marg_data->acc.vec, 3);
    PACKFV(marg_data->mag.vec, 3);
    PACKFV(ahrs_quat.vec, 4);

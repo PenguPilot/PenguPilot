@@ -30,8 +30,8 @@
 #define __PIID_H__
 
 
-#define PIID_PITCH 1
 #define PIID_ROLL  0
+#define PIID_PITCH 1
 #define PIID_YAW   2
 
 

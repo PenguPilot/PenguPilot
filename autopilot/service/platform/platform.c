@@ -93,7 +93,6 @@ uint16_t platform_read_sensors(marg_data_t *marg_data, gps_data_t *gps_data, flo
    uint16_t status = 0;
    if (platform_read_marg(marg_data) == 0)
    {
-      /* TODO: check absolute values */
       status |= MARG_VALID;
    }
    

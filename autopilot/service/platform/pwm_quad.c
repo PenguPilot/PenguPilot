@@ -32,8 +32,8 @@
 #include "../hardware/drivers/pwm_esc/pwm_escs.h"
 
 
-                                     /* m0  m1  m2   m3 */
-static uint8_t motor_addrs[N_MOTORS] = {9,  11, 10,  8};
+                                     /* m1  m2  m3  m4 */
+static uint8_t motor_addrs[N_MOTORS] = { 9, 11, 10, 8};
 
 
 static float force_to_esc(float force, float voltage)
@@ -47,7 +47,7 @@ int pwm_quad_init(platform_t *plat, float f_c)
    ASSERT_ONCE();
 
    /* set-up actuator characteristics: */
-   ac_init(&plat->ac, 0.1f, 1.0f, 12.0, 17.0, f_c, N_MOTORS, force_to_esc, 0.0f);
+   ac_init(&plat->ac, 0.1f, 0.7f, 12.0, 17.0, f_c, N_MOTORS, force_to_esc, 0.0f);
     
    /* set-up motors driver: */
    pwm_escs_init(motor_addrs, N_MOTORS);
