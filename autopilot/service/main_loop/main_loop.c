@@ -62,6 +62,7 @@
 #include "../force_opt/att_thrust.h"
 #include "../flight_logic/flight_logic.h"
 #include "../blackbox/blackbox.h"
+#include "../filters/sliding_avg.h"
 
 
 static bool calibrate = false;
@@ -76,7 +77,8 @@ static interval_t gyro_move_interval;
 static int init = 0;
 static body_to_world_t *btw;
 static flight_state_t flight_state;
- 
+static sliding_avg_t acc_avgs[3];
+
 
 typedef union
 {
@@ -177,6 +179,12 @@ void main_init(int argc, char *argv[])
 
    interval_init(&gyro_move_interval);
    gps_data_init(&gps_data);
+   
+   /* intitialize averages: */
+   const int ACC_AVG_SIZE = 10000;
+   sliding_avg_init(&acc_avgs[0], ACC_AVG_SIZE, 0.0f);
+   sliding_avg_init(&acc_avgs[1], ACC_AVG_SIZE, 0.0f);
+   sliding_avg_init(&acc_avgs[2], ACC_AVG_SIZE, -9.81f);
    LOG(LL_INFO, "entering main loop");
 }
 
@@ -245,12 +253,20 @@ void main_step(float dt,
       return;
 
    ONCE(init = 1; LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
-   
-   /*marg_data->acc.x = 1;
-   marg_data->acc.y = 0;
-   marg_data->acc.z = 0;*/
+   //EVERY_N_TIMES(10, printf("%f %f\n", euler.pitch, euler.roll));
+
    /* local ACC to global ACC rotation: */
-   body_to_world_transform(btw, &pos_in.acc, &euler, &marg_data->acc);
+   vec3_t world_acc;
+   body_to_world_transform(btw, &world_acc, &euler, &marg_data->acc);
+   
+   /* center global ACC readings by sliding average: */
+   FOR_N(i, 3)
+   {
+      float avg = sliding_avg_calc(&acc_avgs[i], world_acc.vec[i]);
+      pos_in.acc.vec[i] = world_acc.vec[i] - avg;
+   }
+   pos_in.acc.u *= -1.0f; /* convert NED frame to NEU */
+
 
    /* compute next 3d position estimate: */
    pos_t pos_estimate;
@@ -275,12 +291,12 @@ void main_step(float dt,
    if (cm_u_is_spd())
       u_speed_sp = cm_u_setp();
    
-   float f_d_rel = u_speed_step(u_speed_sp, pos_estimate.baro_u.speed, dt);
+   float f_u_rel = u_speed_step(u_speed_sp, pos_estimate.baro_u.speed, pos_in.acc.u, dt);
    if (cm_u_is_acc())
-      f_d_rel = cm_u_setp();
-
-   f_d_rel = fmin(f_d_rel, cm_u_acc_limit());
-   float f_d = f_d_rel * platform.max_thrust_n;
+      f_u_rel = cm_u_setp();
+   
+   f_u_rel = fmin(f_u_rel, cm_u_acc_limit());
+   float f_u = f_u_rel * platform.max_thrust_n;
 
    vec2_t speed_sp = {{0.0f, 0.0f}};
    if (cm_att_is_gps_pos())
@@ -295,7 +311,7 @@ void main_step(float dt,
    /* RUN ATT NORTH/EAST SPEED CONTROLLER: */
    vec2_t f_ne;
    ne_speed_ctrl_run(&f_ne, &speed_sp, dt, &pos_estimate.ne_speed, euler.yaw);
-   vec3_t f_ned = {{f_ne.vec[0], f_ne.vec[1], f_d}};
+   vec3_t f_ned = {{f_ne.vec[0], f_ne.vec[1], f_u}};
 
    vec2_t pitch_roll_sp;
    float thrust;
