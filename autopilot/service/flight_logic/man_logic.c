@@ -154,8 +154,7 @@ void man_logic_run(uint16_t sensor_status, float channels[MAX_CHANNELS], float y
    {
       if (interval_measure(&rc_lost_interval) > 1.0f)
          emergency_landing(sensor_status & GPS_VALID, ne_gps_pos, u_ultra_pos);
-      else
-         return;
+      return;
    }
    interval_init(&rc_lost_interval);
 
@@ -167,7 +166,9 @@ void man_logic_run(uint16_t sensor_status, float channels[MAX_CHANNELS], float y
    float gas_stick = channels[CH_GAS];
    float sw_l = channels[CH_SWITCH_L];
    float sw_r = channels[CH_SWITCH_R];
-   
+
+   cm_enable_motors(sw_l > 0.5 ? true : false);
+
    cm_yaw_set_spd(yaw_stick); /* the only applied mode in manual operation */
    man_mode_t man_mode = channel_to_man_mode(sw_r);
    if (man_mode == MAN_NOVICE && (!(sensor_status & GPS_VALID)))
