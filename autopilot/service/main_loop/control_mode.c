@@ -27,6 +27,12 @@
 
 #include "control_mode.h"
 
+#include <util.h>
+
+
+/*
+ * generic motor modes:
+ */
 
 static bool motors_enabled = false;
 static bool persistent_disabled = false;
@@ -48,6 +54,10 @@ void cm_disable_motors_persistent(void)
 }
 
 
+/*
+ * "up" control:
+ */
+
 static enum
 {
    U_ULTRA_POS,
@@ -56,31 +66,31 @@ static enum
    U_ACC
 }
 u_mode = U_ACC;
-static float u_setp = 0.0;
+static float u_sp = 0.0;
 static float u_acc_limit = 1.0;
 
 void cm_u_set_ultra_pos(float pos)
 {
    u_mode = U_ULTRA_POS;
-   u_setp = pos;
+   u_sp = pos;
 }
 
 void cm_u_set_baro_pos(float pos)
 {
    u_mode = U_BARO_POS;
-   u_setp = pos;
+   u_sp = pos;
 }
 
 void cm_u_set_spd(float spd)
 {
    u_mode = U_SPEED;
-   u_setp = spd;
+   u_sp = spd;
 }
 
 void cm_u_set_acc(float acc)
 {
    u_mode = U_ACC;
-   u_setp = acc;   
+   u_sp = acc;   
 }
 
 bool cm_u_is_pos(void)
@@ -103,9 +113,9 @@ bool cm_u_is_acc(void)
    return u_mode == U_ACC;   
 }
 
-float cm_u_setp(void)
+float cm_u_sp(void)
 {
-   return u_setp;   
+   return u_sp;   
 }
 
 float cm_u_acc_limit(void)
@@ -114,6 +124,9 @@ float cm_u_acc_limit(void)
 }
 
 
+/*
+ * attitude control modes:
+ */
 
 static enum
 {
@@ -123,30 +136,30 @@ static enum
    ATT_RATES
 }
 att_mode = ATT_RATES;
-static vec2_t att_setp;
+static vec2_t att_sp;
 
-void cm_att_set_gps_pos(vec2_t pos)
+void cm_att_set_gps_pos(const vec2_t *pos)
 {
    att_mode = ATT_GPS_POS;
-   att_setp = pos;
+   vec_copy(&att_sp, pos);
 }
 
-void cm_att_set_gps_spd(vec2_t spd)
+void cm_att_set_gps_spd(const vec2_t *spd)
 {
-   att_mode = ATT_GPS_SPD;   
-   att_setp = spd;
+   att_mode = ATT_GPS_SPD;
+   vec_copy(&att_sp, spd);
 }
 
-void cm_att_set_angles(vec2_t angles)
+void cm_att_set_angles(const vec2_t *angles)
 {
    att_mode = ATT_ANGLES;
-   att_setp = angles;
+   vec_copy(&att_sp, angles);
 }
 
-void cm_att_set_rates(vec2_t rates)
+void cm_att_set_rates(const vec2_t *rates)
 {
    att_mode = ATT_RATES;
-   att_setp = rates;
+   vec_copy(&att_sp, rates);
 }
 
 bool cm_att_is_gps_pos(void)
@@ -169,26 +182,29 @@ bool cm_att_is_rates(void)
    return att_mode == ATT_RATES;   
 }
 
-vec2_t cm_att_setp(void)
+void cm_att_sp(vec2_t *out)
 {
-   return att_setp;   
+   vec_copy(out, &att_sp);
 }
 
 
+/*
+ * yaw control modes:
+ */
 
 static bool is_yaw_pos = false;
-static float yaw_setp = 0.0;
+static float yaw_sp = 0.0;
 
 void cm_yaw_set_pos(float pos)
 {
    is_yaw_pos = true;
-   yaw_setp = pos;
+   yaw_sp = pos;
 }
 
 void cm_yaw_set_spd(float spd)
 {
    is_yaw_pos = false;
-   yaw_setp = spd;
+   yaw_sp = spd;
 }
 
 bool cm_yaw_is_pos(void)
@@ -196,8 +212,14 @@ bool cm_yaw_is_pos(void)
    return is_yaw_pos;   
 }
 
-float cm_yaw_setp(void)
+float cm_yaw_sp(void)
 {
-   return yaw_setp;  
+   return yaw_sp;  
+}
+
+void cm_init(void)
+{
+   ASSERT_ONCE();
+   vec2_init(&att_sp);
 }
 

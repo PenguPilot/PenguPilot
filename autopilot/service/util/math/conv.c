@@ -39,3 +39,36 @@ float rad2deg(float x)
    return x * (float)(180.0 / M_PI);
 }
 
+
+float norm_angle_0_2pi(float a)
+{
+   a = fmod(a, M_PI * 2);
+   if (a < 0)
+   {
+      a += M_PI * 2;
+   }
+   return a;
+}
+
+
+float norm_angle_sym_pi(float a)
+{
+   if (a < -M_PI)
+   {
+      a = fmod(a, M_PI * 2.0f);
+      if (a < -M_PI)
+      {
+         a += M_PI * 2.0f;
+      }
+   }
+   else if (a > M_PI)
+   {
+      a = fmod(a, M_PI * 2.0f);
+      if (a > M_PI)
+      {
+         a -= M_PI * 2.0f;
+      }
+   }
+   return a;
+}
+

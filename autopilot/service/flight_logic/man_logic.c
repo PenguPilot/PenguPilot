@@ -69,6 +69,7 @@ static bool always_hard_off = false;
 static bool vert_pos_locked = false;
 static bool horiz_pos_locked = true;
 static int rc_inval_count = 0;
+static float yaw_pos_sp = 0.0f;
 
 
 void man_logic_init(void)
@@ -152,10 +153,10 @@ static float stick_dz(float g, float d)
 
 
 
-static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos, float u_ultra_pos)
+static void set_vertical_spd_or_pos(float gas_stick, float baro_u_pos, float ultra_u_pos)
 {
    float dz = tsfloat_get(&gas_deadzone);
-   if (1) //fabs(gas_stick) > dz || u_ultra_pos < 0.4)
+   if (1) //fabs(gas_stick) > dz || ultra_u_pos < 0.4)
    {
       float vmax = tsfloat_get(&vert_speed_max);
       cm_u_set_spd(stick_dz(gas_stick, dz) * vmax);
@@ -165,15 +166,15 @@ static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos, float u_u
    {
       u_ctrl_reset();
       vert_pos_locked = true;
-      if (0) //u_ultra_pos < 6.5)
+      if (0) //ultra_u_pos < 6.5)
       {
-         LOG(LL_INFO, "vertical position lock at ultra pos: %fm", u_ultra_pos);
-         cm_u_set_ultra_pos(u_ultra_pos);
+         LOG(LL_INFO, "vertical position lock at ultra pos: %fm", ultra_u_pos);
+         cm_u_set_ultra_pos(ultra_u_pos);
       }
       else
       {
-         LOG(LL_INFO, "vertical position lock at baro pos: %fm", u_baro_pos);
-         cm_u_set_baro_pos(u_baro_pos);
+         LOG(LL_INFO, "vertical position lock at baro pos: %fm", baro_u_pos);
+         cm_u_set_baro_pos(baro_u_pos);
       }
    }
 }
@@ -183,15 +184,15 @@ static void set_pitch_roll_rates(float pitch, float roll)
 {
    float dz = tsfloat_get(&gps_deadzone);
    float rate_max = deg2rad(tsfloat_get(&pitch_roll_speed_max));
-   vec2_t pitch_roll;
-   vec2_set(&pitch_roll, rate_max * stick_dz(pitch, dz), rate_max * stick_dz(roll, dz));
-   cm_att_set_rates(pitch_roll);
+   vec2_t pr_sp;
+   vec2_set(&pr_sp, rate_max * pitch, rate_max * roll);
+   cm_att_set_rates(&pr_sp);
 }
 
 
-static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t *ne_gps_pos, float u_ultra_pos)
+static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t *ne_gps_pos, float ultra_u_pos)
 {
-   if (1) //sqrt(pitch * pitch + roll * roll) > tsfloat_get(&gps_deadzone) || u_ultra_pos < 0.4)
+   if (1) //sqrt(pitch * pitch + roll * roll) > tsfloat_get(&gps_deadzone) || ultra_u_pos < 0.4)
    {
       /* set GPS speed based on sticks input: */
       float vmax_sqrt = sqrt(tsfloat_get(&horiz_speed_max));
@@ -201,7 +202,7 @@ static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t
       vec2_t ne_spd_sp;
       vec2_init(&ne_spd_sp); 
       vec2_rotate(&ne_spd_sp, &pitch_roll_spd_sp, yaw);
-      cm_att_set_gps_spd(ne_spd_sp);
+      cm_att_set_gps_spd(&ne_spd_sp);
       horiz_pos_locked = false;
    }
    else if (!horiz_pos_locked)
@@ -210,7 +211,7 @@ static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t
       /* lock GPS position until next sticks activity: */
       navi_reset();
       horiz_pos_locked = true;
-      cm_att_set_gps_pos(*ne_gps_pos);   
+      cm_att_set_gps_pos(ne_gps_pos);   
    }
 }
 
@@ -219,33 +220,39 @@ void set_att_angles(float pitch, float roll)
 {
    float dz = tsfloat_get(&gps_deadzone);
    float angle_max = deg2rad(tsfloat_get(&pitch_roll_angle_max));
-   vec2_t pitch_roll;
-   vec2_set(&pitch_roll, angle_max * stick_dz(pitch, dz), angle_max * stick_dz(roll, dz));
-   cm_att_set_angles(pitch_roll);
+   vec2_t pr_sp;
+   vec2_set(&pr_sp, angle_max * pitch, angle_max * roll);
+   cm_att_set_angles(&pr_sp);
 }
 
 
-static bool emergency_landing(bool gps_valid, vec2_t *ne_gps_pos, float u_ultra_pos)
+static bool emergency_landing(bool gps_valid, vec2_t *ne_gps_pos, float ultra_u_pos)
 {
    vert_pos_locked = false;
    cm_u_set_spd(-0.2);
    
    if (gps_valid)
-      set_horizontal_spd_or_pos(0.0f, 0.0f, 0.0f, ne_gps_pos, u_ultra_pos);
+      set_horizontal_spd_or_pos(0.0f, 0.0f, 0.0f, ne_gps_pos, ultra_u_pos);
    else
       set_att_angles(0.0f, 0.0f);
    
    cm_yaw_set_spd(0.0f);
 
-   if (u_ultra_pos < 0.4f)
+   if (ultra_u_pos < 0.4f)
       return true;
 
    return false;
 }
 
 
-bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos, float f_max, float mass)
+bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float baro_u_pos, float ultra_u_pos, float f_max, float mass, float dt)
 {
+   if (always_hard_off)
+   {
+      *hard_off = true;
+      return false;
+   }
+
    if (!(sensor_status & RC_VALID))
    {
       if (rc_inval_count == 0)
@@ -260,8 +267,10 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
          if (rc_inval_count == RC_INVAL_MAX_COUNT)
             LOG(LL_ERROR, "performing emergency landing");
          
-         if (emergency_landing(sensor_status & GPS_VALID, ne_gps_pos, u_ultra_pos))
+         if (emergency_landing(sensor_status & GPS_VALID, ne_gps_pos, ultra_u_pos))
          {
+            if (!always_hard_off)
+               LOG(LL_ERROR, "emergency landing complete; disabling actuators");
             always_hard_off = true;
             return false;
          }
@@ -269,7 +278,6 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
    }
    else
       rc_inval_count = 0;   
-   
    
    vec2_t pr;
    vec2_set(&pr, channels[CH_PITCH], channels[CH_ROLL]);
@@ -283,7 +291,6 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
    float sw_r = channels[CH_SWITCH_R];
    bool gps_valid = (sensor_status & GPS_VALID) ? true : false;
 
-   cm_yaw_set_spd(stick_dz(yaw_stick, 0.075) * deg2rad(tsfloat_get(&yaw_speed_max))); /* the only applied mode in manual operation */
    man_mode_t man_mode = channel_to_man_mode(sw_r);
    if (man_mode == MAN_NOVICE && !gps_valid)
    {
@@ -292,12 +299,29 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
    }
    handle_mode_update(man_mode);
    
+   /* standard mode is yaw speed */
+   cm_yaw_set_spd(stick_dz(yaw_stick, 0.075) * deg2rad(tsfloat_get(&yaw_speed_max)));
+
+   if (ultra_u_pos < 0.5)
+   {
+      /* reset yaw setpoint if we are too low 
+       * and fall back to yaw speed control: */
+      yaw_pos_sp = yaw;
+   }
+   else if (man_mode == MAN_RELAXED || man_mode == MAN_NOVICE)
+   {
+      /* if the mode request it and we are flying high enough,
+       * allow fixed yaw control: */
+      yaw_pos_sp += stick_dz(yaw_stick, 0.075) * deg2rad(tsfloat_get(&yaw_speed_max)) * dt;
+      yaw_pos_sp = norm_angle_0_2pi(yaw_pos_sp);
+      cm_yaw_set_pos(yaw_pos_sp);
+   }
+
    switch (man_mode)
    {
       case MAN_SPORT:
       {
-         //set_pitch_roll_rates(pitch, roll);
-         set_att_angles(pitch, roll);
+         set_pitch_roll_rates(pitch, roll);
          cm_u_set_acc(tsfloat_get(&gas_acc_max) * (gas_stick - 0.5));
          break;
       }
@@ -305,22 +329,22 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       case MAN_RELAXED:
       {
          set_att_angles(pitch, roll);
-         set_vertical_spd_or_pos(gas_stick - 0.5, u_baro_pos, u_ultra_pos);
+         set_vertical_spd_or_pos(gas_stick - 0.5, baro_u_pos, ultra_u_pos);
          break;
       }
 
       case MAN_NOVICE:
       {
-         set_horizontal_spd_or_pos(pitch, roll, yaw, ne_gps_pos, u_ultra_pos);
-         set_vertical_spd_or_pos(gas_stick - 0.5, u_baro_pos, u_ultra_pos);
+         set_horizontal_spd_or_pos(pitch, roll, yaw, ne_gps_pos, ultra_u_pos);
+         set_vertical_spd_or_pos(gas_stick - 0.5, baro_u_pos, ultra_u_pos);
          //cm_u_set_acc(f_max / mass * (gas_stick - 0.5));
          break;
       }
    }
 
-   if (always_hard_off || ((sensor_status & RC_VALID) && sw_l > 0.5))
+   if (((sensor_status & RC_VALID) && sw_l > 0.5))
       *hard_off = true;
 
-   return always_hard_off? false : gas_stick > 0.1;
+   return gas_stick > 0.1;
 }
 

@@ -35,6 +35,22 @@
 #include <string.h>
 
 
+void _vec_copy(vec_t *out, const vec_t *in)
+{
+   assert(out && in);
+   assert(out->dim == in->dim);
+   memcpy((void *)out->ve, (const void *)in->ve, sizeof(real_t) * out->dim);
+}
+
+
+bool _vec_equal(const vec_t *a, const vec_t *b)
+{
+   assert(a && b);
+   assert(a->dim == b->dim);
+   return memcmp((const void *)a->ve, (const void *)b->ve, sizeof(real_t) * a->dim) == 0;
+}
+
+
 void vec_alloc(vec_t *vec, size_t dim)
 {
    assert(dim > 0);

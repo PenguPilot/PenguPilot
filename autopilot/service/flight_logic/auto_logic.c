@@ -104,13 +104,13 @@ bool auto_logic_run(bool *hard_off, bool is_full_auto, uint16_t sensor_status, b
    {
       vec2_t angles;
       vec2_set(&angles, pitch, roll);
-      cm_att_set_angles(angles);
+      cm_att_set_angles(&angles);
    }
    else
    {
       vec2_t ne_gps_setpoint;
       vec2_set(&ne_gps_setpoint, tsfloat_get(&setp_n), tsfloat_get(&setp_e));
-      cm_att_set_gps_pos(ne_gps_setpoint);
+      cm_att_set_gps_pos(&ne_gps_setpoint);
    }
 
    if (!is_full_auto && (sensor_status & RC_VALID) && sw_l > 0.5)

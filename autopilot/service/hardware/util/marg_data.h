@@ -44,6 +44,7 @@ marg_data_t;
 
 void marg_data_init(marg_data_t *marg_data);
 
+void marg_data_copy(marg_data_t *out, const marg_data_t *in);
 
 bool gyro_moved(const vec3_t *gyro);
 
