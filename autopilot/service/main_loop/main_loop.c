@@ -497,20 +497,24 @@ void main_step(const float dt,
    /* computate rpm ^ 2 out of the desired forces: */
    inv_coupling_calc(rpm_square, f_local.ve);
    
-   /* optimize forces (should not happen when we're standing, might cause catastrophic behavior): */
+   /* optimize forces (must not happen when we're standing, might cause catastrophic behavior) */
    if (flying && pos_est.ultra_u.pos > 1.0f)
    {
       FOR_N(i, platform.n_motors)
          forces[i] = rpm_square[i] * 1.5866e-007f;
       float max_force = find_maximum(forces, platform.n_motors);
       float min_force = find_minimum(forces, platform.n_motors);
-      float delta_lim = (platform.max_thrust_n / platform.n_motors) / 5.0; /* up to 20% thrust variation is allowed */
+      /* up to 25% thrust variation is allowed: */
+      float motor_f_max = platform.max_thrust_n / platform.n_motors;
+      /* 5% epsilon (reserved): */
+      float motor_f_eps = 0.05 * motor_f_max;
+      float delta_lim = motor_f_max * 0.25; 
       float delta_min = sym_limit(0.0f - min_force, delta_lim);
-      if (delta_min > 0.0f)
+      if (delta_min > motor_f_eps)
          FOR_N(i, platform.n_motors)
             forces[i] += delta_min;
       float delta_max = sym_limit(max_force - platform.max_thrust_n / platform.n_motors, delta_lim);
-      if (delta_max > 0.0f)
+      if (delta_max > motor_f_eps)
          FOR_N(i, platform.n_motors)
             forces[i] -= delta_max;
       FOR_N(i, platform.n_motors)

@@ -172,47 +172,42 @@ int ahrs_update(ahrs_t *ahrs, const marg_data_t *marg_data, const real_t dt)
       ahrs_normalize_3(&mx, &my, &mz);
 
       /* auxiliary variables to avoid repeated arithmetic: */
-      real_t q0 = ahrs->quat.q0;
-      real_t q1 = ahrs->quat.q1;
-      real_t q2 = ahrs->quat.q2;
-      real_t q3 = ahrs->quat.q3;
-      real_t _2q0mx = REAL(2.0) * q0 * mx;
-      real_t _2q0my = REAL(2.0) * q0 * my;
-      real_t _2q0mz = REAL(2.0) * q0 * mz;
-      real_t _2q1mx = REAL(2.0) * q1 * mx;
-      real_t _2q0   = REAL(2.0) * q0;
-      real_t _2q1   = REAL(2.0) * q1;
-      real_t _2q2   = REAL(2.0) * q2;
-      real_t _2q3   = REAL(2.0) * q3;
-      
-      real_t q0q0   = q0 * ahrs->quat.q0;
-      real_t q0q1   = q0 * ahrs->quat.q1;
-      real_t q0q2   = q0 * ahrs->quat.q2;
-      real_t q0q3   = q0 * ahrs->quat.q3;
-      real_t q1q1   = q1 * ahrs->quat.q1;
-      real_t q1q2   = q1 * ahrs->quat.q2;
-      real_t q1q3   = q1 * ahrs->quat.q3;
-      real_t q2q2   = q2 * ahrs->quat.q2;
-      real_t q2q3   = q2 * ahrs->quat.q3;
-      real_t q3q3   = q3 * ahrs->quat.q3;
+      real_t _2q0mx = REAL(2.0) * ahrs->quat.q0 * mx;
+      real_t _2q0my = REAL(2.0) * ahrs->quat.q0 * my;
+      real_t _2q0mz = REAL(2.0) * ahrs->quat.q0 * mz;
+      real_t _2q1mx = REAL(2.0) * ahrs->quat.q1 * mx;
+      real_t _2q0 = REAL(2.0) * ahrs->quat.q0;
+      real_t _2q1 = REAL(2.0) * ahrs->quat.q1;
+      real_t _2q2 = REAL(2.0) * ahrs->quat.q2;
+      real_t _2q3 = REAL(2.0) * ahrs->quat.q3;
+      real_t _2q0q2 = REAL(2.0) * ahrs->quat.q0 * ahrs->quat.q2;
+      real_t _2q2q3 = REAL(2.0) * ahrs->quat.q2 * ahrs->quat.q3;
+      real_t q0q0 = ahrs->quat.q0 * ahrs->quat.q0;
+      real_t q0q1 = ahrs->quat.q0 * ahrs->quat.q1;
+      real_t q0q2 = ahrs->quat.q0 * ahrs->quat.q2;
+      real_t q0q3 = ahrs->quat.q0 * ahrs->quat.q3;
+      real_t q1q1 = ahrs->quat.q1 * ahrs->quat.q1;
+      real_t q1q2 = ahrs->quat.q1 * ahrs->quat.q2;
+      real_t q1q3 = ahrs->quat.q1 * ahrs->quat.q3;
+      real_t q2q2 = ahrs->quat.q2 * ahrs->quat.q2;
+      real_t q2q3 = ahrs->quat.q2 * ahrs->quat.q3;
+      real_t q3q3 = ahrs->quat.q3 * ahrs->quat.q3;
 
       /* reference direction of Earth's magnetic field: */
-      real_t hx   = mx * q0q0 - _2q0my * q3 + _2q0mz * q2 + mx * q1q1 + _2q1 * my * q2 + _2q1 * mz * q3 - mx * q2q2 - mx * q3q3;
-      real_t hy   = _2q0mx * q3 + my * q0q0 - _2q0mz * q1 + _2q1mx * q2 - my * q1q1 + my * q2q2 + _2q2 * mz * q3 - my * q3q3;
+      real_t hx = mx * q0q0 - _2q0my * ahrs->quat.q3 + _2q0mz * ahrs->quat.q2 + mx * q1q1 + _2q1 * my * ahrs->quat.q2 + _2q1 * mz * ahrs->quat.q3 - mx * q2q2 - mx * q3q3;
+      real_t hy = _2q0mx * ahrs->quat.q3 + my * q0q0 - _2q0mz * ahrs->quat.q1 + _2q1mx * ahrs->quat.q2 - my * q1q1 + my * q2q2 + _2q2 * mz * ahrs->quat.q3 - my * q3q3;
       real_t _2bx = sqrt(hx * hx + hy * hy);
-      real_t _2bz = -_2q0mx * q2 + _2q0my * q1 + mz * q0q0 + _2q1mx * q3 - mz * q1q1 + _2q2 * my * q3 - mz * q2q2 + mz * q3q3;
+      real_t _2bz = -_2q0mx * ahrs->quat.q2 + _2q0my * ahrs->quat.q1 + mz * q0q0 + _2q1mx * ahrs->quat.q3 - mz * q1q1 + _2q2 * my * ahrs->quat.q3 - mz * q2q2 + mz * q3q3;
       real_t _4bx = REAL(2.0) * _2bx;
       real_t _4bz = REAL(2.0) * _2bz;
-      real_t _8bx = REAL(2.0) * _4bx;
-      real_t _8bz = REAL(2.0) * _4bz;
 
       /* Gradient decent algorithm corrective step: */
       vec4_t s;
       vec4_init(&s);
-      s.ve[0] = -_2q2*(REAL(2.0)*(q1q3 - q0q2) - ax)    +   _2q1*(REAL(2.0)*(q0q1 + q2q3) - ay)   +  -_4bz*q2*(_4bx*(REAL(0.5) - q2q2 - q3q3) + _4bz*(q1q3 - q0q2) - mx)   +   (-_4bx*q3+_4bz*q1)*(_4bx*(q1q2 - q0q3) + _4bz*(q0q1 + q2q3) - my)    +   _4bx*q2*(_4bx*(q0q2 + q1q3) + _4bz*(REAL(0.5) - q1q1 - q2q2) - mz);
-      s.ve[1] = _2q3*(REAL(2.0)*(q1q3 - q0q2) - ax) +   _2q0*(REAL(2.0)*(q0q1 + q2q3) - ay) +   -REAL(4.0)*q1*(REAL(2.0)*(REAL(0.5) - q1q1 - q2q2) - az)    +   _4bz*q3*(_4bx*(REAL(0.5) - q2q2 - q3q3) + _4bz*(q1q3 - q0q2) - mx)   + (_4bx*q2+_4bz*q0)*(_4bx*(q1q2 - q0q3) + _4bz*(q0q1 + q2q3) - my)   +   (_4bx*q3-_8bz*q1)*(_4bx*(q0q2 + q1q3) + _4bz*(REAL(0.5) - q1q1 - q2q2) - mz);             
-      s.ve[2] = -_2q0*(REAL(2.0)*(q1q3 - q0q2) - ax)    +     _2q3*(REAL(2.0)*(q0q1 + q2q3) - ay)   +   (-REAL(4.0)*q2)*(REAL(2.0)*(REAL(0.5) - q1q1 - q2q2) - az) +   (-_8bx*q2-_4bz*q0)*(_4bx*(REAL(0.5) - q2q2 - q3q3) + _4bz*(q1q3 - q0q2) - mx)+(_4bx*q1+_4bz*q3)*(_4bx*(q1q2 - q0q3) + _4bz*(q0q1 + q2q3) - my)+(_4bx*q0-_8bz*q2)*(_4bx*(q0q2 + q1q3) + _4bz*(REAL(0.5) - q1q1 - q2q2) - mz);
-      s.ve[3] = _2q1*(REAL(2.0)*(q1q3 - q0q2) - ax) +   _2q2*(REAL(2.0)*(q0q1 + q2q3) - ay)+(-_8bx*q3+_4bz*q1)*(_4bx*(REAL(0.5) - q2q2 - q3q3) + _4bz*(q1q3 - q0q2) - mx)+(-_4bx*q0+_4bz*q2)*(_4bx*(q1q2 - q0q3) + _4bz*(q0q1 + q2q3) - my)+(_4bx*q1)*(_4bx*(q0q2 + q1q3) + _4bz*(REAL(0.5) - q1q1 - q2q2) - mz);      
+      s.ve[0] = -_2q2 * (REAL(2.0) * q1q3 - _2q0q2 + ax) + _2q1 * (REAL(2.0) * q0q1 + _2q2q3 + ay) - _2bz * ahrs->quat.q2 * (_2bx * (REAL(0.5) - q2q2 - q3q3) + _2bz * (q1q3 - q0q2) - mx) + (-_2bx * ahrs->quat.q3 + _2bz * ahrs->quat.q1) * (_2bx * (q1q2 - q0q3) + _2bz * (q0q1 + q2q3) - my) + _2bx * ahrs->quat.q2 * (_2bx * (q0q2 + q1q3) + _2bz * (REAL(0.5) - q1q1 - q2q2) - mz);
+      s.ve[1] = _2q3 * (REAL(2.0) * q1q3 - _2q0q2 + ax) + _2q0 * (REAL(2.0) * q0q1 + _2q2q3 + ay) - REAL(4.0) * ahrs->quat.q1 * (REAL(1.0) - REAL(2.0) * q1q1 - REAL(2.0) * q2q2 + az) + _2bz * ahrs->quat.q3 * (_2bx * (REAL(0.5) - q2q2 - q3q3) + _2bz * (q1q3 - q0q2) - mx) + (_2bx * ahrs->quat.q2 + _2bz * ahrs->quat.q0) * (_2bx * (q1q2 - q0q3) + _2bz * (q0q1 + q2q3) - my) + (_2bx * ahrs->quat.q3 - _4bz * ahrs->quat.q1) * (_2bx * (q0q2 + q1q3) + _2bz * (REAL(0.5) - q1q1 - q2q2) - mz);
+      s.ve[2] = -_2q0 * (REAL(2.0) * q1q3 - _2q0q2 + ax) + _2q3 * (REAL(2.0) * q0q1 + _2q2q3 + ay) - REAL(4.0) * ahrs->quat.q2 * (REAL(1.0) - REAL(2.0) * q1q1 - REAL(2.0) * q2q2 + az) + (-_4bx * ahrs->quat.q2 - _2bz * ahrs->quat.q0) * (_2bx * (REAL(0.5) - q2q2 - q3q3) + _2bz * (q1q3 - q0q2) - mx) + (_2bx * ahrs->quat.q1 + _2bz * ahrs->quat.q3) * (_2bx * (q1q2 - q0q3) + _2bz * (q0q1 + q2q3) - my) + (_2bx * ahrs->quat.q0 - _4bz * ahrs->quat.q2) * (_2bx * (q0q2 + q1q3) + _2bz * (REAL(0.5) - q1q1 - q2q2) - mz);
+      s.ve[3] = _2q1 * (REAL(2.0) * q1q3 - _2q0q2 + ax) + _2q2 * (REAL(2.0) * q0q1 + _2q2q3 + ay) + (-_4bx * ahrs->quat.q3 + _2bz * ahrs->quat.q1) * (_2bx * (REAL(0.5) - q2q2 - q3q3) + _2bz * (q1q3 - q0q2) - mx) + (-_2bx * ahrs->quat.q0 + _2bz * ahrs->quat.q2) * (_2bx * (q1q2 - q0q3) + _2bz * (q0q1 + q2q3) - my) + _2bx * ahrs->quat.q1 * (_2bx * (q0q2 + q1q3) + _2bz * (REAL(0.5) - q1q1 - q2q2) - mz);
 
       vec_normalize(&s);
       
