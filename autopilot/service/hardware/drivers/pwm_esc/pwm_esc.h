@@ -30,10 +30,10 @@
 
 
 #define PWM_ESC_RAW_MIN (10000)
-#define PWM_ESC_RAW_MAX (10000)
+#define PWM_ESC_RAW_MAX (20000)
 
 #define PWM_ESC_FLOAT_MIN (0.0f)
-#define PWM_ESC_FLOAT_MAX (0.0f)
+#define PWM_ESC_FLOAT_MAX (1.0f)
 
 
 typedef struct

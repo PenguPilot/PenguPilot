@@ -291,7 +291,6 @@ void main_init(int override_hw)
 
 void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ultra, float baro, float voltage, float channels[MAX_CHANNELS], uint16_t sensor_status, int override_hw)
 {
-   override_hw = 1;
    /*******************************************
     * read sensor data and calibrate sensors: *
     *******************************************/
@@ -498,8 +497,8 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    motors_state_update(flight_state, motors_locked, norm_gas, dt, satisfied);
    if (!motors_state_controllable())
    {
-      memset(&f_local, 0, sizeof(f_local)); /* all moments are 0 / minimum motor RPM */
-      piid_reset(); /* reset piid integrators so that we can move the device manually */
+      //memset(&f_local, 0, sizeof(f_local)); /* all moments are 0 / minimum motor RPM */
+      //piid_reset(); /* reset piid integrators so that we can move the device manually */
       /* TODO: also reset higher-level controllers */
    }
 
@@ -536,7 +535,6 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    {
       piid_int_enable(0);   
    }
-   printf("%f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]);
 
    /* write motors: */
    if (!override_hw)

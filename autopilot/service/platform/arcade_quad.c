@@ -106,18 +106,25 @@ int arcade_quad_init(platform_t *plat, int override_hw)
    plat->imtx3 = imtx3;
 
    /* inverse coupling matrix for ARCADE quadrotor: */
-   const float inv_coupling_matrix[4 * N_MOTORS] =
+   const float icmatrix[4 * N_MOTORS] =
    {         /* gas    pitch    roll   yaw */
       /* m0 */ imtx1,   0.0f, -imtx2,  imtx3,
       /* m1 */ imtx1,   0.0f,  imtx2,  imtx3,
       /* m2 */ imtx1, -imtx2,   0.0f, -imtx3,
       /* m3 */ imtx1,  imtx2,   0.0f, -imtx3
    };
-  
+
+   LOG(LL_INFO, "ic matrix [gas pitch roll yaw]");
+   FOR_N(i, 4)
+   {
+      LOG(LL_INFO, "[m%d]: %.0f, %.0f, %.0f, %.0f", i,
+          icmatrix[i*4], icmatrix[i*4+1],
+          icmatrix[i*4+2], icmatrix[i*4+3]);
+   }
    LOG(LL_INFO, "setting platform parameters");
    
   
-   plat->max_thrust_n = 28.0f;
+   plat->max_thrust_n = 40.0f;
    plat->mass_kg = 0.95f;
    plat->n_motors = N_MOTORS;
 
@@ -132,28 +139,27 @@ int arcade_quad_init(platform_t *plat, int override_hw)
       plat->read_marg = read_marg;
 
       /*LOG(LL_INFO, "initializing i2cxl sonar sensor");
-      THROW_ON_ERR(i2cxl_reader_init(&i2c_3));*/
-      plat->read_ultra = i2cxl_reader_get_alt;
+      THROW_ON_ERR(i2cxl_reader_init(&i2c_3));
+      plat->read_ultra = i2cxl_reader_get_alt;*/
       
       LOG(LL_INFO, "initializing ms5611 barometric pressure sensor");
       THROW_ON_ERR(ms5611_reader_init(&i2c_3));
       plat->read_baro = ms5611_reader_get_alt;
 
       LOG(LL_INFO, "initializing inverse coupling matrix");
-      inv_coupling_init(&plat->inv_coupling, N_MOTORS, inv_coupling_matrix);
+      inv_coupling_init(&plat->inv_coupling, N_MOTORS, icmatrix);
    
       /* initialize motors: */
       int holger_blmc = 0;
-      float f_c = 1.5866e-007f;
       if (holger_blmc)
       {
          LOG(LL_INFO, "initializing holger motors");
-         holger_quad_init(plat, f_c);
+         holger_quad_init(plat, c);
       }
       else
       {
          LOG(LL_INFO, "initializing pwm motors");
-         pwm_quad_init(plat, f_c);
+         pwm_quad_init(plat, c);
       }
  
    

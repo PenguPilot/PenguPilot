@@ -63,7 +63,7 @@ int pwm_esc_write_raw(pwm_esc_t *esc, int val)
 
 int pwm_esc_write_float(pwm_esc_t *esc, float val)
 {
-   long int_val = PWM_ESC_RAW_MIN + roundf(val * (float)(PWM_ESC_RAW_MAX - PWM_ESC_RAW_MIN));
+   long int_val = PWM_ESC_RAW_MIN + lroundf(val * (float)(PWM_ESC_RAW_MAX - PWM_ESC_RAW_MIN));
    return pwm_esc_write_raw(esc, int_val);
 }
 

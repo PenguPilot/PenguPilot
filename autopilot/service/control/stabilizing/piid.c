@@ -11,9 +11,9 @@
   
  Stabilizing PIID Controller Implementation
 
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
  Copyright (C) 2012 Alexander Barth, Ilmenau University of Technology
  Copyright (C) 2012 Benjamin Jahn, Ilmenau University of Technology
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@
 #include "piid.h"
 #include "../util/adams4.h"
 #include "../../filters/filter.h"
+#include "../../util/logger/logger.h"
 
 
 /* configuration parameters: */
@@ -104,6 +105,16 @@ void piid_init(float _Ts)
    };
    opcd_params_apply("controllers.stabilizing.", params);
 
+   LOG(LL_INFO, "ctrl dt = %fs", _Ts);
+   LOG(LL_INFO, "filter: fg = %f Hz, d = %f",
+                tsfloat_get(&filt_fg), tsfloat_get(&filt_d));
+   LOG(LL_INFO, "att-ctrl: P = %f, I = %f, II = %f, D = %f",
+                tsfloat_get(&att_kp), tsfloat_get(&att_ki), tsfloat_get(&att_kii), tsfloat_get(&att_kd));
+   LOG(LL_INFO, "yaw-ctrl: P = %f, I = %f, II = %f, D = %f", 
+                tsfloat_get(&yaw_kp), tsfloat_get(&yaw_ki), tsfloat_get(&yaw_kii), tsfloat_get(&yaw_kd));
+   LOG(LL_INFO, "feed-forward: jxx_jyy = %f, jzz = %f, tmc = %f",
+                tsfloat_get(&jxx_jyy), tsfloat_get(&jzz), tsfloat_get(&tmc));
+   
    Ts = _Ts;
 
    /* initialize feed-forward system: */
