@@ -39,15 +39,13 @@ typedef struct
 {
    /* i2c device: */
    i2c_dev_t i2c_dev;
-   /* privated data: */
-   uint8_t gain;
 }
 hmc5883_t;
 
 
 int hmc5883_init(hmc5883_t *dev, i2c_bus_t *bus);
 
-int hmc5883_read_mag(float mag[3], const hmc5883_t *dev);
+int hmc5883_read_mag(float mag[3], hmc5883_t *dev);
 
 
 #endif /* __HMC5883_H__ */
