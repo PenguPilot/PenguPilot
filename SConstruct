@@ -38,7 +38,7 @@ def set_compiler_dependent_cflags():
    cflags = '-D_GNU_SOURCE -pipe -std=c99 -O3 -ftree-vectorize -ffast-math -fomit-frame-pointer -funroll-loops -Wall -Wextra '
    pipe = subprocess.Popen([env['CC'], '-v'], env=env['ENV'], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
    if 'armv7a' in pipe.stderr.read():
-      cflags += ' -march=armv7-a -mtune=cortex-a8 -mfpu=vfpv3-d16 -mfloat-abi=hard'
+      cflags += ' -mcpu=cortex-a8 -mfpu=vfpv3-d16 -mfloat-abi=hard'
    env['CFLAGS'] = cflags
 
 def collect_files(path, regex):

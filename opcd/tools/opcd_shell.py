@@ -54,6 +54,7 @@ _pp = pprint.PrettyPrinter(indent = 3)
 def get(key = ''):
    try:
       _pp.pprint(_interface.get(key, True))
+      return _interface.get(key, True)
    except KeyError:
       print('key not found')
 
