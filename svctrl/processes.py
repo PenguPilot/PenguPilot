@@ -74,14 +74,17 @@ def validate(name):
       return pid
 
 
-def start(name, path):
+def start(name, path, args):
+   if args:
+      path += ' ' + args
    if validate(name):
       print green('note:') + ' %s is already running' % name
    else:
       print 'starting', blue(name), '...',
       try:
          print path,
-         ps = subprocess.Popen('%s' % path, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+         print path.split(' ')
+         ps = subprocess.Popen(path.split(' '), shell = False, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
          ps.stdout.close()
          ps.stderr.close()
          ps.wait()

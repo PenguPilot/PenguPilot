@@ -33,13 +33,14 @@ def parse_args():
    group.add_argument('--start', type = str, metavar = 'name')
    group.add_argument('--stop', type = str, metavar = 'name')
    group.add_argument('--restart', type = str, metavar = 'name')
+   parser.add_argument('--args', type = str, metavar = 'name')
    args = parser.parse_args()
    if args.start:
-      return 'start', args.start
+      return 'start', args.start, args.args
    elif args.stop:
       return 'stop', args.stop
    elif args.restart:
-      return 'restart', args.restart
+      return 'restart', args.restart, args.args
    else:
       return 'show'
 
@@ -246,7 +247,7 @@ try:
             if len(names) > 1:
                print 'dependency resolution order:', names
             for name in names:
-               start(name, config[name][0])
+               start(name, config[name][0], args[2])
          else:
             running = running_processes()
             names = []
@@ -278,7 +279,7 @@ try:
       if len(names) > 1:
          print 'start resolution order:', names
       for name in names:
-         start(name, config[name][0])
+         start(name, config[name][0], args[2])
 
 except KeyboardInterrupt:
    print red('NOTE:'), 'operation canceled by user'

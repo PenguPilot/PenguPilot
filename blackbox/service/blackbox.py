@@ -30,19 +30,22 @@ from os import sep, symlink, unlink
 from scl import generate_map
 from misc import daemonize, user_data_dir
 from datetime import datetime
-
+from sys import argv
 
 def main(name):
    socket = generate_map(name)['data']
    prefix = user_data_dir + sep + 'log' + sep
    try:
       now = datetime.today().isoformat().replace(':', '')
-      symlink_file = prefix + 'autopilot_debug.msgpack'
+      symlink_file = prefix + 'blackbox_last.msgpack'
       try:
          unlink(symlink_file)
       except:
          pass
-      new_file = prefix + 'autopilot_debug_%s.msgpack' % now
+      if len(argv) > 1:
+         new_file = prefix + 'blackbox_%s_%s.msgpack' % (now, argv[1])
+      else:
+         new_file = prefix + 'blackbox_%s.msgpack' % now
       symlink(new_file, symlink_file)
       f = open(new_file, "wb")
       while True:
