@@ -109,17 +109,17 @@ static void handle_mode_update(man_mode_t mode)
 
 static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos)
 {
-   if (fabs(gas_stick) > 0.2f)
-   {
+   /*if (fabs(gas_stick) > 0.2f)
+   {*/
       float vmax = tsfloat_get(&vert_speed_max);
-      cm_u_set_spd(gas_stick * vmax);
+      cm_u_set_spd(gas_stick * 0.2 /*vmax*/);
       vert_pos_locked = false;
-   }
+   /*}
    else if (!vert_pos_locked)
    {
       vert_pos_locked = true;
       cm_u_set_baro_pos(u_baro_pos);
-   }
+   }*/
 }
 
 

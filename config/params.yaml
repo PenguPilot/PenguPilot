@@ -126,11 +126,11 @@ pilot:
          init_setpoint: 2.0
          init_mode_is_ground: True
 
-      z_speed:
-         speed_p: 0.1
-         speed_d: 0.1
-         speed_i: 0.05
-         speed_imax: 1.0
+      u_speed:
+         p: 0.2
+         i: 0.0
+         imax: 0.2
+         d: 0.1
 
       yaw:
          p: 0.24
@@ -156,10 +156,6 @@ pilot:
       baro_noise: 1.0e-2
       gps_noise: 4.0e-3
       process_noise: 1.0e-6
-      acc_avg_update_s: 60
-      x_acc_avg: 0.0
-      y_acc_avg: 0.0
-      z_acc_avg: 9.81
 
    sensors:
       rc_dsl:

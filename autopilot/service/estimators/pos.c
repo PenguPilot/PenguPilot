@@ -37,7 +37,6 @@
 
 #include "pos.h"
 #include "../geometry/quat.h"
-#include "../filters/sliding_avg.h"
 #include "../util/logger/logger.h"
 
 
@@ -46,8 +45,6 @@ static tsfloat_t process_noise;
 static tsfloat_t ultra_noise;
 static tsfloat_t baro_noise;
 static tsfloat_t gps_noise;
-static tsint_t acc_avg_update_s;
-static tsfloat_t acc_avg_start[3];
 
 
 typedef struct
@@ -87,9 +84,6 @@ static kalman_t baro_u_kalman;
 static kalman_t n_kalman;
 static kalman_t e_kalman;
 
-/* averages: */
-static sliding_avg_t acc_avgs[3];
-
 
 void pos_init(void)
 {
@@ -102,10 +96,6 @@ void pos_init(void)
       {"ultra_noise", &ultra_noise},
       {"baro_noise", &baro_noise},
       {"gps_noise", &gps_noise},
-      {"acc_avg_update_s", &acc_avg_update_s},
-      {"x_acc_avg", &acc_avg_start[0]},
-      {"y_acc_avg", &acc_avg_start[1]},
-      {"z_acc_avg", &acc_avg_start[2]},
       OPCD_PARAMS_END
    };
    opcd_params_apply("kalman_pos.", params);
@@ -121,12 +111,6 @@ void pos_init(void)
    kalman_init(&ultra_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&ultra_noise), 0, 0);
    kalman_init(&baro_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&baro_noise), 0, 0);
    
-   /* intitialize averages: */
-   const int ACC_AVG_SIZE = 10000;
-   FOR_N(i, 3)
-   {
-      sliding_avg_init(&acc_avgs[i], ACC_AVG_SIZE, tsfloat_get(&acc_avg_start[i]));
-   }
 }
 
 
@@ -135,19 +119,11 @@ void pos_update(pos_t *out, pos_in_t *in)
    ASSERT_NOT_NULL(out);
    ASSERT_NOT_NULL(in);
 
-   /* center global ACC readings by sliding average: */
-   vec3_t world_acc;
-   FOR_N(i, 3)
-   {
-      float avg = sliding_avg_calc(&acc_avgs[i], in->acc.vec[i]);
-      world_acc.vec[i] = in->acc.vec[i] - avg;
-   }
-
    /* run kalman filters: */
-   kalman_run(&n_kalman,       &out->ne_pos.n,    &out->ne_speed.n,    in->pos_n,   world_acc.n, in->dt);
-   kalman_run(&e_kalman,       &out->ne_pos.e,    &out->ne_speed.e,    in->pos_e,   world_acc.e, in->dt);
-   kalman_run(&ultra_u_kalman, &out->ultra_u.pos, &out->ultra_u.speed, in->ultra_u, world_acc.u, in->dt);
-   kalman_run(&baro_u_kalman,  &out->baro_u.pos,  &out->baro_u.speed,  in->baro_u,  world_acc.u, in->dt);
+   kalman_run(&n_kalman,       &out->ne_pos.n,    &out->ne_speed.n,    in->pos_n,   in->acc.n, in->dt);
+   kalman_run(&e_kalman,       &out->ne_pos.e,    &out->ne_speed.e,    in->pos_e,   in->acc.e, in->dt);
+   kalman_run(&ultra_u_kalman, &out->ultra_u.pos, &out->ultra_u.speed, in->ultra_u, in->acc.u, in->dt);
+   kalman_run(&baro_u_kalman,  &out->baro_u.pos,  &out->baro_u.speed,  in->baro_u,  in->acc.u, in->dt);
 }
 
 
