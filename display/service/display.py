@@ -302,9 +302,9 @@ def main(name):
    t3.daemon = True
    t3.start()
 
-   screens = [(draw_health, 15),
-              (draw_gps, 1500000),
-              (draw_gps2, 15)]
+   screens = [(draw_health, 10),
+              (draw_gps, 10),
+              (draw_gps2, 10)]
 
    screen = 0
    oled.init('/dev/i2c-3', W, H)

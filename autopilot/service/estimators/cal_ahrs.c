@@ -75,9 +75,6 @@ int cal_ahrs_update(euler_t *euler, const marg_data_t *marg_data,
       euler->pitch = imu_euler.pitch;
       euler->roll = imu_euler.roll;
       euler_normalize(euler);
-      EVERY_N_TIMES(200, LOG(LL_INFO, "%f %f %f", rad2deg(euler->pitch),
-                                                  rad2deg(euler->roll),
-                                                  rad2deg(euler->yaw)));
    }
    else
    {
