@@ -65,7 +65,7 @@ void att_ctrl_init(void)
    opcd_params_apply("controllers.attitude.", params);
    
    /* initialize filter: */
-   filter1_lp_init(&filter, tsfloat_get(&filt_fg), 0.06, 2);
+   filter1_lp_init(&filter, tsfloat_get(&filt_fg), 0.0033333, 2);
    
    /* initialize controllers: */
    FOR_EACH(i, controllers)
@@ -87,12 +87,12 @@ void att_ctrl_reset(void)
 void att_ctrl_step(vec2_t *ctrl, vec2_t *err, const float dt, const vec2_t *pos, const vec2_t *speed, const vec2_t *setp)
 {
    float tmp[2];
+   filter1_run(&filter, pos->ve, tmp);
    FOR_EACH(i, controllers)
    {
-      float error = setp->ve[i] + deg2rad(tsfloat_get(&biases[i])) - pos->ve[i];
+      float error = setp->ve[i] + deg2rad(tsfloat_get(&biases[i])) - tmp[i];
       err->ve[i] = error;
-      tmp[i] = pid_control(&controllers[i], error, speed->ve[i], dt);
+      ctrl->ve[i] = pid_control(&controllers[i], error, speed->ve[i], dt);
    }
-   filter1_run(&filter, tmp, ctrl->ve);
 }
 
