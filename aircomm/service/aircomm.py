@@ -95,7 +95,7 @@ def main(name):
    key = opcd.get('psk')
    crypt.init(key)
 
-   out_socket = None#sm['out']
+   out_socket = None #sm['out']
    in_socket = sm['in']
 
    aci = Interface('/dev/ttyACM0')
