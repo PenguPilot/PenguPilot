@@ -43,7 +43,7 @@ powerman:
    gpio_i2c_address: 0x11
    gpio_power_pin: 0
    battery_cells: 4
-   battery_low_cell_voltage: 3.3
+   battery_low_cell_voltage: 3.5
    low_voltage_hysteresis: 10.0 # battery needs to go below battery_low_cell_voltage for this time period in order to trigger a low power event
    battery_capacity: 6.6
    power_save_timeout: 60.0
@@ -128,9 +128,9 @@ pilot:
 
       u_speed:
          p: 0.2
-         i: 0.0
+         d: 0.05
+         i: 0.01
          imax: 0.2
-         d: 0.1
 
       yaw:
          p: 0.24

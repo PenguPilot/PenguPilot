@@ -51,7 +51,6 @@ int i2cxl_read(i2cxl_t *i2cxl, float *dist)
    /* start measurement: */
    THROW_ON_ERR(i2c_write(&i2cxl->i2c_dev, I2CXL_RANGE_COMMAND));
 
-   /* sleep at least 60ms - we do 70 for safety: */
    msleep(70);
    
    /* read back the result: */

@@ -120,7 +120,7 @@ def main(name):
          socket.send(packer.pack(data))
          sleep(5)
       except Exception, e:
-         sleep(1)
+         sleep(0.1)
 
 daemonize('heartbeat', main)
 

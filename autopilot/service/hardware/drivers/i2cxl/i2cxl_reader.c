@@ -53,7 +53,7 @@ SIMPLE_THREAD_BEGIN(thread_func)
       {
          tsfloat_set(&altitude, alt);
       }
-      msleep(50);
+      msleep(20);
    }
    SIMPLE_THREAD_LOOP_END
 }

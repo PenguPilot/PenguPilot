@@ -112,7 +112,7 @@ static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos)
    /*if (fabs(gas_stick) > 0.2f)
    {*/
       float vmax = tsfloat_get(&vert_speed_max);
-      cm_u_set_spd(gas_stick * 0.2 /*vmax*/);
+      cm_u_set_spd(gas_stick * 1.0 /*vmax*/);
       vert_pos_locked = false;
    /*}
    else if (!vert_pos_locked)
@@ -226,8 +226,8 @@ void man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANN
       case MAN_RELAXED:
       {
          set_att_angles(pitch, roll);
-         cm_u_set_acc(gas_stick);
-         //set_vertical_spd_or_pos(gas_stick - 0.5, u_baro_pos);
+         //cm_u_set_acc(gas_stick);
+         set_vertical_spd_or_pos(gas_stick - 0.5, u_baro_pos);
          break;
       }
 
