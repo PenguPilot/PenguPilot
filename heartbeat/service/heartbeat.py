@@ -33,7 +33,7 @@ from scl import generate_map
 from gps_data_pb2 import GpsData
 from math import sin, cos, pi
 from misc import daemonize
-from power_pb2 import PowerState
+from msgpack import loads
 from msgpack import Packer
 from aircomm_shared import BCAST_NOFW, HEARTBEAT
 
@@ -71,19 +71,17 @@ def cpuavg():
 
 def pmreader():
    s = socket_map['power']
-   p = PowerState()
    global voltage, current, critical
    while True:
-      p.ParseFromString(s.recv())
-      critical = p.critical
+      _voltage, _current, _, critical = loads(s.recv())
       if voltage is None:
-         voltage = p.voltage
+         voltage = _voltage
       else:
-         voltage = 0.9 * voltage + 0.1 * p.voltage
+         voltage = 0.9 * voltage + 0.1 * _voltage
       if current is None:
-         current = p.current
+         current = _current
       else:
-         current = 0.9 * current + 0.1 * p.current
+         current = 0.9 * current + 0.1 * _current
 
 
 def mem_used():
