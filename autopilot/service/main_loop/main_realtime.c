@@ -85,8 +85,8 @@ void main_realtime(int argc, char *argv[])
    PERIODIC_THREAD_LOOP_BEGIN
    {
       dt = interval_measure(&interval);
-      uint16_t sensor_status = platform_read_sensors(&marg_data, &gps_data, &ultra_z, &baro_z, &voltage, channels);
-      main_step(dt, &marg_data, &gps_data, ultra_z, baro_z, voltage, channels, sensor_status, 0);
+      sensor_status = platform_read_sensors(&marg_data, &gps_data, &ultra_z, &baro_z, &voltage, &current, channels);
+      main_step(dt, &marg_data, &gps_data, ultra_z, baro_z, voltage, current, channels, sensor_status, 0);
    }
    PERIODIC_THREAD_LOOP_END
 }

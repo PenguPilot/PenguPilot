@@ -44,7 +44,7 @@
 #include "../hardware/drivers/i2cxl/i2cxl_reader.h"
 #include "../hardware/drivers/ms5611/ms5611_reader.h"
 #include "../hardware/drivers/rc_dsl/rc_dsl_reader.h"
-#include "../hardware/drivers/scl_voltage/scl_voltage.h"
+#include "../hardware/drivers/scl_power/scl_power.h"
 #include "../hardware/util/rc_channels.h"
 #include "drotek_marg2.h"
 #include "holger_quad.h"
@@ -183,12 +183,12 @@ int arcade_quad_init(platform_t *plat, int override_hw)
       }
       plat->read_rc = read_rc;
 
-      if (scl_voltage_init() < 0)
+      if (scl_power_init() < 0)
       {
-         LOG(LL_ERROR, "could not initialize voltage reader");
+         LOG(LL_ERROR, "could not initialize power reader");
          exit(1);
       }
-      plat->read_voltage = scl_voltage_read;
+      plat->read_power = scl_power_read;
    }
 
    LOG(LL_INFO, "arcade_quadro platform initialized");

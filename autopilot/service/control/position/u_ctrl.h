@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Up Position Controller Interface
+ up position controller interface
  
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -28,7 +28,11 @@
 #define __U_CTRL_H__
 
 
-float u_ctrl_step(float err);
+float u_ctrl_step(float setpoint, float pos, float speed, float dt);
+
+void u_ctrl_init(float neutral_gas);
+
+void u_ctrl_reset(void);
 
 
 #endif /* __U_CTRL_H__ */

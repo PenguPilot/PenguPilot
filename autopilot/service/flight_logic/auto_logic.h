@@ -47,5 +47,18 @@ void auto_logic_run(bool is_full_auto,
                     float u_ultra_pos);
 
 
+/* setpoint update functions: */
+
+int auto_logic_set_n(float val);
+
+int auto_logic_set_e(float val);
+
+int auto_logic_set_u_ground(float val);
+
+int auto_logic_set_u_msl(float val);
+
+int auto_logic_set_yaw(float val);
+
+
 #endif /* __AUTO_LOGIC_H__ */
 

@@ -9,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- SCL Voltage Reader Implementation
+ SCL Power Reader Implementation
 
- Copyright (C) 2011 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@
 #include <power.pb-c.h>
 #include <scl.h>
 
-#include "scl_voltage.h"
+#include "scl_power.h"
 #include "../../../filters/filter.h"
 #include "../../../util/logger/logger.h"
 
@@ -45,53 +45,50 @@ static pthread_mutexattr_t mutexattr;
 static pthread_mutex_t mutex;
 static void *socket;
 static float voltage = 16.0;
-static int status = -EAGAIN;
+static float current = 0.4;
 
 
-static float scl_read_voltage(void)
+static void scl_read_power(float *_voltage, float *_current)
 {
-   float voltage;
    PowerState *state;
    SCL_RECV_AND_UNPACK_DYNAMIC(state, socket, power_state);
    if (state)
    {
-      voltage = state->voltage;
+      *_voltage = state->voltage;
+      *_current = state->current;
       SCL_FREE(power_state, state);
    }
    else
    {
       sleep(1);
       LOG(LL_ERROR, "could not read voltage");
-      voltage = 0.0;
    }
-   return voltage;
 }
 
 
 SIMPLE_THREAD_BEGIN(thread_func)
 {
    /* initial measurement: */
-   voltage = scl_read_voltage();
+   scl_read_power(&voltage, &current);
    
    /* filter set-up: */
-   Filter1 filter;
-   filter1_lp_init(&filter, 0.1f, 1.0f, 1);
-   filter.z[0] = voltage;
+   Filter1 voltage_filter;
+   filter1_lp_init(&voltage_filter, 0.1f, 1.0f, 1);
+   voltage_filter.z[0] = voltage;
+   Filter1 current_filter;
+   filter1_lp_init(&current_filter, 0.1f, 1.0f, 1);
+   current_filter.z[0] = current;
 
-   /* battery reading loop: */
+   /* power state reading loop: */
    SIMPLE_THREAD_LOOP_BEGIN
    {
-      float voltage_raw = scl_read_voltage();
+      float voltage_raw;
+      float current_raw;
+      scl_read_power(&voltage_raw, &current_raw);
+      
       pthread_mutex_lock(&mutex);
-      if (voltage_raw < 17.0 && voltage_raw > 10.0)
-      {
-         filter1_run(&filter, &voltage_raw, &voltage);
-         status = 0;
-      }
-      else
-      {
-         status = -EIO;   
-      }
+      filter1_run(&voltage_filter, &voltage_raw, &voltage);
+      filter1_run(&current_filter, &current_raw, &current);
       pthread_mutex_unlock(&mutex);
    }
    SIMPLE_THREAD_LOOP_END
@@ -99,7 +96,7 @@ SIMPLE_THREAD_BEGIN(thread_func)
 SIMPLE_THREAD_END
 
 
-int scl_voltage_init(void)
+int scl_power_init(void)
 {
    socket = scl_get_socket("power");
    if (socket == NULL)
@@ -114,12 +111,12 @@ int scl_voltage_init(void)
 }
 
 
-int scl_voltage_read(float *voltage_out)
+int scl_power_read(float *voltage_out, float *current_out)
 {
    pthread_mutex_lock(&mutex);
    *voltage_out = voltage;
-   int _status = status;
+   *current_out = current;
    pthread_mutex_unlock(&mutex);
-   return _status;
+   return 0;
 }
 
