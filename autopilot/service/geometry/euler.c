@@ -130,8 +130,9 @@ void body_to_neu(body_to_neu_t *btn, vec3_t *world, const euler_t *euler, const 
    /*
     * convert meschach vector to output:
     */
-   FOR_N(i, 3)
+   FOR_N(i, 2)
       world->vec[i] = btn->world_acc_vec->ve[i];
+   world->vec[2] = -btn->world_acc_vec->ve[2];
 }
 
 

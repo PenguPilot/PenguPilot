@@ -82,8 +82,10 @@ int cal_ahrs_update(euler_t *euler, marg_data_t *marg_data, float mag_decl, floa
       euler->yaw = ahrs_euler.yaw + deg2rad(tsfloat_get(&yaw_bias)) + mag_decl;
       euler->pitch = imu_euler.pitch + deg2rad(tsfloat_get(&pitch_bias));
       euler->roll = imu_euler.roll + deg2rad(tsfloat_get(&roll_bias));
-      EVERY_N_TIMES(200, LOG(LL_INFO, "%f %f %f", euler->pitch, euler->roll, euler->yaw));
       euler_normalize(euler);
+      EVERY_N_TIMES(200, LOG(LL_INFO, "%f %f %f", rad2deg(euler->pitch),
+                                                  rad2deg(euler->roll),
+                                                  rad2deg(euler->yaw)));
    }
    else
    {

@@ -62,6 +62,7 @@ static tsfloat_t horiz_speed_max;
 static tsfloat_t gps_deadzone;
 static tsfloat_t gas_deadzone;
 static tsfloat_t yaw_speed_max;
+static tsfloat_t gas_acc_max;
 static tsfloat_t sticks_rotation;
 
 static bool always_hard_off = false;
@@ -81,6 +82,7 @@ void man_logic_init(void)
       {"gps_deadzone", &gps_deadzone},
       {"gas_deadzone", &gas_deadzone},
       {"yaw_speed_max", &yaw_speed_max},
+      {"gas_acc_max", &gas_acc_max},
       {"sticks_rotation", &sticks_rotation},
       OPCD_PARAMS_END
    };
@@ -155,7 +157,7 @@ static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos, float u_u
    {
       u_ctrl_reset();
       vert_pos_locked = true;
-      if (u_ultra_pos < 6.5)
+      if (0) //u_ultra_pos < 6.5)
       {
          LOG(LL_INFO, "vertical position lock at ultra pos: %fm", u_ultra_pos);
          cm_u_set_ultra_pos(u_ultra_pos);
@@ -281,8 +283,9 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
    {
       case MAN_SPORT:
       {
-         set_pitch_roll_rates(pitch, roll);
-         cm_u_set_acc(f_max / mass * (gas_stick - 0.5));
+         //set_pitch_roll_rates(pitch, roll);
+         set_att_angles(pitch, roll);
+         cm_u_set_acc(tsfloat_get(&gas_acc_max) * (gas_stick - 0.5));
          break;
       }
 

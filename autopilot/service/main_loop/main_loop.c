@@ -342,7 +342,7 @@ void main_step(const float dt,
    ne_speed_ctrl_run(&a_ne, &ne_spd_err, &ne_speed_sp, dt, &pos_est.ne_speed);
    vec3_t a_neu = {{a_ne.x, a_ne.y, a_u}}, f_neu;
    vec3_mul_scalar(&f_neu, &a_neu, platform.mass_kg); /* f[i] = a[i] * m, makes ctrl device-independent */
-   float hover_force = platform.mass_kg * 10.0f;
+   float hover_force = platform.mass_kg * 9.81;
    f_neu.z += hover_force;
 
    /* execute NEU forces optimizer: */
@@ -414,12 +414,11 @@ void main_step(const float dt,
    /* write motors: */
    if (!override_hw)
    {
-      //platform_write_motors(setpoints);
+      platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */
    mon_data_set(ne_pos_err.x, ne_pos_err.y, u_pos_err, yaw_err);
-   printf("%f %f\n", pos_in.baro_u, pos_est.baro_u.pos);
 
 out:
    EVERY_N_TIMES(bb_rate, blackbox_record(dt, marg_data, gps_data, ultra, baro, voltage, current, channels, sensor_status, /* sensor inputs */

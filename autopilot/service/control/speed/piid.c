@@ -218,7 +218,7 @@ void piid_run(float u_ctrl[4], float gyro[3], float rc[3], float dt)
    FOR_N(i, 3)
    {
       error[i] = ringbuf[ringbuf_idx + i] - gyro[i];
-      ringbuf[ringbuf_idx + i] = rc_filt[i];
+      ringbuf[ringbuf_idx + i] = rc[i];
    }
 
    ringbuf_idx += 3;
@@ -258,6 +258,6 @@ void piid_run(float u_ctrl[4], float gyro[3], float rc[3], float dt)
    }
 
    /* yaw feedback: */
-   u_ctrl[PIID_YAW] = pid_control(&yaw_ctrl, rc_filt[PIID_YAW] - gyro[PIID_YAW], 0.0f, dt);
+   u_ctrl[PIID_YAW] = pid_control(&yaw_ctrl, rc[PIID_YAW] - gyro[PIID_YAW], 0.0f, dt);
 }
 
