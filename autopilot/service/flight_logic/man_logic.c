@@ -31,11 +31,11 @@
 #include <opcd_interface.h>
 #include <util.h>
 #include <interval.h>
+#include <logger.h>
 
 #include "sticks.h"
 #include "man_logic.h"
 #include "../sensors/util/calibration.h"
-#include "../util/logger/logger.h"
 #include "../util/math/conv.h"
 #include "../platform/platform.h"
 #include "../control/position/navi.h"

@@ -30,12 +30,12 @@
 #include <util.h>
 #include <threadsafe_types.h>
 #include <opcd_interface.h>
+#include <logger.h>
 
 #include "auto_logic.h"
 #include "sticks.h"
 #include "../main_loop/control_mode.h"
 #include "../platform/platform.h"
-#include "../util/logger/logger.h"
 
 
 /* n/e direction in meters: */

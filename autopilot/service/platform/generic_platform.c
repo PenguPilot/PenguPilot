@@ -25,11 +25,12 @@
 
 
 #include <util.h>
+#include <logger.h>
+
 #include "platform.h"
 #include "../sensors/scl_gps/scl_gps.h"
 #include "../sensors/scl_power/scl_power.h"
 #include "../sensors/scl_rc/scl_rc.h"
-#include "../util/logger/logger.h"
 
 
 int generic_platform_init(platform_t *plat)

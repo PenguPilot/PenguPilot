@@ -31,8 +31,10 @@
 #include <malloc.h>
 #include <math.h>
 
+#include <logger.h>
 #include <util.h>
 #include <i2c/i2c.h>
+
 #include "platform.h"
 #include "generic_platform.h"
 #include "inv_coupling.h"
@@ -42,7 +44,6 @@
 #include "../sensors/ms5611/ms5611_reader.h"
 #include "../sensors/util/gps_data.h"
 #include "../actuators/arduino_pwms/arduino_pwms.h"
-#include "../util/logger/logger.h"
 #include "../util/math/quat.h"
 
 

@@ -33,9 +33,9 @@
 #include <pilot.pb-c.h>
 #include <util.h>
 #include <scl.h>
+#include <logger.h>
 
 #include "interface.h"
-#include "../util/logger/logger.h"
 #include "../flight_logic/auto_logic.h"
 #include "../control/control.h"
 #include "../main_loop/main_loop.h"

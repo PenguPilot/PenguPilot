@@ -42,6 +42,6 @@ try:
          print 'pitch: %.1f\troll: %.1f\tyaw: %.1f\tgas: %.1f\ttwo_state: %.1f\tthree_state: %.1f' % (c[0], c[1], c[2], c[3], c[4], c[5])
       elif rt.expired():
          print 'signal invalid'
-except Exception:
+except:
    print 'canceled by user'
 

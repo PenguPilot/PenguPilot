@@ -133,7 +133,12 @@ wifi_loc:
   depends: [gpsp, wifi_sensor]
   priority: app
 
+log_proxy:
+  binary: 'logger/service/log_proxy.py'
+  priority: app
+
 logger:
   binary: 'logger/service/logger.py'
+  depends: [log_proxy]
   priority: app
 

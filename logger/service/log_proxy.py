@@ -1,4 +1,6 @@
-/*___________________________________________________
+#!/usr/bin/env python
+"""
+  ___________________________________________________
  |  _____                       _____ _ _       _    |
  | |  __ \                     |  __ (_) |     | |   |
  | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
@@ -8,8 +10,8 @@
  |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
- 
- Message Format for AutoPilot Logger
+  
+ Log Proxy Service
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -21,16 +23,20 @@
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. */
+ GNU General Public License for more details. """
 
 
-message log_data
-{
-   enum Level {ERR = 1; WARN = 2; INFO = 3; DEBUG = 4;}
-   
-   required Level level = 1;
-   required uint32 details = 2;
-   required string file = 3;
-   required uint32 line = 4;
-   required string msg = 5;
-}
+from scl import generate_map
+from misc import daemonize
+
+
+def main(name):
+   map = generate_map(name)
+   socket_in = map['log_data']
+   socket_out = map['log_data_pub']
+   while True:
+      data = socket_in.recv()
+      socket_out.send(data)
+
+daemonize('log_proxy', main)
+
