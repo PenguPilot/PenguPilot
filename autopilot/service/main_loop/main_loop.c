@@ -183,6 +183,7 @@ void main_init(int argc, char *argv[])
 }
 
 
+
 void main_step(float dt,
                marg_data_t *marg_data,
                gps_data_t *gps_data,
@@ -261,12 +262,12 @@ void main_step(float dt,
    pos_in.acc.u *= -1.0f; /* convert NED frame to NEU */
 
    /* compute next 3d position estimate: */
-   pos_t pos_estimate;
-   pos_update(&pos_estimate, &pos_in);
+   pos_t pos_est;
+   pos_update(&pos_est, &pos_in);
    flight_state = flight_state_update(&marg_data->acc.vec[0]);
    
    /* execute flight logic (sets cm_x parameters used below): */
-   flight_logic_run(sensor_status, 1, channels, euler.yaw, &pos_estimate.ne_pos, pos_estimate.baro_u.pos, pos_estimate.ultra_u.pos);
+   flight_logic_run(sensor_status, 1, channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos);
    
    /* RUN U POSITION AND SPEED CONTROLLER: */
    float u_err = 0.0f;
@@ -274,27 +275,28 @@ void main_step(float dt,
    if (cm_u_is_pos())
    {
       if (cm_u_is_baro_pos())
-         u_err = cm_u_setp() - pos_estimate.baro_u.pos;
+         u_err = cm_u_setp() - pos_est.baro_u.pos;
       else
-         u_err = cm_u_setp() - pos_estimate.ultra_u.pos;
+         u_err = cm_u_setp() - pos_est.ultra_u.pos;
       u_speed_sp = u_ctrl_step(u_err);
    }
    
    if (cm_u_is_spd())
       u_speed_sp = cm_u_setp();
-   
-   float f_d_rel = u_speed_step(u_speed_sp, pos_estimate.baro_u.speed, pos_in.acc.u, dt);
+
+
+   float f_d_rel = u_speed_step(0.4, pos_est.ultra_u.pos, pos_est.baro_u.speed, dt);
    if (cm_u_is_acc())
       f_d_rel = cm_u_setp();
    
-   f_d_rel = fmin(f_d_rel, cm_u_acc_limit());
+   f_d_rel = fmin(f_d_rel, channels[CH_GAS] /*cm_u_acc_limit()*/);
    float f_d = f_d_rel * platform.max_thrust_n;
 
    vec2_t speed_sp = {{0.0f, 0.0f}};
    if (cm_att_is_gps_pos())
    {
       navi_set_dest(cm_att_setp());
-      navi_run(&speed_sp, &pos_estimate.ne_pos, dt); /* attitude navigation control */
+      navi_run(&speed_sp, &pos_est.ne_pos, dt); /* attitude navigation control */
    }
 
    if (cm_att_is_gps_spd())
@@ -302,7 +304,7 @@ void main_step(float dt,
 
    /* RUN ATT NORTH/EAST SPEED CONTROLLER: */
    vec2_t f_ne;
-   ne_speed_ctrl_run(&f_ne, &speed_sp, dt, &pos_estimate.ne_speed, euler.yaw);
+   ne_speed_ctrl_run(&f_ne, &speed_sp, dt, &pos_est.ne_speed, euler.yaw);
    vec3_t f_ned = {{f_ne.vec[0], f_ne.vec[1], f_d}};
 
    vec2_t pitch_roll_sp;
@@ -352,7 +354,7 @@ void main_step(float dt,
    inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
 
    /* update motors state: */
-   motors_state_update(flight_state, dt, f_d_rel > 0.11);
+   motors_state_update(flight_state, dt, channels[CH_SWITCH_L] < 0.5 && channels[CH_GAS] > 0.1);
 
    if (!motors_controllable())
    {
@@ -370,8 +372,8 @@ void main_step(float dt,
    }
 
    /* set monitoring data: */
-   mon_data_set(pos_estimate.ne_pos.n - navi_get_dest_n(),
-                pos_estimate.ne_pos.e - navi_get_dest_e(),
+   mon_data_set(pos_est.ne_pos.n - navi_get_dest_n(),
+                pos_est.ne_pos.e - navi_get_dest_e(),
                 u_err, yaw_err);
  
 }

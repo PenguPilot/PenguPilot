@@ -37,15 +37,15 @@ static pid_controller_t ctrl;
 
 static float u_neutral_gas;
 static tsfloat_t speed_p;
+static tsfloat_t speed_d;
 static tsfloat_t speed_i;
 static tsfloat_t speed_imax;
-static tsfloat_t speed_d;
 
 
-float u_speed_step(float setpoint, float speed, float acc, float dt)
+float u_speed_step(float setpoint, float pos, float speed, float dt)
 {   
-   float err = setpoint - speed;
-   return u_neutral_gas + pid_control(&ctrl, err, acc, dt);
+   float err = setpoint - pos;
+   return u_neutral_gas + pid_control(&ctrl, err, speed, dt);
 }
 
 
@@ -56,8 +56,8 @@ void u_speed_init(float neutral_gas)
    opcd_param_t params[] =
    {
       {"p", &speed_p},
-      {"i", &speed_i},
       {"d", &speed_d},
+      {"i", &speed_i},
       {"imax", &speed_imax},
       OPCD_PARAMS_END
    };
