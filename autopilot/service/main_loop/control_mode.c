@@ -30,6 +30,7 @@
 #include "main_loop.h"
 #include "../filters/filter.h"
 #include "../hardware/util/calibration.h"
+#include "../util/math/conv.h"
 
 
 static tsfloat_t stick_pitch_roll_p;
@@ -78,12 +79,13 @@ void cm_update(control_mode_t *cm, uint16_t sensor_status, float channels[MAX_CH
       pitch = cal_channels[0];
       roll = cal_channels[1];
       yaw = cal_channels[2];
-      gas = cal_channels[3];
-      sw = cal_channels[4];
+      gas = channels[CH_GAS];
+      sw = channels[CH_SWITCH];
    }
 
    /* select mode */
-   cm->xy.type = XY_ATT_RATE;
+   cm->xy.type = XY_GPS_SPEED;
+   cm->xy.global = 1;
 
    /* fill data accoring to mode */
    if (cm->xy.type == XY_ATT_RATE)
@@ -92,9 +94,22 @@ void cm_update(control_mode_t *cm, uint16_t sensor_status, float channels[MAX_CH
       cm->xy.setp.x = p * pitch;
       cm->xy.setp.y = p * roll;
    }
+   else if (cm->xy.type == XY_ATT_POS)
+   {
+      float a = deg2rad(tsfloat_get(&stick_pitch_roll_angle_max));
+      cm->xy.setp.x = a * pitch;
+      cm->xy.setp.y = a * roll;
+   }
+   else if (cm->xy.type == XY_GPS_SPEED)
+   {
+      float p = tsfloat_get(&stick_pitch_roll_p);
+      cm->xy.setp.x = p * pitch;   
+      cm->xy.setp.y = p * roll;   
+   }
    cm->z.type = Z_STICK;
-   cm->z.setp = gas;
-   cm->yaw.setp = yaw;
+   cm->z.setp = gas * platform.max_thrust_n;
+   cm->yaw.type = YAW_STICK;
+   cm->yaw.setp = yaw * tsfloat_get(&stick_yaw_p);
    cm->motors_enabled = rc_valid && sw > 0.5;
 }
 

@@ -46,7 +46,6 @@
 #include "../platform/ac.h"
 #include "../platform/platform.h"
 #include "../platform/arcade_quad.h"
-#include "../control/basic/piid.h"
 #include "../hardware/util/acc_mag_cal.h"
 #include "../hardware/util/calibration.h"
 #include "../hardware/util/gps_util.h"
@@ -55,6 +54,7 @@
 #include "../control/position/att_ctrl.h"
 #include "../control/position/z_ctrl.h"
 #include "../control/position/yaw_ctrl.h"
+#include "../control/speed/piid.h"
 #include "../control/speed/xy_speed.h"
 #include "../state/motors_state.h"
 #include "../force_opt/force_opt.h"
@@ -246,13 +246,13 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    marg_err = 0;
    
 
+   /* perform gyro calibration: */
    if (cal_sample_apply(&gyro_cal, &marg_data->gyro.vec[0]) == 0 && gyro_moved(&marg_data->gyro))
    {
       if (interval_measure(&gyro_move_interval) > 1.0)
          LOG(LL_ERROR, "gyro moved during calibration, retrying");
       cal_reset(&gyro_cal);
    }
-   marg_data->gyro.y *= -1.0;
 
    if (sensor_status & GPS_VALID)
    {
@@ -266,12 +266,10 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    /* acc/mag calibration: */
    acc_mag_cal_apply(&marg_data->acc, &marg_data->mag);
 
-   /********************************
-    * perform sensor data fusion : *
-    ********************************/
-
+   /* perform sensor data fusion: */
    int ahrs_state = ahrs_update(&ahrs, marg_data, 0, dt);
    ahrs_update(&imu, marg_data, 1, dt);
+   //EVERY_N_TIMES(20, printf("%f %f %f\n", marg_data->acc.x, marg_data->acc.y, marg_data->acc.z));
    flight_state_t flight_state = 0; //flight_detect(&marg_data->acc.vec[0]);
 
    /* global z orientation calibration: */
@@ -286,7 +284,6 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    euler_t imu_euler;
    quat_to_euler(&imu_euler, &imu.quat);
 
-
    if (ahrs_state < 0 || !cal_complete(&gyro_cal))
       goto out;
 
@@ -294,20 +291,25 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    
    /* local ACC to global ACC rotation: */
    transform_local_global(&pos_in.acc, &marg_data->acc, &ahrs_quat);
-   //EVERY_N_TIMES(20, printf("%f %f %f\n", pos_in.acc.x, pos_in.acc.y, pos_in.acc.z));
 
    /* compute next 3d position estimate: */
    pos_t pos_estimate;
    pos_update(&pos_estimate, &pos_in);
+   
+   marg_data->gyro.y *= -1.0;
 
-   stick_t auto_stick;
+   float gas = 0.0f;
    float yaw_err, z_err;
-   auto_stick.yaw = yaw_ctrl_step(&yaw_err, euler.yaw, marg_data->gyro.z, dt);
+   //auto_stick.yaw = yaw_ctrl_step(&yaw_err, euler.yaw, marg_data->gyro.z, dt);
    if (cm.z.type == Z_AUTO)
    {
-      auto_stick.gas = z_ctrl_step(&z_err, pos_estimate.ultra_z.pos,
+      gas = z_ctrl_step(&z_err, pos_estimate.ultra_z.pos,
                                    pos_estimate.baro_z.pos, pos_estimate.baro_z.speed, dt);
-      auto_stick.gas = fmin(auto_stick.gas, cm.z.setp);
+      gas = fmin(gas, cm.z.setp);
+   }
+   else /* Z_STICK */
+   {
+      gas = cm.z.setp;
    }
    
    /* the following code sets the x/y speed setpoint: */
@@ -318,8 +320,8 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
       if (cm.xy.global)
       {
          /* move according to global speed vector: */
-         speed_sp.x = cm.xy.setp.x;
-         speed_sp.y = cm.xy.setp.y;
+         speed_sp.x = 0.0;
+         speed_sp.y = 0.0;
       }
       else /* local */
       {
@@ -340,7 +342,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    xy_speed_ctrl_run(&pitch_roll_sp, &speed_sp, &speed_vec, euler.yaw);
 
    /* run attitude controller: */
-   vec2_t pitch_roll = {{imu_euler.pitch, imu_euler.roll}};
+   vec2_t pitch_roll = {{-imu_euler.pitch, imu_euler.roll}};
    if (cm.xy.type == XY_ATT_POS)
    {
       if (cm.xy.global)
@@ -358,21 +360,26 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    vec2_t pitch_roll_speed = {{marg_data->gyro.y, marg_data->gyro.x}};
    vec2_t pitch_roll_ctrl;
    att_ctrl_step(&pitch_roll_ctrl, &att_err, dt, &pitch_roll, &pitch_roll_speed, &pitch_roll_sp);
-   auto_stick.pitch = pitch_roll_ctrl.x;
-   auto_stick.roll = pitch_roll_ctrl.y;
 
    float piid_sp[3] = {0.0f, 0.0f, 0.0f};
-   f_local_t f_local = {{0.0f, 0.0f, 0.0f, 0.0f}};
 
    /* direct rate control: */
-   if (cm.xy.type == XY_ATT_RATE)
+   if (cm.xy.type == XY_GPS_SPEED)
+   {
+      piid_sp[PIID_PITCH] = pitch_roll_ctrl.x + cm.xy.setp.x;
+      piid_sp[PIID_ROLL] = pitch_roll_ctrl.y + cm.xy.setp.y;
+   }
+   else if (cm.xy.type == XY_ATT_RATE)
    {
       piid_sp[PIID_PITCH] = cm.xy.setp.x;
       piid_sp[PIID_ROLL] = cm.xy.setp.y;
    }
-
-   /* scale relative gas value to absolute newtons: */
-   f_local.gas = auto_stick.gas * platform.max_thrust_n;
+   else if (cm.xy.type == XY_ATT_POS)
+   {
+      piid_sp[PIID_PITCH] = pitch_roll_ctrl.x;
+      piid_sp[PIID_ROLL] = pitch_roll_ctrl.y;
+   }
+   piid_sp[PIID_YAW] = cm.yaw.setp;
 
    /* set monitoring data: */
    mon_data_set(pos_estimate.x.pos - navi_get_dest_x(),
@@ -380,6 +387,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
                 z_err, yaw_err);
    
    /* run feed-forward system and stabilizing PIID controller: */
+   f_local_t f_local = {{gas, 0.0f, 0.0f, 0.0f}};
    piid_run(&f_local.vec[1], marg_data->gyro.vec, piid_sp);
 
    /* computation of rpm ^ 2 out of the desired forces */

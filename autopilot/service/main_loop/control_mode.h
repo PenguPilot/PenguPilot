@@ -65,6 +65,13 @@ typedef struct
 
    struct
    {
+      enum
+      {
+         YAW_ANGLE,
+         YAW_POI,
+         YAW_STICK
+      }
+      type;
       float setp; /* yaw rate; to be extended  */   
    }
    yaw;
