@@ -42,6 +42,9 @@
 #include "../main_loop/control_mode.h"
 
 
+#define RC_INVAL_MAX_COUNT 300
+
+
 typedef enum
 {
    MAN_SPORT,
@@ -63,6 +66,8 @@ static tsfloat_t sticks_rotation;
 
 static bool vert_pos_locked = false;
 static bool horiz_pos_locked = true;
+static int rc_inval_count = 0;
+static float channels_prev[MAX_CHANNELS];
 
 
 void man_logic_init(void)
@@ -140,7 +145,7 @@ static float stick_dz(float g, float d)
 static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos, float u_ultra_pos)
 {
    float dz = tsfloat_get(&gas_deadzone);
-   if (fabs(gas_stick) > dz || u_ultra_pos < 0.4)
+   if (1) //fabs(gas_stick) > dz || u_ultra_pos < 0.4)
    {
       float vmax = tsfloat_get(&vert_speed_max);
       cm_u_set_spd(stick_dz(gas_stick, dz) * vmax);
@@ -206,7 +211,7 @@ void set_att_angles(float pitch, float roll)
 }
 
 
-static void emergency_landing(bool gps_valid, vec2_t *ne_gps_pos, float u_ultra_pos)
+static bool emergency_landing(bool gps_valid, vec2_t *ne_gps_pos, float u_ultra_pos)
 {
    cm_u_set_spd(-0.5f);
    if (gps_valid)
@@ -214,13 +219,37 @@ static void emergency_landing(bool gps_valid, vec2_t *ne_gps_pos, float u_ultra_
    else
       set_att_angles(0.0f, 0.0f);
    
-   if (u_ultra_pos < 0.3f)
-      cm_disable_motors_persistent();
+   if (u_ultra_pos < 0.4f)
+      return true;
+
+   return false;
 }
 
 
 bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos, float f_max, float mass)
 {
+   if (!(sensor_status & RC_VALID))
+   {
+      if (rc_inval_count == 0)
+         LOG(LL_ERROR, "rc signal invalid!");
+      /* restore previous channels: */
+      memset(channels, 0, sizeof(float) * MAX_CHANNELS);
+      channels[CH_GAS] = 0.3;
+      rc_inval_count++;
+      if (rc_inval_count >= RC_INVAL_MAX_COUNT)
+      {
+         /* too much; bring it down */
+         if (rc_inval_count == RC_INVAL_MAX_COUNT)
+            LOG(LL_ERROR, "performing emergency landing");
+         return !(*hard_off = emergency_landing(sensor_status & GPS_VALID, ne_gps_pos, u_ultra_pos));
+      }
+   }
+   else
+   {
+      rc_inval_count = 0;   
+   }
+   
+   
    vec2_t pr = {{channels[CH_PITCH], channels[CH_ROLL]}};
    vec2_rotate(&pr, &pr, deg2rad(tsfloat_get(&sticks_rotation)));
    float pitch = pr.vec[0];
@@ -269,7 +298,9 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
          break;
       }
    }
-   *hard_off = !((sensor_status & RC_VALID) && sw_l < 0.5);
+
+   if ((sensor_status & RC_VALID) && sw_l > 0.5)
+      *hard_off = true;
 
    return gas_stick > 0.1;
 }

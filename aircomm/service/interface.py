@@ -28,7 +28,6 @@
 from ed_nrf.lib.cdc import CDC_nRF
 from time import sleep
 
-
 class Interface:
 
    def __init__(self, dev_path):

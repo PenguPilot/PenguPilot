@@ -32,7 +32,7 @@
 #include "../../util/math/vec2.h"
 
 
-void ne_speed_ctrl_init(void);
+void ne_speed_ctrl_init(float Ts);
 
 void ne_speed_ctrl_reset(void);
 

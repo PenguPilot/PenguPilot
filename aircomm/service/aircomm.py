@@ -66,7 +66,7 @@ class ACIReader(Thread):
                # load msgpack contents:
                try:
                   msg = loads(raw_msg)
-               except:
+               except Exception, e:
                   continue
                
                addr = msg[0]

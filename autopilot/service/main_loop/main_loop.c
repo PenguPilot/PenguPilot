@@ -159,7 +159,7 @@ void main_init(int argc, char *argv[])
 
    LOG(LL_INFO, "initializing model/controller");
    pos_init();
-   ne_speed_ctrl_init();
+   ne_speed_ctrl_init(REALTIME_PERIOD);
    att_ctrl_init();
    yaw_ctrl_init();
    u_ctrl_init();
@@ -234,22 +234,16 @@ void main_step(const float dt,
    }
    marg_err = 0;
    
-   /* apply calibration if remote control input is valid: */
    float cal_channels[MAX_CHANNELS];
-   if (!(sensor_status & RC_VALID))
+   memcpy(cal_channels, channels, sizeof(cal_channels));
+   if (sensor_status & RC_VALID)
    {
-      memset(&cal_channels, 0, sizeof(cal_channels));
-   }
-   else
-   {
+      /* apply calibration if remote control input is valid: */
       float cal_data[3] = {channels[CH_PITCH], channels[CH_ROLL], channels[CH_YAW]};
       cal_sample_apply(&rc_cal, cal_data);
       cal_channels[CH_PITCH] = cal_data[0];
       cal_channels[CH_ROLL] = cal_data[1];
       cal_channels[CH_YAW] = cal_data[2];
-      cal_channels[CH_GAS] = channels[CH_GAS];
-      cal_channels[CH_SWITCH_L] = channels[CH_SWITCH_L];
-      cal_channels[CH_SWITCH_R] = channels[CH_SWITCH_R];
    }
 
    /* perform gyro calibration: */
@@ -308,7 +302,7 @@ void main_step(const float dt,
    pos_update(&pos_est, &pos_in);
 
    /* execute flight logic (sets cm_x parameters used below): */
-   bool hard_off = 0;
+   bool hard_off = false;
    bool motors_enabled = flight_logic_run(&hard_off, sensor_status, flying, cal_channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg);
    
    /* execute up position/speed controller(s): */
@@ -416,7 +410,7 @@ void main_step(const float dt,
    /* write motors: */
    if (!override_hw)
    {
-      platform_write_motors(setpoints);
+      //platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */
