@@ -104,6 +104,7 @@ pilot:
       horiz_speed_max: 5.0 # maximal horizontal speed
       gps_deadzone: 0.05 # if magnitude of gps speed sticks are lower than this value, gps position is locked
       gas_deadzone: 0.07 # if magnitude of centered gas stick is lower than this value, altitude is locked
+      gas_acc_max: 10.0 # maximum positive/negative acceleration in m/s^2
       sticks_rotation: 0.0 # 0 = "+" mode, 90 = "x mode"
 
    controllers:
@@ -136,6 +137,7 @@ pilot:
          d: 0.0
          pitch_bias: 0.0
          roll_bias: 0.0
+         filt_fg: 3.0
 
       u_speed:
          p: 5.0
