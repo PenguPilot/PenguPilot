@@ -175,6 +175,7 @@ vec2_t cm_att_setp(void)
 }
 
 
+
 static bool is_yaw_pos = false;
 static float yaw_setp = 0.0;
 

@@ -12,39 +12,40 @@ import time
 
 class CDC_nRF:
 	
-	NRF_FNC_TX_MESSAGE						=	 0
-	NRF_FNC_TX_MESSAGE_NOACK			=	16
-	NRF_FNC_RX_MESSAGE						=	32
-	NRF_FNC_NRF_POWER							=	 1
-	NRF_FNC_NRF_DEFAULT_POWER			=	201
-	NRF_FNC_GET_NRF_STATUS				=	 2
-	NRF_FNC_NRF_RECONFIGURE				=	10
-	NRF_FNC_NRF_WRITE_REGISTER		=	11
-	NRF_FNC_NRF_READ_REGISTER			=	12
+	NRF_FNC_TX_MESSAGE						=		  0
+	NRF_FNC_TX_MESSAGE_NOACK			=		 16
+	NRF_FNC_RX_MESSAGE						=		 32
+	NRF_FNC_NRF_POWER							=		  1
+	NRF_FNC_NRF_DEFAULT_POWER			=		201
+	NRF_FNC_NRF_DEFAULT_TXMODE		=		202
+	NRF_FNC_GET_NRF_STATUS				=		  2
+	NRF_FNC_NRF_RECONFIGURE				=		 10
+	NRF_FNC_NRF_WRITE_REGISTER		=		 11
+	NRF_FNC_NRF_READ_REGISTER			=		 12
 	
-	NRF_FNC_NRF_WRITE_TX_ADDRESS	=	20
-	NRF_FNC_NRF_READ_TX_ADDRESS		=	21
+	NRF_FNC_NRF_WRITE_TX_ADDRESS	=		 20
+	NRF_FNC_NRF_READ_TX_ADDRESS		=		 21
 	
-	NRF_FNC_NRF_WRITE_RX_ADDRESS	=	30
-	NRF_FNC_NRF_READ_RX_ADDRESS		=	31
+	NRF_FNC_NRF_WRITE_RX_ADDRESS	=		 30
+	NRF_FNC_NRF_READ_RX_ADDRESS		=		 31
 
-	NRF_FNC_WRITE_EEPROM					= 40
-	NRF_FNC_READ_EEPROM						= 41
+	NRF_FNC_WRITE_EEPROM					=		 40
+	NRF_FNC_READ_EEPROM						=		 41
 	
-	NRF_FNC_ECHO									= 100
+	NRF_FNC_ECHO									=		100
 	
-	DEV_FNC_RESET									=	254
-	DEV_FNC_ENTER_BOOTLOADER			= 255
+	DEV_FNC_RESET									=		254
+	DEV_FNC_ENTER_BOOTLOADER			=		255
 
-	NRF_RESPONSE_ACK							= 0x80
-	NRF_RESPONSE_NACK							= 0x81
+	NRF_RESPONSE_ACK							=		0x80
+	NRF_RESPONSE_NACK							=		0x81
 
 	_bus=None
 	
 	debug=False
 	
 	def __init__(self,port):
-		self._bus=serial.Serial(port,timeout=0.01)
+		self._bus=serial.Serial(port,timeout=0.5)
 		#self._bus.setDTR(False)
 		self._bus.setDTR(False)
 		time.sleep(0.2)
@@ -61,6 +62,7 @@ class CDC_nRF:
 		
 	def _tx(self,data):
 		self._bus.flush()
+		self._bus.read(self._bus.inWaiting())
 		if self.debug:
 			print 'tx',data
 		self._bus.write(serial.to_bytes(data))
@@ -74,6 +76,12 @@ class CDC_nRF:
 		data=self._rx(rx_length)
 		return data
 	
+	def enterRaw(self):
+		self._bus.setDTR(True)
+
+	def enterCommand(self):
+		self._bus.setDTR(False)
+
 	#-----------------------------
 	def sendMessage(self,message,ack=True):
 		if ack:
@@ -86,10 +94,8 @@ class CDC_nRF:
 			
 	def receiveMessage(self):
 		ret=self._tx_frame([self.NRF_FNC_RX_MESSAGE],32)
-		if len(ret) == 0:
-			return False
 		if ret[0]==0x80:
-			return ret[2:] #self._rx()
+			return self._rx()
 		return False
 
 	def setPower(self,power):
@@ -100,6 +106,10 @@ class CDC_nRF:
 		ret=self._tx_frame([self.NRF_FNC_NRF_DEFAULT_POWER,power],2)
 		return True if ret[0]==0x80 else False
 
+	def setDefaultTXMode(self,mode):
+		ret=self._tx_frame([self.NRF_FNC_NRF_DEFAULT_TXMODE,mode],2)
+		return True if ret[0]==0x80 else False
+		
 	def getStatus(self):
 		ret=self._tx_frame([self.NRF_FNC_GET_NRF_STATUS],2)
 		if len(ret)!=2:
@@ -107,12 +117,12 @@ class CDC_nRF:
 		return ret[1] if (ret[0]==0x80) else False
 
 	def Reconfigure(self):
-		ret=self._tx_frame([self.NRF_FNC_NRF_RECONFIGURE]+message,2)
-		return True if ret==self.FRAME_ACK else False
+		ret=self._tx_frame([self.NRF_FNC_NRF_RECONFIGURE],1)
+		return True if ret[0]==0x80 else False
 
 	def writeRegister(self,register,value):
 		ret=self._tx_frame([self.NRF_FNC_NRF_WRITE_REGISTER,register,value],2)
-		return True if ret==self.FRAME_ACK else False
+		return True #if ret==self.FRAME_ACK else False
 
 	def Echo(self,length,values):
 		ret=self._tx_frame([self.NRF_FNC_ECHO,length]+values,1+len(values))

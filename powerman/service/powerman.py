@@ -126,8 +126,6 @@ class PowerMan:
          try:
             state.voltage = self.voltage
             state.current = self.current
-            if state.current < 4.0:
-               state.current = 0.5
             state.capacity = self.capacity
             state.consumed = self.current_integral
             remaining = self.capacity - self.current_integral

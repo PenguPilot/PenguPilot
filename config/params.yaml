@@ -26,6 +26,7 @@
 
 aircomm:
    id: 0
+   psk: "This is the PenguPilot Standard Pre-Shared Key for NRF24L01+ Communication"
 
 
 sensors:

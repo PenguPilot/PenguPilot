@@ -26,26 +26,26 @@
  GNU General Public License for more details. """
 
 
+from base64 import b64encode
 from interface import Interface
 from scl import generate_map
 from time import sleep, time
 from threading import Thread
 from opcd_interface import OPCD_Interface
-#import msgpack
+import msgpack
 from misc import daemonize
 from message_history import MessageHistory
 import crypt
 
 
-BCAST_ADDR = 0x7F
+BCAST_ID = 0x7F
 
 
 class ACIReader(Thread):
 
-   def __init__(self, sys_id, aci, scl_socket):
+   def __init__(self, aci, scl_socket):
       Thread.__init__(self)
       self.daemon = True
-      self.sys_id = sys_id
       self.aci = aci
       self.scl_socket = scl_socket
       self.mhist = MessageHistory(60)
@@ -57,28 +57,35 @@ class ACIReader(Thread):
             # receive encrypted message:
             crypt_data = self.aci.receive()
             if crypt_data:
+               #print 'received encrypted data:', b64encode(crypt_data), 'orig len: %d' % len(crypt_data)
                
                # check if we have seen this message before:
-               if not mhist.check(key):
-                  continue
+               #if not self.mhist.check(crypt_data):
+               #   continue
                
                # decrypt message:
-               raw_msg = crypd.decode(crypt_data)
+               raw_msg = crypt.decrypt(crypt_data)
                
                # load msgpack contents:
-               msg = msgpack.loads(raw_msg)
+               try:
+                  msg = msgpack.loads(raw_msg)
+               except:
+                  #print 'could not unpack data'
+                  continue
                
                # if message is meant for us, forward to application(s)
-               if msg.dst in [THIS_SYS_ID, BCAST]:
-                  self.scl_socket.send(msg)
-               
-               # message might be intersting for others, too:
-               if msg.dst == BCAST:
+               if msg[0] in [THIS_SYS_ID, BCAST_ID]:
+                  msg_tail = msg[1:]
+                  #print 'message for me:', msg_tail
+                  self.scl_socket.send(msgpack.dumps(msg_tail))
+
+               if msg[0] != THIS_SYS_ID:
+                  #print 'broadcasting message'
                   self.aci.send(crypt_data)
 
          except Exception, e:
-            print e
-            sleep(0.1)
+            pass
+
 
 def main(name):
    sm = generate_map(name)
@@ -97,9 +104,9 @@ def main(name):
 
    # read from SCL in socket and send data via NRF
    while True:
-      raw = in_socket.recv()
-      aci.send(raw)
-
+      raw_data = in_socket.recv()
+      msg = crypt.encrypt(raw_data)
+      aci.send(msg)
 
 daemonize('aircomm', main)
 

@@ -55,13 +55,13 @@ def _crypt(data, key):
 
 def encrypt(data):
    salt = ''
-   for n in range(salt_length):
+   for n in range(salt_len):
       salt += chr(random.randrange(256))
    data = salt + _crypt(data, sha1(key + salt).digest())
    return data
 
 
 def decrypt(data):
-   salt = data[:salt_length]
-   return _crypt(data[salt_length:], sha1(key + salt).digest())
+   salt = data[:salt_len]
+   return _crypt(data[salt_len:], sha1(key + salt).digest())
 
