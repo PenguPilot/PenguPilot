@@ -403,7 +403,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    /****************************
     * run attitude controller: *
     ****************************/
-   vec2_t pitch_roll = {{euler.pitch, euler.roll}};
+   vec2_t pitch_roll = {{imu_euler.pitch, imu_euler.roll}};
    if (mode == CM_MANUAL && manual_mode == M_ATT_ABS)
    {
       /* interpret sticks as pitch and roll setpoints: */
