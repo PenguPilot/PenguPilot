@@ -142,6 +142,13 @@ void navi_set_dest_n(float n)
 }
 
 
+void navi_set_dest(vec2_t vec)
+{
+   navi_set_dest_n(vec.x);  
+   navi_set_dest_e(vec.y);  
+}
+
+
 float navi_get_dest_e(void)
 {
    return tsfloat_get(&dest_e);

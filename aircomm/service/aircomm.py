@@ -23,7 +23,6 @@ class ACIReader(Thread):
          try:
             msg = self.aci.receive()
             if True: #msgpack.unpack(msg)[0] == self.sys_id:
-               sleep(0.01)
                self.aci.send(msg)
                self.scl_socket.send(msg)
          except:

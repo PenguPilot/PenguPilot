@@ -9,9 +9,10 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Control Modes Inmplementation
+ Control Modes Implementation
+ used to set remote control or auto pilot inputs
 
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,92 +25,171 @@
  GNU General Public License for more details. */
 
 
-#include <threadsafe_types.h>
-#include <opcd_interface.h>
 #include "control_mode.h"
-#include "main_loop.h"
-#include "../filters/filter.h"
-#include "../hardware/util/calibration.h"
-#include "../util/math/conv.h"
 
 
-static tsfloat_t stick_pitch_roll_p;
-static tsfloat_t stick_pitch_roll_angle_max;
-static tsfloat_t stick_yaw_p;
+static bool motors_enabled = false;
 
-static calibration_t rc_cal;
-static Filter1 rc_valid_filter;
-
-
-void cm_init(void)
+bool cm_motors_enabled(void)
 {
-   cal_init(&rc_cal, 3, 500);
-   filter1_lp_init(&rc_valid_filter, 0.5, REALTIME_PERIOD, 1);
+   return motors_enabled;  
+}
 
-   /* read parameters: */
-   opcd_param_t params[] =
-   {
-      {"pitch_roll_p", &stick_pitch_roll_p},
-      {"pitch_roll_angle_max", &stick_pitch_roll_angle_max},
-      {"yaw_p", &stick_yaw_p},
-      OPCD_PARAMS_END
-   };
-   opcd_params_apply("sticks.", params);
+void cm_enable_motors(bool enabled)
+{
+   motors_enabled = enabled;   
 }
 
 
-void cm_update(control_mode_t *cm, uint16_t sensor_status, float channels[MAX_CHANNELS])
+static enum
 {
-   float rc_valid_f = (sensor_status & RC_VALID) ? 1.0f : 0.0f;
-   filter1_run(&rc_valid_filter, &rc_valid_f, &rc_valid_f);
-   int rc_valid = rc_valid_f > 0.5f;
-   float pitch, roll, yaw, gas, sw;
-   if (!rc_valid)
-   {
-      pitch = 0.0f;
-      roll = 0.0f;
-      yaw = 0.0f;
-      gas = 0.0f;
-      sw = 0.0f;
-   }
-   else
-   {
-      float cal_channels[3] = {channels[CH_PITCH], channels[CH_ROLL], channels[CH_YAW]};
-      cal_sample_apply(&rc_cal, cal_channels);
-      pitch = cal_channels[0];
-      roll = cal_channels[1];
-      yaw = cal_channels[2];
-      gas = channels[CH_GAS];
-      sw = channels[CH_SWITCH];
-   }
+   U_ULTRA_POS,
+   U_BARO_POS,
+   U_SPEED,
+   U_ACC
+}
+u_mode = U_ACC;
+static float u_setp = 0.0;
+static float u_acc_limit = 1.0;
 
-   /* select mode */
-   cm->att.type = ATT_GPS_SPEED;
-   cm->att.global = 1;
+void cm_u_ultra_pos_set(float pos)
+{
+   u_mode = U_ULTRA_POS;
+   u_setp = pos;
+}
 
-   /* fill data accoring to mode */
-   if (cm->att.type == ATT_RATE)
-   {
-      float p = tsfloat_get(&stick_pitch_roll_p);
-      cm->att.setp.x = -p * pitch;
-      cm->att.setp.y = p * roll;
-   }
-   else if (cm->att.type == ATT_POS)
-   {
-      float a = deg2rad(tsfloat_get(&stick_pitch_roll_angle_max));
-      cm->att.setp.x = a * pitch;
-      cm->att.setp.y = -a * roll;
-   }
-   else if (cm->att.type == ATT_GPS_SPEED)
-   {
-      float p = tsfloat_get(&stick_pitch_roll_p);
-      cm->att.setp.x = p * pitch;   
-      cm->att.setp.y = p * roll;   
-   }
-   cm->z.type = Z_STICK;
-   cm->z.setp = gas;
-   cm->yaw.type = YAW_STICK;
-   cm->yaw.setp = yaw * tsfloat_get(&stick_yaw_p);
-   cm->motors_enabled = rc_valid && sw > 0.5;
+void cm_u_baro_pos_set(float pos)
+{
+   u_mode = U_BARO_POS;
+   u_setp = pos;
+}
+
+void cm_u_spd_set(float spd)
+{
+   u_mode = U_SPEED;
+   u_setp = spd;
+}
+
+void cm_u_acc_set(float acc)
+{
+   u_mode = U_ACC;
+   u_setp = acc;   
+}
+
+bool cm_u_is_pos(void)
+{
+   return u_mode == U_ULTRA_POS || u_mode == U_BARO_POS;   
+}
+
+bool cm_u_is_baro_pos(void)
+{
+   return u_mode == U_BARO_POS;   
+}
+
+bool cm_u_is_spd(void)
+{
+   return u_mode == U_SPEED;
+}
+
+bool cm_u_is_acc(void)
+{
+   return u_mode == U_ACC;   
+}
+
+float cm_u_setp(void)
+{
+   return u_setp;   
+}
+
+float cm_u_acc_limit(void)
+{
+   return u_acc_limit;   
+}
+
+
+
+static enum
+{
+   ATT_GPS_POS,
+   ATT_GPS_SPD,
+   ATT_ANGLES,
+   ATT_RATES
+}
+att_mode = ATT_RATES;
+static vec2_t att_setp = {{0.0f, 0.0f}};
+
+void cm_att_set_gps_pos(vec2_t pos)
+{
+   att_mode = ATT_GPS_POS;
+   att_setp = pos;
+}
+
+void cm_att_set_gps_spd(vec2_t spd)
+{
+   att_mode = ATT_GPS_SPD;   
+   att_setp = spd;
+}
+
+void cm_att_set_angles(vec2_t angles)
+{
+   att_mode = ATT_ANGLES;
+   att_setp = angles;
+}
+
+void cm_att_set_rates(vec2_t rates)
+{
+   att_mode = ATT_RATES;
+   att_setp = rates;
+}
+
+bool cm_att_is_gps_pos(void)
+{
+   return att_mode == ATT_GPS_POS;
+}
+
+bool cm_att_is_gps_spd(void)
+{
+   return att_mode == ATT_GPS_SPD;
+}
+
+bool cm_att_is_angle(void)
+{
+   return att_mode == ATT_GPS_SPD;   
+}
+
+bool cm_att_is_rate(void)
+{
+   return att_mode == ATT_RATES;   
+}
+
+vec2_t cm_att_setp(void)
+{
+   return att_setp;   
+}
+
+
+static bool is_yaw_pos = false;
+static float yaw_setp = 0.0;
+
+void cm_yaw_set_pos(float pos)
+{
+   is_yaw_pos = true;
+   yaw_setp = pos;
+}
+
+void cm_yaw_set_spd(float spd)
+{
+   is_yaw_pos = false;
+   yaw_setp = spd;
+}
+
+bool cm_yaw_is_pos(void)
+{
+   return is_yaw_pos;   
+}
+
+float cm_yaw_setp(void)
+{
+   return yaw_setp;  
 }
 

@@ -36,22 +36,36 @@ from gps_data_pb2 import GpsData
 from math import sin, cos, pi
 from misc import daemonize
 from os import getenv
+from power_pb2 import PowerState
 
 
 WHITE = 1
 BLACK = 0
 W = 128
 H = 64
+flying = False
+socket_map = None
+
+
+def flying_reader():
+   global flying, socket_map
+   socket = socket_map['flying']
+   while True:
+      if socket.recv() == 'flying':
+         flying = True
+      else:
+         flying = False
 
 
 def gps():
-   global gps_data
+   global gps_data, socket_map
    gps_data = None
-   socket = generate_map('gps_test')['gps']
+   socket = socket_map['gps']
    while True:
       with gps_lock:
          gps_data = GpsData()
          gps_data.ParseFromString(socket.recv())
+
 
 def cpuavg():
    global load
@@ -63,9 +77,9 @@ def cpuavg():
          load = 0.9 * load + 0.1 * cpu_percent()
       sleep(0.05)
 
+
 def pmreader():
-   from power_pb2 import PowerState
-   s = generate_map('pilot')['power']
+   s = socket_map['power']
    p = PowerState()
    global voltage, critical
    critical = False
@@ -236,13 +250,19 @@ def draw_gps2(draw):
 
 
 def main(name):
-   global gps_lock, font
+   global socket_map, gps_lock, font, flying
+   socket_map = generate_map(name)
+
    gps_lock = Lock()
    font = ImageFont.truetype(getenv('PENGUPILOT_PATH') + '/display/service/verdana.ttf', 11)
-
-   t = Thread(target = cpuavg)
+   
+   t = Thread(target = flying_reader)
    t.daemon = True
    t.start()
+
+   t1 = Thread(target = cpuavg)
+   t1.daemon = True
+   t1.start()
 
    t2 = Thread(target = pmreader)
    t2.daemon = True
@@ -262,17 +282,18 @@ def main(name):
    try:
       while True:
          try:
-            t = time()
-            while time() < t + screens[screen][1]:
-               image = Image.new("1", (W, H), BLACK)
-               draw = ImageDraw.Draw(image)
-               screens[screen][0](draw)
-               show_image(image)
-               sleep(1)
-               if critical:
-                  alert = Alert(1.0, 0.1, 1, batt_low, True)
-                  alert.start()
-                  alert.join()
+            if not flying:
+               t = time()
+               while time() < t + screens[screen][1]:
+                  image = Image.new("1", (W, H), BLACK)
+                  draw = ImageDraw.Draw(image)
+                  screens[screen][0](draw)
+                  show_image(image)
+                  sleep(1)
+                  if critical:
+                     alert = Alert(1.0, 0.1, 1, batt_low, True)
+                     alert.start()
+                     alert.join()
          except Exception, e:
             print e
          sleep(1)
@@ -281,6 +302,7 @@ def main(name):
       oled.invert(False)
       oled.clear()
       oled.update()
+
 
 daemonize('display', main)
 

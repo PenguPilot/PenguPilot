@@ -38,9 +38,6 @@
 
 static pid_controller_t controller;
 
-/* setpoint: */
-static tsfloat_t pos;
-
 /* configurable parameters: */
 static tsfloat_t p;
 static tsfloat_t i;
@@ -87,49 +84,19 @@ void yaw_ctrl_init(void)
       {"i_max", &i_max.value},
       {"d", &d.value},
       {"pid_lim", &pid_lim.value},
-      {"manual", &manual},
       OPCD_PARAMS_END
    };
    opcd_params_apply("controllers.yaw.", params);
-
-   tsfloat_init(&pos, 0.0f);
-
    pid_init(&controller, &p, &i, &d, &i_max);
 }
 
 
-int yaw_ctrl_set_pos(float _pos)
-{
-   if ((_pos < 0) || (_pos > 2.0 * M_PI))
-   {
-      LOG(LL_ERROR, "invalid yaw setpoint: %f, out of bounds: (0.0, 2.0 * M_PI)", _pos);
-      return -1;
-   }
-   tsfloat_set(&pos, _pos);
-   return 0;
-}
-
-
-float yaw_ctrl_get_pos(void)
-{
-   return tsfloat_get(&pos);
-}
-
-
-float yaw_ctrl_step(float *err_out, float yaw, float _speed, float dt)
+float yaw_ctrl_step(float *err_out, float setpoint, float yaw, float _speed, float dt)
 {
    float err;
    float yaw_ctrl;
-   if (tsint_get(&manual))
-   {
-      yaw_ctrl = 0.0f;
-      err = 0.0; /* we control nothing, so the error is always 0 */
-   }
-   else
-   {
-      err = circle_err(yaw, tsfloat_get(&pos));
-      yaw_ctrl = pid_control(&controller, err, _speed, dt);
-   }
+   err = circle_err(yaw, setpoint);
+   yaw_ctrl = pid_control(&controller, err, _speed, dt);
    *err_out = err;
    return sym_limit(yaw_ctrl, tsfloat_get(&pid_lim));
 }

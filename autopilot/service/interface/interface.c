@@ -88,23 +88,23 @@ int set_ctrl_param(CtrlParam param, float value)
       case CTRL_PARAM__POS_U_GROUND:
       {
          LOG(LL_DEBUG, "u ground pos update: %f", value);
-         u_setpoint_t setpoint = {value, 1};
-         u_ctrl_set_setpoint(setpoint); // can't fail
+         //u_setpoint_t setpoint = {value, 1};
+         //u_ctrl_set_setpoint(setpoint); // can't fail
          break;
       }
 
       case CTRL_PARAM__POS_U:
       {
          LOG(LL_DEBUG, "u pos update: %f", value);
-         u_setpoint_t setpoint = {value, 0};
-         u_ctrl_set_setpoint(setpoint);
+         //u_setpoint_t setpoint = {value, 0};
+         //u_ctrl_set_setpoint(setpoint);
          break;
       }
 
       case CTRL_PARAM__POS_YAW:
       {
          LOG(LL_DEBUG, "yaw pos update: %f", value);
-         status = yaw_ctrl_set_pos(value);
+         //status = yaw_ctrl_set_pos(value);
          break;
       }
       
@@ -164,6 +164,7 @@ static void get_state(Params *params)
    params->start_lon = gps_start.lon;
    params->start_lat = gps_start.lat;
    params->start_alt = gps_start.alt;
+   /*
    params->setp_x = navi_get_dest_e();
    params->setp_y = navi_get_dest_n();
    float setp_u = u_ctrl_get_setpoint();
@@ -175,7 +176,8 @@ static void get_state(Params *params)
    {
       params->setp_u = setp_u;
    }
-   params->setp_yaw = yaw_ctrl_get_pos();
+   params->setp_yaw = 0.0;
+   */
 }
 
 
