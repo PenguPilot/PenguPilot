@@ -302,6 +302,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
    /* standard mode is yaw speed */
    cm_yaw_set_spd(stick_dz(yaw_stick, 0.075) * deg2rad(tsfloat_get(&yaw_speed_max)));
 
+#if 0
    if (ultra_u_pos < 0.5)
    {
       /* reset yaw setpoint if we are too low 
@@ -316,6 +317,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       yaw_pos_sp = norm_angle_0_2pi(yaw_pos_sp);
       cm_yaw_set_pos(yaw_pos_sp);
    }
+#endif
 
    switch (man_mode)
    {
@@ -329,7 +331,8 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       case MAN_RELAXED:
       {
          set_att_angles(pitch, roll);
-         set_vertical_spd_or_pos(gas_stick - 0.5, baro_u_pos, ultra_u_pos);
+         cm_u_set_acc(tsfloat_get(&gas_acc_max) * (gas_stick - 0.5));
+         //set_vertical_spd_or_pos(gas_stick - 0.5, baro_u_pos, ultra_u_pos);
          break;
       }
 
@@ -337,7 +340,6 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       {
          set_horizontal_spd_or_pos(pitch, roll, yaw, ne_gps_pos, ultra_u_pos);
          set_vertical_spd_or_pos(gas_stick - 0.5, baro_u_pos, ultra_u_pos);
-         //cm_u_set_acc(f_max / mass * (gas_stick - 0.5));
          break;
       }
    }

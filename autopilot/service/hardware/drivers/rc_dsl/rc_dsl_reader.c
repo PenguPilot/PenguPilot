@@ -39,7 +39,7 @@
 
 
 #define THREAD_NAME       "rc_dsl_reader"
-#define THREAD_PRIORITY   98
+#define THREAD_PRIORITY   96
 
 
 #define RSSI_MIN RSSI_SCALE(7)
@@ -73,7 +73,8 @@ SIMPLE_THREAD_BEGIN(thread_func)
       {
          pthread_mutex_lock(&mutex);
          sig_valid = rc_dsl.RSSI > RSSI_MIN;
-         memcpy(channels, rc_dsl.channels, sizeof(channels));   
+         if (sig_valid)
+            memcpy(channels, rc_dsl.channels, sizeof(channels));   
          pthread_mutex_unlock(&mutex);
       }
    }
@@ -100,7 +101,6 @@ int rc_dsl_reader_init(void)
    pthread_mutexattr_setprotocol(&mutexattr, PTHREAD_PRIO_INHERIT); 
    pthread_mutex_init(&mutex, &mutexattr);
    simple_thread_start(&thread, thread_func, THREAD_NAME, THREAD_PRIORITY, NULL);
-
    THROW_END();
 }
 

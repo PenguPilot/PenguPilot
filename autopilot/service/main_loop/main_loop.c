@@ -407,7 +407,7 @@ void main_step(const float dt,
       yaw_speed_sp = yaw_ctrl_step(&yaw_err, cm_yaw_sp(), euler.yaw, cal_marg_data.gyro.z, dt);
    else
       yaw_speed_sp = cm_yaw_sp(); /* direct yaw speed control */
-   yaw_speed_sp = yaw_ctrl_step(&yaw_err, 0.0, euler.yaw, cal_marg_data.gyro.z, dt);
+   //yaw_speed_sp = yaw_ctrl_step(&yaw_err, 0.0, euler.yaw, cal_marg_data.gyro.z, dt);
    piid_sp[PIID_YAW] = yaw_speed_sp;
 
    /* execute stabilizing PIID controller: */
@@ -443,9 +443,8 @@ void main_step(const float dt,
    /* write motors: */
    if (!override_hw)
    {
-      printf("%f\n", dt);
       //EVERY_N_TIMES(20, printf("%f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]));
-      //platform_write_motors(setpoints);
+      platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */
