@@ -294,7 +294,8 @@ void main_step(float dt,
    pos_update(&pos_est, &pos_in);
 
    /* execute flight logic (sets cm_x parameters used below): */
-   bool motors_enabled = flight_logic_run(sensor_status, flying, channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg);
+   bool hard_off = 0;
+   bool motors_enabled = flight_logic_run(&hard_off, sensor_status, flying, channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg);
    
    /* execute up position/speed controller(s): */
    float u_err = 0.0f;
@@ -383,9 +384,8 @@ void main_step(float dt,
    /* compute motor setpoints out of rpm ^ 2: */
    piid_int_enable(platform_ac_calc(setpoints, motors_spinning(), voltage, rpm_square));
 
-   /* enables motors, if flight logic requests at a force lifting at least 10% of our mass: */
-   float motors_start_force = 0.1 * hover_force;
-   motors_state_update(flying, dt, motors_enabled && thrust > motors_start_force);
+   /* enables motors, if flight logic requests it: */
+   motors_state_update(flying, dt, motors_enabled);
    
    /* reset controllers, if motors are not controllable: */
    if (!motors_controllable())
@@ -400,13 +400,13 @@ void main_step(float dt,
    /* handle special cases for motor setpoints (0.0f ... 1.0f): */
    if (motors_starting())
       FOR_N(i, platform.n_motors) setpoints[i] = 0.1f;
-   if (!motors_enabled || motors_stopping())
+   if (hard_off || motors_stopping())
       FOR_N(i, platform.n_motors) setpoints[i] = 0.0f;
 
    /* write motors: */
    if (!override_hw)
    {
-      printf("%f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]);
+      EVERY_N_TIMES(10, printf("%d %f %f %f %f\n", hard_off, setpoints[0], setpoints[1], setpoints[2], setpoints[3]));
       //platform_write_motors(setpoints);
    }
 
