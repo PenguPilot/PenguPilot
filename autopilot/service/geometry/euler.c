@@ -29,50 +29,17 @@
 
 #include "../util/math/vec3.h"
 #include "../util/math/mat.h"
+#include "../util/math/conv.h"
+
 
 #include "euler.h"
 
 
-
-float normalize_euler_0_2pi(float a)
-{
-   a = fmod(a, M_PI * 2);
-   if (a < 0)
-   {
-      a += M_PI * 2;
-   }
-   return a;
-}
-
-
-float normalize_euler_sym_pi(float a)
-{
-   if (a < -M_PI)
-   {
-      a = fmod(a, M_PI * 2.0f);
-      if (a < -M_PI)
-      {
-         a += M_PI * 2.0f;
-      }
-   }
-   else if (a > M_PI)
-   {
-      a = fmod(a, M_PI * 2.0f);
-      if (a > M_PI)
-      {
-         a -= M_PI * 2.0f;
-      }
-   }
-   return a;
-}
-
-
-
 void euler_normalize(euler_t *euler)
 {
-   euler->yaw = normalize_euler_0_2pi(euler->yaw);
-   euler->pitch = normalize_euler_sym_pi(euler->pitch);
-   euler->roll = normalize_euler_sym_pi(euler->roll);
+   euler->yaw = norm_angle_0_2pi(euler->yaw);
+   euler->pitch = norm_angle_sym_pi(euler->pitch);
+   euler->roll = norm_angle_sym_pi(euler->roll);
 }
 
 

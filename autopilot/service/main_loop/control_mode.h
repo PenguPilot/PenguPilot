@@ -66,7 +66,7 @@ bool cm_u_is_spd(void);
 bool cm_u_is_acc(void);
 
 /* returns the setpoint */
-float cm_u_setp(void);
+float cm_u_sp(void);
 
 /* returns the acc limit */
 float cm_u_acc_limit(void);
@@ -76,10 +76,10 @@ float cm_u_acc_limit(void);
  * ATT CONTROL MODES *
  *********************/
 
-void cm_att_set_gps_pos(vec2_t pos);
-void cm_att_set_gps_spd(vec2_t spd);
-void cm_att_set_angles(vec2_t angles);
-void cm_att_set_rates(vec2_t rates);
+void cm_att_set_gps_pos(const vec2_t *pos);
+void cm_att_set_gps_spd(const vec2_t *spd);
+void cm_att_set_angles(const vec2_t *angles);
+void cm_att_set_rates(const vec2_t *rates);
 
 /* true, if GPS navigation/position-hold */
 bool cm_att_is_gps_pos(void);
@@ -94,7 +94,7 @@ bool cm_att_is_angles(void);
 bool cm_att_is_rates(void);
 
 /* the attitude setpoint */
-vec2_t cm_att_setp(void);
+void cm_att_sp(vec2_t *out);
 
 
 /*********************
@@ -112,8 +112,10 @@ void cm_yaw_set_spd(float spd);
 bool cm_yaw_is_pos(void);
 
 /* returns the current yaw setpoint */
-float cm_yaw_setp(void);
+float cm_yaw_sp(void);
 
+/* module initializer */
+void cm_init(void);
 
 #endif /* __CONTROL_MODE_H__ */
 

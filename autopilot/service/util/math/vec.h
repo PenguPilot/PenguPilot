@@ -33,7 +33,7 @@
 
 #include <stdlib.h>
 #include <assert.h>
-
+#include <stdbool.h>
 
 
 /* generic vector type */
@@ -77,6 +77,16 @@ void vec_alloc(vec_t *vec, size_t dim);
       vec->ve = (real_t *)&vec->data; \
       memset(vec->ve, 0, sizeof(real_t) * vec->dim); \
    }
+
+
+#define vec_copy(vec_out, vec_in) \
+   _vec_copy((vec_t *)vec_out, (const vec_t *)vec_in)
+void _vec_copy(vec_t *out, const vec_t *in);
+
+
+#define vec_equal(vec_a, vec_b) \
+   _vec_equal((const vec_t *)vec_a, (const vec_t *)vec_b)
+bool _vec_equal(const vec_t *a, const vec_t *b);
 
 
 #define vec_fill(vec_ptr, values) \

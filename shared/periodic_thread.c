@@ -47,7 +47,7 @@ void periodic_thread_start(periodic_thread_t *thread, void *(*func)(void *),
    thread->name = name;
    thread->private = private;
    thread->periodic_data.period = period;
-   pthread_create(&thread->handle, &attr, func, thread);
+   pthread_create(&thread->handle, 0, func, thread);
    thread->sched_param.sched_priority = priority;
    pthread_setschedparam(thread->handle, SCHED_FIFO, &thread->sched_param);
 }

@@ -30,6 +30,7 @@
 #include <util.h>
 
 #include "quat.h"
+#include "../util/math/conv.h"
 
 
 void quat_init(quat_t *q, const vec3_t *acc, const vec3_t *mag)
@@ -143,7 +144,7 @@ void quat_to_euler(euler_t *euler, const quat_t *quat)
 {
    const float x = quat->x, y = quat->y, z = quat->z, w = quat->w;
    const float ww = w * w, xx = x * x, yy = y * y, zz = z * z;
-   euler->yaw = normalize_euler_0_2pi(atan2f(2.f * (x * y + z * w), xx - yy - zz + ww));
+   euler->yaw = norm_angle_0_2pi(atan2f(2.f * (x * y + z * w), xx - yy - zz + ww));
    euler->pitch = asinf(-2.f * (x * z - y * w));
    euler->roll = atan2f(2.f * (y * z + x * w), -xx - yy + zz + ww);
 }

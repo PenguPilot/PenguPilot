@@ -45,7 +45,8 @@ bool flight_logic_run(bool *hard_off,
                       float u_baro_pos,
                       float u_ultra_pos,
                       float f_max,
-                      float mass);
+                      float mass,
+                      float dt);
 
 
 #endif /* __FLIGHT_LOGIC_H__ */

@@ -45,11 +45,7 @@ typedef union
 euler_t;
 
 
-float normalize_euler_0_2pi(float a);
- 
-
 void euler_normalize(euler_t *euler);
-
 
 void body_to_neu(vec3_t *world, const euler_t *euler, const vec3_t *body);
 

@@ -192,6 +192,7 @@ void main_init(int argc, char *argv[])
    opcd_params_apply("main.", params);
    filter1_lp_init(&lp_filter, tsfloat_get(&acc_fg), 0.06, 3);
 
+   cm_init();
    mon_init();
    LOG(LL_INFO, "entering main loop");
 }
@@ -209,7 +210,6 @@ void main_step(const float dt,
                const uint16_t sensor_status,
                const bool override_hw)
 {
-   printf("%f\n", dt);
    vec2_t ne_pos_err, ne_speed_sp, ne_spd_err;
    vec2_init(&ne_pos_err);
    vec2_init(&ne_speed_sp);
@@ -260,8 +260,9 @@ void main_step(const float dt,
 
    /* perform gyro calibration: */
    marg_data_t cal_marg_data;
-   memcpy(&cal_marg_data, marg_data, sizeof(marg_data_t));
-   if (cal_sample_apply(&gyro_cal, &cal_marg_data.gyro.ve[0]) == 0 && gyro_moved(&marg_data->gyro))
+   marg_data_init(&cal_marg_data);
+   marg_data_copy(&cal_marg_data, marg_data);
+   if (cal_sample_apply(&gyro_cal, cal_marg_data.gyro.ve) == 0 && gyro_moved(&marg_data->gyro))
    {
       if (interval_measure(&gyro_move_interval) > 1.0)
          LOG(LL_ERROR, "gyro moved during calibration, retrying");
@@ -324,30 +325,32 @@ void main_step(const float dt,
 
    /* execute flight logic (sets cm_x parameters used below): */
    bool hard_off = false;
-   bool motors_enabled = flight_logic_run(&hard_off, sensor_status, flying, cal_channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg);
+   bool motors_enabled = flight_logic_run(&hard_off, sensor_status, flying, cal_channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg, dt);
    
    /* execute up position/speed controller(s): */
    float a_u = 0.0f;
    if (cm_u_is_pos())
    {
       if (cm_u_is_baro_pos())
-         a_u = u_ctrl_step(&u_pos_err, cm_u_setp(), pos_est.baro_u.pos, pos_est.baro_u.speed, dt);
+         a_u = u_ctrl_step(&u_pos_err, cm_u_sp(), pos_est.baro_u.pos, pos_est.baro_u.speed, dt);
       else /* ultra pos */
-         a_u = u_ctrl_step(&u_pos_err, cm_u_setp(), pos_est.ultra_u.pos, pos_est.ultra_u.speed, dt);
+         a_u = u_ctrl_step(&u_pos_err, cm_u_sp(), pos_est.ultra_u.pos, pos_est.ultra_u.speed, dt);
    }
    else if (cm_u_is_spd())
-      a_u = u_speed_step(&u_spd_err, cm_u_setp(), pos_est.baro_u.speed, dt);
+      a_u = u_speed_step(&u_spd_err, cm_u_sp(), pos_est.baro_u.speed, dt);
    else
-      a_u = cm_u_setp();
+      a_u = cm_u_sp();
    
    /* execute north/east navigation and/or read speed vector input: */
    if (cm_att_is_gps_pos())
    {
-      navi_set_dest(cm_att_setp());
-      navi_run(&ne_speed_sp, &ne_pos_err, &pos_est.ne_pos, dt);
+      vec2_t pos_sp;
+      vec2_init(&pos_sp);
+      cm_att_sp(&pos_sp);
+      navi_run(&ne_speed_sp, &ne_pos_err, &pos_sp, &pos_est.ne_pos, dt);
    }
    else if (cm_att_is_gps_spd())
-      ne_speed_sp = cm_att_setp();
+      cm_att_sp(&ne_speed_sp);
 
    /* execute north/east speed controller: */
    vec2_t a_ne;
@@ -365,46 +368,46 @@ void main_step(const float dt,
 
    /* execute NEU forces optimizer: */
    float thrust;
-   vec2_t pitch_roll_sp;
-   vec2_init(&pitch_roll_sp);
-   att_thrust_calc(&pitch_roll_sp, &thrust, &f_neu, euler.yaw, platform.max_thrust_n, 0);
+   vec2_t pr_pos_sp;
+   vec2_init(&pr_pos_sp);
+   att_thrust_calc(&pr_pos_sp, &thrust, &f_neu, euler.yaw, platform.max_thrust_n, 0);
 
    /* execute direct attitude angle control, if requested: */
    if (cm_att_is_angles())
-      pitch_roll_sp = cm_att_setp();
+      cm_att_sp(&pr_pos_sp);
 
    /* execute attitude angles controller: */
    vec2_t att_err;
    vec2_init(&att_err);
-   vec2_t pitch_roll_speed;
-   vec2_set(&pitch_roll_speed, -cal_marg_data.gyro.y, cal_marg_data.gyro.x);
-   vec2_t pitch_roll_ctrl;
-   vec2_init(&pitch_roll_ctrl);
-   pitch_roll_ctrl.x = -euler.pitch;
-   pitch_roll_ctrl.y = euler.roll;
-   
-   vec2_t pitch_roll;
-   vec2_set(&pitch_roll, -euler.pitch, euler.roll);
-   att_ctrl_step(&pitch_roll_ctrl, &att_err, dt, &pitch_roll, &pitch_roll_speed, &pitch_roll_sp);
+   vec2_t pr_spd;
+   vec2_set(&pr_spd, -cal_marg_data.gyro.y, cal_marg_data.gyro.x);
+
+   vec2_t pr_pos, pr_pos_ctrl;
+   vec2_set(&pr_pos, -euler.pitch, euler.roll);
+   vec2_init(&pr_pos_ctrl);
+   att_ctrl_step(&pr_pos_ctrl, &att_err, dt, &pr_pos, &pr_spd, &pr_pos_sp);
  
    float piid_sp[3] = {0.0f, 0.0f, 0.0f};
-   piid_sp[PIID_PITCH] = pitch_roll_ctrl.ve[0];
-   piid_sp[PIID_ROLL] = pitch_roll_ctrl.ve[1];
+   piid_sp[PIID_PITCH] = pr_pos_ctrl.ve[0];
+   piid_sp[PIID_ROLL] = pr_pos_ctrl.ve[1];
  
    /* execute direct attitude rate control, if requested:*/
    if (cm_att_is_rates())
    {
-      vec2_t pitch_roll_rates_sp = cm_att_setp();
-      piid_sp[PIID_PITCH] = pitch_roll_rates_sp.ve[0];
-      piid_sp[PIID_ROLL] = pitch_roll_rates_sp.ve[1];
+      vec2_t rates_sp;
+      vec2_init(&rates_sp);
+      cm_att_sp(&rates_sp);
+      piid_sp[PIID_PITCH] = rates_sp.ve[0];
+      piid_sp[PIID_ROLL] = rates_sp.ve[1];
    }
 
    /* execute yaw position controller: */
    float yaw_speed_sp, yaw_err;
-   if (cm_yaw_is_pos() && pos_est.ultra_u.pos > 1.0f)
-      yaw_speed_sp = yaw_ctrl_step(&yaw_err, cm_yaw_setp(), euler.yaw, cal_marg_data.gyro.z, dt);
+   if (cm_yaw_is_pos())
+      yaw_speed_sp = yaw_ctrl_step(&yaw_err, cm_yaw_sp(), euler.yaw, cal_marg_data.gyro.z, dt);
    else
-      yaw_speed_sp = cm_yaw_setp(); /* direct yaw speed control */
+      yaw_speed_sp = cm_yaw_sp(); /* direct yaw speed control */
+   yaw_speed_sp = yaw_ctrl_step(&yaw_err, 0.0, euler.yaw, cal_marg_data.gyro.z, dt);
    piid_sp[PIID_YAW] = yaw_speed_sp;
 
    /* execute stabilizing PIID controller: */
@@ -440,6 +443,8 @@ void main_step(const float dt,
    /* write motors: */
    if (!override_hw)
    {
+      printf("%f\n", dt);
+      //EVERY_N_TIMES(20, printf("%f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]));
       //platform_write_motors(setpoints);
    }
 

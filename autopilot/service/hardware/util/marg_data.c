@@ -38,6 +38,14 @@ void marg_data_init(marg_data_t *marg_data)
 }
 
 
+void marg_data_copy(marg_data_t *out, const marg_data_t *in)
+{
+   vec_copy(&out->gyro, &in->gyro);
+   vec_copy(&out->acc, &in->acc);
+   vec_copy(&out->mag, &in->mag);
+}
+
+
 bool gyro_moved(const vec3_t *gyro)
 {
    FOR_N(i, 3)
