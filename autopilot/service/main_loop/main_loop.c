@@ -349,7 +349,7 @@ void main_step(const float dt,
       a_u = u_speed_step(&u_spd_err, cm_u_sp(), pos_est.baro_u.speed, dt);
    else
       a_u = cm_u_sp();
-   
+ 
    /* execute north/east navigation and/or read speed vector input: */
    if (cm_att_is_gps_pos())
    {
