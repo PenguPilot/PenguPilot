@@ -35,22 +35,18 @@
 typedef struct 
 {
    size_t dim;
-   float *f0;
-   float *f1;
-   float *f2;
-   float *f3;
-   float *f4;
+   float **f;
 }
-adams4_t;
+adams5_t;
 
 
-int adams4_init(adams4_t *a, const size_t dim);
+int adams5_init(adams5_t *a, const size_t dim);
 
-void adams4_reset(adams4_t *a);
+void adams5_reset(adams5_t *a);
 
-void adams4_run(adams4_t *a, float *out, float *in, float ts, int enabled);
+void adams5_run(adams5_t *a, float *out, float *in, float ts, int enabled);
 
-void adams4_term(adams4_t *a);
+void adams5_term(adams5_t *a);
 
 
 #endif /* __ADAMS4_H__ */
