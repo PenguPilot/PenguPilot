@@ -24,14 +24,14 @@
  GNU General Public License for more details. */
 
 
-#include <meschach/matrix.h>
-#include <meschach/matrix2.h>
 #include <math.h>
+#include <string.h>
 
-#include <util.h>
+#include "../util/math/vec3.h"
+#include "../util/math/mat.h"
 
 #include "euler.h"
-#include "vec3.h"
+
 
 
 float normalize_euler_0_2pi(float a)
@@ -76,19 +76,12 @@ void euler_normalize(euler_t *euler)
 }
 
 
-struct body_to_neu
+
+MAT_DECL(3, 3);
+
+
+void body_to_neu(vec3_t *world, const euler_t *euler, const vec3_t *body)
 {
-   VEC *body_acc_vec;
-   VEC *world_acc_vec;
-   MAT *dcm;
-};
-
-
-void body_to_neu(body_to_neu_t *btn, vec3_t *world, const euler_t *euler, const vec3_t *body)
-{
-   FOR_N(i, 3)
-      btn->body_acc_vec->ve[i] = body->vec[i];
-
    float theta = euler->pitch;
    float phi = euler->roll;
    float psi = euler->yaw;
@@ -109,39 +102,23 @@ void body_to_neu(body_to_neu_t *btn, vec3_t *world, const euler_t *euler, const 
     * the transpose of this is used as the inverse DCM below:
     */
 
-   MAT *d = btn->dcm;
-   d->me[0][0] = cos_psi * cos_theta;
-   d->me[0][1] = cos_psi * sin_phi * sin_theta - cos_phi * sin_psi;
-   d->me[0][2] = sin_phi * sin_psi + cos_phi * cos_psi * sin_theta;
+   mat3x3_t dcm;
+   mat3x3_init(&dcm);
+   dcm.me[0][0] = cos_psi * cos_theta;
+   dcm.me[0][1] = cos_psi * sin_phi * sin_theta - cos_phi * sin_psi;
+   dcm.me[0][2] = sin_phi * sin_psi + cos_phi * cos_psi * sin_theta;
 
-   d->me[1][0] = cos_theta * sin_psi;
-   d->me[1][1] = cos_phi * cos_psi + sin_phi * sin_psi * sin_theta;
-   d->me[1][2] = cos_phi * sin_psi * sin_theta - cos_psi * sin_phi;
+   dcm.me[1][0] = cos_theta * sin_psi;
+   dcm.me[1][1] = cos_phi * cos_psi + sin_phi * sin_psi * sin_theta;
+   dcm.me[1][2] = cos_phi * sin_psi * sin_theta - cos_psi * sin_phi;
 
-   d->me[2][0] = -sin_theta;
-   d->me[2][1] = cos_theta * sin_phi;
-   d->me[2][2] = cos_phi * cos_theta;
+   dcm.me[2][0] = -sin_theta;
+   dcm.me[2][1] = cos_theta * sin_phi;
+   dcm.me[2][2] = cos_phi * cos_theta;
 
    /*
     * multiply resulting matrix with input vector:
     */
-   mv_mlt(d, btn->body_acc_vec, btn->world_acc_vec);
-
-   /*
-    * convert meschach vector to output:
-    */
-   world->vec[0] = -btn->world_acc_vec->ve[0];
-   world->vec[1] = -btn->world_acc_vec->ve[1];
-   world->vec[2] = -btn->world_acc_vec->ve[2];
-}
-
-
-body_to_neu_t *body_to_neu_create(void)
-{
-   body_to_neu_t *btn = (body_to_neu_t *)malloc(sizeof(body_to_neu_t));
-   btn->body_acc_vec = v_get(3);
-   btn->world_acc_vec = v_get(3);
-   btn->dcm = m_get(3, 3);
-   return btn;
+   mat_vec_mul(world, &dcm, body);
 }
 

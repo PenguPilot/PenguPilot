@@ -35,7 +35,7 @@ re_pb = re.compile('.*\.proto$')
 
 
 def set_compiler_dependent_cflags():
-   cflags = '-D_GNU_SOURCE -pipe -std=c99 -O3 -ftree-vectorize -ffast-math -fomit-frame-pointer -funroll-loops -Wall -Wextra '
+   cflags = '-D_GNU_SOURCE -pipe -std=c99 -g -Wall -Wextra '
    pipe = subprocess.Popen([env['CC'], '-v'], env=env['ENV'], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
    if 'armv7a' in pipe.stderr.read():
       cflags += ' -mcpu=cortex-a8 -mfpu=vfpv3-d16 -mfloat-abi=hard'
@@ -116,10 +116,7 @@ ap_dir = 'autopilot/'
 ap_pb_dir = ap_dir + 'shared/'
 ap_src = collect_files(ap_dir + 'service', re_cc)
 ap_pb_lib = make_proto_lib(ap_pb_dir, 'autopilot_pb')
-meschach_dir = ap_dir + 'shared/meschach'
-meschach_src = collect_files(meschach_dir, re_cc)
-meschach_lib = env.Library(meschach_dir + 'meschach', meschach_src)
-ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = common_libs + [pm_pb_lib, gpsp_pb_lib, ap_pb_lib] + ['m', meschach_lib, 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
+ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = common_libs + [pm_pb_lib, gpsp_pb_lib, ap_pb_lib] + ['m', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
 
 # Display:
 display_src = map(lambda x: 'display/shared/' + x, ['pyssd1306.c', 'pyssd1306.i', 'i2c/i2c.c', 'ssd1306.c'])

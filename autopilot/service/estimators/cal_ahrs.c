@@ -58,7 +58,8 @@ void cal_ahrs_init(float beta_start, float beta_step)
 }
 
 
-int cal_ahrs_update(euler_t *euler, marg_data_t *marg_data, float mag_decl, float dt)
+int cal_ahrs_update(euler_t *euler, const marg_data_t *marg_data,
+                    const float mag_decl, const float dt)
 {
    ahrs_update(&imu, marg_data, dt);
    int status = ahrs_update(&ahrs, marg_data, dt);

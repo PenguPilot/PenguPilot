@@ -135,15 +135,15 @@ void main_replay(int argc, char *argv[])
       dt = double_data[0];
       FOR_N(i, 3)
       {
-         marg_data.gyro.vec[i] = double_data[1 + i];
+         marg_data.gyro.ve[i] = double_data[1 + i];
       }
       FOR_N(i, 3)
       {
-         marg_data.acc.vec[i] = double_data[4 + i];
+         marg_data.acc.ve[i] = double_data[4 + i];
       }
       FOR_N(i, 3)
       {
-         marg_data.mag.vec[i] = double_data[7 + i];
+         marg_data.mag.ve[i] = double_data[7 + i];
       }
       gps_data.lat = double_data[10];
       gps_data.lon = double_data[11];

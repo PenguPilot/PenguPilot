@@ -227,14 +227,14 @@ int mpu6050_read(mpu6050_t *mpu, vec3_t *gyro, vec3_t *acc, float *temperature)
 
    if (acc != NULL)
       FOR_N(i, 3)
-         acc->vec[i] = 9.81f * (float)(val[i]) / (float)((1 << 14) >> mpu->afs);
+         acc->ve[i] = 9.81f * (float)(val[i]) / (float)((1 << 14) >> mpu->afs);
 
    if (temperature != NULL)
       *temperature = (float)(val[3]) / 340.0f + 36.53f;
 
    if (gyro != NULL)
       FOR_N(i, 3)
-         gyro->vec[i] = M_PI / 180.0f * (float)(val[i + 4]) * (float)(250 << mpu->gfs) / (float)(1 << 15);
+         gyro->ve[i] = M_PI / 180.0f * (float)(val[i + 4]) * (float)(250 << mpu->gfs) / (float)(1 << 15);
 
    THROW_END();
 }

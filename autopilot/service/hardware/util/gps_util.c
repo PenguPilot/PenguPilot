@@ -40,16 +40,16 @@ static double start_lat; /* start latitude in meters */
 
 void gps_util_update(gps_rel_data_t *out, const gps_data_t *in)
 {
-   if (in->fix >= FIX_2D && !initialized)
+   if (!initialized)
    {
       /* set-up start positions */
-      initialized = 1;
       start_lon = in->lon;
       start_lat = in->lat;
+      initialized = 1;
    }
 
    /* calculate deltas: */
-   if (in->fix >= FIX_2D && initialized)
+   if (initialized)
    {
       meter_offset(&out->dn, &out->de,
                     in->lat, in->lon,

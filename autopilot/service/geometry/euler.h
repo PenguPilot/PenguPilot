@@ -28,7 +28,7 @@
 #define __EULER_H__
 
 
-#include "vec3.h"
+#include "../util/math/vec3.h"
 
 
 /* euler angles */
@@ -51,13 +51,7 @@ float normalize_euler_0_2pi(float a);
 void euler_normalize(euler_t *euler);
 
 
-struct body_to_neu;
-typedef struct body_to_neu body_to_neu_t;
-
-
-body_to_neu_t *body_to_neu_create(void);
-
-void body_to_neu(body_to_neu_t *btw, vec3_t *world, const euler_t *euler, const vec3_t *body);
+void body_to_neu(vec3_t *world, const euler_t *euler, const vec3_t *body);
 
 
 #endif /* __EULER_H__ */

@@ -33,6 +33,7 @@
 #include "../hardware/util/rc_channels.h"
 #include "../util/math/vec2.h"
 
+
 /* initialize autoflight logic */
 void auto_logic_init(void);
 
