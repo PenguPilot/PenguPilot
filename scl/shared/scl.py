@@ -43,10 +43,12 @@ def scl_get_socket(id, type_name):
    socket_path = pp_path + id
    socket = context.socket(socket_type)
    if socket_type in [zmq.SUB, zmq.REQ, zmq.PUSH]:
+      socket.setsockopt(zmq.RCVHWM, 1)
       if socket_type == zmq.SUB:
          socket.setsockopt(zmq.SUBSCRIBE, "")
       socket.connect(socket_path)
    elif socket_type in [zmq.PUB, zmq.REP, zmq.PULL]:
+      socket.setsockopt(zmq.SNDHWM, 1)
       socket.bind(socket_path)
    else:
       raise Exception("unknown socket type: %d" % socket_type)

@@ -113,17 +113,19 @@ SERVICE_MAIN_BEGIN("pos_speed_est_neu", PP_PRIO_3)
          
          /* run position estimate: */
          pos_update(&pos, &pos_in);
-         msgpack_sbuffer_clear(msgpack_buf);
-         msgpack_pack_array(pk, 8);
-         PACKF(pos.ultra_u.pos);
-         PACKF(pos.ultra_u.speed);
-         PACKF(pos.baro_u.pos);
-         PACKF(pos.baro_u.speed);
-         PACKF(pos.ne_pos.n);
-         PACKF(pos.ne_speed.n);
-         PACKF(pos.ne_pos.e);
-         PACKF(pos.ne_speed.e);
-         scl_copy_send_dynamic(pos_speed_est_socket, msgpack_buf->data, msgpack_buf->size);
+         EVERY_N_TIMES(4, /* ~50 Hz: */ 
+            msgpack_sbuffer_clear(msgpack_buf);
+            msgpack_pack_array(pk, 8);
+            PACKF(pos.ultra_u.pos);
+            PACKF(pos.ultra_u.speed);
+            PACKF(pos.baro_u.pos);
+            PACKF(pos.baro_u.speed);
+            PACKF(pos.ne_pos.n);
+            PACKF(pos.ne_speed.n);
+            PACKF(pos.ne_pos.e);
+            PACKF(pos.ne_speed.e);
+            scl_copy_send_dynamic(pos_speed_est_socket, msgpack_buf->data, msgpack_buf->size);
+         )
       }
    }
    MSGPACK_READER_SIMPLE_LOOP_END;

@@ -70,8 +70,8 @@ try:
          yaw_speed_socket.send(dumps(0.6 * yaw))
       else:
          mot_en_socket.send(dumps(0))
-except:
-   pass
+except Exception, e:
+   print e
 
 mot_en_socket.send(dumps(0))
 sleep(0.5)
