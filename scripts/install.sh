@@ -39,4 +39,5 @@ ln -f -s $PENGUPILOT_PATH/gps/tools/gps_debug.py pp_gps_debug
 ln -f -s $PENGUPILOT_PATH/icarus/tools/icarus_shell.sh pp_icarus_shell
 ln -f -s $PENGUPILOT_PATH/autopilot/tools/calibration/cal_begin.sh pp_cal_begin
 ln -f -s $PENGUPILOT_PATH/autopilot/tools/calibration/cal_end.sh pp_cal_end
+ln -f -s $PENGUPILOT_PATH/autopilot/tools/motor_test.py pp_motor_test
 
