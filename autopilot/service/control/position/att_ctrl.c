@@ -86,13 +86,13 @@ void att_ctrl_reset(void)
 
 void att_ctrl_step(vec2_t *ctrl, vec2_t *err, const float dt, const vec2_t *pos, const vec2_t *speed, const vec2_t *setp)
 {
-   float tmp[2];
-   filter1_run(&filter, pos->ve, tmp);
+   float err_in[2];
+   FOR_EACH(i, err_in)
+      err_in[i] = setp->ve[i] + deg2rad(tsfloat_get(&biases[i])) - pos->ve[i];
+
+   filter1_run(&filter, err_in, &err->ve[0]);
+   
    FOR_EACH(i, controllers)
-   {
-      float error = setp->ve[i] + deg2rad(tsfloat_get(&biases[i])) - tmp[i];
-      err->ve[i] = error;
-      ctrl->ve[i] = pid_control(&controllers[i], error, speed->ve[i], dt);
-   }
+      ctrl->ve[i] = pid_control(&controllers[i], err->ve[i], speed->ve[i], dt);
 }
 

@@ -302,8 +302,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
    /* standard mode is yaw speed */
    cm_yaw_set_spd(stick_dz(yaw_stick, 0.075) * deg2rad(tsfloat_get(&yaw_speed_max)));
 
-#if 0
-   if (ultra_u_pos < 0.5)
+   if (ultra_u_pos < 0.3)
    {
       /* reset yaw setpoint if we are too low 
        * and fall back to yaw speed control: */
@@ -317,7 +316,6 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       yaw_pos_sp = norm_angle_0_2pi(yaw_pos_sp);
       cm_yaw_set_pos(yaw_pos_sp);
    }
-#endif
 
    switch (man_mode)
    {

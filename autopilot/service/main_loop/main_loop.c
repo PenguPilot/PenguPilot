@@ -303,8 +303,7 @@ void main_step(const float dt,
    float x = 0.003;
    _c = _c * (1-x) + current * x;
    cmc_apply(&cal_marg_data.mag, _c);
-   //printf("%f %f %f %f\n", _c, cal_marg_data.mag.x, cal_marg_data.mag.y, cal_marg_data.mag.z);
-   
+
    /* determine flight state: */
    bool flying = flight_state_update(&cal_marg_data.acc.ve[0]);
    if (!flying && pos_in.ultra_u == 7.0)
@@ -417,7 +416,6 @@ void main_step(const float dt,
       yaw_speed_sp = yaw_ctrl_step(&yaw_err, cm_yaw_sp(), euler.yaw, cal_marg_data.gyro.z, dt);
    else
       yaw_speed_sp = cm_yaw_sp(); /* direct yaw speed control */
-   //yaw_speed_sp = yaw_ctrl_step(&yaw_err, 0.0, euler.yaw, cal_marg_data.gyro.z, dt);
    piid_sp[PIID_YAW] = yaw_speed_sp;
 
    /* execute stabilizing PIID controller: */
@@ -451,11 +449,10 @@ void main_step(const float dt,
       FOR_N(i, platform.n_motors) setpoints[i] = platform.ac.off_val;
    
    
-   printf("%f %f %f\n", rad2deg(euler.pitch), rad2deg(euler.roll), rad2deg(euler.yaw));
    /* write motors: */
    if (!override_hw)
    {
-      //platform_write_motors(setpoints);
+      platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */
