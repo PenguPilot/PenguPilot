@@ -109,6 +109,11 @@ class PowerMan:
             pass
 
    def power_state_emitter(self):
+      sleep(5)
+      vmin = 13.2
+      vmax = 16.4
+      batt = min(1.0, max(0.0, (self.voltage - vmin) / (vmax - vmin)))
+      self.current_integral = (1.0 - batt) * self.capacity
       while True:
          state = PowerState()
          sleep(1)
