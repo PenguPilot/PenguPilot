@@ -36,5 +36,4 @@ def main(name):
    sched_set_prio(PP_PRIO_3)
    proxy = SCL_Proxy('vp_ctrl_spp', 'pull', 'vp_ctrl_sp', 'pub')
 
-
 daemonize('vp_ctrl_prx', main)

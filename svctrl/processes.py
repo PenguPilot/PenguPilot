@@ -88,10 +88,11 @@ def start(name, path, args):
       if ps.returncode != 0:
          print red('[ERROR: service quit with code ' + str(ps.returncode) + ']')
       else:
-         for _ in range(50):
+         for _ in range(30):
             time.sleep(0.1)
             try:
                pid = validate(name)
+               break
             except:
                pass
          if not pid:

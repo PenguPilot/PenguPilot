@@ -37,4 +37,5 @@ def main(name):
    proxy = SCL_Proxy('vs_ctrl_spp', 'pull', 'vs_ctrl_sp', 'pub')
 
 
+main('vs_ctrl_prx')
 daemonize('vs_ctrl_prx', main)

@@ -35,7 +35,7 @@ socket = scl_get_socket('acc', 'sub')
 while True:
    try:
       vec = loads(socket.recv())
-      print 'acc g vector magnitude:', norm(vec)
+      print 'acc vector magnitude:', norm(vec)
    except:
       break
 

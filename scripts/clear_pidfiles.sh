@@ -10,9 +10,9 @@
 # |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
 # |___________________________________________________|
 #
-# This Script removes all service Pidfiles
+# This Script removes all service Pidfiles and sockets
 #
-# Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+# Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,3 +26,4 @@
 
 
 rm -rf $HOME/.PenguPilot/run/*
+rm -rf $HOME/.PenguPilot/ipc/*

@@ -10,11 +10,14 @@
     |___________________________________________________|
 
 
-Remote Control Channel Permutation and Calibration Service
-==========================================================
+Accelerometer Calibration Subsystem
+===================================
 
-- subscribes to raw remote control channel inputs (socket: rc\_raw)
-- applies channel permutation and scaling based on calibration
-- publishes calibrated remote control channel inputs (socket: rc\_cal)
-
-For the calibration precedure itself, the interactive utility program "pp_rc_cal" is used.
+- service:
+  - subscribes to socket acc\_raw
+  - publishes on socket acc
+- tools/acc\_cal.py:
+  - computes calibration coefficients after rotating the device in arbitrary directions
+  - stores coefficients in opcd
+- tools/acc\_magnitude.py:
+  - prints acc vector magnitude to verify calibration

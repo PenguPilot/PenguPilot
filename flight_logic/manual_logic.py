@@ -26,12 +26,12 @@
  GNU General Public License for more details. """
 
 
-from sticks import sticks_expo
+from sticks import *
 from scl import scl_get_socket, SCL_Reader
 from msgpack import dumps, loads
 from time import sleep
 from geomath import vec2_rot
-from control_api import *
+from ctrl_api import *
 from gps_msgpack import fix
 
 
