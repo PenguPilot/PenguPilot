@@ -54,3 +54,10 @@ remote:
   binary: 'remote/service/remote'
   depends: [opcd]
 
+wifi_sensor:
+  binary: 'wifi_sensor/service/wifi_sensor.py'
+
+heartbeat:
+  binary: 'heartbeat/service/heartbeat.py'
+  depends: [gps, powerman, aircomm]
+

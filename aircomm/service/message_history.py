@@ -20,6 +20,5 @@ class MessageHistory:
             rl.append(m)
       for m in rl:
          self.hist.pop(m)
-      print self.hist
       return True
 

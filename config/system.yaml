@@ -164,12 +164,20 @@ components:
       - gps: sub
       - power: sub
 
+   - name: heartbeat
+     gates:
+      - out: pub
+      - gps: sub
+      - power: sub
 
 #
 # component connections (component_a.gate_x -- component_b.gate_y)
 #
 
 connections:
+   - [ heartbeat.out,            aircomm.in]
+   - [ heartbeat.gps,            gps.data]
+   - [ heartbeat.power,          powerman.mon]
    - [ display.motors_spinning,  pilot.motors_spinning]
    - [ display.gps,              gps.data]
    - [ display.power,            powerman.mon]

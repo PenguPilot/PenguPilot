@@ -60,13 +60,18 @@ def gps():
    global spinning, gps_data, socket_map
    gps_data = None
    socket = socket_map['gps']
+   i = 0
    while True:
-      if spinning:
-         sleep(1)
-      else:
-         with gps_lock:
+      with gps_lock:
+         data = socket.recv()
+         if spinning:
+            continue
+         if i == 5:
+            i = 0
             gps_data = GpsData()
-            gps_data.ParseFromString(socket.recv())
+            gps_data.ParseFromString(data)
+         i += 1
+
 
 
 def cpuavg():

@@ -265,8 +265,16 @@ try:
 
    elif args[0] == 'restart':
       name = args[1]
+      try:
+         data = config[name]
+      except KeyError, e:
+         print red('ERROR:'), 'service %s is unknown' % args[1]
+         sys.exit(1)
       names = []
       running = running_processes()
+      if name not in running:
+         print red('ERROR:'), 'service %s is not running' % args[1]
+         sys.exit(1)
       for service in restart_order(name):
          if service in running:
             names.append(service)

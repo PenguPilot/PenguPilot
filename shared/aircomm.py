@@ -1,0 +1,7 @@
+
+
+BCAST = 0x7F
+
+HEARTBEAT = 0
+
+
