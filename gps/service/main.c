@@ -42,11 +42,11 @@
 #include "nmea.h"
 
 
-#define TIME_STR_LEN 20
+#define TIME_STR_LEN 64
 
 
 static char running = 1;
-static char *serial_path = "/dev/ttyACM0";
+static char *serial_path = "/dev/ttyO2";
 static tsint_t serial_speed;
 static tsint_t min_sats;
 static void *gps_socket;
@@ -165,7 +165,7 @@ void _main(int argc, char *argv[])
             /* set system time to gps time once: */
             if (!time_set && info.fix >= 2)
             {
-               char shell_date_cmd[TIME_STR_LEN + 8];
+               char shell_date_cmd[TIME_STR_LEN + 10];
                linux_sys_set_timezone(convert(info.lat), convert(info.lon));
                sprintf(shell_date_cmd, "date -s \"%s\"", time_str);
                time_set = system(shell_date_cmd) == 0;

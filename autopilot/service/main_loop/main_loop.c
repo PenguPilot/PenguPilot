@@ -203,7 +203,7 @@ void main_init(int override_hw)
    cal_init(&gyro_cal, 3, 500);
    btw = body_to_world_create();
 
-   cal_ahrs_init(10.0f, 2.0f * REALTIME_PERIOD, 0.02f);
+   cal_ahrs_init(10.0f, 5.0f * REALTIME_PERIOD, 0.02f);
    gps_util_init(&gps_util);
    flight_state_init(50, 30, 4.0, 150.0, 1.3);
    
@@ -267,6 +267,9 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    /* perform sensor data fusion: */
    euler_t euler;
    int ahrs_state = cal_ahrs_update(&euler, marg_data, dt);
+   //printf("%f %f %f\n", marg_data->gyro.x, marg_data->gyro.y, marg_data->gyro.z);
+   //printf("%f %f %f\n", marg_data->mag.x, marg_data->mag.y, marg_data->mag.z);
+   printf("%f %f %f\n", euler.yaw, euler.pitch, euler.roll);
    if (ahrs_state < 0 || !cal_complete(&gyro_cal))
       goto out;
    
@@ -328,7 +331,6 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    ne_speed_ctrl_run(&pitch_roll_sp, &speed_sp, dt, &pos_estimate.ne_speed, euler.yaw);
 
    /* run attitude controller: */
-   vec2_t pitch_roll = {{euler.pitch, euler.roll}};
    if (cm.xy.type == XY_ATT_POS)
    {
       if (cm.xy.global)
@@ -345,6 +347,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    vec2_t att_err;
    vec2_t pitch_roll_speed = {{marg_data->gyro.y, marg_data->gyro.x}};
    vec2_t pitch_roll_ctrl;
+   vec2_t pitch_roll = {{euler.pitch, euler.roll}};
    att_ctrl_step(&pitch_roll_ctrl, &att_err, dt, &pitch_roll, &pitch_roll_speed, &pitch_roll_sp);
 
    float piid_sp[3] = {0.0f, 0.0f, 0.0f};
@@ -386,7 +389,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    /* write motors: */
    if (!override_hw)
    {
-      platform_write_motors(setpoints);
+      //platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */
