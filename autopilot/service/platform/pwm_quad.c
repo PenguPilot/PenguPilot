@@ -33,7 +33,7 @@
 
 
                                      /* m1  m2  m3  m4 */
-static uint8_t motor_addrs[N_MOTORS] = { 9, 11, 10, 8};
+static uint8_t motor_addrs[N_MOTORS] = { 10, 9, 11, 8};
 
 
 static float force_to_esc(float force, float voltage)

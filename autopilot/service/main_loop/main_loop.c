@@ -275,7 +275,6 @@ void main_step(float dt,
    if (cm_u_is_spd())
       u_speed_sp = cm_u_setp();
    
-   printf("%f %f\n", pos_estimate.baro_u.speed, pos_estimate.ultra_u.speed);
    float f_d_rel = u_speed_step(u_speed_sp, pos_estimate.baro_u.speed, dt);
    if (cm_u_is_acc())
       f_d_rel = cm_u_setp();
@@ -359,8 +358,7 @@ void main_step(float dt,
    /* write motors: */
    if (!override_hw)
    {
-      //EVERY_N_TIMES(10, printf("MOTORS: %f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]));
-      //platform_write_motors(setpoints);
+      platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */
