@@ -65,7 +65,7 @@ void cal_ahrs_init(float beta_start, float beta_step, float beta_end)
 }
 
 
-int cal_ahrs_update(euler_t *euler, marg_data_t *marg_data, float dt)
+int cal_ahrs_update(euler_t *euler, marg_data_t *marg_data, float mag_decl, float dt)
 {
    ahrs_update(&imu, marg_data, dt);
    int status = ahrs_update(&ahrs, marg_data, dt);
@@ -77,7 +77,7 @@ int cal_ahrs_update(euler_t *euler, marg_data_t *marg_data, float dt)
       quat_to_euler(&ahrs_euler, &ahrs.quat);
       quat_to_euler(&imu_euler, &imu.quat);
       /* apply calibration: */
-      euler->yaw = ahrs_euler.yaw + deg2rad(tsfloat_get(&yaw_bias));
+      euler->yaw = ahrs_euler.yaw + deg2rad(tsfloat_get(&yaw_bias)) + mag_decl;
       euler->pitch = imu_euler.pitch + deg2rad(tsfloat_get(&pitch_bias));
       euler->roll = imu_euler.roll + deg2rad(tsfloat_get(&roll_bias));
       euler_normalize(euler);

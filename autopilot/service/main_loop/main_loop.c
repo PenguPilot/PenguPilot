@@ -286,10 +286,10 @@ void main_step(float dt,
 
    /* perform sensor data fusion: */
    euler_t euler;
-   int ahrs_state = cal_ahrs_update(&euler, marg_data, dt);
+   int ahrs_state = cal_ahrs_update(&euler, marg_data, mag_decl, dt);
    if (ahrs_state < 0 || !cal_complete(&gyro_cal))
       goto out;
-   
+
    ONCE(init = 1; LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
    
    /* local ACC to global ACC rotation: */

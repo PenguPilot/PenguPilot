@@ -36,7 +36,7 @@
 void cal_ahrs_init(float beta_start, float beta_step, float beta_end);
 
 
-int cal_ahrs_update(euler_t *euler, marg_data_t *marg_data, float dt);
+int cal_ahrs_update(euler_t *euler, marg_data_t *marg_data, float mag_decl, float dt);
 
 
 #endif /* __CAL_AHRS_H__ */
