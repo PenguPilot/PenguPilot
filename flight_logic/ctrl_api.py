@@ -45,8 +45,10 @@ class _OutputEnable:
             s.send(dumps(state))
       self.prev_state = state
 
-# thrust:
+
+# thrust and thrust maximum:
 _thrust = scl_get_socket('thrust_p', 'push')
+_thrust_max = scl_get_socket('thrust_maxp', 'push')
 
 # vertical speed control:
 _vs_sp = scl_get_socket('vs_ctrl_spp', 'push')
@@ -99,54 +101,59 @@ _mot_en = scl_get_socket('mot_en', 'push')
 ### PUBLIC API: ###
 
 def mot_en(val):
-   _mot_en.send(dumps(val))
+   _mot_en.send(dumps(int(val)))
 
 
 def set_ys(val):
    _rp_y_oe.set(0)
-   _rs_sp_y.send(dumps(val))
+   _rs_sp_y.send(dumps(float(val)))
 
 
 def set_yp(val):
    _rp_y_oe.set(1)
-   _rp_sp_y.send(dumps(val))
+   _rp_sp_y.send(dumps(float(val)))
 
 
 def set_thrust(val):
    _vs_oe.set(0)
-   _thrust.send(dumps(val))
+   _thrust.send(dumps(float(val)))
+
+
+def set_thrust_max(val):
+   _thrust_max.send(dumps(float(val)))
 
 
 def set_vs(val):
    _vs_oe.set(1)
    _vp_oe.set(0)
-   _vs_sp.send(dumps(val))
+   _vs_sp.send(dumps(float(val)))
 
 
 def set_vp(val, mode = 'ultra'):
    _vs_oe.set(1)
    _vp_oe.set(1)
-   _vp_sp.send(dumps([mode, val]))
+   _vp_sp.send(dumps([str(mode), float(val)]))
 
 
 def set_torques(vec):
    _rs_oe.set(0)
+   vec = map(float, vec)
    _torques.send(dumps(vec))
 
 
 def set_rs(vec):
    _rs_oe.set(1)
    _rp_oe.set(0)
-   _rs_sp_p.send(dumps(vec[0]))
-   _rs_sp_r.send(dumps(vec[1]))
+   _rs_sp_p.send(dumps(float(vec[0])))
+   _rs_sp_r.send(dumps(float(vec[1])))
 
 
 def set_rp(vec):
    _rs_oe.set(1)
    _rp_oe.set(1)
    _hs_oe.set(0)
-   _rp_sp_p.send(dumps(vec[0]))
-   _rp_sp_r.send(dumps(vec[1]))
+   _rp_sp_p.send(dumps(float(vec[0])))
+   _rp_sp_r.send(dumps(float(vec[1])))
 
 
 def set_hs(vec):
@@ -154,8 +161,8 @@ def set_hs(vec):
    _rp_oe.set(1)
    _hs_oe.set(1)
    _hp_oe.set(0)
-   _hs_sp_n.send(dumps(vec[0]))
-   _hs_sp_e.send(dumps(vec[1]))
+   _hs_sp_n.send(dumps(float(vec[0])))
+   _hs_sp_e.send(dumps(float(vec[1])))
 
 
 def set_hp(vec):
@@ -163,14 +170,15 @@ def set_hp(vec):
    _rp_oe.set(1)
    _hs_oe.set(1)
    _hp_oe.set(1)
-   _hp_sp_n.send(dumps(vec[0]))
-   _hp_sp_e.send(dumps(vec[1]))
+   _hp_sp_n.send(dumps(float(vec[0])))
+   _hp_sp_e.send(dumps(float(vec[1])))
 
 
 if __name__ == '__main__':
    # tests; execute only if motors are disabled!
    mot_en(0)
    set_torques([0.0, 0.0, 0.0])
+   set_thrust_max(10.0)
    set_thrust(0.0)
    set_ys(0.0)
    set_yp(0.0)

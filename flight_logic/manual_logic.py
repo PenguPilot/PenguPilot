@@ -52,6 +52,7 @@ gps = SCL_Reader('gps', 'sub', [0])
 
 init(OPCD_Subscriber())
 sleep(1)
+set_thrust_max(1000.0)
 try:
    mode_prev = None
    while True:
