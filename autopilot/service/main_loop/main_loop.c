@@ -209,6 +209,7 @@ void main_step(const float dt,
                const uint16_t sensor_status,
                const bool override_hw)
 {
+   printf("%f\n", dt);
    vec2_t ne_pos_err, ne_speed_sp, ne_spd_err;
    vec2_init(&ne_pos_err);
    vec2_init(&ne_speed_sp);
