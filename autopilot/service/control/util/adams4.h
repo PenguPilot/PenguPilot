@@ -47,7 +47,7 @@ int adams4_init(adams4_t *a, const size_t dim);
 
 void adams4_reset(adams4_t *a);
 
-void adams4_run(adams4_t *a, float *x, float ts, int enabled);
+void adams4_run(adams4_t *a, float *out, float *in, float ts, int enabled);
 
 void adams4_term(adams4_t *a);
 

@@ -43,6 +43,7 @@ void ahrs_init(ahrs_t *ahrs, ahrs_type_t type, float beta_start, float beta_step
    ahrs->quat.q1 = 0;
    ahrs->quat.q2 = 0;
    ahrs->quat.q3 = 0;
+   adams4_init(&ahrs->adams4, 3);
 }
 
 
@@ -117,10 +118,12 @@ static void ahrs_update_imu(ahrs_t *ahrs, float gx, float gy, float gz,
    }
 
    /* integrate rate of change to yield quaternion: */
-   ahrs->quat.q0 += qDot0 * dt;
-   ahrs->quat.q1 += qDot1 * dt;
-   ahrs->quat.q2 += qDot2 * dt;
-   ahrs->quat.q3 += qDot3 * dt;
+   //ahrs->quat.q0 += qDot0 * dt;
+   //ahrs->quat.q1 += qDot1 * dt;
+   //ahrs->quat.q2 += qDot2 * dt;
+   //ahrs->quat.q3 += qDot3 * dt;
+   float x[4] = {qDot0 * dt, qDot1 * dt, qDot2 * dt, qDot3 * dt};
+   adams4_run(&ahrs->adams4, &ahrs->quat.vec, x, dt, 1);
 
    /* normalize quaternion: */
    ahrs_normalize_4(&ahrs->quat.q0, &ahrs->quat.q1 , &ahrs->quat.q2, &ahrs->quat.q3);
@@ -226,10 +229,12 @@ int ahrs_update(ahrs_t *ahrs, const marg_data_t *marg_data, const float dt)
    }
 
    /* integrate rate of change to yield quaternion: */
-   ahrs->quat.q0 += qDot0 * dt;
-   ahrs->quat.q1 += qDot1 * dt;
-   ahrs->quat.q2 += qDot2 * dt;
-   ahrs->quat.q3 += qDot3 * dt;
+   //ahrs->quat.q0 += qDot0 * dt;
+   //ahrs->quat.q1 += qDot1 * dt;
+   //ahrs->quat.q2 += qDot2 * dt;
+   //ahrs->quat.q3 += qDot3 * dt;
+   float x[4] = {qDot0 * dt, qDot1 * dt, qDot2 * dt, qDot3 * dt};
+   adams4_run(&ahrs->adams4, &ahrs->quat.vec, x, dt, 1);
 
    /* normalise quaternion: */
    quat_normalize_self(&ahrs->quat);
