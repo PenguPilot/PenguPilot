@@ -68,10 +68,22 @@ int platform_read_ultra(float *ultra)
 }
 
 
+static float start = 0.0f;
+
 int platform_read_baro(float *baro)
 {
    CHECK_DEV(platform.read_baro);
-   return platform.read_baro(baro);
+   float buf;
+   int status = platform.read_baro(&buf);
+   if (status == 0)
+   {
+      if (start == 0.0f)
+      {
+         start = buf;   
+      }
+   }
+   *baro = buf - start;
+   return status;
 }
 
 

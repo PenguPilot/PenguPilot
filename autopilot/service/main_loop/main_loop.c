@@ -265,6 +265,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
 
    /* acc/mag calibration: */
    acc_mag_cal_apply(&marg_data->acc, &marg_data->mag);
+   //printf("%f\n", sqrt(marg_data->acc.x * marg_data->acc.x + marg_data->acc.y * marg_data->acc.y + marg_data->acc.z * marg_data->acc.z));
 
    /* perform sensor data fusion: */
    int ahrs_state = ahrs_update(&ahrs, marg_data, 0, dt);
@@ -305,6 +306,8 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    {
       gas = z_ctrl_step(&z_err, pos_estimate.ultra_z.pos,
                                    pos_estimate.baro_z.pos, pos_estimate.baro_z.speed, dt);
+      
+      EVERY_N_TIMES(20, printf("%f %f\n", pos_in.baro_z, pos_estimate.baro_z.pos));
       gas = fmin(gas, cm.z.setp);
    }
    else /* Z_STICK */
