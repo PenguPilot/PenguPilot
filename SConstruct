@@ -97,12 +97,14 @@ opcd_lib = env.Library('opcd/shared/opcd', collect_files('opcd', re_cc))
 Requires(opcd_lib, scl_lib + opcd_pb_lib)
 append_inc_lib('opcd/shared')
 
-# build gps:
-gps_dir = 'gps/'
-gps_pb_dir = gps_dir + 'shared/'
-gps_pb_lib = make_proto_lib(gps_pb_dir, 'gps_pb')
-gps_bin = env.Program('gps/service/gps', collect_files(gps_dir + 'service', re_cc), LIBS = ['pthread', 'opcd', 'opcd_pb', 'shared', 'scl', 'yaml-cpp', 'zmq', 'glib-2.0', 'gps_pb', 'protobuf-c', 'libstdc++'])
-Requires(gps_bin, scl_lib + shared_lib + gps_pb_lib + opcd_pb_lib)
+# build rc input:
+#rc_dir = 'input/rc/'
+#rc_pb_dir = rc_dir + 'shared/'
+#rc_pb = 'rc_data.proto'
+#rc_pb_lib = make_proto_lib(rc_pb_dir, 'rc_pb')
+#rc_bin = env.Program('input/rc/services/rc', collect_files(rc_dir + 'services', re_cc), LIBS = ['pthread', 'opcd', 'opcd_pb', 'shared', 'scl', 'yaml-cpp', 'zmq', 'glib-2.0', 'rc_pb', 'protobuf-c'])
+#Requires(rc_bin, scl_lib + shared_lib + rc_pb_lib + opcd_pb_lib)
+
 
 # build powerman:
 pm_pb_lib = make_proto_lib('powerman/shared/', 'powerman_pb')
@@ -128,6 +130,16 @@ amd_src = ['autopilot/service/hardware/bus/i2c/i2c.c', 'autopilot/service/hardwa
            'autopilot/service/platform/drotek_marg2.c', 'autopilot/service/hardware/drivers/hmc5883/hmc5883.c',
            'shared/util.c', 'autopilot/tools/acc_mag_cal/acc_mag_dump.c']
 amd_bin = env.Program('autopilot/tools/acc_mag_cal/acc_mag_dump', amd_src, LIBS = ['rt', 'shared'])
+
+# build gps:
+
+append_inc_lib('gps/service/nmealib')
+gps_dir = 'gps/'
+gps_pb_dir = gps_dir + 'shared/'
+gps_pb_lib = make_proto_lib(gps_pb_dir, 'gps_pb')
+gps_bin = env.Program('gps/service/gps', collect_files(gps_dir + 'service', re_cc), LIBS = ['pthread', 'opcd', 'opcd_pb', 'shared', 'scl', 'yaml-cpp', 'zmq', 'glib-2.0', 'gps_pb', 'protobuf-c', 'libstdc++'])
+Requires(gps_bin, scl_lib + shared_lib + gps_pb_lib + opcd_pb_lib)
+
 
 # build icarus:
 ic_dir = 'icarus/'

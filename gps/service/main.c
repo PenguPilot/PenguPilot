@@ -39,14 +39,14 @@
 #include <daemon.h>
 
 #include "linux_sys.h"
-#include "nmea.h"
+#include "nmealib/nmea/nmea.h"
 
 
-#define TIME_STR_LEN 64
+#define TIME_STR_LEN 20
 
 
 static char running = 1;
-static char *serial_path = "/dev/ttyO2";
+static char *serial_path = "/dev/ttyACM0";
 static tsint_t serial_speed;
 static tsint_t min_sats;
 static void *gps_socket;
@@ -165,7 +165,7 @@ void _main(int argc, char *argv[])
             /* set system time to gps time once: */
             if (!time_set && info.fix >= 2)
             {
-               char shell_date_cmd[TIME_STR_LEN + 10];
+               char shell_date_cmd[TIME_STR_LEN + 8];
                linux_sys_set_timezone(convert(info.lat), convert(info.lon));
                sprintf(shell_date_cmd, "date -s \"%s\"", time_str);
                time_set = system(shell_date_cmd) == 0;
@@ -183,7 +183,7 @@ void _main(int argc, char *argv[])
                   PB_SET(gps_data, lat, convert(info.lat));
                   PB_SET(gps_data, lon, convert(info.lon));
                   PB_SET(gps_data, sats, info.satinfo.inuse);
-                  PB_SET(gps_data, course, info.direction);
+                  PB_SET(gps_data, course, info.track);
                   PB_SET(gps_data, speed, info.speed);
                }
               
@@ -206,7 +206,7 @@ void _main(int argc, char *argv[])
                satinfo[i] = malloc(gps_data.n_satinfo * sizeof(SatInfo));
                sat_info__init(satinfo[i]);
                satinfo[i]->id = nmea_satinfo->id;
-               satinfo[i]->in_use = nmea_satinfo->in_use;
+               satinfo[i]->in_use = info.satinfo.in_use[i];
                satinfo[i]->elv = nmea_satinfo->elv;
                satinfo[i]->azimuth = nmea_satinfo->azimuth;
                satinfo[i]->sig = nmea_satinfo->sig;
