@@ -154,7 +154,7 @@ int scl_init(char *comp_name)
    }
    if (!found)
    {
-      fprintf(stderr, "could not find SCL cache: %s\n", cache);
+      fprintf(stderr, "could not find component %s\n", comp_name);
       return -3;   
    }
 

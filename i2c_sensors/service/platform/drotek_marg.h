@@ -29,8 +29,8 @@
 
 
 #include <util.h>
+#include <marg_data.h>
 
-#include "../sensors/util/marg_data.h"
 #include "../sensors/itg3200/itg3200.h"
 #include "../sensors/bma180/bma180.h"
 #include "../sensors/hmc5883/hmc5883.h"

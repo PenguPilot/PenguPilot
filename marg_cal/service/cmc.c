@@ -8,10 +8,10 @@
  |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
- 
- Calibrated MARG Data Interface
+  
+ Current Magnetometer Compensation (CMC) Implementation
 
- Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,20 +24,36 @@
  GNU General Public License for more details. */
 
 
-#ifndef __MARG_CAL_H__
-#define __MARG_CAL_H__
+#include <opcd_interface.h>
+#include <threadsafe_types.h>
+#include <util.h>
 
-#include <math/vec3.h>
-
-typedef strut
-#define ACC_X (3)
-#define ACC_Y (4)
-#define ACC_Z (5)
-
-#define MAG_X (6)
-#define MAG_Y (7)
-#define MAG_Z (8)
+#include "cmc.h"
 
 
-#endif /* __MARG_CAL_H__ */
+static tsfloat_t scale[3];
+static tsfloat_t bias;
+
+
+void cmc_init(void)
+{
+   ASSERT_ONCE();
+
+   opcd_param_t params[] =
+   {
+      {"scale_x", &scale[0]},
+      {"scale_y", &scale[1]},
+      {"scale_z", &scale[2]},
+      {"bias", &bias},
+      OPCD_PARAMS_END
+   };
+   opcd_params_apply("cmc.", params);
+}
+
+
+void cmc_apply(vec3_t *mag, const float current)
+{
+   FOR_N(i, 3)
+      mag->ve[i] -= (current - tsfloat_get(&bias)) * tsfloat_get(&scale[i]);
+}
 

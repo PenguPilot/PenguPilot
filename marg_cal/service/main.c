@@ -11,7 +11,7 @@
   
  MARG Calibration Service Implementation
 
- Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details. */
 
+
 #include <syslog.h>
 
 #include <msgpack.h>
@@ -32,23 +33,27 @@
 #include <opcd_interface.h>
 #include <serial.h>
 #include <logger.h>
+#include <marg_data.h>
+#include <interval.h>
 
-#include "../shared/rc_cal.h"
-#include "channels.h"
+#include "calibration.h"
+#include "acc_mag_cal.h"
 
 
 static int running = 1;
 static msgpack_sbuffer *msgpack_buf = NULL;
 static msgpack_packer *pk = NULL;
 static char *platform = NULL;
-static void *rc_raw_socket = NULL;
-static float channels[MAX_CHANNELS];
-static void *rc_cal_socket = NULL;
+static void *marg_raw_socket = NULL;
+static void *marg_cal_socket = NULL;
+static calibration_t gyro_cal;
+static interval_t gyro_move_interval;
 
 
 int _main(void)
 {
    THROW_BEGIN();
+   char *name = "marg_cal";
 
    /* initialize msgpack buffers: */
    msgpack_buf = msgpack_sbuffer_new();
@@ -57,59 +62,79 @@ int _main(void)
    THROW_IF(pk == NULL, -ENOMEM);
   
    /* initialize SCL: */
-   THROW_ON_ERR(scl_init("rc_cal"));
-   rc_raw_socket = scl_get_socket("rc_raw");
-   THROW_IF(rc_raw_socket == NULL, -EIO);
-   rc_cal_socket = scl_get_socket("rc_cal");
-   THROW_IF(rc_cal_socket == NULL, -EIO);
+   THROW_ON_ERR(scl_init("marg_cal"));
+   marg_raw_socket = scl_get_socket("marg_raw");
+   THROW_IF(marg_raw_socket == NULL, -EIO);
+   marg_cal_socket = scl_get_socket("marg_cal");
+   THROW_IF(marg_cal_socket == NULL, -EIO);
 
-
-   /* init opcd: */
-   opcd_params_init("rc_cal", 0);
-   
    /* initialize logger: */
    syslog(LOG_INFO, "opening logger");
-   if (logger_open("rc_cal") != 0)
+   if (logger_open(name) != 0)
    {  
       syslog(LOG_CRIT, "could not open logger");
       THROW(-EIO);
    }
    syslog(LOG_CRIT, "logger opened");
-
-   /* init channel mapping: */
-   LOG(LL_INFO, "loading channels configuration");
-   THROW_ON_ERR(channels_init());
    
+   /* init opcd: */
+   opcd_params_init(name, 1);
+   
+   /* init calibration data: */
+   cal_init(&gyro_cal, 3, 1000);
+   acc_mag_cal_init();
+   interval_init(&gyro_move_interval);
+  
    while (1)
    {
       char buffer[1024];
-      int ret = scl_recv_static(rc_raw_socket, buffer, sizeof(buffer));
+      int ret = scl_recv_static(marg_raw_socket, buffer, sizeof(buffer));
       if (ret > 0)
       {
-         float channels[MAX_CHANNELS];
          msgpack_unpacked msg;
          msgpack_unpacked_init(&msg);
+         marg_data_t marg_data;
+         marg_data_init(&marg_data);
          if (msgpack_unpack_next(&msg, buffer, ret, NULL))
          {
-            /* read received raw channels message: */
             msgpack_object root = msg.data;
             assert (root.type == MSGPACK_OBJECT_ARRAY);
-            int n_channels = root.via.array.size - 1;
-            int valid = root.via.array.ptr[0].via.i64;
-            FOR_N(i, n_channels)
-               if (i < MAX_CHANNELS)
-                  channels[i] = root.via.array.ptr[1 + i].via.dec;
-            
-            /* apply permutation and calibration */
-            float cal_channels[PP_MAX_CHANNELS];
-            channels_update(cal_channels, channels);
+            uint8_t status = root.via.array.ptr[0].via.i64;
+            FOR_N(i, 3)
+               marg_data.gyro.ve[i] = root.via.array.ptr[1 + i].via.dec;
+            FOR_N(i, 3)
+               marg_data.acc.ve[i] = root.via.array.ptr[4 + i].via.dec;
+            FOR_N(i, 3)
+               marg_data.mag.ve[i] = root.via.array.ptr[7 + i].via.dec;
+            float ultra_z = root.via.array.ptr[10].via.dec;
+            float baro_z = root.via.array.ptr[11].via.dec;
 
-            /* send the channels: */
+            if (!cal_sample_apply(&gyro_cal, marg_data.gyro.ve))
+            {
+               if (gyro_moved(&marg_data.gyro))
+               {
+                  if (interval_measure(&gyro_move_interval) > 1.0)
+                     LOG(LL_ERROR, "gyro moved during calibration, retrying");
+                  cal_reset(&gyro_cal);
+               }
+
+            }
+            else
+            {
+               ONCE(LOG(LL_INFO, "gyro biases: %f %f %f", gyro_cal.bias[0], gyro_cal.bias[1], gyro_cal.bias[2]));
+            }
+
+            acc_mag_cal_apply(&marg_data.acc, &marg_data.mag);
+
             msgpack_sbuffer_clear(msgpack_buf);
-            msgpack_pack_array(pk, PP_MAX_CHANNELS + 1);
-            PACKI(valid);    /* index 0: valid */
-            PACKFV(cal_channels, PP_MAX_CHANNELS); /* index 1, .. : channels */
-            scl_copy_send_dynamic(rc_cal_socket, msgpack_buf->data, msgpack_buf->size);
+            msgpack_pack_array(pk, 12);
+            PACKI(status);      /*  0 */
+            PACKFV(marg_data.gyro.ve, 3); /* 1 - 3 */
+            PACKFV(marg_data.acc.ve, 3);  /* 4 - 6 */
+            PACKFV(marg_data.mag.ve, 3);  /* 7 - 9 */
+            PACKF(ultra_z);     /* 10 */
+            PACKF(baro_z);      /* 11 */
+            scl_copy_send_dynamic(marg_cal_socket, msgpack_buf->data, msgpack_buf->size);
          }
          msgpack_unpacked_destroy(&msg);
       }
@@ -118,7 +143,6 @@ int _main(void)
          msleep(1);
       }
    }
-   printf("nrf\n");
   
    THROW_END();
 }
@@ -142,7 +166,7 @@ void main_wrap(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
    char pid_file[1024];
-   sprintf(pid_file, "%s/.PenguPilot/run/rc_cal.pid", getenv("HOME"));
+   sprintf(pid_file, "%s/.PenguPilot/run/marg_cal.pid", getenv("HOME"));
    daemonize(pid_file, main_wrap, _cleanup, argc, argv);
    return 0;
 }

@@ -30,7 +30,7 @@
 
 
 #include <i2c/i2c.h>
-#include "../../util/math/vec3.h"
+#include <math/vec3.h>
 
 
 int ak8975c_reader_init(i2c_bus_t *bus);

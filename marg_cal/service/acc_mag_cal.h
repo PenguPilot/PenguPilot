@@ -8,10 +8,10 @@
  |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
- 
- Calibrated MARG Data Interface
+  
+ ACC/MAG Calibration
 
- Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,20 +24,17 @@
  GNU General Public License for more details. */
 
 
-#ifndef __MARG_CAL_H__
-#define __MARG_CAL_H__
-
-#include <math/vec3.h>
-
-typedef strut
-#define ACC_X (3)
-#define ACC_Y (4)
-#define ACC_Z (5)
-
-#define MAG_X (6)
-#define MAG_Y (7)
-#define MAG_Z (8)
+#ifndef __ACC_MAG_CAL_H__
+#define __ACC_MAG_CAL_H__
 
 
-#endif /* __MARG_CAL_H__ */
+#include "marg_data.h"
+
+
+void acc_mag_cal_init(void);
+
+void acc_mag_cal_apply(vec3_t *acc, vec3_t *mag);
+
+
+#endif /* __ACC_MAG_CAL_H__ */
 

@@ -33,7 +33,7 @@
 #include <util.h>
 
 #include <i2c/i2c.h>
-#include "../../util/math/vec3.h"
+#include <math/vec3.h>
 
 
 typedef struct

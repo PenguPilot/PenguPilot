@@ -34,12 +34,12 @@
 #include <logger.h>
 #include <util.h>
 #include <i2c/i2c.h>
+#include <math/quat.h>
 
 #include "platform.h"
 #include "drotek_9150.h"
 #include "../sensors/i2cxl/i2cxl_reader.h"
 #include "../sensors/ms5611/ms5611_reader.h"
-#include "../util/math/quat.h"
 
 
 static i2c_bus_t i2c_bus;

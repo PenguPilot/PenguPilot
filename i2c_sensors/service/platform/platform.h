@@ -30,7 +30,7 @@
 
 #include <stdint.h>
 
-#include "../sensors/util/marg_data.h"
+#include <marg_data.h>
 
 
 typedef struct

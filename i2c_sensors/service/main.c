@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Sensor Reader / Publisher
+ I2C Sensor Reader / Publisher
 
  Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <daemon.h>
 #include <stdbool.h>
+#include <msgpack.h>
 
 #include <sched.h>
 #include <unistd.h>
@@ -45,43 +46,45 @@
 #include "platform/overo_quad.h"
 #include "platform/pi_quad.h"
 
+
 #define REALTIME_PERIOD 0.005
 
 
-static struct sched_param sp;
-static periodic_thread_t _thread; 
-static periodic_thread_t *thread = &_thread;
 
-
-static void _main(int argc, char *argv[])
+static int _main(int argc, char *argv[])
 {
    ASSERT_ONCE();
+   THROW_BEGIN();
 
-   /* init SCL subsystem: */
-   syslog(LOG_INFO, "initializing signaling and communication link (SCL)");
-   if (scl_init("10dof_sensor") != 0)
-   {
-      syslog(LOG_CRIT, "could not init scl module");
-      die();
-   }
+   struct sched_param sp;
+   periodic_thread_t _thread; 
+   periodic_thread_t *thread = &_thread;
+   char *name = "i2c_sensors";
+   char *plat_name;
+   msgpack_sbuffer *msgpack_buf = NULL;
+   msgpack_packer *pk = NULL;
+ 
+   /* initialize SCL: */
+   syslog(LOG_INFO, "initializing scl");
+   THROW_ON_ERR(scl_init(name));
+   void *marg_raw_socket = scl_get_socket("marg_raw");
+   THROW_IF(marg_raw_socket == NULL, -EIO);
 
+   /* initialize msgpack buffers: */
+   msgpack_buf = msgpack_sbuffer_new();
+   THROW_IF(msgpack_buf == NULL, -ENOMEM);
+   pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
+   THROW_IF(pk == NULL, -ENOMEM);
+ 
    /* init params subsystem: */
-   syslog(LOG_INFO, "initializing opcd interface");
-   opcd_params_init("autopilot.", 1);
+   opcd_params_init(name, 1);
 
    /* initialize logger: */
    syslog(LOG_INFO, "opening logger");
-   if (logger_open("autopilot") != 0)
-   {
-      syslog(LOG_CRIT, "could not open logger");
-      die();
-   }
-   syslog(LOG_CRIT, "logger opened");
+   THROW_ON_ERR(logger_open(name));
 
-   LOG(LL_INFO, "initializing platform");
-
-   char *plat_name = NULL;
-   opcd_param_get("platform", &plat_name);
+   /* determine platform: */
+   THROW_ON_ERR(opcd_param_get("platform", &plat_name));
    if (strcmp(plat_name, "overo_quad") == 0)
    {
       if (overo_quad_init(&platform) < 0)
@@ -108,7 +111,6 @@ static void _main(int argc, char *argv[])
       LOG(LL_ERROR, "unknown platform: %s", plat_name);
    }
 
-
    LOG(LL_INFO, "setting up real-time scheduling");
    sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
    sched_setscheduler(getpid(), SCHED_FIFO, &sp);
@@ -125,29 +127,51 @@ static void _main(int argc, char *argv[])
    thread->running = 1;
    thread->periodic_data.period.tv_sec = 0;
    thread->periodic_data.period.tv_nsec = NSEC_PER_SEC * REALTIME_PERIOD;
-
    interval_t interval;
    interval_init(&interval);
 
    PERIODIC_THREAD_LOOP_BEGIN
    {
       marg_data_t marg_data;
-      float ultra_z;
+      marg_data_init(&marg_data);
       float baro_z;
+      float ultra_z;
       float dt = interval_measure(&interval);
       uint8_t status = platform_read_sensors(&marg_data, &ultra_z, &baro_z);
+      msgpack_sbuffer_clear(msgpack_buf);
+      msgpack_pack_array(pk, 12);
+      PACKI(status);                /* 0: status */
+      PACKFV(marg_data.gyro.ve, 3); /* 1-3: gyro */
+      PACKFV(marg_data.acc.ve, 3);  /* 4-6: acc */
+      PACKFV(marg_data.mag.ve, 3);  /* 7-9: mag */
+      PACKF(ultra_z);               /* 10: ultra */
+      PACKF(baro_z);                /* 11: baro */
+      scl_copy_send_dynamic(marg_raw_socket, msgpack_buf->data, msgpack_buf->size);
+ 
    }
    PERIODIC_THREAD_LOOP_END
+
+   THROW_END();
+}
+
+
+void main_wrap(int argc, char *argv[])
+{
+   _main(argc, argv);  
+}
+
+
+void pp_daemonize(char *name, int argc, char *argv[])
+{
+   char pid_file[1024];
+   sprintf(pid_file, "%s/.PenguPilot/run/%s.pid", getenv("HOME"), name);
+   daemonize(pid_file, main_wrap, die, argc, argv);
 }
 
 
 int main(int argc, char *argv[])
 {
-   _main(argc, argv);
-   char pid_file[1024];
-   sprintf(pid_file, "%s/.PenguPilot/run/sensors_reader.pid", getenv("HOME"));
-   daemonize(pid_file, _main, die, argc, argv);
+   pp_daemonize("i2c_sensors", argc, argv);
    return 0;
 }
-
 

@@ -33,7 +33,7 @@ re_cc = re.compile('.*\.(c|cpp)$')
 re_pb = re.compile('.*\.proto$')
 
 def set_compiler_dependent_cflags():
-   cflags = '-D_GNU_SOURCE -pipe -fomit-frame-pointer -std=c99 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-unused-but-set-variable -Wno-error=unused-result'
+   cflags = '-g -D_GNU_SOURCE -pipe -fomit-frame-pointer -std=c99 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-unused-but-set-variable -Wno-error=unused-result'
    all_info = file('/proc/cpuinfo').read()
    board = 'None'
    for line in all_info.split('\n'):
@@ -41,11 +41,11 @@ def set_compiler_dependent_cflags():
          board = re.sub( ".*Hardware.*: ", "", line, 1)
    print 'scons: Optimization for board: ' + board
    if board == 'ODROID-U2/U3':
-      cflags += ' -O3 -ffast-math -mcpu=cortex-a9 -mfpu=neon-fp16 -mfloat-abi=hard'
+      cflags += ' -ffast-math -mcpu=cortex-a9 -mfpu=neon-fp16 -mfloat-abi=hard'
    elif board == 'Gumstix Overo':
-      cflags += ' -O3 -ffast-math -march=armv7-a -mtune=cortex-a8 -mfpu=vfpv3-d16 -mfloat-abi=hard'
+      cflags += ' -ffast-math -march=armv7-a -mtune=cortex-a8 -mfpu=vfpv3-d16 -mfloat-abi=hard'
    elif board == 'BCM2708':
-	   cflags += ' -O3 -ffast-math -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard'
+	   cflags += ' -ffast-math -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard'
    env['CFLAGS'] = cflags
    env['CXXFLAGS'] = cflags + ' -Wno-error'
 
@@ -139,6 +139,10 @@ append_inc_lib(marg_cal_dir + 'shared')
 marg_cal_bin = env.Program('marg_cal/service/marg_cal', collect_files(marg_cal_dir + 'service', re_cc), LIBS = common_libs + [logger_lib, 'm', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
 Requires(marg_cal_bin, common_libs)
 
+# AHRS Service:
+ahrs_dir = 'ahrs/'
+ahrs_bin = env.Program('ahrs/service/ahrs', collect_files(ahrs_dir + 'service', re_cc), LIBS = common_libs + [logger_lib, 'm', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(ahrs_bin, common_libs)
 
 # Arduino RC / Power Publisher:
 arduino_dir = 'arduino/'

@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Channels Mapping and Scaling Interface
+ MARG Data Interface
 
  Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -24,19 +24,30 @@
  GNU General Public License for more details. */
 
 
-#ifndef __CHANNELS_H__
-#define __CHANNELS_H__
+#ifndef __MARG_DATA_H__
+#define __MARG_DATA_H__
 
 
-#include <stdint.h>
-#include <remote.h>
+#include <stdbool.h>
+
+#include <math/vec3.h>
 
 
+typedef struct
+{
+   vec3_t gyro;
+   vec3_t acc;
+   vec3_t mag;
+}
+marg_data_t;
 
-int channels_init(void);
 
-void channels_update(float out[PP_MAX_CHANNELS], float in[MAX_CHANNELS]);
+void marg_data_init(marg_data_t *marg_data);
+
+void marg_data_copy(marg_data_t *out, const marg_data_t *in);
+
+bool gyro_moved(const vec3_t *gyro);
 
 
-#endif /* __CHANNELS__ */
+#endif /* __MARG_DATA_H__ */
 

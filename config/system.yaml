@@ -23,6 +23,13 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+
+- name: ahrs
+  sockets:
+  - marg_cal: sub
+  - decl: sub
+  - orientation: pub
+
 - name: ofs
   sockets:
    - oflow: pub
@@ -175,6 +182,19 @@
 - name: rc_cal_dump
   sockets:
    - rc_cal: sub
+
+- name: i2c_sensors
+  sockets:
+   - marg_raw: pub
+
+- name: marg_cal
+  sockets:
+  - marg_raw: sub
+  - marg_cal: pub
+
+- name: marg_cal_tool
+  sockets:
+  - marg_raw: sub
 
 - name: motors
   sockets:

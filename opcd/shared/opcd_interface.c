@@ -256,12 +256,12 @@ static void init_param_simple(Value *val, void *data)
 }
 
 
-void opcd_param_get(char *full_name, void *data)
+int opcd_param_get(char *full_name, void *data)
 {
    if (!full_name)
    {
       fprintf(stderr, "libOPCD: null pointer argument\n");
-      return;
+      return -EINVAL;
    }
    /* build and send request: */
    CtrlReq req = CTRL_REQ__INIT;
@@ -282,15 +282,16 @@ void opcd_param_get(char *full_name, void *data)
       else
       {
          fprintf(stderr, "libOPCD: could not find parameter: %s\n", req.id);   
-         exit(EXIT_FAILURE);
+         return -EINVAL;
       }
       SCL_FREE(ctrl_rep, rep);
    }
    else
    {
       fprintf(stderr, "libOPCD: could not communicate with opcd\n");
-      exit(EXIT_FAILURE);
+      return -EIO;
    }
+   return 0;
 }
 
 

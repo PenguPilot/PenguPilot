@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- MARG Data Interface
+ Calibration Interface
 
  Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -24,30 +24,29 @@
  GNU General Public License for more details. */
 
 
-#ifndef __MARG_DATA_H__
-#define __MARG_DATA_H__
-
-
-#include <stdbool.h>
-
-#include "../../util/math/vec3.h"
+#ifndef __CALIBRATION_H__
+#define __CALIBRATION_H__
 
 
 typedef struct
 {
-   vec3_t gyro;
-   vec3_t acc;
-   vec3_t mag;
+   size_t dim; /* dimension of the calibration data */
+   float *sum; /* sum vector */
+   float *bias; /* bias vector */
+   size_t max_samples; /* maximum number of samples */
+   size_t sample; /* current sample counter */
 }
-marg_data_t;
+calibration_t;
 
 
-void marg_data_init(marg_data_t *marg_data);
+void cal_init(calibration_t *cal, const size_t dim, const size_t max_samples);
 
-void marg_data_copy(marg_data_t *out, const marg_data_t *in);
+void cal_reset(calibration_t *cal);
 
-bool gyro_moved(const vec3_t *gyro);
+int cal_complete(calibration_t *cal);
+
+int cal_sample_apply(calibration_t *cal, float *vec);
 
 
-#endif /* __MARG_DATA_H__ */
+#endif /* __CALIBRATION_H__ */
 

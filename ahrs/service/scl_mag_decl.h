@@ -8,11 +8,12 @@
  |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
+  
  
- Calibrated MARG Data Interface
-
- Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
-
+ Magnetic Declination SCL Subscriber Interface
+ 
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation; either version 2 of the License, or
@@ -24,20 +25,14 @@
  GNU General Public License for more details. */
 
 
-#ifndef __MARG_CAL_H__
-#define __MARG_CAL_H__
-
-#include <math/vec3.h>
-
-typedef strut
-#define ACC_X (3)
-#define ACC_Y (4)
-#define ACC_Z (5)
-
-#define MAG_X (6)
-#define MAG_Y (7)
-#define MAG_Z (8)
+#ifndef __SCL_MAG_DECL_H__
+#define __SCL_MAG_DECL_H__
 
 
-#endif /* __MARG_CAL_H__ */
+int scl_mag_decl_init(void);
+
+float scl_mag_decl_get(void);
+
+
+#endif /* __SCL_MAG_DECL_H__ */
 

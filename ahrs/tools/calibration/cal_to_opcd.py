@@ -1,4 +1,6 @@
-/*___________________________________________________
+#!/usr/bin/env python
+"""
+  ___________________________________________________
  |  _____                       _____ _ _       _    |
  | |  __ \                     |  __ (_) |     | |   |
  | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
@@ -9,9 +11,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
  
- Calibrated MARG Data Interface
+ calibration from standard input and stores it to OPCD
 
- Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -21,23 +23,23 @@
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. */
+ GNU General Public License for more details. """
 
 
-#ifndef __MARG_CAL_H__
-#define __MARG_CAL_H__
+from sys import stdin
+from scl import generate_map
+from opcd_interface import OPCD_Interface
 
-#include <math/vec3.h>
+opcd = OPCD_Interface(generate_map('opcd_shell')['opcd_ctrl'])
 
-typedef strut
-#define ACC_X (3)
-#define ACC_Y (4)
-#define ACC_Z (5)
-
-#define MAG_X (6)
-#define MAG_Y (7)
-#define MAG_Z (8)
-
-
-#endif /* __MARG_CAL_H__ */
-
+try:
+   while True:
+      line = stdin.readline()
+      if not line:
+         break
+      key, val = line.split(' ')
+      val = float(val)
+      opcd.set('autopilot.cal.' + key, val)
+   opcd.persist()
+except:
+   print 'calibration invalid; please collect better data'

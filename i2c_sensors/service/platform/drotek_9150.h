@@ -30,7 +30,7 @@
 #define __DROTEK_9150_H__
 
 
-#include "../sensors/util/marg_data.h"
+#include <marg_data.h>
 #include "../sensors/mpu6050/mpu6050.h"
 
 

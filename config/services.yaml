@@ -26,6 +26,20 @@
 
 # high-priority system services:
 
+i2c_sensors:
+   binary: 'i2c_sensors/service/i2c_sensors'
+   priority: sys_high
+
+marg_cal:
+   binary: 'marg_cal/service/marg_cal'
+   depends: [i2c_sensors]
+   priority: sys_high
+
+ahrs:
+   binary: 'ahrs/service/ahrs'
+   depends: [marg_cal]
+   priority: sys_high
+
 autopilot:
    binary: 'autopilot/service/autopilot'
    depends: [gpsp, geomag, powerman, arduino, rc_cal]

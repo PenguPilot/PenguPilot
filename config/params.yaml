@@ -91,6 +91,20 @@ icarus:
       motors_off_z: 0.4
       z_low: 0.5
 
+marg_cal: # accelerometer and magnetometer calibration
+   acc_bias_x: 0.0
+   acc_bias_y: 0.0
+   acc_bias_z: 0.0
+   acc_scale_x: 1.0
+   acc_scale_y: 1.0
+   acc_scale_z: 1.0
+   mag_bias_x: 0.0
+   mag_bias_y: 0.0
+   mag_bias_z: 0.0
+   mag_scale_x: 1.0
+   mag_scale_y: 1.0
+   mag_scale_z: 1.0
+
 
 rc_cal:
    pitch:
@@ -124,29 +138,16 @@ logger:
    details: 2
 
 
+ahrs: # attitude and heading reference system
+   beta: 0.041 # optimal value from madgwick paper
+   beta_start: 20.0
+   beta_step: 10.0
+
+
 autopilot:
 
    main:
       acc_fg: 0.03 # accelerometer low-pass filter
-
-   ahrs: # attitude and heading reference system
-      beta: 0.041 # optimal value from madgwick paper
-      beta_start: 20.0
-      beta_step: 10.0
-
-   cal: # accelerometer and magnetometer calibration
-      acc_bias_x: 0.0
-      acc_bias_y: 0.0
-      acc_bias_z: 0.0
-      acc_scale_x: 1.0
-      acc_scale_y: 1.0
-      acc_scale_z: 1.0
-      mag_bias_x: 0.0
-      mag_bias_y: 0.0
-      mag_bias_z: 0.0
-      mag_scale_x: 1.0
-      mag_scale_y: 1.0
-      mag_scale_z: 1.0
 
    cmc: # current magnetometer calibration
       bias: 0.0
