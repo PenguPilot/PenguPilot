@@ -23,6 +23,7 @@
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details. */
 
+
 %feature("autodoc", "1");
 
 %module(docstring="SSD1306 Interface") pyssd1306

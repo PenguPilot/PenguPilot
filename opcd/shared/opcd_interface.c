@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <sclhelper.h>
+#include <scl.h>
 #include <util.h>
 #include <opcd.pb-c.h>
 #include <simple_thread.h>

@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <util.h>
-#include <sclhelper.h>
+#include <scl.h>
 #include <daemon.h>
 #include "rc_dsl/rc_dsl_reader.h"
 #include <rc.pb-c.h>

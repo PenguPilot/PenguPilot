@@ -10,9 +10,11 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Ed_nrf Wrapper Interface
+ Crypto Functionality for Aircomm
 
  Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Original Code Copyright (C) 2009 joonis new media
+ Author: Thimo Kraemer <thimo.kraemer@joonis.de>
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -25,22 +27,41 @@
  GNU General Public License for more details. """
 
 
-from ed_nrf.dev.cdc import CDC_nRF
-from time import sleep
+import random
+from hashlib import sha1
 
 
-class Interface:
+def init(_key, _salt_len = 2):
+   global key, salt_len
+   key = _key
+   salt_len = _salt_len
 
-   def __init__(self, dev_path):
-      self.nrf = CDC_nRF(dev_path)
-      self.nrf.setPower(True) # enable power
-      self.nrf._bus.setDTR(True) # enable transparent mode
-      self.nrf._bus.timeout = None # disable read/write timeouts
 
-   def send(self, data):
-      sleep(0.01)
-      self.nrf._bus.write(data)
+def _crypt(data, key):
+   x = 0
+   box = range(256)
+   for i in range(256):
+      x = (x + box[i] + ord(key[i % len(key)])) % 256
+      box[i], box[x] = box[x], box[i]
+   x = y = 0
+   out = []
+   for char in data:
+      x = (x + 1) % 256
+      y = (y + box[x]) % 256
+      box[x], box[y] = box[y], box[x]
+      out.append(chr(ord(char) ^ box[(box[x] + box[y]) % 256]))
+   return ''.join(out)
 
-   def receive(self):
-      return self.nrf._bus.read()
+
+def encrypt(data):
+   salt = ''
+   for n in range(salt_length):
+      salt += chr(random.randrange(256))
+   data = salt + _crypt(data, sha1(key + salt).digest())
+   return data
+
+
+def decrypt(data):
+   salt = data[:salt_length]
+   return _crypt(data[salt_length:], sha1(key + salt).digest())
 

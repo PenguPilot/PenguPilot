@@ -29,7 +29,7 @@
 
 #include <opcd_interface.h>
 #include <util.h>
-#include <sclhelper.h>
+#include <scl.h>
 #include <msgpack.h>
 #include <periodic_thread.h>
 

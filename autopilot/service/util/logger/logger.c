@@ -30,7 +30,7 @@
 #include <zmq.h>
 #include <syslog.h>
 
-#include <sclhelper.h>
+#include <scl.h>
 #include <threadsafe_types.h>
 #include <opcd_interface.h>
 #include <log_data.pb-c.h>

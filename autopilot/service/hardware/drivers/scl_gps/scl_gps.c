@@ -27,7 +27,7 @@
 #include <util.h>
 #include <simple_thread.h>
 #include <gps_data.pb-c.h>
-#include <sclhelper.h>
+#include <scl.h>
 #include "../../../util/time/interval.h"
 
 #include "scl_gps.h"

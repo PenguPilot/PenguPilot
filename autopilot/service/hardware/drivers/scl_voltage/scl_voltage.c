@@ -30,7 +30,7 @@
 #include <util.h>
 #include <simple_thread.h>
 #include <power.pb-c.h>
-#include <sclhelper.h>
+#include <scl.h>
 
 #include "scl_voltage.h"
 #include "../../../filters/filter.h"
