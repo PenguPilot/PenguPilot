@@ -64,8 +64,6 @@
 #include "../force_opt/att_thrust.h"
 #include "../flight_logic/flight_logic.h"
 #include "../blackbox/blackbox.h"
-#include "../filters/average.h"
-#include "../filters/filter.h"
 
 
 static bool calibrate = false;
@@ -78,10 +76,8 @@ static calibration_t gyro_cal;
 static interval_t gyro_move_interval;
 static int init = 0;
 static body_to_neu_t *btn;
-
-
-static avg_data_t avgs[3];
 static float avg_acc[3] = {0, 0, 9.81};
+
 
 typedef union
 {
@@ -100,7 +96,7 @@ f_local_t;
 static int marg_err = 0;
 static pos_in_t pos_in;
 static calibration_t rc_cal;
-static Filter1 rc_valid_filter;
+static float baro_ultra_sp = 0.0f;
 
 
 void main_init(int argc, char *argv[])
@@ -185,12 +181,7 @@ void main_init(int argc, char *argv[])
    interval_init(&gyro_move_interval);
    gps_data_init(&gps_data);
 
-   avg_init(&avgs[0], 0.0);
-   avg_init(&avgs[1], 0.0);
-   avg_init(&avgs[2], -9.81);
-
    cal_init(&rc_cal, 3, 500);
-   filter1_lp_init(&rc_valid_filter, 0.5f, REALTIME_PERIOD, 1);
 
    mon_init();
    LOG(LL_INFO, "entering main loop");
@@ -244,14 +235,6 @@ void main_step(float dt,
       channels[CH_SWITCH_R] = 1.0f;
       channels[CH_GAS] = 0.0f;
    }
-   
-   /* run rc signal low-pass filter: */
-   /*float rc_valid_f = (sensor_status & RC_VALID) ? 1.0f : 0.0f;
-   filter1_run(&rc_valid_filter, &rc_valid_f, &rc_valid_f);
-   if (rc_valid_f < 0.5f)
-      sensor_status &= ~RC_VALID;
-   else
-      sensor_status |= RC_VALID;*/
    
    /* apply calibration if remote control input is valid: */
    if (sensor_status & RC_VALID)
@@ -317,17 +300,19 @@ void main_step(float dt,
    /* execute up position/speed controller(s): */
    float u_err = 0.0f;
    float a_u = 0.0f;
-   if (cm_u_is_pos())
+   if (1) //cm_u_is_pos())
    {
-      if (cm_u_is_baro_pos())
+      if (0)//cm_u_is_baro_pos())
       {
          a_u = u_ctrl_step(cm_u_setp(), pos_est.baro_u.pos, pos_est.baro_u.speed, dt);
          u_err = cm_u_setp() - pos_est.baro_u.pos;
       }
-      else
+      else /* ultra pos */
       {
-         a_u = u_ctrl_step(cm_u_setp(), pos_est.ultra_u.pos, pos_est.ultra_u.speed, dt);
-         u_err = cm_u_setp() - pos_est.ultra_u.pos;
+         u_err = 1.0 /*cm_u_setp()*/ - pos_est.ultra_u.pos;
+         baro_ultra_sp += 0.001 * u_err;
+         EVERY_N_TIMES(10, printf("%f %f\n", u_err, baro_ultra_sp));
+         a_u = u_ctrl_step(baro_ultra_sp, pos_est.baro_u.pos, pos_est.baro_u.speed, dt);
       }
    }
    else if (cm_u_is_spd())
@@ -423,10 +408,12 @@ void main_step(float dt,
    if (!motors_enabled || motors_stopping())
       FOR_N(i, platform.n_motors) setpoints[i] = 0.0f;
 
+   //EVERY_N_TIMES(10, printf("%f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]));
    /* write motors: */
    if (!override_hw)
-      EVERY_N_TIMES(10, printf("%f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]));
+   {
       //platform_write_motors(setpoints);
+   }
 
    /* set monitoring data: */
    mon_data_set(pos_est.ne_pos.n - navi_get_dest_n(),
