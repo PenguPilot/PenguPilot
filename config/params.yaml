@@ -50,7 +50,7 @@ powerman:
    voltage_adc: 7
    current_adc: 2
    adc_2_voltage: 'lambda x: (x + 27.0951) / 117.1319'
-   adc_2_current: 'lambda x: (x + 27.0951) / 117.1319'
+   adc_2_current: 'lambda x: 0.0303 * (2500 - x) + 0.4'
 
 icarus:
    takeoff:
