@@ -50,7 +50,6 @@ static char *names[] =
 {
    "HALTED", 
    "STOPPING", 
-   "STOPPED", 
    "STARTING", 
    "SPINNING",
 };
@@ -102,6 +101,7 @@ void motors_state_update(flight_state_t flight_state, float dt, int start)
          {
             state = MOTORS_STARTING;
             timer_reset(&timer);
+            printf("NEW STATE: %s\n", state_name());
          }
          break;
       
@@ -110,10 +110,12 @@ void motors_state_update(flight_state_t flight_state, float dt, int start)
          {
             state = MOTORS_STOPPING;
             timer_reset(&timer);
+            printf("NEW STATE: %s\n", state_name());
          }
          else if (timer_check(&timer, dt))
          {
             state = MOTORS_SPINNING;
+            printf("NEW STATE: %s\n", state_name());
          }
          break;
       
@@ -122,6 +124,7 @@ void motors_state_update(flight_state_t flight_state, float dt, int start)
          {
             state = MOTORS_STOPPING;
             timer_reset(&timer);
+            printf("NEW STATE: %s\n", state_name());
          }
          break;
       
@@ -130,11 +133,13 @@ void motors_state_update(flight_state_t flight_state, float dt, int start)
          {
             state = MOTORS_STARTING;
             timer_reset(&timer);
+            printf("NEW STATE: %s\n", state_name());
          }
          else if (timer_check(&timer, dt))
          {
             state = MOTORS_HALTED;
             timer_reset(&timer);
+            printf("NEW STATE: %s\n", state_name());
          }
          break;
    }

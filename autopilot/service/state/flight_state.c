@@ -87,7 +87,7 @@ flight_state_t flight_state_update(float acc[3], float ground_z)
    }
    else
    {
-      if (state == FS_FLYING && ground_z < min_ground_z)
+      if (ground_z < min_ground_z)
       {
          /* flying -> standing */
          if (hyst_cnt++ == hyst)

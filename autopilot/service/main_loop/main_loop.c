@@ -208,7 +208,7 @@ void main_init(int override_hw)
 
    cal_ahrs_init(10.0f, 5.0f * REALTIME_PERIOD, 0.02f);
    gps_util_init(&gps_util);
-   flight_state_init(50, 30, 4.0, 150.0, 1.3);
+   flight_state_init(50, 30, 4.0, 150.0, 0.3);
    
    piid_init(REALTIME_PERIOD);
 
@@ -228,8 +228,6 @@ void main_step(float dt,
                uint16_t sensor_status,
                int override_hw)
 {
-   
-   /* read sensor data and calibrate sensors: */
    pos_in.dt = dt;
    pos_in.ultra_u = ultra;
    pos_in.baro_u = baro;
@@ -262,7 +260,7 @@ void main_step(float dt,
       gps_util_update(&gps_rel_data, &gps_util, gps_data);
       pos_in.pos_e = gps_rel_data.de;
       pos_in.pos_n = gps_rel_data.dn;
-      printf("n: %f e: %f\n", pos_in.pos_n, pos_in.pos_e);
+      //printf("n: %f e: %f\n", pos_in.pos_n, pos_in.pos_e);
       ONCE(mag_decl = mag_decl_lookup(gps_data->lat, gps_data->lon);
            gps_start_set(gps_data);
            LOG(LL_ERROR, "declination lookup yields: %f", mag_decl));
@@ -288,7 +286,7 @@ void main_step(float dt,
    flight_state = flight_state_update(&marg_data->acc.vec[0], pos_estimate.ultra_u.pos);
    
    /* execute flight logic (sets cm_x parameters used below): */
-   flight_logic_run(sensor_status, flight_state == FS_FLYING, channels, euler.yaw, &pos_estimate.ne_pos, pos_estimate.baro_u.pos, pos_estimate.ultra_u.pos);
+   flight_logic_run(sensor_status, 1, channels, euler.yaw, &pos_estimate.ne_pos, pos_estimate.baro_u.pos, pos_estimate.ultra_u.pos);
    
    /* RUN U POSITION AND SPEED CONTROLLER: */
    float u_err = 0.0f;
@@ -331,7 +329,7 @@ void main_step(float dt,
    float thrust;
    att_thrust_calc(&pitch_roll_sp, &thrust, &f_ned, platform.max_thrust_n, 0);
 
-   if (cm_att_is_angle())
+   if (cm_att_is_angles())
       pitch_roll_sp = cm_att_setp(); /* direct attitude angle control */
  
    /* RUN ATT ANGLE CONTROLLER: */
@@ -345,7 +343,7 @@ void main_step(float dt,
    piid_sp[PIID_PITCH] = pitch_roll_ctrl.x;
    piid_sp[PIID_ROLL] = pitch_roll_ctrl.y;
  
-   if (cm_att_is_rate())
+   if (cm_att_is_rates())
    {
       /* direct attitude rate control */
       vec2_t setp = cm_att_setp();
@@ -372,28 +370,25 @@ void main_step(float dt,
 
    /* computation of rpm ^ 2 out of the desired forces */
    inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
-   
+   float motors_enabled = (sensor_status & RC_VALID) && channels[CH_SWITCH_L] < 0.5;
    /* update motors state: */
-   motors_state_update(flight_state, dt, cm_motors_enabled());
-
-   if (motors_starting())
+   //motors_state_update(flight_state, dt, f_d_rel > 0.1 || flight_state == FS_FLYING);
+   
+   if (!motors_enabled) //if (!motors_controllable())
    {
       piid_reset(); /* reset piid integrators so that we can move the device manually */
       att_ctrl_reset();
-   }
-
-   if (!motors_controllable())
-   {
-      FOR_N(i, platform.n_motors)
-         rpm_square[i] = 100;
+      //FOR_N(i, platform.n_motors)
+      //   rpm_square[i] = 100;
    }
    
    /* compute motor set points out of rpm ^ 2: */
-   piid_int_enable(platform_ac_calc(setpoints, motors_spinning(), voltage, rpm_square));
+   piid_int_enable(platform_ac_calc(setpoints, motors_enabled, voltage, rpm_square));
    
    /* write motors: */
    if (!override_hw)
    {
+      //EVERY_N_TIMES(10, printf("MOTORS: %f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]));
       platform_write_motors(setpoints);
    }
 

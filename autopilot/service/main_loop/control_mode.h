@@ -88,10 +88,10 @@ bool cm_att_is_gps_pos(void);
 bool cm_att_is_gps_spd(void);
 
 /* true, if angle control */
-bool cm_att_is_angle(void);
+bool cm_att_is_angles(void);
 
 /* true, if rate control */
-bool cm_att_is_rate(void);
+bool cm_att_is_rates(void);
 
 /* the attitude setpoint */
 vec2_t cm_att_setp(void);

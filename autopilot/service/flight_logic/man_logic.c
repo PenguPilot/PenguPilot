@@ -129,7 +129,7 @@ void set_att_angles(float pitch, float roll)
 {
    float a = deg2rad(tsfloat_get(&stick_pitch_roll_angle_max));
    vec2_t pitch_roll = {{a * pitch, -a * roll}};
-   cm_att_set_rates(pitch_roll);
+   cm_att_set_angles(pitch_roll);
 }
 
 
@@ -139,7 +139,7 @@ static void emergency_landing(bool gps_valid, vec2_t *ne_gps_pos, float u_ultra_
    if (gps_valid)
       set_horizontal_spd_or_pos(0.0f, 0.0f, 0.0f, ne_gps_pos);
    else
-      set_pitch_roll_rates(0.0f, 0.0f);
+      set_att_angles(0.0f, 0.0f);
    
    if (u_ultra_pos < 0.3f)
       cm_disable_motors_persistent();
@@ -153,9 +153,9 @@ void man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANN
    if (rc_valid_f < 0.5f)
    {
       rc_lost_timer += interval_measure(&rc_lost_interval);
-      if (rc_lost_timer > 1.0f)
+      /*if (flying && rc_lost_timer > 1.0f)
          emergency_landing(sensor_status & GPS_VALID, ne_gps_pos, u_ultra_pos);
-      return;
+      return;*/
    }
    rc_lost_timer = 0.0f;
 
@@ -168,13 +168,25 @@ void man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANN
    float sw_l = channels[CH_SWITCH_L];
    float sw_r = channels[CH_SWITCH_R];
 
+   /*if (rc_valid_f < 0.5 || sw_l > 0.5)
+   {
+      pitch = 0.0f;
+      roll = 0.0f;
+      yaw_stick = 0.0f;
+      gas_stick = 0.0f;
+      sw_l = 0.0f;
+      sw_r = 0.0f;
+   }*/
+
    cm_yaw_set_spd(yaw_stick); /* the only applied mode in manual operation */
    man_mode_t man_mode = channel_to_man_mode(sw_r);
+   #if 0
    if (man_mode == MAN_NOVICE && (!(sensor_status & GPS_VALID)))
    {
       /* lost gps fix: switch to attitude control */
       man_mode = MAN_RELAXED;
    }
+   #endif
    handle_mode_update(man_mode);
    
    switch (man_mode)
@@ -189,7 +201,8 @@ void man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANN
       case MAN_RELAXED:
       {
          set_att_angles(pitch, roll);
-         set_vertical_spd_or_pos(gas_stick - 0.5, u_baro_pos);
+         cm_u_set_acc(gas_stick);
+         //set_vertical_spd_or_pos(gas_stick - 0.5, u_baro_pos);
          break;
       }
 

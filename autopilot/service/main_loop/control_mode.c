@@ -159,12 +159,12 @@ bool cm_att_is_gps_spd(void)
    return att_mode == ATT_GPS_SPD;
 }
 
-bool cm_att_is_angle(void)
+bool cm_att_is_angles(void)
 {
-   return att_mode == ATT_GPS_SPD;   
+   return att_mode == ATT_ANGLES;   
 }
 
-bool cm_att_is_rate(void)
+bool cm_att_is_rates(void)
 {
    return att_mode == ATT_RATES;   
 }

@@ -11,5 +11,5 @@ myDev._bus.setDTR(True)
 w=0
 while True:
 	w=w+1
-	time.sleep(1.0)
+	time.sleep(0.1)
 	print myDev._bus.write('This message! (%i)\n\r'%w)

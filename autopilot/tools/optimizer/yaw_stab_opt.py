@@ -1,19 +1,19 @@
 
-from random import uniform
+from random import choice, uniform
 from scl import generate_map
 from opcd_interface import OPCD_Interface
 from msgpack import loads
 import sys
 
 
-MUTATION_RATE = 0.01
-NUM_SAMPLES = 2000
+MUTATION_RATE = 0.1
+NUM_SAMPLES = 1000
 
 gates = generate_map('optimizer')
 opcd = OPCD_Interface(gates['opcd_ctrl'])
 debug = gates['blackbox']
 
-
+from copy import copy
 param_names = ['kp', 'ki', 'kii', 'kd']
 prefix = 'pilot.controllers.stabilizing.yaw_'
 vec = [ opcd.get(prefix + n) for n in param_names]
@@ -21,7 +21,9 @@ fit_best = sys.float_info.max
 vec_best = vec
 while True:
    # apply mutation:
-   vec = map(lambda x: x * uniform(1.0 - MUTATION_RATE, 1.0 + MUTATION_RATE), vec)
+   new = map(lambda x: x * uniform(1.0 - MUTATION_RATE, 1.0 + MUTATION_RATE), vec)
+   i = choice(range(4))
+   vec[i] = new[i] #map(lambda x: x * uniform(1.0 - MUTATION_RATE, 1.0 + MUTATION_RATE), vec)
    
    # send new gains to opcd:
    for i, n in zip(range(4), param_names):
@@ -40,11 +42,11 @@ while True:
    if fit < fit_best:
       # fitness has increased, print and commit to opcd
       print 'new best fitness:', vec, fit
-      #opcd.persist()
+      opcd.persist()
       fit_best = fit
       vec_best = vec
    else:
       # we did not improve;
       # use best vector as search starting point
-      vec = vec_best
+      vec = copy(vec_best)
 
