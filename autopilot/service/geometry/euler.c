@@ -93,13 +93,13 @@ void body_to_neu(body_to_neu_t *btn, vec3_t *world, const euler_t *euler, const 
    float phi = euler->roll;
    float psi = euler->yaw;
 
-   float cos_phi = cosf(phi);
-   float cos_theta = cosf(theta);
-   float cos_psi = cosf(psi);
+   float cos_phi = cos(phi);
+   float cos_theta = cos(theta);
+   float cos_psi = cos(psi);
 
-   float sin_phi = sinf(phi);
-   float sin_theta = sinf(theta);
-   float sin_psi = sinf(psi);
+   float sin_phi = sin(phi);
+   float sin_theta = sin(theta);
+   float sin_psi = sin(psi);
 
    /*
     * Rotation matrix from inertial frame to body frame (for computing expected sensor outputs given yaw, pitch, and roll angles)
