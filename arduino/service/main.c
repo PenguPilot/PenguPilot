@@ -40,11 +40,7 @@
 #define CHANNELS_MAX (16)
 
 
-#define SERVICE_NAME "arduino"
-#define SERVICE_PRIO 99
-
-
-SERVICE_MAIN_BEGIN
+SERVICE_MAIN_BEGIN("arduino", 99)
 {
    /* init scl and get sockets:: */
    void *rc_socket = scl_get_socket("rc_raw", "pub");

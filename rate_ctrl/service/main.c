@@ -31,10 +31,6 @@
 #include "piid.h"
 
 
-#define SERVICE_NAME "rate_ctrl"
-#define SERVICE_PRIO 99
-
-
 static float rates[3];
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -68,7 +64,8 @@ MSGPACK_READER_BEGIN(inten_reader)
 MSGPACK_READER_END
 
 
-SERVICE_MAIN_BEGIN
+SERVICE_MAIN_BEGIN("rate_ctrl", 99)
+{
    /* initialize msgpack: */
    msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new();
    THROW_IF(msgpack_buf == NULL, -ENOMEM);
@@ -86,10 +83,9 @@ SERVICE_MAIN_BEGIN
  
    piid_init(0.005);
    LOG(LL_INFO, "entering main loop");
-   simple_thread_t _thread;
-   simple_thread_t *thread = &_thread;
-   thread->running = true;
-   MSGPACK_READER_LOOP_BEGIN(gyro_cal)
+
+   MSGPACK_READER_SIMPLE_LOOP_BEGIN(gyro_cal)
+   {
       if (root.type == MSGPACK_OBJECT_ARRAY)
       {
          /* read gyro data: */
@@ -111,6 +107,8 @@ SERVICE_MAIN_BEGIN
          PACKFV(torques, 3);
          scl_copy_send_dynamic(torques_socket, msgpack_buf->data, msgpack_buf->size);
       }
-   MSGPACK_READER_LOOP_END
+   }
+   MSGPACK_READER_SIMPLE_LOOP_END
+}
 SERVICE_MAIN_END
 

@@ -33,10 +33,6 @@
 #include "calibration.h"
 
 
-#define SERVICE_NAME "gyro_cal"
-#define SERVICE_PRIO 99
-
-
 static void *gyro_raw_socket;
 static void *gyro_cal_socket;
 static calibration_t gyro_cal;
@@ -56,7 +52,7 @@ static bool gyro_moved(const float *gyro)
 }
 
 
-SERVICE_MAIN_BEGIN
+SERVICE_MAIN_BEGIN("gyro_cal", 99)
 {
    /* initialize msgpack: */
    msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new();

@@ -89,8 +89,6 @@
 
 
 #define MIN_GAS 0.1f
-#define SERVICE_NAME "motors"
-#define SERVICE_PRIO 99
 
 
 
@@ -111,7 +109,7 @@ MSGPACK_READER_BEGIN(voltage_reader)
 MSGPACK_READER_END
 
 
-SERVICE_MAIN_BEGIN
+SERVICE_MAIN_BEGIN("motors", 99)
 {
    /* start voltage reader thread: */
    tsfloat_init(&voltage, 16.0);
@@ -170,51 +168,35 @@ SERVICE_MAIN_BEGIN
    interval_t interval;
    interval_init(&interval);
 
-   while (running)
-   {
-      char buffer[1024];
-      int ret = scl_recv_static(forces_socket, buffer, sizeof(buffer));
-      if (ret > 0)
+   MSGPACK_READER_SIMPLE_LOOP_BEGIN(forces)
+      if (root.type == MSGPACK_OBJECT_ARRAY)
       {
-         msgpack_unpacked msg;
-         msgpack_unpacked_init(&msg);
-         if (msgpack_unpack_next(&msg, buffer, ret, NULL))
+         int n_forces = root.via.array.size - 1;
+         int enable = root.via.array.ptr[0].via.i64;
+         float dt = interval_measure(&interval);
+         motors_state_t state = motors_state_machine_update(dt, enable);
+         float ctrls[16];
+         FOR_N(i, n_forces)
          {
-            /* read received raw channels message: */
-            msgpack_object root = msg.data;
-            assert (root.type == MSGPACK_OBJECT_ARRAY);
-            int n_forces = root.via.array.size - 1;
-            int enable = root.via.array.ptr[0].via.i64;
-            float dt = interval_measure(&interval);
-            motors_state_t state = motors_state_machine_update(dt, enable);
-            float ctrls[16];
-            FOR_N(i, n_forces)
+            float force = root.via.array.ptr[i + 1].via.dec;
+            switch (state)
             {
-               float force = root.via.array.ptr[i + 1].via.dec;
-               switch (state)
-               {
-                  case MOTORS_RUNNING:
-                     ctrls[i] = fmax(MIN_GAS, f2e(force, tsfloat_get(&voltage)));
-                     break;
+               case MOTORS_RUNNING:
+                  ctrls[i] = fmax(MIN_GAS, f2e(force, tsfloat_get(&voltage)));
+                  break;
 
-                  case MOTORS_STARTING:
-                     ctrls[i] = MIN_GAS;
-                     break;
+               case MOTORS_STARTING:
+                  ctrls[i] = MIN_GAS;
+                  break;
 
-                  case MOTORS_STOPPED:
-                  case MOTORS_STOPPING:
-                     ctrls[i] = 0.0f;
-               }
+               case MOTORS_STOPPED:
+               case MOTORS_STOPPING:
+                  ctrls[i] = 0.0f;
             }
-            write_motors(ctrls);
          }
-         msgpack_unpacked_destroy(&msg);
+         write_motors(ctrls);
       }
-      else
-      {
-         msleep(1);
-      }
-   }
+   MSGPACK_READER_SIMPLE_LOOP_END
 }
 SERVICE_MAIN_END
 

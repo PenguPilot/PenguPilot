@@ -24,105 +24,64 @@
  GNU General Public License for more details. */
 
 
-#include <msgpack.h>
-#include <scl.h>
 #include <threadsafe_types.h>
 #include <simple_thread.h>
 #include <interval.h>
 #include <math/conv.h>
 #include <service.h>
+#include <msgpack_reader.h>
 
-#include "scl_mag_decl.h"
 #include "cal_ahrs.h"
-
-
-#define SERVICE_NAME "ahrs"
-#define SERVICE_PRIO 99
 
 
 static marg_data_t marg_data;
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-void *acc_socket;
-void *mag_socket;
 
 
-SIMPLE_THREAD_BEGIN(acc_reader_func)
-{
-   SIMPLE_THREAD_LOOP_BEGIN
+/* accelerometer reader thread: */
+MSGPACK_READER_BEGIN(acc_reader)
+   MSGPACK_READER_LOOP_BEGIN(acc_reader)
+   if (root.type == MSGPACK_OBJECT_ARRAY)
    {
-      char buffer[1024];
-      int ret = scl_recv_static(acc_socket, buffer, sizeof(buffer));
-      if (ret > 0)
-      {
-         msgpack_unpacked msg;
-         msgpack_unpacked_init(&msg);
-         if (msgpack_unpack_next(&msg, buffer, ret, NULL))
-         {
-            msgpack_object root = msg.data;
-            if (root.type == MSGPACK_OBJECT_ARRAY)
-            {
-               pthread_mutex_lock(&mutex);
-               FOR_N(i, 3)
-                  marg_data.acc.ve[i] = root.via.array.ptr[i].via.dec;
-               pthread_mutex_unlock(&mutex);
-            }
-         }
-         msgpack_unpacked_destroy(&msg);
-      }
-      else
-      {
-         msleep(10);   
-      }
+      pthread_mutex_lock(&mutex);
+      FOR_N(i, 3)
+         marg_data.acc.ve[i] = root.via.array.ptr[i].via.dec;
+      pthread_mutex_unlock(&mutex);
    }
-   SIMPLE_THREAD_LOOP_END
-}
-SIMPLE_THREAD_END
+   MSGPACK_READER_LOOP_END
+MSGPACK_READER_END
 
 
-SIMPLE_THREAD_BEGIN(mag_reader_func)
-{
-   SIMPLE_THREAD_LOOP_BEGIN
+/* magnetometer reader thread: */
+MSGPACK_READER_BEGIN(mag_reader)
+   MSGPACK_READER_LOOP_BEGIN(mag_reader)
+   if (root.type == MSGPACK_OBJECT_ARRAY)
    {
-      char buffer[1024];
-      int ret = scl_recv_static(mag_socket, buffer, sizeof(buffer));
-      if (ret > 0)
-      {
-         msgpack_unpacked msg;
-         msgpack_unpacked_init(&msg);
-         if (msgpack_unpack_next(&msg, buffer, ret, NULL))
-         {
-            msgpack_object root = msg.data;
-            if (root.type == MSGPACK_OBJECT_ARRAY)
-            {
-               pthread_mutex_lock(&mutex);
-               FOR_N(i, 3)
-                  marg_data.mag.ve[i] = root.via.array.ptr[i].via.dec;
-               pthread_mutex_unlock(&mutex);
-            }
-         }
-         msgpack_unpacked_destroy(&msg);
-      }
-      else
-      {
-         msleep(10);   
-      }
+      pthread_mutex_lock(&mutex);
+      FOR_N(i, 3)
+         marg_data.mag.ve[i] = root.via.array.ptr[i].via.dec;
+      pthread_mutex_unlock(&mutex);
    }
-   SIMPLE_THREAD_LOOP_END
-}
-SIMPLE_THREAD_END
+   MSGPACK_READER_LOOP_END
+MSGPACK_READER_END
 
 
+/* declination reader thread: */
+tsfloat_t decl;
+MSGPACK_READER_BEGIN(decl_reader)
+   MSGPACK_READER_LOOP_BEGIN(decl_reader)
+   tsfloat_set(&decl, root.via.dec);
+   MSGPACK_READER_LOOP_END
+MSGPACK_READER_END
 
 
-SERVICE_MAIN_BEGIN
+SERVICE_MAIN_BEGIN("ahrs", 99)
 {
+   tsfloat_init(&decl, 0.0f);
+
    /* init SCL: */
    void *gyro_socket = scl_get_socket("gyro_cal", "sub");
    THROW_IF(gyro_socket == NULL, -EIO);
-   acc_socket = scl_get_socket("acc_adc_cal", "sub");
-   THROW_IF(acc_socket == NULL, -EIO);
-   mag_socket = scl_get_socket("mag_adc_cal", "sub");
-   THROW_IF(mag_socket == NULL, -EIO);
    void *orientation_socket = scl_get_socket("orientation", "pub");
    THROW_IF(orientation_socket == NULL, -EIO);
  
@@ -130,16 +89,10 @@ SERVICE_MAIN_BEGIN
    marg_data_init(&marg_data);
 
    /* start reader threads: */
-   simple_thread_t acc_reader;
-   acc_reader.running = false;
-   simple_thread_start(&acc_reader, acc_reader_func, "acc_reader", 99, NULL);
-   simple_thread_t mag_reader;
-   mag_reader.running = false;
-   simple_thread_start(&mag_reader, mag_reader_func, "mag_reader", 99, NULL);
+   MSGPACK_READER_START(acc_reader, "acc_adc_cal", 99);
+   MSGPACK_READER_START(mag_reader, "mag_adc_cal", 99);
+   MSGPACK_READER_START(decl_reader, "dec", 98);
  
-   /* init magnetic declination reader: */
-   THROW_ON_ERR(scl_mag_decl_init());
-
    /* init cal ahrs:*/
    cal_ahrs_init();
 
@@ -172,8 +125,9 @@ SERVICE_MAIN_BEGIN
                   marg_data.gyro.ve[i] = root.via.array.ptr[i].via.dec;
  
                euler_t euler;
-               float declination = scl_mag_decl_get();
-               int ahrs_state = cal_ahrs_update(&euler, &marg_data, declination, dt);
+               pthread_mutex_lock(&mutex);
+               int ahrs_state = cal_ahrs_update(&euler, &marg_data, tsfloat_get(&decl), dt);
+               pthread_mutex_unlock(&mutex);
                if (ahrs_state == 0)
                {
                   EVERY_N_TIMES(100, LOG(LL_INFO, "intermediate orientation (y p r): %f %f %f", 

@@ -38,13 +38,11 @@
 #include "emitters/ultra_emitter.h"
 #include "emitters/mag_emitter.h"
 
-#define SERVICE_NAME "i2c_sensors"
-#define SERVICE_PRIO 99
 
 #define REALTIME_PERIOD 0.005
 
 
-SERVICE_MAIN_BEGIN
+SERVICE_MAIN_BEGIN("i2c_sensors", 99)
 {
    periodic_thread_t _thread; 
    periodic_thread_t *thread = &_thread;

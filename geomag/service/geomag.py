@@ -27,21 +27,20 @@
 
 
 from geomag.geomag import GeoMag
-from scl import generate_map
+from scl import scl_get_socket
 from misc import daemonize, RateTimer
 import os
 from time import time
 from datetime import datetime
 from gps_msgpack import *
-from msgpack import loads
+from msgpack import loads, dumps
 
 
 def main(name):
    script_path = os.path.dirname(os.path.abspath(__file__))
    gm = GeoMag(script_path + os.sep + 'geomag' + os.sep + 'WMM.COF')
-   socket_map = generate_map(name)
-   gps_socket = socket_map['gps']
-   decl_socket = socket_map['decl']
+   gps_socket = scl_get_socket('gps', 'sub')
+   decl_socket = scl_get_socket('decl', 'pub')
    rt = RateTimer(1)
    while True:
       raw = gps_socket.recv()
@@ -50,7 +49,7 @@ def main(name):
          try:
             date = datetime.strptime(gps[TIME], '%Y-%m-%d %H:%M:%S').date()
             decl = gm.GeoMag(gps[LAT], gps[LON], time = date).dec
-            decl_socket.send('%f' % decl)
+            decl_socket.send(dumps(decl))
          except:
             pass
 

@@ -52,7 +52,7 @@ acc_adc_cal:
 
 ahrs:
    binary: 'ahrs/service/ahrs'
-   depends: [gyro_cal, mag_adc_cal, acc_adc_cal]
+   depends: [gyro_cal, mag_adc_cal, acc_adc_cal, geomag]
    priority: sys_high
 
 rate_ctrl:

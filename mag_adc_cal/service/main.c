@@ -31,15 +31,11 @@
 #include "mag_adc_cal.h"
 
 
-#define SERVICE_NAME "mag_adc_cal"
-#define SERVICE_PRIO 99
-
-
 static void *marg_raw_socket = NULL;
 static void *marg_cal_socket = NULL;
 
 
-SERVICE_MAIN_BEGIN
+SERVICE_MAIN_BEGIN("mag_adc_cal", 99)
 {
    /* initialize msgpack buffers: */
    msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new();
