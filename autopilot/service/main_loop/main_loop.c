@@ -33,6 +33,7 @@
 #include <msgpack.h>
 #include <periodic_thread.h>
 #include <pilot.pb-c.h>
+#include <threadsafe_types.h>
 
 #include "main_loop.h"
 #include "main_util.h"
@@ -165,10 +166,10 @@ static enum
 }
 manual_mode = M_ATT_REL;
 
+static tsfloat_t stick_pitch_roll_p;
+static tsfloat_t stick_pitch_roll_angle_max;
+static tsfloat_t stick_yaw_p;
 
-
-#define RC_PITCH_ROLL_STICK_P 2.0f
-#define RC_YAW_STICK_P 3.0f
 
 #define STICK_GPS_SPEED_MAX 5.0
 
@@ -212,6 +213,17 @@ void main_init(int override_hw)
    syslog(LOG_CRIT, "logger opened");
    sleep(1); /* give scl some time to establish
                 a link between publisher and subscriber */
+   
+   /* read parameters: */
+   opcd_param_t params[] =
+   {
+      {"pitch_roll_p", &stick_pitch_roll_p},
+      {"pitch_roll_angle_max", &stick_pitch_roll_angle_max},
+      {"yaw_p", &stick_yaw_p},
+      OPCD_PARAMS_END
+   };
+   opcd_params_apply("sticks.", params);
+
 
    LOG(LL_INFO, "autopilot initializing");
 
@@ -409,8 +421,8 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    if (mode == CM_MANUAL && manual_mode == M_ATT_ABS)
    {
       /* interpret sticks as pitch and roll setpoints: */
-      pitch_roll_sp.x = -1.0f * channels[CH_PITCH];
-      pitch_roll_sp.y = 1.0f * channels[CH_ROLL];
+      pitch_roll_sp.x = -tsfloat_get(&stick_pitch_roll_angle_max) * channels[CH_PITCH];
+      pitch_roll_sp.y = tsfloat_get(&stick_pitch_roll_angle_max) * channels[CH_ROLL];
    }
    vec2_t att_err;
    vec2_t pitch_roll_speed = {{marg_data->gyro.y, marg_data->gyro.x}};
@@ -441,17 +453,17 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
 
    if (mode == CM_MANUAL && manual_mode == M_ATT_REL)
    {
-      piid_sp[PIID_PITCH] = RC_PITCH_ROLL_STICK_P * channels[CH_PITCH];
-      piid_sp[PIID_ROLL] = RC_PITCH_ROLL_STICK_P * channels[CH_ROLL];
-      piid_sp[PIID_YAW] = -RC_YAW_STICK_P * channels[CH_YAW];
+      piid_sp[PIID_PITCH] = tsfloat_get(&stick_pitch_roll_p) * channels[CH_PITCH];
+      piid_sp[PIID_ROLL] = tsfloat_get(&stick_pitch_roll_p) * channels[CH_ROLL];
+      piid_sp[PIID_YAW] = -tsfloat_get(&stick_yaw_p) * channels[CH_YAW];
       norm_gas = channels[CH_GAS];
    }
 
    if (mode == CM_SAFE_AUTO && rc_valid)
    {
-      piid_sp[PIID_PITCH] += RC_PITCH_ROLL_STICK_P * channels[CH_PITCH];
-      piid_sp[PIID_ROLL] += RC_PITCH_ROLL_STICK_P * channels[CH_ROLL];
-      piid_sp[PIID_YAW] -= RC_YAW_STICK_P * channels[CH_YAW];
+      piid_sp[PIID_PITCH] += tsfloat_get(&stick_pitch_roll_p) * channels[CH_PITCH];
+      piid_sp[PIID_ROLL] += tsfloat_get(&stick_pitch_roll_p) * channels[CH_ROLL];
+      piid_sp[PIID_YAW] -= tsfloat_get(&stick_yaw_p) * channels[CH_YAW];
       norm_gas = limit(norm_gas, 0.0f, channels[CH_GAS]);
    }
 
