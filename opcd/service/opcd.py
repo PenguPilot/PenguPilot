@@ -32,6 +32,7 @@ from scl import generate_map
 from misc import daemonize
 from sys import argv
 from re import match
+from time import sleep
 
 
 class OPCD:
@@ -62,8 +63,11 @@ class OPCD:
       while True:
          # read and parse request:
          req = CtrlReq()
-         req.ParseFromString(self.ctrl_socket.recv())
-
+         try:
+            req.ParseFromString(self.ctrl_socket.recv())
+         except:
+            sleep(1)
+            continue
          # process request and prepare reply:
          rep = CtrlRep()
          rep.status = CtrlRep.OK
