@@ -54,8 +54,8 @@
 static i2c_bus_t i2c_3;
 static deadzone_t deadzone;
 static rc_channels_t rc_channels;
-static uint8_t channel_mapping[MAX_CHANNELS] =  {0, 1, 3, 2, 4}; /* pitch: 0, roll: 1, yaw: 3, gas: 2, switch: 4 */
-static float channel_scale[MAX_CHANNELS] =  {1.0f, -1.0f, -1.0f, 1.0f, 1.0f};
+static uint8_t channel_mapping[MAX_CHANNELS] =  {0, 1, 3, 2, 4, 5}; /* pitch: 0, roll: 1, yaw: 3, gas: 2, switch left: 4, switch right: 5 */
+static float channel_scale[MAX_CHANNELS] =  {1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
 static drotek_marg2_t marg;
 
 
@@ -63,8 +63,13 @@ static int read_rc(float channels[MAX_CHANNELS])
 {
    float dsl_channels[RC_DSL_CHANNELS];
    int ret = rc_dsl_reader_get(dsl_channels);
-   int c;
-   for (c = 0; c < MAX_CHANNELS; c++)
+   
+   /* for (int i = 0; i < RC_DSL_CHANNELS; i++)
+      printf("(%d, %f) ", i, dsl_channels[i]);
+      printf("\n");
+   */
+
+   for (int c = 0; c < MAX_CHANNELS; c++)
    {
       channels[c] = rc_channels_get(&rc_channels, dsl_channels, c);
    }

@@ -12,7 +12,7 @@ static enum
    MODE_SAFE_AUTO,
    MODE_FULL_AUTO
 }
-flight_mode;
+flight_mode = MODE_MANUAL;
 
 
 
@@ -33,12 +33,12 @@ void flight_logic_init(void)
 }
 
 
-void flight_logic_run(uint16_t sensor_status, float channels[MAX_CHANNELS])
+void flight_logic_run(uint16_t sensor_status, float channels[MAX_CHANNELS], float yaw)
 {
    switch (flight_mode)
    {
       case MODE_MANUAL:
-         man_logic_run(sensor_status, channels);
+         man_logic_run(sensor_status, channels, yaw);
          break;
 
       case MODE_SAFE_AUTO:

@@ -5,7 +5,7 @@
 #include "man_logic.h"
 #include "../filters/filter.h"
 #include "../hardware/util/calibration.h"
-#include "../util/math/conv.h"
+#include "../util/logger/logger.h"
 #include "../main_loop/main_loop.h"
 #include "../main_loop/control_mode.h"
 
@@ -42,7 +42,7 @@ typedef enum
    MAN_NOVICE
 }
 man_mode_t;
-
+man_mode_t last_mode = -1;
 
 static man_mode_t channel_to_man_mode(float sw)
 {
@@ -61,58 +61,70 @@ static man_mode_t channel_to_man_mode(float sw)
 }
 
 
-void man_logic_run(uint16_t sensor_status, float channels[MAX_CHANNELS])
+static void handle_mode_update(man_mode_t mode)
+{
+   if (last_mode != mode)
+   {
+      LOG(LL_INFO, "switching manual mode to: %d", mode);
+      last_mode = mode;   
+   }
+}
+
+
+void man_logic_run(uint16_t sensor_status, float channels[MAX_CHANNELS], float yaw)
 {
    float rc_valid_f = (sensor_status & RC_VALID) ? 1.0f : 0.0f;
    filter1_run(&rc_valid_filter, &rc_valid_f, &rc_valid_f);
    int rc_valid = rc_valid_f > 0.5f;
-   float pitch, roll, yaw, gas, sw;
    if (!rc_valid)
-   {
-      pitch = 0.0f;
-      roll = 0.0f;
-      yaw = 0.0f;
-      gas = 0.0f;
-      sw = 0.0f;
-   }
-   else
-   {
-      float cal_channels[3] = {channels[CH_PITCH], channels[CH_ROLL], channels[CH_YAW]};
-      cal_sample_apply(&rc_cal, cal_channels);
-      pitch = cal_channels[0];
-      roll = cal_channels[1];
-      yaw = cal_channels[2];
-      gas = channels[CH_GAS];
-      sw = channels[CH_SWITCH];
-   }
+      return;
+
+   float cal_channels[3] = {channels[CH_PITCH], channels[CH_ROLL], channels[CH_YAW]};
+   cal_sample_apply(&rc_cal, cal_channels);
+   float pitch = cal_channels[0];
+   float roll = cal_channels[1];
+   float yaw_stick = cal_channels[2];
+   float gas_stick = channels[CH_GAS];
+   float sw_l = channels[CH_SWITCH_L];
+   float sw_r = channels[CH_SWITCH_R];
    
-   man_mode_t man_mode = channel_to_man_mode(sw);
+   cm_yaw_set_spd(yaw_stick); /* the only applied mode in manual operation */
+   man_mode_t man_mode = channel_to_man_mode(sw_r);
+   if (man_mode == MAN_NOVICE && (!(sensor_status & GPS_VALID)))
+   {
+      /* lost gps fix: switch to attitude control */
+      man_mode = MAN_RELAXED;
+   }
+   handle_mode_update(man_mode);
+   
    switch (man_mode)
    {
       case MAN_SPORT:
       {
-         cm_u_acc_set(gas);
-         vec2_t rates = {{pitch, roll}};
-         cm_att_set_rates(rates);
-         cm_yaw_set_spd(yaw);
+         float p = tsfloat_get(&stick_pitch_roll_p);
+         vec2_t pitch_roll = {{-p * pitch, p * roll}};
+         cm_att_set_rates(pitch_roll);
+         cm_u_acc_set(gas_stick);
          break;
       }
 
       case MAN_RELAXED:
       {
-         cm_u_acc_set(gas);
-         vec2_t rates = {{pitch, roll}};
-         cm_att_set_rates(rates);
-         cm_yaw_set_spd(yaw);
+         float a = deg2rad(tsfloat_get(&stick_pitch_roll_angle_max));
+         vec2_t pitch_roll = {{a * pitch, -a * roll}};
+         cm_att_set_rates(pitch_roll);
+         cm_u_spd_set(gas_stick);
          break;
       }
 
       case MAN_NOVICE:
       {
-         cm_u_spd_set(gas);
-         vec2_t speed = {{pitch, roll}};
-         cm_att_set_gps_spd(speed);
-         cm_yaw_set_spd(yaw);
+         float p = tsfloat_get(&stick_pitch_roll_p);
+         vec2_t pitch_roll = {{p * pitch, p * roll}};
+         vec2_t gps_spd_sp;
+         vec2_rotate(&gps_spd_sp, &pitch_roll, yaw);
+         cm_att_set_gps_spd(pitch_roll);
+         cm_u_spd_set(gas_stick);
          break;
       }
    }

@@ -228,7 +228,6 @@ void main_step(float dt,
                uint16_t sensor_status,
                int override_hw)
 {
-   flight_logic_run(sensor_status, channels);
    
    /* read sensor data and calibrate sensors: */
    pos_in.dt = dt;
@@ -288,6 +287,9 @@ void main_step(float dt,
    pos_update(&pos_estimate, &pos_in);
    flight_state = flight_state_update(&marg_data->acc.vec[0], pos_estimate.ultra_z.pos);
    
+   /* execute flight logic (sets cm_x parameters used below): */
+   flight_logic_run(sensor_status, channels, euler.yaw);
+   
    /* RUN U POSITION AND SPEED CONTROLLER: */
    float u_err = 0.0f;
    float u_speed_sp = 0.0f;
@@ -304,7 +306,6 @@ void main_step(float dt,
       u_speed_sp = cm_u_setp();
    
    float f_d = u_speed_step(u_speed_sp, pos_estimate.baro_z.speed, dt);
-
    if (cm_u_is_acc())
       f_d = cm_u_setp();
 

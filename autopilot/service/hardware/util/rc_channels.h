@@ -33,7 +33,7 @@
 #include "deadzone.h"
 
 
-#define MAX_CHANNELS 5
+#define MAX_CHANNELS 6
 
 
 typedef enum
@@ -42,7 +42,8 @@ typedef enum
    CH_ROLL,
    CH_YAW,
    CH_GAS,
-   CH_SWITCH
+   CH_SWITCH_L,
+   CH_SWITCH_R
 }
 channel_t;
 

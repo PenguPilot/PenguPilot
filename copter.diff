@@ -1,0 +1,1705 @@
+diff --git a/aircomm/service/aircomm.py b/aircomm/service/aircomm.py
+index 64d614e..fd24d45 100755
+--- a/aircomm/service/aircomm.py
++++ b/aircomm/service/aircomm.py
+@@ -23,7 +23,6 @@ class ACIReader(Thread):
+          try:
+             msg = self.aci.receive()
+             if True: #msgpack.unpack(msg)[0] == self.sys_id:
+-               sleep(0.01)
+                self.aci.send(msg)
+                self.scl_socket.send(msg)
+          except:
+diff --git a/aircomm/service/interface.py b/aircomm/service/interface.py
+index 5443d80..c87a9c9 100644
+--- a/aircomm/service/interface.py
++++ b/aircomm/service/interface.py
+@@ -1,6 +1,6 @@
+ 
+ from ed_nrf.dev.cdc import CDC_nRF
+-from packet.dencode import encode, decode, Packet
++from time import sleep
+ 
+ 
+ class Interface:
+@@ -12,6 +12,7 @@ class Interface:
+       self.nrf._bus.timeout = None # disable read/write timeouts
+ 
+    def send(self, data):
++      sleep(0.01)
+       self.nrf._bus.write(data)
+ 
+    def receive(self):
+diff --git a/autopilot/service/control/position/navi.c b/autopilot/service/control/position/navi.c
+index 26c0e95..0a18a7c 100644
+--- a/autopilot/service/control/position/navi.c
++++ b/autopilot/service/control/position/navi.c
+@@ -142,6 +142,13 @@ void navi_set_dest_n(float n)
+ }
+ 
+ 
++void navi_set_dest(vec2_t vec)
++{
++   navi_set_dest_n(vec.x);  
++   navi_set_dest_e(vec.y);  
++}
++
++
+ float navi_get_dest_e(void)
+ {
+    return tsfloat_get(&dest_e);
+diff --git a/autopilot/service/control/position/navi.h b/autopilot/service/control/position/navi.h
+index 58e1230..8e650c5 100644
+--- a/autopilot/service/control/position/navi.h
++++ b/autopilot/service/control/position/navi.h
+@@ -56,6 +56,9 @@ void navi_set_dest_e(float x);
+ void navi_set_dest_n(float y);
+ 
+ 
++void navi_set_dest(vec2_t vec);
++
++
+ /*
+  * getter for e position
+  */
+diff --git a/autopilot/service/control/position/u_ctrl.c b/autopilot/service/control/position/u_ctrl.c
+index 5e9f525..bd52fff 100644
+--- a/autopilot/service/control/position/u_ctrl.c
++++ b/autopilot/service/control/position/u_ctrl.c
+@@ -11,7 +11,7 @@
+   
+  Up Position Controller Implementation
+  
+- Copyright (C) 2010 Tobias Simon, Ilmenau University of Technology
++ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ 
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+@@ -25,111 +25,10 @@
+ 
+ 
+ #include <util.h>
+-#include <opcd_interface.h>
+-#include <threadsafe_types.h>
+ 
+-#include "u_ctrl.h"
+-#include "../util/pid.h"
+ 
+-
+-static pid_controller_t controller;
+-
+-
+-/* initialized by "init" parameter: */
+-static float u_neutral_gas;
+-
+-/* following thread-safe variables are initialized by pid_init: */
+-static tsfloat_t speed_p;
+-static tsfloat_t speed_i;
+-static tsfloat_t speed_imax;
+-static tsfloat_t speed_d;
+-
+-/* following thread-safe variables are initialized by OPCD: */
+-static tsfloat_t init_setpoint;
+-static tsint_t init_mode_is_ground;
+-
+-/* following thread-safe variables are initialized by u_ctrl_init: */
+-static tsfloat_t setpoint;
+-static tsint_t mode_is_ground;
+-
+-
+-
+-/* returns the desired vertical speed given a error */
+-static float speed_func(float err)
+-{
+-   return sym_limit(err, 1.0f) * 0.6;
+-}
+-
+-
+-void u_ctrl_set_setpoint(u_setpoint_t u_setpoint)
+-{
+-   tsfloat_set(&setpoint, u_setpoint.val);
+-   tsint_set(&mode_is_ground, u_setpoint.mode_is_ground);
+-}
+-
+-
+-float u_ctrl_get_setpoint(void)
+-{
+-   return tsfloat_get(&setpoint);
+-}
+-
+-
+-int u_ctrl_mode_is_ground(void)
+-{
+-   return tsint_get(&mode_is_ground);
+-}
+-
+-
+-/*
+- * perform controller step
+- * parameters ground_u_pos, u_pos, float speed: need to be filtered (e.g. kalman)
+- * returns vertical controller output
+- */
+-float u_ctrl_step(float *u_err, float ground_u_pos, float u_pos, float speed, float dt)
++float u_ctrl_step(float err)
+ {   
+-   float _u_err;
+-   if (tsint_get(&mode_is_ground))
+-   {
+-      _u_err = tsfloat_get(&setpoint) - ground_u_pos;
+-   }
+-   else
+-   {
+-      _u_err = tsfloat_get(&setpoint) - u_pos;
+-   }
+-   float spd_sp = speed_func(_u_err);
+-   float spd_err = spd_sp - speed;
+-   float val;
+-   val = u_neutral_gas + pid_control(&controller, _u_err, -speed, dt);
+-   *u_err = _u_err;
+-   return val;
+-}
+-
+-
+-void u_ctrl_init(float neutral_gas)
+-{
+-   ASSERT_ONCE();
+-   
+-   opcd_param_t params[] =
+-   {
+-      {"speed_p", &speed_p},
+-      {"speed_i", &speed_i},
+-      {"speed_d", &speed_d},
+-      {"speed_imax", &speed_imax},
+-      {"init_setpoint", &init_setpoint},
+-      {"init_mode_is_ground", &init_mode_is_ground},
+-      OPCD_PARAMS_END
+-   };
+-   opcd_params_apply("controllers.altitude.", params);
+-
+-   tsfloat_init(&setpoint, tsfloat_get(&init_setpoint));
+-   tsint_init(&mode_is_ground, tsint_get(&init_mode_is_ground));
+-   pid_init(&controller, &speed_p, &speed_i, &speed_d, &speed_imax);
+-   u_neutral_gas = neutral_gas;
+-}
+-
+-
+-void u_ctrl_reset(void)
+-{
+-   pid_reset(&controller);
++   return sym_limit(err, 1.0f) * 0.6;
+ }
+ 
+diff --git a/autopilot/service/control/position/u_ctrl.h b/autopilot/service/control/position/u_ctrl.h
+index dbf4b04..3ed40e7 100644
+--- a/autopilot/service/control/position/u_ctrl.h
++++ b/autopilot/service/control/position/u_ctrl.h
+@@ -11,7 +11,7 @@
+   
+  Up Position Controller Interface
+  
+- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
++ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ 
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+@@ -28,26 +28,7 @@
+ #define __U_CTRL_H__
+ 
+ 
+-typedef struct
+-{
+-   float val;
+-   int mode_is_ground;
+-}
+-u_setpoint_t;
+-
+-
+-
+-void u_ctrl_init(float neutral_gas);
+-
+-void u_ctrl_set_setpoint(u_setpoint_t u_setpoint);
+-
+-float u_ctrl_get_setpoint(void);
+-
+-int u_ctrl_mode_is_ground(void);
+- 
+-float u_ctrl_step(float *u_err, float ground_u_pos, float u_pos, float speed, float dt);
+-
+-void u_ctrl_reset(void);
++float u_ctrl_step(float err);
+ 
+ 
+ #endif /* __U_CTRL_H__ */
+diff --git a/autopilot/service/control/position/yaw_ctrl.c b/autopilot/service/control/position/yaw_ctrl.c
+index 6d4a394..8245d2c 100644
+--- a/autopilot/service/control/position/yaw_ctrl.c
++++ b/autopilot/service/control/position/yaw_ctrl.c
+@@ -38,9 +38,6 @@
+ 
+ static pid_controller_t controller;
+ 
+-/* setpoint: */
+-static tsfloat_t pos;
+-
+ /* configurable parameters: */
+ static tsfloat_t p;
+ static tsfloat_t i;
+@@ -87,49 +84,19 @@ void yaw_ctrl_init(void)
+       {"i_max", &i_max.value},
+       {"d", &d.value},
+       {"pid_lim", &pid_lim.value},
+-      {"manual", &manual},
+       OPCD_PARAMS_END
+    };
+    opcd_params_apply("controllers.yaw.", params);
+-
+-   tsfloat_init(&pos, 0.0f);
+-
+    pid_init(&controller, &p, &i, &d, &i_max);
+ }
+ 
+ 
+-int yaw_ctrl_set_pos(float _pos)
+-{
+-   if ((_pos < 0) || (_pos > 2.0 * M_PI))
+-   {
+-      LOG(LL_ERROR, "invalid yaw setpoint: %f, out of bounds: (0.0, 2.0 * M_PI)", _pos);
+-      return -1;
+-   }
+-   tsfloat_set(&pos, _pos);
+-   return 0;
+-}
+-
+-
+-float yaw_ctrl_get_pos(void)
+-{
+-   return tsfloat_get(&pos);
+-}
+-
+-
+-float yaw_ctrl_step(float *err_out, float yaw, float _speed, float dt)
++float yaw_ctrl_step(float *err_out, float setpoint, float yaw, float _speed, float dt)
+ {
+    float err;
+    float yaw_ctrl;
+-   if (tsint_get(&manual))
+-   {
+-      yaw_ctrl = 0.0f;
+-      err = 0.0; /* we control nothing, so the error is always 0 */
+-   }
+-   else
+-   {
+-      err = circle_err(yaw, tsfloat_get(&pos));
+-      yaw_ctrl = pid_control(&controller, err, _speed, dt);
+-   }
++   err = circle_err(yaw, setpoint);
++   yaw_ctrl = pid_control(&controller, err, _speed, dt);
+    *err_out = err;
+    return sym_limit(yaw_ctrl, tsfloat_get(&pid_lim));
+ }
+diff --git a/autopilot/service/control/position/yaw_ctrl.h b/autopilot/service/control/position/yaw_ctrl.h
+index 9e1a254..f030796 100644
+--- a/autopilot/service/control/position/yaw_ctrl.h
++++ b/autopilot/service/control/position/yaw_ctrl.h
+@@ -30,11 +30,7 @@
+ 
+ void yaw_ctrl_init(void);
+ 
+-int yaw_ctrl_set_pos(float pos);
+-
+-float yaw_ctrl_get_pos(void);
+-
+-float yaw_ctrl_step(float *err_out, float yaw, float speed, float dt);
++float yaw_ctrl_step(float *err_out, float setpoint, float yaw, float speed, float dt);
+ 
+ void yaw_ctrl_reset(void);
+ 
+diff --git a/autopilot/service/flight_logic/flight_logic.c b/autopilot/service/flight_logic/flight_logic.c
+new file mode 100644
+index 0000000..c6d31ef
+--- /dev/null
++++ b/autopilot/service/flight_logic/flight_logic.c
+@@ -0,0 +1,51 @@
++
++
++#include "flight_logic.h"
++#include "man_logic.h"
++#include "../main_loop/control_mode.h"
++
++
++
++static enum
++{
++   MODE_MANUAL,
++   MODE_SAFE_AUTO,
++   MODE_FULL_AUTO
++}
++flight_mode = MODE_MANUAL;
++
++
++
++void flight_logic_init(void)
++{
++   switch (flight_mode)
++   {
++      case MODE_MANUAL:
++         man_logic_init();
++         break;
++
++      case MODE_SAFE_AUTO:
++         break;
++
++      case MODE_FULL_AUTO:
++         break;
++   }
++}
++
++
++void flight_logic_run(uint16_t sensor_status, float channels[MAX_CHANNELS])
++{
++   switch (flight_mode)
++   {
++      case MODE_MANUAL:
++         man_logic_run(sensor_status, channels);
++         break;
++
++      case MODE_SAFE_AUTO:
++         break;
++
++      case MODE_FULL_AUTO:
++         break;
++   }
++}
++
+diff --git a/autopilot/service/flight_logic/flight_logic.h b/autopilot/service/flight_logic/flight_logic.h
+new file mode 100644
+index 0000000..da933a5
+--- /dev/null
++++ b/autopilot/service/flight_logic/flight_logic.h
+@@ -0,0 +1,18 @@
++
++
++#ifndef __FLIGHT_LOGIC_H__
++#define __FLIGHT_LOGIC_H__
++
++
++#include <stdint.h>
++#include "../hardware/util/rc_channels.h"
++
++
++void flight_logic_init(void);
++
++
++void flight_logic_run(uint16_t sensor_status, float channels[MAX_CHANNELS]);
++
++
++#endif /* __FLIGHT_LOGIC_H__ */
++
+diff --git a/autopilot/service/flight_logic/man_logic.c b/autopilot/service/flight_logic/man_logic.c
+new file mode 100644
+index 0000000..7ee6bf0
+--- /dev/null
++++ b/autopilot/service/flight_logic/man_logic.c
+@@ -0,0 +1,109 @@
++
++#include <threadsafe_types.h>
++#include <opcd_interface.h>
++
++#include "man_logic.h"
++#include "../filters/filter.h"
++#include "../hardware/util/calibration.h"
++#include "../util/math/conv.h"
++#include "../main_loop/main_loop.h"
++#include "../main_loop/control_mode.h"
++
++
++static tsfloat_t stick_pitch_roll_p;
++static tsfloat_t stick_pitch_roll_angle_max;
++static tsfloat_t stick_yaw_p;
++
++static calibration_t rc_cal;
++static Filter1 rc_valid_filter;
++
++
++void man_logic_init(void)
++{
++   cal_init(&rc_cal, 3, 500);
++   filter1_lp_init(&rc_valid_filter, 0.5, REALTIME_PERIOD, 1);
++
++   /* read parameters: */
++   opcd_param_t params[] =
++   {
++      {"pitch_roll_p", &stick_pitch_roll_p},
++      {"pitch_roll_angle_max", &stick_pitch_roll_angle_max},
++      {"yaw_p", &stick_yaw_p},
++      OPCD_PARAMS_END
++   };
++   opcd_params_apply("sticks.", params);
++}
++
++
++typedef enum
++{
++   MAN_SPORT,
++   MAN_RELAXED,
++   MAN_NOVICE
++}
++man_mode_t;
++
++
++static man_mode_t channel_to_man_mode(float sw)
++{
++   float a = 0.333;
++   float b = 0.666;
++
++   if (sw <= a)
++   {
++      return MAN_SPORT;   
++   }
++   else if (sw > a && sw < b)
++   {
++      return MAN_RELAXED;
++   }
++   return MAN_NOVICE;
++}
++
++
++void man_logic_run(uint16_t sensor_status, float channels[MAX_CHANNELS], float yaw)
++{
++   float rc_valid_f = (sensor_status & RC_VALID) ? 1.0f : 0.0f;
++   filter1_run(&rc_valid_filter, &rc_valid_f, &rc_valid_f);
++   int rc_valid = rc_valid_f > 0.5f;
++   if (!rc_valid)
++      return;
++
++   float cal_channels[3] = {channels[CH_PITCH], channels[CH_ROLL], channels[CH_YAW]};
++   cal_sample_apply(&rc_cal, cal_channels);
++   vec2_t pitch_roll = {{cal_channels[0], cal_channels[1]}}
++   float yaw_stick = cal_channels[2];
++   float gas_stick = channels[CH_GAS];
++   float sw_l = channels[CH_SWITCH_L];
++   float sw_r = channels[CH_SWITCH_R];
++   
++   cm_yaw_set_spd(yaw_stick); /* the only applied mode in manual operation */
++   man_mode_t man_mode = channel_to_man_mode(sw_r);
++   switch (man_mode)
++   {
++      case MAN_SPORT:
++      {
++         printf("SPORT\n");
++         cm_u_acc_set(gas_stick);
++         cm_att_set_rates(pitch_roll);
++         break;
++      }
++
++      case MAN_RELAXED:
++      {
++         printf("RELAXED\n");
++         cm_u_spd_set(gas_stick);
++         cm_att_set_rates(pitch_roll);
++         break;
++      }
++
++      case MAN_NOVICE:
++      {
++         printf("NOVICE\n");
++         cm_u_spd_set(gas_stick);
++         cm_att_set_gps_spd(pitch_roll);
++         break;
++      }
++   }
++}
++
+diff --git a/autopilot/service/flight_logic/man_logic.h b/autopilot/service/flight_logic/man_logic.h
+new file mode 100644
+index 0000000..75f6332
+--- /dev/null
++++ b/autopilot/service/flight_logic/man_logic.h
+@@ -0,0 +1,17 @@
++
++#ifndef __MAN_LOGIC_H__
++#define __MAN_LOGIC_H__
++
++
++#include <stdint.h>
++#include "../hardware/util/rc_channels.h"
++
++
++void man_logic_init(void);
++
++
++void man_logic_run(uint16_t sensor_status, float channels[MAX_CHANNELS]);
++
++
++#endif /* __MAN_LOGIC_H__ */
++
+diff --git a/autopilot/service/hardware/drivers/pwm_esc/pwm.ko b/autopilot/service/hardware/drivers/pwm_esc/pwm.ko
+new file mode 100644
+index 0000000..58d5d8b
+Binary files /dev/null and b/autopilot/service/hardware/drivers/pwm_esc/pwm.ko differ
+diff --git a/autopilot/service/hardware/drivers/pwm_esc/pwm_init.sh b/autopilot/service/hardware/drivers/pwm_esc/pwm_init.sh
+new file mode 100755
+index 0000000..73af54d
+--- /dev/null
++++ b/autopilot/service/hardware/drivers/pwm_esc/pwm_init.sh
+@@ -0,0 +1,14 @@
++#!/bin/sh
++
++echo 170 > /sys/class/gpio/export
++sleep 1
++echo out > /sys/class/gpio/gpio170/direction
++sleep 1
++echo 1 > /sys/class/gpio/gpio170/value
++sleep 1
++insmod pwm.ko servo=1 frequency=400 servo_start=20000 irq_mode=1 timeout=10
++sleep 2
++echo 10000 > /dev/pwm8
++echo 10000 > /dev/pwm9
++echo 10000 > /dev/pwm10
++echo 10000 > /dev/pwm11
+diff --git a/autopilot/service/hardware/util/rc_channels.c b/autopilot/service/hardware/util/rc_channels.c
+index ab9f250..890c41a 100644
+--- a/autopilot/service/hardware/util/rc_channels.c
++++ b/autopilot/service/hardware/util/rc_channels.c
+@@ -29,7 +29,7 @@
+ #include "rc_channels.h"
+ 
+ 
+-static int ch_is_symmetric[MAX_CHANNELS] = {1, 1, 1, 0, 0};
++static int ch_is_symmetric[MAX_CHANNELS] = {1, 1, 1, 0, 0, 0};
+ 
+ 
+ void rc_channels_init(rc_channels_t *channels, uint8_t map[MAX_CHANNELS], float scale[MAX_CHANNELS], deadzone_t *deadzone)
+diff --git a/autopilot/service/hardware/util/rc_channels.h b/autopilot/service/hardware/util/rc_channels.h
+index c930b33..2712ad1 100644
+--- a/autopilot/service/hardware/util/rc_channels.h
++++ b/autopilot/service/hardware/util/rc_channels.h
+@@ -33,7 +33,7 @@
+ #include "deadzone.h"
+ 
+ 
+-#define MAX_CHANNELS 5
++#define MAX_CHANNELS 6
+ 
+ 
+ typedef enum
+@@ -42,7 +42,8 @@ typedef enum
+    CH_ROLL,
+    CH_YAW,
+    CH_GAS,
+-   CH_SWITCH
++   CH_SWITCH_L,
++   CH_SWITCH_R
+ }
+ channel_t;
+ 
+diff --git a/autopilot/service/interface/interface.c b/autopilot/service/interface/interface.c
+index 3c26859..b81d6de 100644
+--- a/autopilot/service/interface/interface.c
++++ b/autopilot/service/interface/interface.c
+@@ -88,23 +88,23 @@ int set_ctrl_param(CtrlParam param, float value)
+       case CTRL_PARAM__POS_U_GROUND:
+       {
+          LOG(LL_DEBUG, "u ground pos update: %f", value);
+-         u_setpoint_t setpoint = {value, 1};
+-         u_ctrl_set_setpoint(setpoint); // can't fail
++         //u_setpoint_t setpoint = {value, 1};
++         //u_ctrl_set_setpoint(setpoint); // can't fail
+          break;
+       }
+ 
+       case CTRL_PARAM__POS_U:
+       {
+          LOG(LL_DEBUG, "u pos update: %f", value);
+-         u_setpoint_t setpoint = {value, 0};
+-         u_ctrl_set_setpoint(setpoint);
++         //u_setpoint_t setpoint = {value, 0};
++         //u_ctrl_set_setpoint(setpoint);
+          break;
+       }
+ 
+       case CTRL_PARAM__POS_YAW:
+       {
+          LOG(LL_DEBUG, "yaw pos update: %f", value);
+-         status = yaw_ctrl_set_pos(value);
++         //status = yaw_ctrl_set_pos(value);
+          break;
+       }
+       
+@@ -164,6 +164,7 @@ static void get_state(Params *params)
+    params->start_lon = gps_start.lon;
+    params->start_lat = gps_start.lat;
+    params->start_alt = gps_start.alt;
++   /*
+    params->setp_x = navi_get_dest_e();
+    params->setp_y = navi_get_dest_n();
+    float setp_u = u_ctrl_get_setpoint();
+@@ -175,7 +176,8 @@ static void get_state(Params *params)
+    {
+       params->setp_u = setp_u;
+    }
+-   params->setp_yaw = yaw_ctrl_get_pos();
++   params->setp_yaw = 0.0;
++   */
+ }
+ 
+ 
+diff --git a/autopilot/service/main_loop/control_mode.c b/autopilot/service/main_loop/control_mode.c
+index 1973e2c..2c76089 100644
+--- a/autopilot/service/main_loop/control_mode.c
++++ b/autopilot/service/main_loop/control_mode.c
+@@ -9,9 +9,10 @@
+  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
+  |___________________________________________________|
+   
+- Control Modes Inmplementation
++ Control Modes Implementation
++ used to set remote control or auto pilot inputs
+ 
+- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
++ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ 
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+@@ -24,92 +25,171 @@
+  GNU General Public License for more details. */
+ 
+ 
+-#include <threadsafe_types.h>
+-#include <opcd_interface.h>
+ #include "control_mode.h"
+-#include "main_loop.h"
+-#include "../filters/filter.h"
+-#include "../hardware/util/calibration.h"
+-#include "../util/math/conv.h"
+-
+-
+-static tsfloat_t stick_pitch_roll_p;
+-static tsfloat_t stick_pitch_roll_angle_max;
+-static tsfloat_t stick_yaw_p;
+-
+-static calibration_t rc_cal;
+-static Filter1 rc_valid_filter;
+-
+-
+-void cm_init(void)
+-{
+-   cal_init(&rc_cal, 3, 500);
+-   filter1_lp_init(&rc_valid_filter, 0.5, REALTIME_PERIOD, 1);
+-
+-   /* read parameters: */
+-   opcd_param_t params[] =
+-   {
+-      {"pitch_roll_p", &stick_pitch_roll_p},
+-      {"pitch_roll_angle_max", &stick_pitch_roll_angle_max},
+-      {"yaw_p", &stick_yaw_p},
+-      OPCD_PARAMS_END
+-   };
+-   opcd_params_apply("sticks.", params);
+-}
+-
+-
+-void cm_update(control_mode_t *cm, uint16_t sensor_status, float channels[MAX_CHANNELS])
+-{
+-   float rc_valid_f = (sensor_status & RC_VALID) ? 1.0f : 0.0f;
+-   filter1_run(&rc_valid_filter, &rc_valid_f, &rc_valid_f);
+-   int rc_valid = rc_valid_f > 0.5f;
+-   float pitch, roll, yaw, gas, sw;
+-   if (!rc_valid)
+-   {
+-      pitch = 0.0f;
+-      roll = 0.0f;
+-      yaw = 0.0f;
+-      gas = 0.0f;
+-      sw = 0.0f;
+-   }
+-   else
+-   {
+-      float cal_channels[3] = {channels[CH_PITCH], channels[CH_ROLL], channels[CH_YAW]};
+-      cal_sample_apply(&rc_cal, cal_channels);
+-      pitch = cal_channels[0];
+-      roll = cal_channels[1];
+-      yaw = cal_channels[2];
+-      gas = channels[CH_GAS];
+-      sw = channels[CH_SWITCH];
+-   }
+-
+-   /* select mode */
+-   cm->att.type = ATT_GPS_SPEED;
+-   cm->att.global = 1;
+-
+-   /* fill data accoring to mode */
+-   if (cm->att.type == ATT_RATE)
+-   {
+-      float p = tsfloat_get(&stick_pitch_roll_p);
+-      cm->att.setp.x = -p * pitch;
+-      cm->att.setp.y = p * roll;
+-   }
+-   else if (cm->att.type == ATT_POS)
+-   {
+-      float a = deg2rad(tsfloat_get(&stick_pitch_roll_angle_max));
+-      cm->att.setp.x = a * pitch;
+-      cm->att.setp.y = -a * roll;
+-   }
+-   else if (cm->att.type == ATT_GPS_SPEED)
+-   {
+-      float p = tsfloat_get(&stick_pitch_roll_p);
+-      cm->att.setp.x = p * pitch;   
+-      cm->att.setp.y = p * roll;   
+-   }
+-   cm->z.type = Z_STICK;
+-   cm->z.setp = gas;
+-   cm->yaw.type = YAW_STICK;
+-   cm->yaw.setp = yaw * tsfloat_get(&stick_yaw_p);
+-   cm->motors_enabled = rc_valid && sw > 0.5;
++
++
++static bool motors_enabled = false;
++
++bool cm_motors_enabled(void)
++{
++   return motors_enabled;  
++}
++
++void cm_enable_motors(bool enabled)
++{
++   motors_enabled = enabled;   
++}
++
++
++static enum
++{
++   U_ULTRA_POS,
++   U_BARO_POS,
++   U_SPEED,
++   U_ACC
++}
++u_mode = U_ACC;
++static float u_setp = 0.0;
++static float u_acc_limit = 1.0;
++
++void cm_u_ultra_pos_set(float pos)
++{
++   u_mode = U_ULTRA_POS;
++   u_setp = pos;
++}
++
++void cm_u_baro_pos_set(float pos)
++{
++   u_mode = U_BARO_POS;
++   u_setp = pos;
++}
++
++void cm_u_spd_set(float spd)
++{
++   u_mode = U_SPEED;
++   u_setp = spd;
++}
++
++void cm_u_acc_set(float acc)
++{
++   u_mode = U_ACC;
++   u_setp = acc;   
++}
++
++bool cm_u_is_pos(void)
++{
++   return u_mode == U_ULTRA_POS || u_mode == U_BARO_POS;   
++}
++
++bool cm_u_is_baro_pos(void)
++{
++   return u_mode == U_BARO_POS;   
++}
++
++bool cm_u_is_spd(void)
++{
++   return u_mode == U_SPEED;
++}
++
++bool cm_u_is_acc(void)
++{
++   return u_mode == U_ACC;   
++}
++
++float cm_u_setp(void)
++{
++   return u_setp;   
++}
++
++float cm_u_acc_limit(void)
++{
++   return u_acc_limit;   
++}
++
++
++
++static enum
++{
++   ATT_GPS_POS,
++   ATT_GPS_SPD,
++   ATT_ANGLES,
++   ATT_RATES
++}
++att_mode = ATT_RATES;
++static vec2_t att_setp = {{0.0f, 0.0f}};
++
++void cm_att_set_gps_pos(vec2_t pos)
++{
++   att_mode = ATT_GPS_POS;
++   att_setp = pos;
++}
++
++void cm_att_set_gps_spd(vec2_t spd)
++{
++   att_mode = ATT_GPS_SPD;   
++   att_setp = spd;
++}
++
++void cm_att_set_angles(vec2_t angles)
++{
++   att_mode = ATT_ANGLES;
++   att_setp = angles;
++}
++
++void cm_att_set_rates(vec2_t rates)
++{
++   att_mode = ATT_RATES;
++   att_setp = rates;
++}
++
++bool cm_att_is_gps_pos(void)
++{
++   return att_mode == ATT_GPS_POS;
++}
++
++bool cm_att_is_gps_spd(void)
++{
++   return att_mode == ATT_GPS_SPD;
++}
++
++bool cm_att_is_angle(void)
++{
++   return att_mode == ATT_GPS_SPD;   
++}
++
++bool cm_att_is_rate(void)
++{
++   return att_mode == ATT_RATES;   
++}
++
++vec2_t cm_att_setp(void)
++{
++   return att_setp;   
++}
++
++
++static bool is_yaw_pos = false;
++static float yaw_setp = 0.0;
++
++void cm_yaw_set_pos(float pos)
++{
++   is_yaw_pos = true;
++   yaw_setp = pos;
++}
++
++void cm_yaw_set_spd(float spd)
++{
++   is_yaw_pos = false;
++   yaw_setp = spd;
++}
++
++bool cm_yaw_is_pos(void)
++{
++   return is_yaw_pos;   
++}
++
++float cm_yaw_setp(void)
++{
++   return yaw_setp;  
+ }
+ 
+diff --git a/autopilot/service/main_loop/control_mode.h b/autopilot/service/main_loop/control_mode.h
+index 23f217a..a8e8d79 100644
+--- a/autopilot/service/main_loop/control_mode.h
++++ b/autopilot/service/main_loop/control_mode.h
+@@ -10,8 +10,9 @@
+  |___________________________________________________|
+   
+  Control Modes Interface
++ used to set remote control or auto pilot inputs
+ 
+- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
++ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ 
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+@@ -28,67 +29,89 @@
+ #define __CONTROL_MODE_H__
+ 
+ 
+-#include <stdint.h>
++#include <stdbool.h>
+ 
+-#include "../hardware/util/rc_channels.h"
+ #include "../util/math/vec2.h"
+ 
+ 
+-typedef struct
+-{
+-   struct
+-   {
+-      enum
+-      {
+-         ATT_GPS_POS,   /* GPS position*/
+-         ATT_GPS_SPEED, /* GPS speed */
+-         ATT_POS,   /* attitude angle */
+-         ATT_RATE   /* attitude rate */
+-      }
+-      type;
+-      int global;
+-      vec2_t setp; /* setpoint in global x/y or body frame pitch/roll direction */
+-   }
+-   att;
+-
+-   struct
+-   {
+-      enum
+-      {
+-         Z_STICK, /* stick controls gas directly */
+-         Z_AUTO /* ultra/baro, stick limits gas */
+-      }
+-      type;
+-      float setp; /* setpoint from stick */
+-   }
+-   z;
+-
+-   struct
+-   {
+-      enum
+-      {
+-         YAW_ANGLE,
+-         YAW_POI,
+-         YAW_STICK
+-      }
+-      type;
+-      float setp; /* yaw rate; to be extended  */   
+-   }
+-   yaw;
+-
+-   int motors_enabled;
+-} 
+-control_mode_t;
+-
+-void cm_set_att_gyro(vec2_t *setp);
+-void cm_set_att_acc(vec2_t *setp);
+-void cm_set_att_acc(vec2_t *setp);
+-
+-
+-void cm_init(void);
+-
+-
+-void cm_update(control_mode_t *cm, uint16_t sensor_status, float channels[MAX_CHANNELS]);
++/*************************
++ * GENERIC MOTOR CONTROL *
++ *************************/
++
++bool cm_motors_enabled(void);
++void cm_enable_motors(bool enabled);
++
++
++/*******************
++ * U CONTROL MODES *
++ *******************/
++
++void cm_u_ultra_pos_set(float pos);
++void cm_u_baro_pos_set(float pos);
++void cm_u_spd_set(float spd);
++void cm_u_acc_set(float acc);
++
++/* true, if in u pos hold mode */
++bool cm_u_is_pos(void);
++
++/* true, if in baro position hold mode
++   false, if in ultra position hold mode */
++bool cm_u_is_baro_pos(void);
++
++/* true, if in u speed control mode */
++bool cm_u_is_spd(void);
++
++/* true, if in u acc mode without feedback loop */
++bool cm_u_is_acc(void);
++
++/* returns the setpoint */
++float cm_u_setp(void);
++
++/* returns the acc limit */
++float cm_u_acc_limit(void);
++
++
++/*********************
++ * ATT CONTROL MODES *
++ *********************/
++
++void cm_att_set_gps_pos(vec2_t pos);
++void cm_att_set_gps_spd(vec2_t spd);
++void cm_att_set_angles(vec2_t angles);
++void cm_att_set_rates(vec2_t rates);
++
++/* true, if GPS navigation/position-hold */
++bool cm_att_is_gps_pos(void);
++
++/* true, if GPS speed */
++bool cm_att_is_gps_spd(void);
++
++/* true, if angle control */
++bool cm_att_is_angle(void);
++
++/* true, if rate control */
++bool cm_att_is_rate(void);
++
++/* the attitude setpoint */
++vec2_t cm_att_setp(void);
++
++
++/*********************
++ * YAW CONTROL MODES *
++ *********************/
++
++/* set yaw control mode to position */
++void cm_yaw_set_pos(float pos);
++
++/* set yaw control mode to speed */
++void cm_yaw_set_spd(float spd);
++
++/* true, if yaw control is position
++   false, if yaw control is speed */
++bool cm_yaw_is_pos(void);
++
++/* returns the current yaw setpoint */
++float cm_yaw_setp(void);
+ 
+ 
+ #endif /* __CONTROL_MODE_H__ */
+diff --git a/autopilot/service/main_loop/main_loop.c b/autopilot/service/main_loop/main_loop.c
+index 97b6630..296be11 100644
+--- a/autopilot/service/main_loop/main_loop.c
++++ b/autopilot/service/main_loop/main_loop.c
+@@ -60,6 +60,7 @@
+ #include "../state/motors_state.h"
+ #include "../force_opt/force_opt.h"
+ #include "../force_opt/att_thrust.h"
++#include "../flight_logic/flight_logic.h"
+ 
+ 
+ static float *rpm_square = NULL;
+@@ -75,6 +76,7 @@ static gps_util_t gps_util;
+ static interval_t gyro_move_interval;
+ static int init = 0;
+ static body_to_world_t *btw;
++static flight_state_t flight_state;
+ 
+ 
+ static char *blackbox_spec[] = {"dt",                      /*  1      */
+@@ -197,8 +199,8 @@ void main_init(int override_hw)
+    }
+    scl_copy_send_dynamic(blackbox_socket, msgpack_buf->data, msgpack_buf->size);
+ 
+-   /* init control modes: */
+-   cm_init();
++   /* init flight logic: */
++   flight_logic_init();
+ 
+    /* init calibration data: */
+    cal_init(&gyro_cal, 3, 500);
+@@ -216,11 +218,16 @@ void main_init(int override_hw)
+ }
+ 
+ 
+-void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ultra, float baro, float voltage, float channels[MAX_CHANNELS], uint16_t sensor_status, int override_hw)
++void main_step(float dt,
++               marg_data_t *marg_data,
++               gps_data_t *gps_data,
++               float ultra,
++               float baro,
++               float voltage,
++               float channels[MAX_CHANNELS],
++               uint16_t sensor_status,
++               int override_hw)
+ {
+-   /* set the control mode: */
+-   control_mode_t cm;
+-   cm_update(&cm, sensor_status, channels);
+    
+    /* read sensor data and calibrate sensors: */
+    pos_in.dt = dt;
+@@ -255,7 +262,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
+       gps_util_update(&gps_rel_data, &gps_util, gps_data);
+       pos_in.pos_e = gps_rel_data.de;
+       pos_in.pos_n = gps_rel_data.dn;
+-      printf("e: %f n: %f\n", pos_in.pos_e, pos_in.pos_n);
++      printf("n: %f e: %f\n", pos_in.pos_n, pos_in.pos_e);
+       ONCE(mag_decl = mag_decl_lookup(gps_data->lat, gps_data->lon);
+            gps_start_set(gps_data);
+            LOG(LL_ERROR, "declination lookup yields: %f", mag_decl));
+@@ -263,19 +270,13 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
+ 
+    /* acc/mag calibration: */
+    acc_mag_cal_apply(&marg_data->acc, &marg_data->mag);
+-   //printf("%f\n", sqrt(marg_data->acc.x * marg_data->acc.x + marg_data->acc.y * marg_data->acc.y + marg_data->acc.z * marg_data->acc.z));
+ 
+    /* perform sensor data fusion: */
+    euler_t euler;
+    int ahrs_state = cal_ahrs_update(&euler, marg_data, dt);
+-   //printf("%f %f %f\n", marg_data->gyro.x, marg_data->gyro.y, marg_data->gyro.z);
+-   //printf("%f %f %f\n", marg_data->mag.x, marg_data->mag.y, marg_data->mag.z);
+-   printf("%f %f %f\n", euler.yaw, euler.pitch, euler.roll);
+    if (ahrs_state < 0 || !cal_complete(&gyro_cal))
+       goto out;
+    
+-   flight_state_t flight_state = 0; //flight_detect(&marg_data->acc.vec[0]);
+-
+    ONCE(init = 1; LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
+    
+    /* local ACC to global ACC rotation: */
+@@ -284,99 +285,88 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
+    /* compute next 3d position estimate: */
+    pos_t pos_estimate;
+    pos_update(&pos_estimate, &pos_in);
++   flight_state = flight_state_update(&marg_data->acc.vec[0], pos_estimate.ultra_z.pos);
+    
+-   float f_d = 0.0f;
+-   float yaw_err, u_err;
+-   //auto_stick.yaw = yaw_ctrl_step(&yaw_err, euler.yaw, marg_data->gyro.z, dt);
+-   if (cm.z.type == Z_AUTO)
+-   {
+-      /*float speed_sp = u_ctrl_step(&u_err, pos_estimate.ultra_z.pos,
+-                                   pos_estimate.baro_z.pos, pos_estimate.baro_z.speed, dt);
+-      */
+-      float speed_sp = 0.0f;
+-      f_d = u_speed_step(speed_sp, pos_estimate.baro_z.speed, dt);
+-      f_d = fmin(f_d, cm.z.setp);
+-   }
+-   else /* Z_STICK */
+-   {
+-      f_d = cm.z.setp;
+-   }
+-   f_d *= platform.max_thrust_n;
++   /* execute flight logic (sets cm_x parameters used below): */
++   flight_logic_run(sensor_status, channels);
+    
+-   /* the following code sets the x/y speed setpoint: */
+-   vec2_t speed_sp;
+-   if (cm.att.type == ATT_GPS_SPEED)
++   /* RUN U POSITION AND SPEED CONTROLLER: */
++   float u_err = 0.0f;
++   float u_speed_sp = 0.0f;
++   if (cm_u_is_pos())
+    {
+-      /* direct speed control mode: */
+-      if (cm.att.global)
+-      {
+-         /* move according to global speed vector: */
+-         speed_sp.n = 0.0;
+-         speed_sp.e = 0.0;
+-      }
+-      else /* local */
+-      {
+-         /* rotate desired speed vector with copter orientation: */
+-         vec2_rotate(&speed_sp, &cm.att.setp, euler.yaw);
+-      }
++      if (cm_u_is_baro_pos())
++         u_err = cm_u_setp() - pos_estimate.baro_z.pos;
++      else
++         u_err = cm_u_setp() - pos_estimate.ultra_z.pos;
++      u_speed_sp = u_ctrl_step(u_err);
+    }
+-   else /* GPS_POS */
++   
++   if (cm_u_is_spd())
++      u_speed_sp = cm_u_setp();
++   
++   float f_d = u_speed_step(u_speed_sp, pos_estimate.baro_z.speed, dt);
++   if (cm_u_is_acc())
++      f_d = cm_u_setp();
++
++   f_d = fmin(f_d, cm_u_acc_limit());
++   f_d *= platform.max_thrust_n;
++
++   vec2_t speed_sp = {{0.0f, 0.0f}};
++   if (cm_att_is_gps_pos())
+    {
+-      /* navigation mode: */
+-      navi_run(&speed_sp, &pos_estimate.ne_pos, dt);
++      navi_set_dest(cm_att_setp());
++      navi_run(&speed_sp, &pos_estimate.ne_pos, dt); /* attitude navigation control */
+    }
+ 
+-   /* run speed vector controller, which computes forces in n,e direction: */
++   if (cm_att_is_gps_spd())
++      speed_sp = cm_att_setp(); /* direct attitude speed control */
++
++   /* RUN ATT NORTH/EAST SPEED CONTROLLER: */
+    vec2_t f_ne;
+    ne_speed_ctrl_run(&f_ne, &speed_sp, dt, &pos_estimate.ne_speed, euler.yaw);
+    vec3_t f_ned = {{f_ne.vec[0], f_ne.vec[1], f_d}};
+ 
+-   /* transform requested forces in n,e,d direction into pitch/roll angles and overall thrust: */
+    vec2_t pitch_roll_sp;
+    float thrust;
+    att_thrust_calc(&pitch_roll_sp, &thrust, &f_ned, platform.max_thrust_n, 0);
+ 
+-   /* run attitude controller: */
+-   if (cm.att.type == ATT_POS)
+-   {
+-      if (cm.att.global)
+-      {
+-         /* "carefree" mode */
+-         vec2_rotate(&pitch_roll_sp, &cm.att.setp, euler.yaw);
+-      }
+-      else
+-      {
+-         /* pitch/roll direction  */
+-         pitch_roll_sp = cm.att.setp;
+-      }
+-   }
++   if (cm_att_is_angle())
++      pitch_roll_sp = cm_att_setp(); /* direct attitude angle control */
++ 
++   /* RUN ATT ANGLE CONTROLLER: */
+    vec2_t att_err;
+    vec2_t pitch_roll_speed = {{marg_data->gyro.y, marg_data->gyro.x}};
+    vec2_t pitch_roll_ctrl;
+    vec2_t pitch_roll = {{euler.pitch, euler.roll}};
+    att_ctrl_step(&pitch_roll_ctrl, &att_err, dt, &pitch_roll, &pitch_roll_speed, &pitch_roll_sp);
+-
++ 
+    float piid_sp[3] = {0.0f, 0.0f, 0.0f};
+-
+-   /* direct rate control: */
+-   if (cm.att.type == ATT_RATE)
+-   {
+-      piid_sp[PIID_PITCH] = pitch_roll_ctrl.x + cm.att.setp.x;
+-      piid_sp[PIID_ROLL] = pitch_roll_ctrl.y + cm.att.setp.y;
+-   }
+-   else if (cm.att.type == ATT_RATE)
++   piid_sp[PIID_PITCH] = pitch_roll_ctrl.x;
++   piid_sp[PIID_ROLL] = pitch_roll_ctrl.y;
++ 
++   if (cm_att_is_rate())
+    {
+-      piid_sp[PIID_PITCH] = cm.att.setp.x;
+-      piid_sp[PIID_ROLL] = cm.att.setp.y;
++      /* direct attitude rate control */
++      vec2_t setp = cm_att_setp();
++      piid_sp[PIID_PITCH] = setp.x;
++      piid_sp[PIID_ROLL] = setp.y;
+    }
+-   else if (cm.att.type == ATT_POS)
++
++   /* RUN YAW CONTROLLER: */
++   float yaw_speed_sp, yaw_err;
++   if (cm_yaw_is_pos())
+    {
+-      piid_sp[PIID_PITCH] = pitch_roll_ctrl.x;
+-      piid_sp[PIID_ROLL] = pitch_roll_ctrl.y;
++      /* yaw position control */
++      float sp = cm_yaw_setp();
++      yaw_speed_sp = yaw_ctrl_step(&yaw_err, sp, euler.yaw, marg_data->gyro.z, dt);
+    }
+-   piid_sp[PIID_YAW] = cm.yaw.setp;
++   else
++      yaw_speed_sp = cm_yaw_setp(); /* direct yaw speed control */
++   
++   piid_sp[PIID_YAW] = yaw_speed_sp;
+ 
+-   /* run feed-forward system and stabilizing PIID controller: */
++   /* RUN STABLIZING PIID CONTROLLER: */
+    f_local_t f_local = {{thrust, 0.0f, 0.0f, 0.0f}};
+    piid_run(&f_local.vec[1], marg_data->gyro.vec, piid_sp);
+ 
+@@ -384,13 +374,19 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
+    inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
+    
+    /* compute motor set points out of rpm ^ 2: */
+-   piid_int_enable(platform_ac_calc(setpoints, cm.motors_enabled, voltage, rpm_square));
+-   if (!cm.motors_enabled)
++   piid_int_enable(platform_ac_calc(setpoints, cm_motors_enabled(), voltage, rpm_square));
++   if (!cm_motors_enabled())
+    {
+       memset(setpoints, 0, sizeof(float) * platform.n_motors);
+       piid_reset(); /* reset piid integrators so that we can move the device manually */
+       att_ctrl_reset();
+    }
++   else
++   {
++      /* notify any cpu-consuming applications to stop processing */
++      
++      goto out;
++   }
+ 
+    /* write motors: */
+    if (!override_hw)
+diff --git a/autopilot/service/platform/arcade_quad.c b/autopilot/service/platform/arcade_quad.c
+index d49f1d0..b7a522c 100644
+--- a/autopilot/service/platform/arcade_quad.c
++++ b/autopilot/service/platform/arcade_quad.c
+@@ -54,8 +54,8 @@
+ static i2c_bus_t i2c_3;
+ static deadzone_t deadzone;
+ static rc_channels_t rc_channels;
+-static uint8_t channel_mapping[MAX_CHANNELS] =  {0, 1, 3, 2, 4}; /* pitch: 0, roll: 1, yaw: 3, gas: 2, switch: 4 */
+-static float channel_scale[MAX_CHANNELS] =  {1.0f, -1.0f, -1.0f, 1.0f, 1.0f};
++static uint8_t channel_mapping[MAX_CHANNELS] =  {0, 1, 3, 2, 4, 5}; /* pitch: 0, roll: 1, yaw: 3, gas: 2, switch left: 4, switch right: 5 */
++static float channel_scale[MAX_CHANNELS] =  {1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
+ static drotek_marg2_t marg;
+ 
+ 
+@@ -63,8 +63,13 @@ static int read_rc(float channels[MAX_CHANNELS])
+ {
+    float dsl_channels[RC_DSL_CHANNELS];
+    int ret = rc_dsl_reader_get(dsl_channels);
+-   int c;
+-   for (c = 0; c < MAX_CHANNELS; c++)
++   
++   /* for (int i = 0; i < RC_DSL_CHANNELS; i++)
++      printf("(%d, %f) ", i, dsl_channels[i]);
++      printf("\n");
++   */
++
++   for (int c = 0; c < MAX_CHANNELS; c++)
+    {
+       channels[c] = rc_channels_get(&rc_channels, dsl_channels, c);
+    }
+diff --git a/config/system.yaml b/config/system.yaml
+index cb01fb8..0f7a2ab 100644
+--- a/config/system.yaml
++++ b/config/system.yaml
+@@ -90,15 +90,16 @@ components:
+ 
+    - name: pilot
+      gates:
+-      - log: pub
+-      - blackbox: pub
+-      - gps: sub
+-      - rc: sub
+-      - ctrl: rep
+-      - mon: pub
+-      - power: sub
+-      - opcd_ctrl: req
+-      - opcd_event: sub
++      - log: pub        # logs useful human-readable data at different verbosity levels
++      - blackbox: pub   # publishes data produced in every step of the main loop
++      - gps: sub        # subscribes to GPS data provider
++      - rc: sub         # experimental remote control input
++      - ctrl: rep       # control interface
++      - mon: pub        # controller error monitoring publisher
++      - power: sub      # power data subscriber
++      - flying: pub     # publishes
++      - opcd_ctrl: req  # OPCD request/reply interface
++      - opcd_event: sub # OPCD parameter update
+ 
+    - name: optimizer
+      gates:
+@@ -157,11 +158,21 @@ components:
+       - out: pub
+       - opcd_ctrl: req
+ 
++   - name: display
++     gates:
++      - flying: sub
++      - gps: sub
++      - power: sub
++
++
+ #
+ # component connections (component_a.gate_x -- component_b.gate_y)
+ #
+ 
+ connections:
++   - [ display.flying,           pilot.flying]
++   - [ display.gps,              gps.data]
++   - [ display.power,            powerman.mon]
+    - [ calibration.data,         blackbox.data]
+    - [ pilot.blackbox,           blackbox.data]
+    - [ demo_mission.gps,         gps.data]
+diff --git a/display/service/display.py b/display/service/display.py
+index b4b8ac6..870df22 100755
+--- a/display/service/display.py
++++ b/display/service/display.py
+@@ -36,23 +36,37 @@ from gps_data_pb2 import GpsData
+ from math import sin, cos, pi
+ from misc import daemonize
+ from os import getenv
++from power_pb2 import PowerState
+ 
+ 
+ WHITE = 1
+ BLACK = 0
+ W = 128
+ H = 64
++flying = False
++socket_map = None
++
++
++def flying_reader():
++   global flying, socket_map
++   socket = socket_map['flying']
++   while True:
++      if socket.recv() == 'flying':
++         flying = True
++      else:
++         flying = False
+ 
+ 
+ def gps():
+-   global gps_data
++   global gps_data, socket_map
+    gps_data = None
+-   socket = generate_map('gps_test')['gps']
++   socket = socket_map['gps']
+    while True:
+       with gps_lock:
+          gps_data = GpsData()
+          gps_data.ParseFromString(socket.recv())
+ 
++
+ def cpuavg():
+    global load
+    load = None
+@@ -63,9 +77,9 @@ def cpuavg():
+          load = 0.9 * load + 0.1 * cpu_percent()
+       sleep(0.05)
+ 
++
+ def pmreader():
+-   from power_pb2 import PowerState
+-   s = generate_map('pilot')['power']
++   s = socket_map['power']
+    p = PowerState()
+    global voltage, critical
+    critical = False
+@@ -236,14 +250,20 @@ def draw_gps2(draw):
+ 
+ 
+ def main(name):
+-   global gps_lock, font
++   global socket_map, gps_lock, font, flying
++   socket_map = generate_map(name)
++
+    gps_lock = Lock()
+    font = ImageFont.truetype(getenv('PENGUPILOT_PATH') + '/display/service/verdana.ttf', 11)
+-
+-   t = Thread(target = cpuavg)
++   
++   t = Thread(target = flying_reader)
+    t.daemon = True
+    t.start()
+ 
++   t1 = Thread(target = cpuavg)
++   t1.daemon = True
++   t1.start()
++
+    t2 = Thread(target = pmreader)
+    t2.daemon = True
+    t2.start()
+@@ -262,17 +282,18 @@ def main(name):
+    try:
+       while True:
+          try:
+-            t = time()
+-            while time() < t + screens[screen][1]:
+-               image = Image.new("1", (W, H), BLACK)
+-               draw = ImageDraw.Draw(image)
+-               screens[screen][0](draw)
+-               show_image(image)
+-               sleep(1)
+-               if critical:
+-                  alert = Alert(1.0, 0.1, 1, batt_low, True)
+-                  alert.start()
+-                  alert.join()
++            if not flying:
++               t = time()
++               while time() < t + screens[screen][1]:
++                  image = Image.new("1", (W, H), BLACK)
++                  draw = ImageDraw.Draw(image)
++                  screens[screen][0](draw)
++                  show_image(image)
++                  sleep(1)
++                  if critical:
++                     alert = Alert(1.0, 0.1, 1, batt_low, True)
++                     alert.start()
++                     alert.join()
+          except Exception, e:
+             print e
+          sleep(1)
+@@ -282,5 +303,6 @@ def main(name):
+       oled.clear()
+       oled.update()
+ 
++
+ daemonize('display', main)
+ 
+diff --git a/display/shared/README.txt b/display/shared/README.txt
+new file mode 100644
+index 0000000..ed8d426
+--- /dev/null
++++ b/display/shared/README.txt
+@@ -0,0 +1,13 @@
++
++Adafruit SSD1306 Linux Library + Python Bindings for use with PIL (Python Imaging
++Library)
++
++Required Software:
++- SCONS (Build Tool)
++- SWIG (for Python bindings)
++- PIL (for running the example)
++
++to build the library, run: scons
++
++Happy Hacking :-)
++
+diff --git a/display/shared/example.py b/display/shared/example.py
+new file mode 100755
+index 0000000..0a3a152
+--- /dev/null
++++ b/display/shared/example.py
+@@ -0,0 +1,21 @@
++#!/usr/bin/env python
++
++# SSD1306 PIL (Python Imaging Library) Example
++# Please check out: http://www.pythonware.com/products/pil
++
++from PIL import Image, ImageDraw, ImageFont
++import pyssd1306 as oled
++from time import sleep
++
++WHITE = 1
++BLACK = 0
++W = 128
++H = 64
++
++image = Image.new("1", (W, H), BLACK)
++draw = ImageDraw.Draw(image)
++font = ImageFont.truetype('verdana.ttf', 11)
++draw.text((0, 0), 'HELLO, WORLD', font = font)
++string = ''.join(map(chr, image.getdata()))
++oled.blit(string)
++
+diff --git a/srtm.py b/srtm.py
+new file mode 100644
+index 0000000..4dc1c72
+--- /dev/null
++++ b/srtm.py
+@@ -0,0 +1,98 @@
++"""
++  ___________________________________________________
++ |  _____                       _____ _ _       _    |
++ | |  __ \                     |  __ (_) |     | |   |
++ | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
++ | |  ___/ _ \ '_ \ / _` | | | |  ___/ | |/ _ \| __| |
++ | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
++ | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
++ |                   __/ |                           |
++ |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
++ |___________________________________________________|
++ 
++ SRTM Elevation Map
++
++ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
++
++ This program is free software; you can redistribute it and/or modify
++ it under the terms of the GNU General Public License as published by
++ the Free Software Foundation; either version 2 of the License, or
++ (at your option) any later version.
++
++ This program is distributed in the hope that it will be useful,
++ but WITHOUT ANY WARRANTY; without even the implied warranty of
++ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ GNU General Public License for more details. """
++
++
++
++from osgeo import gdal
++from osgeo.gdalconst import *
++from numpy import matrix
++import sys
++import time
++import os
++
++
++class SrtmElevMap:
++
++   def __init__(self, path):
++      self.path = path
++      self.cache = {}
++
++
++   def _file_from_coord(self, coord):
++      lon, lat = coord
++      if lon >= 0.0: 
++         lon_p = 'E'
++      else: 
++         lon_p = 'W'
++      if lat >= 0.0: 
++         lat_p = 'N'
++      else: 
++         lat_p = 'S'
++      return self.path + lat_p + '%02d' % abs(lat) + lon_p + '%03d' % abs(lon) + '.hgt'
++
++
++   def lookup(self, coord):
++      f = self._file_from_coord(coord)
++      try:
++         # try to use file in cache:
++         ds = self.cache[f]
++      except:
++         # load file:
++         print 'loading: ' + f
++         if not os.path.isfile(f):
++            raise AssertionError('file does not exist: ' + f)
++         ds = gdal.Open(f, GA_ReadOnly)
++         if ds is None:
++            raise AssertionError('could not load file')
++         self.cache[f] = ds
++      
++      # Transform from map space to image space.
++      world = matrix([[coord[0]], [coord[1]]])
++      xform = ds.GetGeoTransform()
++      offset = matrix([[xform[0]], [xform[3]]])
++      A = matrix([[xform[1], xform[2]], [xform[4], xform[5]]])
++      pixel = A.I * (world - offset)
++      if pixel[0] < 0.0 or pixel[0] > ds.RasterXSize or pixel[1] < 0.0 or pixel[1] > ds.RasterYSize:
++         raise AssertionError('pixel out of bounds')
++
++      # return elevation:
++      return ds.ReadAsArray(int(pixel[0]), int(pixel[1]), 1, 1).ravel()[0]
++
++from scl import generate_map
++from gps_data_pb2 import GpsData
++from os import getenv
++
++socket = generate_map('gps_test')['gps']
++m = SrtmElevMap(getenv('PENGUPILOT_PATH') + '/icarus/service/util/')
++while True:
++   gps_data = GpsData()
++   gps_data.ParseFromString(socket.recv())
++   if gps_data.fix == 3:
++      print gps_data.alt
++
++
++
++
+diff --git a/svctrl/processes.py b/svctrl/processes.py
+index bb1cc32..bc6b590 100644
+--- a/svctrl/processes.py
++++ b/svctrl/processes.py
+@@ -99,7 +99,7 @@ def stop(name):
+    if pid:
+       kill(pid)
+       while validate(name):
+-         times.sleep(1.0)
++         time.sleep(1.0)
+       print green('[OK]')
+    else:
+       print red('[ERROR: no such process]')

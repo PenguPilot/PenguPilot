@@ -10,7 +10,7 @@
 void man_logic_init(void);
 
 
-void man_logic_run(uint16_t sensor_status, float channels[MAX_CHANNELS]);
+void man_logic_run(uint16_t sensor_status, float channels[MAX_CHANNELS], float yaw);
 
 
 #endif /* __MAN_LOGIC_H__ */
