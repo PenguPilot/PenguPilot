@@ -25,6 +25,7 @@
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details. """
 
+import copy
 
 def parse_args():
    parser = argparse.ArgumentParser(description = 'svctrl - service control utility')
@@ -245,14 +246,21 @@ try:
             for name in names:
                start(name, config[name][0])
          else:
-            stop(name)
+            running = running_processes()
+            names = []
+            for service in restart_order(name):
+               if service in running:
+                  names.append(service)
+            rev_names = copy.deepcopy(names)
+            rev_names.reverse()
+            for name in rev_names:
+               stop(name)
       except KeyError, e:
          print red('ERROR:'), 'service %s is unknown' % args[1]
       except Exception, e:
          print red('ERROR:'), 'service %s failed to start/stop: %s' % (args[1], str(e))
 
    elif args[0] == 'restart':
-      import copy
       name = args[1]
       names = []
       running = running_processes()
