@@ -25,14 +25,11 @@
 
 
 #include <math.h>
-#include <string.h>
 
-#include "../util/math/vec3.h"
-#include "../util/math/mat.h"
-#include "../util/math/conv.h"
-
+#include "mat.h"
 
 #include "euler.h"
+#include "conv.h"
 
 
 void euler_normalize(euler_t *euler)

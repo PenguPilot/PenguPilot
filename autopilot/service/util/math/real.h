@@ -15,13 +15,14 @@
    #define real_sqrt sqrtf
    #define real_sin sinf
    #define real_cos cosf
+   #define REAL(c) (c##f)
 #else /* double */
    typedef double real_t;
    #define real_sqrt sqrt
    #define real_sin sin
    #define real_cos cos
+   #define REAL(c) (c)
 #endif
-#define REAL(c) ((real_t)c)
 
 
 #endif /* __REAL_H__ */

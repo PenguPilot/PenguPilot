@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <stdbool.h>
+#include <string.h>
 
 
 /* generic vector type */
@@ -122,6 +123,11 @@ void _vec_add(vec_t *out, const vec_t *a, const vec_t *b);
 #define vec_sub(vec_out_ptr, vec_a_ptr, vec_b_ptr) \
    _vec_sub((vec_t *)vec_out_ptr, (const vec_t *)vec_a_ptr, (const vec_t *)vec_b_ptr)
 void _vec_sub(vec_t *out, const vec_t *a, const vec_t *b);
+
+
+#define vec_normalize(vec_ptr) \
+   _vec_normalize((vec_t *)vec_ptr)
+void _vec_normalize(vec_t *vec);
 
 
 #endif /* __VEC_H__ */

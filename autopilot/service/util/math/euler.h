@@ -28,7 +28,7 @@
 #define __EULER_H__
 
 
-#include "../util/math/vec3.h"
+#include "vec3.h"
 
 
 /* euler angles */

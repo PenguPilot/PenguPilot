@@ -73,7 +73,7 @@ real_t _vec_norm(const vec_t *vec)
 {
    assert(vec);
 
-   real_t sum = REAL(0);
+   real_t sum = REAL(0.0);
    FOR_N(i, vec->dim)
       sum += vec->ve[i] * vec->ve[i];
    return real_sqrt(sum);
@@ -133,5 +133,11 @@ void _vec_sub(vec_t *out, const vec_t *a, const vec_t *b)
 
    FOR_N(i, out->dim)
       out->ve[i] = a->ve[i] - b->ve[i];
+}
+
+
+void _vec_normalize(vec_t *vec)
+{
+   vec_scalar_mul(vec, vec, REAL(1.0) / vec_norm(vec));
 }
 

@@ -66,7 +66,7 @@ void _mat_vec_mul(vec_t *out, const mat_t *mat, const vec_t *in)
 
    FOR_N(i, mat->rows)
    {
-      real_t sum = REAL(0);
+      real_t sum = REAL(0.0);
       FOR_N(j, mat->cols)
          sum += ME(mat, i, j) * in->ve[j];
       out->ve[i] = sum;
@@ -110,11 +110,11 @@ void _mat_inv(mat_t *out, const mat_t *in)
 
    if (in->rows == 1)
    {
-      out->ve[0] = REAL(1) / in->ve[0];   
+      out->ve[0] = REAL(1.0) / in->ve[0];   
    }
    else if (in->rows == 2)
    {
-      const real_t inv_det = REAL(1) / (in->ve[0] * in->ve[3] - in->ve[2] * in->ve[1]);
+      const real_t inv_det = REAL(1.0) / (in->ve[0] * in->ve[3] - in->ve[2] * in->ve[1]);
 
       out->ve[0] =  in->ve[3] * inv_det;
       out->ve[1] = -in->ve[1] * inv_det;
@@ -123,7 +123,7 @@ void _mat_inv(mat_t *out, const mat_t *in)
    }
    else if (in->rows == 3)
    {
-      const real_t inv_det = REAL(1) / 
+      const real_t inv_det = REAL(1.0) / 
           (ME(in, 0, 0) * (ME(in, 1, 1) * ME(in, 2, 2) - ME(in, 2, 1) * ME(in, 1, 2))
          - ME(in, 0, 1) * (ME(in, 1, 0) * ME(in, 2, 2) - ME(in, 1, 2) * ME(in, 2, 0))
          + ME(in, 0, 2) * (ME(in, 1, 0) * ME(in, 2, 1) - ME(in, 1, 1) * ME(in, 2, 0)));
@@ -204,7 +204,7 @@ void _mat_ident(mat_t *mat)
 
    FOR_N(i, mat->rows)
       FOR_N(j, mat->cols)
-         ME(mat, j, i) = (i == j) * REAL(1);
+         ME(mat, j, i) = (i == j) * REAL(1.0);
 }
 
 
@@ -218,7 +218,7 @@ void _mat_mul(mat_t *out, const mat_t *a, const mat_t *b)
    FOR_N(i, out->rows)
       FOR_N(j, out->cols)
       {
-         real_t sum = REAL(0);
+         real_t sum = REAL(0.0);
          FOR_N(k, a->cols)
             sum += (ME(a, i, k)) * (ME(b, k, j));
          ME(out, i, j) = sum;
@@ -236,7 +236,7 @@ void _mmtr_mul(mat_t *out, const mat_t *a, const mat_t *b)
    FOR_N(i, out->rows)
       FOR_N(j, out->cols)
       {
-         real_t sum = REAL(0);
+         real_t sum = REAL(0.0);
          FOR_N(k, a->cols)
             sum += (ME(a, i, k)) * (ME(b, j, k));
          ME(out, i, j) = sum;

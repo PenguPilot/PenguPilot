@@ -31,8 +31,6 @@
 
 #include "cal_ahrs.h"
 #include "ahrs.h"
-#include "../util/logger/logger.h"
-#include "../util/math/conv.h"
 
 
 static ahrs_t ahrs;
@@ -78,7 +76,9 @@ int cal_ahrs_update(euler_t *euler, const marg_data_t *marg_data,
    }
    else
    {
-      memset(euler, 0, sizeof(euler_t));
+      euler->pitch = 0.0;
+      euler->roll = 0.0;
+      euler->yaw = 0.0;
    }
    return status;
 }

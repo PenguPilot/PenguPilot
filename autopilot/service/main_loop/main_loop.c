@@ -443,8 +443,8 @@ void main_step(const float dt,
    /* write motors: */
    if (!override_hw)
    {
-      //EVERY_N_TIMES(20, printf("%f %f %f\n", euler.yaw, euler.pitch, euler.roll));
-      platform_write_motors(setpoints);
+      EVERY_N_TIMES(20, printf("%f %f %f\n", rad2deg(euler.yaw), rad2deg(euler.pitch), rad2deg(euler.roll)));
+      //platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */
