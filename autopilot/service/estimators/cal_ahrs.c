@@ -74,8 +74,8 @@ int cal_ahrs_update(euler_t *euler, const marg_data_t *marg_data,
    quat_to_euler(&imu_euler, &imu.quat);
    /* apply calibration: */
    euler->yaw = ahrs_euler.yaw + mag_decl;
-   euler->pitch = imu_euler.pitch;
-   euler->roll = imu_euler.roll;
+   euler->pitch = ahrs_euler.pitch;
+   euler->roll = ahrs_euler.roll;
    euler_normalize(euler);
    return status;
 }
