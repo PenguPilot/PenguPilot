@@ -473,7 +473,7 @@ void main_step(const float dt,
    /* handle special cases for motor setpoints: */
    if (motors_starting())
       FOR_N(i, platform.n_motors) setpoints[i] = platform.ac.min;
-   if (hard_off || motors_stopping())
+   if (hard_off || motors_output_is_disabled())
       FOR_N(i, platform.n_motors) setpoints[i] = platform.ac.off_val;
    
    /* write motors: */
