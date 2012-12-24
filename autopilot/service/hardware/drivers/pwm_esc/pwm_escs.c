@@ -9,10 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Modified OMAP3-PWM ESC Interface
+ Modified OMAP3-PWM Multi-ESC Interface
 
  Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
- Copyright (C) 2012 Jan Roemisch, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -25,45 +24,42 @@
  GNU General Public License for more details. */
 
 
-#include <unistd.h>
+#include <util.h>
+#include <malloc.h>
 #include <stdio.h>
-#include <math.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
+
+#include "pwm_escs.h"
 
 
-#include "pwm_esc.h"
+static size_t _n_escs;
+static pwm_esc_t *escs = NULL;
 
 
-int pwm_esc_init(pwm_esc_t *esc, char *dev)
+int pwm_escs_init(uint8_t *pwm_ids, size_t n_escs)
 {
-   int f = open(dev, O_RDWR);
-   if (f < 0)
+   THROW_BEGIN();
+   ASSERT_NOT_NULL(pwm_ids);
+   ASSERT_TRUE(n_escs > 0);
+   escs = malloc(sizeof(pwm_esc_t) * n_escs);
+   ASSERT_NOT_NULL(escs);
+   FOR_N(i, n_escs)
    {
-      return f;
+      char buffer[128];
+      snprintf(buffer, sizeof(buffer), "/dev/pwm%d", pwm_ids[i]);
+      THROW_ON_ERR(pwm_esc_init(&escs[i], buffer));
    }
-   esc->file = f;
-   return 0;
+   _n_escs = n_escs;
+   THROW_END();
 }
 
 
-int pwm_esc_write_raw(pwm_esc_t *esc, int val)
+int pwm_escs_write(float *setpoints)
 {
-   char buffer[10];
-   if (val < PWM_ESC_RAW_MIN || val > PWM_ESC_RAW_MAX)
+   THROW_BEGIN();
+   FOR_N(i, _n_escs)
    {
-      return -EINVAL;  
+      THROW_ON_ERR(pwm_esc_write_float(&escs[i], setpoints[i]));
    }
-   int len = snprintf(buffer, sizeof(buffer), "%d", val);
-   return write(esc->file, buffer, len);
-}
-
-
-int pwm_esc_write_float(pwm_esc_t *esc, float val)
-{
-   long int_val = PWM_ESC_RAW_MIN + roundf(val * (float)(PWM_ESC_RAW_MAX - PWM_ESC_RAW_MIN));
-   return pwm_esc_write_raw(esc, int_val);
+   THROW_END();
 }
 
