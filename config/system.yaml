@@ -1,0 +1,219 @@
+#  ___________________________________________________
+# |  _____                       _____ _ _       _    |
+# | |  __ \                     |  __ (_) |     | |   |
+# | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
+# | |  ___/ _ \ '_ \ / _` | | | |  ___/ | |/ _ \| __| |
+# | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
+# | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
+# |                   __/ |                           |
+# |  GNU/Linux based |___/  Multirotor UAV Autopilot  |
+# |___________________________________________________|
+#
+# System IPC Configuration File
+#
+# Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+
+# component definitions:
+# - each component needs to define:
+#    - its name
+#    -  a list of gates
+# - every gate consists of a name mapped to a type 
+#   [pub, sub, req, rep]
+#
+
+components:
+
+
+   - name: demo_mission
+     gates:
+      - gps: sub
+      - net: sub
+
+   - name: gps_sensor
+     gates:
+      - opcd_ctrl: req
+      - gps: pub
+
+   - name: gps_test
+     gates:
+      - gps: sub
+
+   - name: gpx_logger
+     gates:
+      - gps: sub
+
+   - name: pilot_logger
+     gates:
+      - log: sub
+
+   - name: remote
+     gates:
+      - ctrl: req
+
+   - name: ferry_ctrl
+     gates:
+      - state: sub
+      - ctrl: req
+
+   - name: blackbox
+     gates:
+      - state_machine: sub
+      - pilot_log: sub
+
+   - name: icarus
+     gates:
+      - mon: sub
+      - state: pub
+      - pilot: req
+      - ctrl: rep
+      - power_ctrl: req
+      - power_mon: sub
+
+   - name: icarus_shell
+     gates:
+      - ctrl: req
+ 
+   - name: wifi_sensor
+     gates:
+      - networks: pub
+
+   - name: wifi_logger
+     gates:
+      - networks: sub
+      - mon: sub
+    
+   - name: cal_server
+     gates:
+      - pilot_ctrl: req
+      - opcd_ctrl: req
+      - cal: sub
+
+   - name: autopilot_debug_logger
+     gates:
+      - debug: sub
+
+   - name: pilot
+     gates:
+      - cal: pub
+      - log: pub
+      - debug: pub
+      - gps: sub
+      - ctrl: rep
+      - mon: pub
+      - power: sub
+      - opcd_ctrl: req
+      - opcd_event: sub
+
+   - name: pilot_shell
+     gates:
+      - ctrl: req
+      - mon: sub
+ 
+   - name: mavlink
+     gates:
+      - pilot_mon: sub
+      - power_mon: sub
+      - ctrl: req # opcd
+      - gps: sub
+      - icarus_ctrl: req
+      - state: sub
+
+   - name: powerman
+     gates:
+      - ctrl: rep
+      - mon: pub
+      - opcd_ctrl: req
+
+   - name: opcd
+     gates:
+      - ctrl: rep
+      - event: pub
+
+   - name: opcd_shell
+     gates:
+      - ctrl: req
+
+   - name: imms_sensor
+     gates:
+      - data: pub
+
+   - name: girlscamp
+     gates:
+      - ctrl: req
+      - imms_data: sub
+      - pilot_data: sub
+
+   - name: aircomm_swarm
+     gates:
+      - ctrl: req
+      - gps: sub
+      - aircomm_in: sub
+      - aircomm_out: pub
+
+   - name: aircomm
+     gates:
+      - in: sub
+      - out: pub
+      - opcd_ctrl: req
+
+#
+# component connections (component_a.gate_x -- component_b.gate_y)
+#
+
+connections:
+   - [ pilot.debug,               autopilot_debug_logger.debug]
+   - [ pilot.cal,                 cal_server.cal]
+   - [ pilot.ctrl,                cal_server.pilot_ctrl]
+   - [ opcd.ctrl,                cal_server.opcd_ctrl]
+   - [ demo_mission.gps,         gps_sensor.gps]
+   - [ demo_mission.net,         wifi_sensor.networks]
+   - [ aircomm.in,               aircomm_swarm.aircomm_out]
+   - [ aircomm.out,              aircomm_swarm.aircomm_in ]
+   - [ opcd.ctrl,                aircomm.opcd_ctrl    ]
+   - [ icarus.ctrl,              aircomm_swarm.ctrl   ]
+   - [ gps_sensor.gps,           aircomm_swarm.gps    ]
+   - [ pilot.power,               powerman.mon         ]
+   - [ imms_sensor.data,         girlscamp.imms_data  ]
+   - [ icarus.ctrl,              girlscamp.ctrl       ]
+   - [ pilot.mon,                 girlscamp.pilot_data  ]
+   - [ opcd.event,               pilot.opcd_event      ]
+   - [ opcd.ctrl,                opcd_shell.ctrl      ]
+   - [ opcd.ctrl,                pilot.opcd_ctrl       ]
+   - [ opcd.ctrl,                gps_sensor.opcd_ctrl ]
+   - [ opcd.ctrl,                powerman.opcd_ctrl   ]
+   - [ wifi_logger.mon,          pilot.mon             ]
+   - [ mavlink.pilot_mon,         pilot.mon             ]
+   - [ mavlink.power_mon,        powerman.mon         ]
+   - [ mavlink.ctrl,             opcd.ctrl            ]
+   - [ mavlink.icarus_ctrl,      icarus.ctrl          ]
+   - [ mavlink.state,            icarus.state         ]
+   - [ remote.ctrl,              pilot.ctrl            ]
+   - [ wifi_logger.networks,     wifi_sensor.networks ]
+   - [ pilot_logger.log,          pilot.log             ]
+   - [ gps_sensor.gps,           pilot.gps             ]
+   - [ gps_sensor.gps,           mavlink.gps          ]
+   - [ icarus.ctrl,              ferry_ctrl.ctrl      ]
+   - [ icarus.power_ctrl,        powerman.ctrl        ]
+   - [ icarus.power_mon,         powerman.mon         ]
+   - [ ferry_ctrl.state,         icarus.state         ]
+   - [ blackbox.state_machine,   icarus.state         ]
+   - [ blackbox.pilot_log,        pilot.log             ]
+   - [ icarus.ctrl,              icarus_shell.ctrl    ]
+   - [ pilot.ctrl,                icarus.pilot          ]
+   - [ pilot.mon,                 icarus.mon           ]
+   - [ pilot.ctrl,                pilot_shell.ctrl      ]
+   - [ pilot.mon,                 pilot_shell.mon       ]
+   - [ gpx_logger.gps,           gps_sensor.gps       ]
+   - [ gps_sensor.gps,           gps_test.gps         ]
+   

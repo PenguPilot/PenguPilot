@@ -1,0 +1,66 @@
+#  ___________________________________________________
+# |  _____                       _____ _ _       _    |
+# | |  __ \                     |  __ (_) |     | |   |
+# | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
+# | |  ___/ _ \ '_ \ / _` | | | |  ___/ | |/ _ \| __| |
+# | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
+# | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
+# |                   __/ |                           |
+# |  GNU/Linux based |___/  Multirotor UAV Autopilot  |
+# |___________________________________________________|
+#
+# Services Configuration File
+#
+# Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+opcd:
+  binary: 'opcd/service/opcd.py'
+
+gps_sensor:
+  binary: 'sensors/gps/service/gps'
+  depends: [opcd]
+
+powerman:
+  binary: 'powerman/service/powerman.py'
+  depends: [opcd]
+
+autopilot:
+  binary: 'autopilot/service/autopilot'
+  depends: [opcd, gps_sensor, powerman]
+
+autopilot_debug_logger:
+  binary: 'autopilot/logging/debug_logger.py'
+
+aircomm_swarm:
+  binary: 'missions/aircomm_swarm/aircomm_swarm.py'
+  depends: [aircomm]
+
+aircomm:
+  binary: 'aircomm/aircomm_server.py'
+  depends: [opcd]
+
+icarus:
+  binary: 'icarus/icarus.py'
+  depends: [autopilot, powerman]
+
+imms_sensor:
+  binary: 'sensors/imms/imms_sensor'
+
+wifi_sensor:
+  binary: 'sensors/wifi/wifi_sensor.py'
+
+wifi_logger:
+  binary: 'logging/wifi/wifi_logger.py'
+  depends: [pilot, wifi_sensor]
+
+

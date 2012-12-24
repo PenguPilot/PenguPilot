@@ -1,0 +1,9 @@
+.sconsign.dblite
+*.pyc
+*.o
+*.a
+*.pb2.py
+*.pb-c.c
+*.pb-c.h
+sensors/gps/service/gps
+autopilot/service/autopilot
