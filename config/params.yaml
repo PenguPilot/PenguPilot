@@ -1,0 +1,165 @@
+#  ___________________________________________________
+# |  _____                       _____ _ _       _    |
+# | |  __ \                     |  __ (_) |     | |   |
+# | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
+# | |  ___/ _ \ '_ \ / _` | | | |  ___/ | |/ _ \| __| |
+# | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
+# | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
+# |                   __/ |                           |
+# |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
+# |___________________________________________________|
+#
+# System Parameters Configuration File
+#
+# Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+#
+# Priority Constraints:
+# """""""""""""""""""""
+# Autopilot > ICARUS
+# Autopilot > GPS
+# GPS > ICARUS
+# ICARUS > PowerMan
+# ICARUS > Mission
+# Mission > PowerMan
+# PowerMan > MAVLink
+#
+# Resulting Priorities:
+# """""""""""""""""""""
+# Autopilot: 98
+# GPS: 97
+# ICARUS: 96
+# Mission: 95
+# PowerMan: 94
+# MAVLink: 93
+#
+
+
+aircomm:
+   id: 0
+
+
+sensors:
+   gps:
+      priority: 97
+      serial_path: "/dev/ttyO2"
+      serial_speed: 57600
+      min_sats: 4
+
+
+powerman:
+   beeper_enabled: False
+   priority: 94
+   gpio_i2c_bus: 3
+   gpio_i2c_address: 0x11
+   gpio_power_pin: 0
+   battery_cells: 4
+   battery_low_cell_voltage: 3.3
+   low_voltage_hysteresis: 10.0 # battery needs to go below battery_low_cell_voltage for this time period in order to trigger a low power event
+   battery_capacity: 6.6
+   power_save_timeout: 60.0
+   voltage_adc: 7
+   current_adc: 2
+   adc_2_voltage: 'lambda x: (x - 56.0) / 134.0'
+   adc_2_current: 'lambda x: (2.5 - x / 1024.0) / 0.028'
+
+icarus:
+   priority: 96
+
+   takeoff:
+      standard_rel_z: 4.0
+
+   landing:
+      motors_off_z: 0.4
+      z_low: 0.5
+
+
+pilot:
+   priority: 98
+
+   logger:
+      level: 3
+      details: 2
+
+   cal:
+      acc_bias_x:  0.0
+      acc_bias_y:  0.0
+      acc_bias_z:  0.0
+      acc_scale_x: 1.0
+      acc_scale_y: 1.0
+      acc_scale_z: 1.0
+      mag_bias_x:  0.0
+      mag_bias_y:  0.0
+      mag_bias_z:  0.0
+      mag_scale_x: 1.0
+      mag_scale_y: 1.0
+      mag_scale_z: 1.0
+
+   controllers:
+      debug_host: "10.0.1.5"
+      debug_port: 5555
+
+      xy_speed:
+         p: 0.4
+
+      attitude:
+         p: 3.0
+         i: 0.0005
+         i_max: 1.0
+         d: 0.1
+         pitch_bias: 0.0
+         roll_bias: 0.0
+ 
+      altitude:
+         manual: false
+         speed_p: 0.1
+         speed_d: 0.1
+         speed_i: 0.05
+         speed_imax: 1.0
+         init_setpoint: 2.0
+         init_mode_is_ground: True
+
+      yaw:
+         manual: false
+         p: 0.24
+         i: 0.7
+         i_max: 0.5
+         d: 0.0
+         pid_lim: 0.2
+
+      navigation:
+         speed_min: 0.5
+         speed_std: 2.0
+         speed_max: 3.5
+         sqrt_shift: 3.0
+         sqrt_scale: 0.25
+         square_shift: 0.5
+         pos_i: 0.015
+         pos_i_max: 5.0
+         ortho_p: 0.0
+         direct_speed_ctrl: 1
+
+   kalman_pos:
+      ultra_noise: 1.0e-2
+      baro_noise: 1.0e-2
+      gps_noise: 4.0e-3
+      process_noise: 1.0e-6
+      acc_avg_update_s: 60
+      x_acc_avg: 0.0
+      y_acc_avg: 0.0
+      z_acc_avg: 9.81
+
+   sensors:
+      rc_dsl:
+         serial_port: "/dev/ttyO0"
+

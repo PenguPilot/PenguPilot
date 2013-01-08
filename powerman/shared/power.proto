@@ -1,0 +1,66 @@
+
+/*___________________________________________________
+ |  _____                       _____ _ _       _    |
+ | |  __ \                     |  __ (_) |     | |   |
+ | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
+ | |  ___/ _ \ '_ \ / _` | | | |  ___/ | |/ _ \| __| |
+ | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
+ | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
+ |                   __/ |                           |
+ |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
+ |___________________________________________________|
+ 
+ Message Format for interfacing Power Management
+
+ Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details. */
+
+
+enum PowerCommand
+{
+   STAND_POWER =  0; // the system is allowed to shut down main power
+                     // and turn off signaling lights
+   FLIGHT_POWER = 1; // the system must be fully powered up
+}
+
+
+message PowerReq
+{
+   required PowerCommand cmd = 1;   
+}
+
+
+enum PowerStatus
+{
+   OK =       0;
+   E_SYNTAX = 1;
+   E_POWER =  2;
+}
+
+
+message PowerRep
+{
+   required PowerStatus status = 1;   
+}
+
+
+message PowerState
+{
+   required float voltage =   1; // main battery voltage in V
+   required float current =   2; // main battery current in A
+   required float capacity =  3; // battery capacity in Ah
+   required float consumed =  4; // consumed capacity in Ah
+   required float remaining = 5; // expected operating time in seconds
+   required bool  critical =  6; // indicates low battery voltage
+   optional float estimate =  7; // time estimate based on current power consumption
+}
+

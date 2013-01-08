@@ -1,0 +1,40 @@
+/*___________________________________________________
+ |  _____                       _____ _ _       _    |
+ | |  __ \                     |  __ (_) |     | |   |
+ | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
+ | |  ___/ _ \ '_ \ / _` | | | |  ___/ | |/ _ \| __| |
+ | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
+ | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
+ |                   __/ |                           |
+ |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
+ |___________________________________________________|
+  
+ Force Optimizer Interface
+
+ Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2012 Alexander Barth, Ilmenau University of Technology
+ Copyright (C) 2012 Benjamin Jahn, Ilmenau University of Technology
+
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details. */
+
+
+#ifndef __FORCE_OPT_H__
+#define __FORCE_OPT_H__
+
+
+void force_opt_init(float imtx1, float imtx2, float imtx3, float rpm_square_min, float rpm_square_max);
+
+
+void force_opt_run(float forces[4]);
+
+
+#endif /* __FORCE_OPT_H__ */
+
