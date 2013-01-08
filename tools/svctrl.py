@@ -142,6 +142,18 @@ def calc_reverse_deps(name):
    return order
 
 
+def calc_repair_deps():
+   deps = []
+   for name in running_processes():
+      deps.extend(calc_reverse_deps(name))
+   topo = toposort()
+   ordered = []
+   deps = set(all_deps)
+   for level in [x for x in toposort()]:
+      ordered.extend(deps & level)
+   return ordered
+
+
 def toposort():
    """ stolen from: http://code.activestate.com/recipes/578272-topological-sort """
    _data = config
