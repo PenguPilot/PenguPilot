@@ -111,12 +111,6 @@ def read_config():
       sys.exit(1)
 
 
-def restart(name):
-   pass
-   #stop(name)
-   #start(name, config[name][0])
-
-
 def running_processes():
    processes = []
    for name in config.keys():
@@ -149,24 +143,25 @@ def calc_reverse_deps(name):
 
 
 def toposort():
-    _data = config
-    data = {}
-    for item in _data.items():
-       data[item[0]] = set(item[1][1])
-    from functools import reduce
-    for k, v in data.items():
-        v.discard(k)
-    extra_items_in_deps = reduce(set.union, data.itervalues()) - set(data.iterkeys())
-    data.update({item:set() for item in extra_items_in_deps})
-    while True:
-        ordered = set(item for item, dep in data.iteritems() if not dep)
-        if not ordered:
-            break
-        yield ordered
-        data = {item: (dep - ordered)
-                for item, dep in data.iteritems()
-                    if item not in ordered}
-    assert not data, "Cyclic dependencies exist among these items:\n%s" % '\n'.join(repr(x) for x in data.iteritems())
+   """ stolen from: http://code.activestate.com/recipes/578272-topological-sort """
+   _data = config
+   data = {}
+   for item in _data.items():
+      data[item[0]] = set(item[1][1])
+   from functools import reduce
+   for k, v in data.items():
+      v.discard(k)
+   extra_items_in_deps = reduce(set.union, data.itervalues()) - set(data.iterkeys())
+   data.update({item:set() for item in extra_items_in_deps})
+   while True:
+      ordered = set(item for item, dep in data.iteritems() if not dep)
+      if not ordered:
+         break
+      yield ordered
+      data = {item: (dep - ordered)
+              for item, dep in data.iteritems()
+                 if item not in ordered}
+   assert not data, "Cyclic dependencies exist among these items:\n%s" % '\n'.join(repr(x) for x in data.iteritems())
 
 
 def restart_order(name):

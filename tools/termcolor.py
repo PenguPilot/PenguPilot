@@ -26,9 +26,6 @@
  GNU General Public License for more details. """
 
 
-# ARCADE svctrl
-# definitions for colorful terminal output
-
 
 def colored_text(text, color):
    return "\033[%sm%s\033[0m" % (color, text)

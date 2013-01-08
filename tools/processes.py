@@ -26,11 +26,6 @@
  GNU General Public License for more details. """
 
 
-# ARCADE svctrl
-#
-# process control helpers
-
-
 import subprocess
 import os, errno
 import signal
