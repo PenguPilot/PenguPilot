@@ -186,17 +186,14 @@ void main_init(int override_hw)
 
    LOG(LL_INFO, "autopilot initializing");
 
-
-   if (!override_hw)
+   LOG(LL_INFO, "initializing platform");
+   if (arcade_quadro_init(&platform, override_hw) < 0)
    {
-      LOG(LL_INFO, "initializing platform");
-      if (platform_init(arcade_quadro_init) < 0)
-      {
-         LOG(LL_ERROR, "could not initialize platform");
-         die();
-      }
-      calpub_init();
+      LOG(LL_ERROR, "could not initialize platform");
+      die();
    }
+   calpub_init();
+ 
    force_opt_init(platform.imtx1, platform.imtx2, platform.imtx3, platform.rpm_square_min, platform.rpm_square_max);
    const size_t array_len = sizeof(float) * platform.n_motors;
    setpoints = malloc(array_len);
@@ -249,6 +246,8 @@ void main_init(int override_hw)
    gps_data_init(&gps_data);
    
    filter1_lp_init(&rc_valid_filter, 0.5, REALTIME_PERIOD, 1);
+
+   landing_init();
 
    LOG(LL_INFO, "entering main loop");
 }
@@ -472,7 +471,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    /* emergency landing: */
    if (!rc_valid || landing_started())
    {
-      motors_enabled = landing_run(&f_local.gas, pos_estimate.ultra_z.pos, pos_estimate.baro_z.pos, dt);
+      //motors_enabled = landing_run(&f_local.gas, pos_estimate.ultra_z.pos, pos_estimate.baro_z.pos, dt);
    }
    
    if (motors_state_safe())
@@ -481,22 +480,26 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    }
 
    /* run convex optimization: */
-   memset(setpoints, 0, sizeof(float) * platform.n_motors);
+   FOR_N(i, platform.n_motors)
+   {
+      setpoints[i] = 0.0f;
+   }
    float opt_forces[4];
    memcpy(opt_forces, f_local.vec, sizeof(opt_forces));
    force_opt_run(opt_forces);
    if (ultra > CONVEXOPT_MIN_GROUND_DIST)
    {
-      memcpy(f_local.vec, opt_forces, sizeof(f_local.vec));
+      //memcpy(f_local.vec, opt_forces, sizeof(f_local.vec));
    }
    
    /* computation of rpm ^ 2 out of the desired forces */
    inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
    
    /* compute motor set points out of rpm ^ 2: */
-   if (motors_enabled)
+   if (1) //motors_enabled)
    {
       piid.int_enable = forces_to_setpoints(&platform.ftos, setpoints, voltage, rpm_square, platform.n_motors);
+      printf("%f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]);
    }
    else
    {

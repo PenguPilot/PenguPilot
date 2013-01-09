@@ -55,14 +55,11 @@
                                      /* m0    m1    m2    m3 */
 static uint8_t motor_addrs[N_MOTORS] = {0x29, 0x2a, 0x2b, 0x2c};
 static i2c_bus_t i2c_3;
-static uint8_t *motor_setpoints = NULL;
 static deadzone_t deadzone;
 static rc_channels_t rc_channels;
 static uint8_t channel_mapping[MAX_CHANNELS] =  {0, 1, 3, 2, 4}; /* pitch: 0, roll: 1, yaw: 3, gas: 2, switch: 4 */
 static float channel_scale[MAX_CHANNELS] =  {1.0f, -1.0f, -1.0f, 1.0f, 1.0f};
 static drotek_marg2_t marg;
-static inv_coupling_t inv_coupling; 
-static float *rpm_square;
 
 
 static int write_motors(float *setpoints)
@@ -98,7 +95,7 @@ static int read_marg(marg_data_t *marg_data)
 }
 
 
-int arcade_quadro_init(platform_t *plat, int init_hw)
+int arcade_quadro_init(platform_t *plat, int override_hw)
 {
    ASSERT_ONCE();
    THROW_BEGIN();
@@ -143,9 +140,9 @@ int arcade_quadro_init(platform_t *plat, int init_hw)
    
    plat->max_thrust_n = 28.0f;
    plat->mass_kg = 0.95f;
+   plat->n_motors = N_MOTORS;
 
-
-   if (init_hw)
+   if (!override_hw)
    {
       LOG(LL_INFO, "initializing i2c bus");
       THROW_ON_ERR(i2c_bus_open(&i2c_3, "/dev/i2c-3"));
@@ -163,7 +160,7 @@ int arcade_quadro_init(platform_t *plat, int init_hw)
       plat->read_baro = ms5611_reader_get_alt;
 
       LOG(LL_INFO, "initializing inverse coupling matrix");
-      inv_coupling_init(&inv_coupling, N_MOTORS, inv_coupling_matrix);
+      inv_coupling_init(&plat->inv_coupling, N_MOTORS, inv_coupling_matrix);
 
       /* set-up motors driver: */
       LOG(LL_INFO, "initializing motor drivers");

@@ -66,9 +66,6 @@ platform_t;
 extern platform_t platform;
 
 
-int platform_init(int (*plat_init)(platform_t *platform));
-
-
 int platform_read_marg(marg_data_t *marg_data);
 
 

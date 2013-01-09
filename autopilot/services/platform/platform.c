@@ -35,13 +35,6 @@
 platform_t platform;
 
 
-int platform_init(int (*plat_init)(platform_t *platform))
-{
-   memset(&platform, 0, sizeof(platform));
-   return plat_init(&platform);
-}
-
-
 #define CHECK_DEV(x) \
    if (!x) \
       return -ENODEV
@@ -92,8 +85,7 @@ int platform_read_voltage(float *voltage)
 uint16_t platform_read_sensors(marg_data_t *marg_data, gps_data_t *gps_data, float *ultra, float *baro, float *voltage, float channels[MAX_CHANNELS])
 {
    uint16_t status = 0;
-   int marg_valid = platform_read_marg(marg_data) == 0;
-   if (marg_valid)
+   if (platform_read_marg(marg_data) == 0)
    {
       /* TODO: check absolute values */
       status |= MARG_VALID;
