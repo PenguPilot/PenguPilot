@@ -9,8 +9,10 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- File Purpose
+ Madgwick AHRS Algorithm Interface
+ See: http://www.x-io.co.uk/open-source-imu-and-ahrs-algorithms
 
+ Copyright (C) 2012 SOH Madgwick, X-IO Technologies
  Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
@@ -23,18 +25,6 @@
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details. */
 
-//=====================================================================================================
-// MadgwickAHRS.h
-//=====================================================================================================
-//
-// Implementation of Madgwick's IMU and AHRS algorithms.
-// See: http://www.x-io.co.uk/node/8#open_source_ahrs_and_imu_algorithms
-//
-// Date			Author          Notes
-// 29/09/2011	SOH Madgwick    Initial release
-// 02/10/2011	SOH Madgwick	Optimised for reduced CPU load
-//
-//=====================================================================================================
 
 #ifndef __AHRS_H__
 #define __AHRS_H__

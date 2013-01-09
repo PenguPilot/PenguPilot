@@ -37,6 +37,7 @@ static pwm_esc_t *escs = NULL;
 
 int pwm_escs_init(uint8_t *pwm_ids, size_t n_escs)
 {
+   ASSERT_ONCE();
    THROW_BEGIN();
    ASSERT_NOT_NULL(pwm_ids);
    ASSERT_TRUE(n_escs > 0);

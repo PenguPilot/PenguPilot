@@ -11,7 +11,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Pilot Debug Writer
+ Debug Writer Service
 
  Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
 

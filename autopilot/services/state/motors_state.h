@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- File Purpose
+ Motors State Tracking
 
  Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
 
@@ -24,23 +24,6 @@
  GNU General Public License for more details. */
 
 
-/*
-   ARCADE Motors State Tracking
-
-   Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
-
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
-   (at your option) any later version.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
- */
-
-
 #ifndef __MOTORS_STATE_H__
 #define __MOTORS_STATE_H__
 
@@ -49,7 +32,7 @@
 
 
 /* initializes motor state */
-void motors_state_init(float _gas_start, float _gas_stop);
+void motors_state_init(float gas_start, float gas_stop);
 
 
 /* indicates if the motors are safe */
