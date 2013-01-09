@@ -109,9 +109,19 @@ pilot:
       debug_host: "10.0.1.5"
       debug_port: 5555
 
+      stabilizing:
+         att_kd: 0.02352953418
+         att_kp: 0.32876523028
+         att_ki: 2.20026754887
+         att_kii: 4.37086296837
+         yaw_kp: 0.108
+         yaw_kd: 0.00648
+         yaw_ki: 0.45
+         filt_c_fg: 10.0
+
       xy_speed:
          p: 0.4
-
+     
       attitude:
          p: 3.0
          i: 0.0005

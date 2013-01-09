@@ -42,8 +42,8 @@
 #include "../platform/platform.h"
 #include "../platform/arcade_quadro.h"
 #include "../control/control.h"
-#include "../control/basic/piid.h"
-#include "../control/basic/feed_forward.h"
+#include "../control/stabilizing/piid.h"
+#include "../control/stabilizing/feed_forward.h"
 #include "../hardware/util/calibration.h"
 #include "../hardware/util/gps_util.h"
 #include "../hardware/util/mag_decl.h"
@@ -74,7 +74,6 @@ static Filter1 rc_valid_filter;
 static calibration_t gyro_cal;
 static calibration_t rc_cal;
 static feed_forward_t feed_forward;
-static piid_t piid;
 static ahrs_t ahrs;
 static quat_t start_quat;
 static gps_util_t gps_util;
@@ -235,7 +234,7 @@ void main_init(int override_hw)
    
    /* init stabilizing controller: */
    feed_forward_init(&feed_forward, REALTIME_PERIOD);
-   piid_init(&piid, REALTIME_PERIOD);
+   piid_init(REALTIME_PERIOD, FILT_FF_FG, FILT_FF_D);
 
    ahrs_init(&ahrs, 10.0f, 2.0f * REALTIME_PERIOD, 0.02f);
    gps_util_init(&gps_util);
@@ -431,7 +430,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
 
    float gyro_vals[3] = {marg_data->gyro.x, -marg_data->gyro.y, -marg_data->gyro.z};
    feed_forward_run(&feed_forward, &f_local.vec[1], piid_sp);
-   piid_run(&piid, &f_local.vec[1], gyro_vals, piid_sp);
+   piid_run(&f_local.vec[1], gyro_vals, piid_sp);
 
 
    /********************
@@ -458,7 +457,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    if (!motors_state_controllable())
    {
       memset(&f_local, 0, sizeof(f_local)); /* all moments are 0 / minimum motor RPM */
-      piid_reset(&piid); /* reset piid integrators so that we can move the device manually */
+      piid_reset(); /* reset piid integrators so that we can move the device manually */
       /* TODO: also reset higher-level controllers */
    }
 
@@ -498,12 +497,12 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    /* compute motor set points out of rpm ^ 2: */
    if (1) //motors_enabled)
    {
-      piid.int_enable = forces_to_setpoints(&platform.ftos, setpoints, voltage, rpm_square, platform.n_motors);
+      piid_int_enable(forces_to_setpoints(&platform.ftos, setpoints, voltage, rpm_square, platform.n_motors));
       printf("%f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]);
    }
    else
    {
-      piid.int_enable = 0;   
+      piid_int_enable(0);   
    }
 
    /* write motors: */

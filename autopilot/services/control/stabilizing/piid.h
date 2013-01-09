@@ -9,10 +9,10 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Force to I2C Converter Implementation
+ Stabilizing PIID Controller Interface
 
- Copyright (C) 2012 Benjamin Jahn, Ilmenau University of Technology
  Copyright (C) 2012 Alexander Barth, Ilmenau University of Technology
+ Copyright (C) 2012 Benjamin Jahn, Ilmenau University of Technology
  Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
@@ -26,45 +26,26 @@
  GNU General Public License for more details. */
 
 
-#include <math.h>
-
-#include <util.h>
-
-#include "force2twi.h"
-#include "holger_blmc.h"
-#include "../../../control/basic/control_param.h"
+#ifndef __PIID_H__
+#define __PIID_H__
 
 
-/* rpm ^ 2 = a * voltage ^ 1.5 * i2c ^ b */
-#define CTRL_F_A 609.6137f
-#define CTRL_F_B 1.3154f
+#include "control_param.h"
 
 
-int force2twi_calc(uint8_t *i2c, const float voltage, const float *rpm_square, const size_t n_motors)
-{
-   int int_enable = 1;
-   /* computation i2c values out of rpm_square by the inverse of: rpm ^ 2 = a * voltage ^ 1.5 * i2c ^ b */
-   FOR_N(i, n_motors)
-   {
-      float temp = powf((rpm_square[i] / CTRL_F_A * powf(voltage, -1.5f)), 1.0f / CTRL_F_B);
-      if (temp > (float)HOLGER_I2C_MIN)
-      {   
-         if (temp > (float)HOLGER_I2C_MAX)
-         {   
-            i2c[i] = (uint8_t)HOLGER_I2C_MAX;
-            int_enable = 0;
-         }
-         else
-         {   
-            i2c[i] = (uint8_t)temp;
-         }
-      }
-      else
-      {   
-         i2c[i] = (uint8_t)HOLGER_I2C_MIN;
-         int_enable = 0;
-      }
-   }
-   return int_enable;
-}
+#define PIID_PITCH 1
+#define PIID_ROLL  0
+#define PIID_YAW   2
+
+
+void piid_init(float Ts, float ff_fg, float ff_d);
+
+void piid_run(float u_ctrl[3], float gyro[3], float rc[3]);
+
+void piid_int_enable(int val);
+
+void piid_reset(void);
+
+
+#endif /* __PIID_H__ */
 

@@ -43,7 +43,6 @@
 #include "../hardware/drivers/ms5611/ms5611_reader.h"
 #include "../hardware/drivers/rc_dsl/rc_dsl_reader.h"
 #include "../hardware/drivers/holger_blmc/holger_blmc.h"
-#include "../hardware/drivers/holger_blmc/force2twi.h"
 #include "../hardware/drivers/scl_voltage/scl_voltage.h"
 #include "../hardware/util/rc_channels.h"
 #include "drotek_marg2.h"
