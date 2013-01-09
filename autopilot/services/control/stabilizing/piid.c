@@ -39,6 +39,7 @@
 #include "../../filters/filter.h"
 
 
+/* configuration parameters: */
 static tsfloat_t att_kp;
 static tsfloat_t att_ki;
 static tsfloat_t att_kii;
@@ -46,9 +47,18 @@ static tsfloat_t att_kd;
 static tsfloat_t yaw_kp;
 static tsfloat_t yaw_ki;
 static tsfloat_t yaw_kd;
-static tsfloat_t filt_c_fg;
+static tsfloat_t filt_fg;
+static tsfloat_t filt_d;
+static tsfloat_t jxx_jyy;
+static tsfloat_t jzz;
+static tsfloat_t tmc;
+
 
 static float Ts = 0.0f;
+
+
+/* ff [x, y, z] 2nd order filters: */
+Filter2 filters[3];
 
 /* integrators: */
 static adams4_t int_err1;
@@ -70,7 +80,7 @@ static int ringbuf_idx = 0;
 static int int_enable = 0;
 
 
-void piid_init(float _Ts, float ff_fg, float ff_d)
+void piid_init(float _Ts)
 {
    ASSERT_ONCE();
 
@@ -83,21 +93,51 @@ void piid_init(float _Ts, float ff_fg, float ff_d)
       {"yaw_kp", &yaw_kp},
       {"yaw_ki", &yaw_ki},
       {"yaw_kd", &yaw_kd},
-      {"filt_c_fg", &filt_c_fg},
+      {"filt_fg", &filt_fg},
+      {"filt_d", &filt_d},
+      {"jxx_jyy", &jxx_jyy},
+      {"jzz", &jzz},
+      {"tmc", &tmc},
       OPCD_PARAMS_END
    };
    opcd_params_apply("controllers.stabilizing.", params);
 
    Ts = _Ts;
 
+   /* initialize feed-forward system: */
+   float T = 1.0f / (2.0f * M_PI * tsfloat_get(&filt_fg));
+   float a0 = (4.0f * T * T + 4.0f * tsfloat_get(&filt_d) * T * Ts + Ts * Ts);
+
+   float a[2];
+   a[0] = (2.0f * Ts * Ts - 8.0f * T * T) / a0;
+   a[1] = (4.0f * T * T   - 4.0f * tsfloat_get(&filt_d) * T * Ts + Ts * Ts) / a0;
+
+   float b[3];
+   #define __FF_B_SETUP(j) \
+      b[0] =  (2.0f * j * (2.0f * tsfloat_get(&tmc) + Ts)) / a0; \
+      b[1] = -(8.0f * j * tsfloat_get(&tmc)) / a0; \
+      b[2] =  (2.0f * j * (2.0f * tsfloat_get(&tmc) - Ts)) / a0;
+
+   /* x-axis: */
+   __FF_B_SETUP(tsfloat_get(&jxx_jyy));
+   filter2_init(&filters[0], a, b, Ts, 1);
+
+   /* y-axis: */
+   __FF_B_SETUP(tsfloat_get(&jxx_jyy));
+   filter2_init(&filters[1], a, b, Ts, 1);
+
+   /* z-axis: */
+   __FF_B_SETUP(tsfloat_get(&jzz));
+   filter2_init(&filters[2], a, b, Ts, 1);
+
    /* initialize multistep integrator: */
    adams4_init(&int_err1, 3);
    adams4_init(&int_err2, 3);
 
    /* initialize error and reference signal filters: */
-   filter1_lp_init(&filter_lp_err, tsfloat_get(&filt_c_fg), Ts, 3);
-   filter1_hp_init(&filter_hp_err, tsfloat_get(&filt_c_fg), Ts, 3);
-   filter2_lp_init(&filter_ref, ff_fg, ff_d, Ts, 3);
+   filter1_lp_init(&filter_lp_err, tsfloat_get(&filt_fg), Ts, 3);
+   filter1_hp_init(&filter_hp_err, tsfloat_get(&filt_fg), Ts, 3);
+   filter2_lp_init(&filter_ref, tsfloat_get(&filt_fg), tsfloat_get(&filt_d), Ts, 3);
 
    /* allocate some working memory: */
    xi_err = calloc(3, sizeof(float));
@@ -126,6 +166,13 @@ void piid_reset(void)
 
 void piid_run(float u_ctrl[4], float gyro[3], float rc[3])
 {
+   /* run feed-forward: */
+   FOR_N(i, 3)
+   {
+      filter2_run(&filters[i], &rc[i], &u_ctrl[i]);
+   }
+
+   /* run stabilizing controller: */
    float error[3];
    float derror[3];
    float rc_filt[3];

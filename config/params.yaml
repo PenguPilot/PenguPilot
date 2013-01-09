@@ -117,7 +117,11 @@ pilot:
          yaw_kp: 0.108
          yaw_kd: 0.00648
          yaw_ki: 0.45
-         filt_c_fg: 10.0
+         filt_fg: 10.0
+         filt_d: 0.95
+         jxx_jyy: 0.0097
+         jzz: 0.0057292965
+         tmc: 0.06
 
       xy_speed:
          p: 0.4

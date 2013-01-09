@@ -43,7 +43,6 @@
 #include "../platform/arcade_quadro.h"
 #include "../control/control.h"
 #include "../control/stabilizing/piid.h"
-#include "../control/stabilizing/feed_forward.h"
 #include "../hardware/util/calibration.h"
 #include "../hardware/util/gps_util.h"
 #include "../hardware/util/mag_decl.h"
@@ -57,6 +56,7 @@
 #include "../filters/sliding_var.h"
 #include "../behaviors/landing.h"
 #include "../force_opt/force_opt.h"
+#include "../filters/filter.h"
 
 
 static int calibrate = 0;
@@ -73,7 +73,6 @@ static gps_rel_data_t gps_rel_data = {0.0, 0.0, 0.0};
 static Filter1 rc_valid_filter;
 static calibration_t gyro_cal;
 static calibration_t rc_cal;
-static feed_forward_t feed_forward;
 static ahrs_t ahrs;
 static quat_t start_quat;
 static gps_util_t gps_util;
@@ -233,8 +232,7 @@ void main_init(int override_hw)
    cal_init(&rc_cal, 3, 500);
    
    /* init stabilizing controller: */
-   feed_forward_init(&feed_forward, REALTIME_PERIOD);
-   piid_init(REALTIME_PERIOD, FILT_FF_FG, FILT_FF_D);
+   piid_init(REALTIME_PERIOD);
 
    ahrs_init(&ahrs, 10.0f, 2.0f * REALTIME_PERIOD, 0.02f);
    gps_util_init(&gps_util);
@@ -429,7 +427,6 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
     ************************************************************/
 
    float gyro_vals[3] = {marg_data->gyro.x, -marg_data->gyro.y, -marg_data->gyro.z};
-   feed_forward_run(&feed_forward, &f_local.vec[1], piid_sp);
    piid_run(&f_local.vec[1], gyro_vals, piid_sp);
 
 
