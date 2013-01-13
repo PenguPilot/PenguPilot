@@ -24,7 +24,6 @@
  GNU General Public License for more details. */
 
 
-#include <stdarg.h>
 #include <stdio.h>
 #include <malloc.h>
 #include <math.h>
@@ -35,7 +34,7 @@
 #include <util.h>
 #include <sclhelper.h>
 
-#include "command.h"
+#include "interface.h"
 #include "../platform/platform.h"
 #include "../util/logger/logger.h"
 #include "../control/position/z_ctrl.h"
@@ -43,13 +42,19 @@
 #include "../control/position/yaw_ctrl.h"
 #include "../main_loop/main_loop.h"
 
-#define THREAD_NAME     "cmd_interface"
+#define THREAD_NAME     "interface"
 #define THREAD_PRIORITY 1
 
 
 static void *cmd_socket = NULL;
 static simple_thread_t thread;
+static bool locked = false;
 
+
+void interface_lock(bool value)
+{
+   locked = value;
+}
 
 
 int set_ctrl_param(CtrlParam param, float value)
@@ -123,6 +128,12 @@ static void check_and_set_ctrl_param(PilotRep *reply, PilotReq *request)
    if (request->ctrl_data == NULL)
    {
       reply->err_msg = "no ctrl_data provided";
+      LOG(LL_ERROR, reply->err_msg);
+      reply->status = STATUS__E_SEMANTIC;
+   }
+   else if (locked)
+   {
+      reply->err_msg = "interface locked";   
       LOG(LL_ERROR, reply->err_msg);
       reply->status = STATUS__E_SEMANTIC;
    }
