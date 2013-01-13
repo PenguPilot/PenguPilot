@@ -36,7 +36,7 @@
 #include "main_util.h"
 #include "../util/time/interval.h"
 #include "../util/logger/logger.h"
-#include "../command/command.h"
+#include "../interface/interface.h"
 #include "../estimators/ahrs.h"
 #include "../estimators/pos.h"
 #include "../platform/platform.h"

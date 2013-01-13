@@ -23,19 +23,17 @@
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details. */
 
-/*
- * cmd.h
- *
- * Created on: Nov 20, 2010
- * Author: tobi
- */
 
-#ifndef __CMD_H__
-#define __CMD_H__
+#ifndef __INTERFACE_H__
+#define __INTERFACE_H__
+
+#include <stdbool.h>
 
 
 int cmd_init(void);
 
+void interface_lock(bool value);
 
-#endif /* __CMD_H__ */
+
+#endif /* __INTERFACE_H__ */
 
