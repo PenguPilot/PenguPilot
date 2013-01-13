@@ -2,15 +2,8 @@
 *.pyc
 *.o
 *.a
-<<<<<<< HEAD
-*.pb2.py
-*.pb-c.c
-*.pb-c.h
-sensors/gps/service/gps
-=======
 *_pb2.py
 *.pb-c.c
 *.pb-c.h
 sensors/gps/services/gps
->>>>>>> 5e786a236d07f74b292fbf4f554fbe04668a5e12
 autopilot/service/autopilot
