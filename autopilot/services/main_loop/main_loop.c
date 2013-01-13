@@ -126,7 +126,7 @@ enum
 mode = CM_MANUAL; //SAFE_AUTO;
 
 
-enum
+static enum
 {
    M_ATT_REL, /* relative attitude control (aka heading hold, axis lock,...) */
    M_ATT_ABS, /* absolute attitude control (aka acc-mode) */
@@ -365,9 +365,11 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    xy_speed_ctrl_run(&pitch_roll_sp, &speed_sp, &speed_vec, euler.yaw);
    FOR_N(i, 2) pitch_roll_sp.vec[i] = sym_limit(pitch_roll_sp.vec[i], 0.2);
 
-   /* run attitude controller: */
+   /****************************
+    * run attitude controller: *
+    ****************************/
    vec2_t pitch_roll = {{euler.pitch, euler.roll}};
-   if (manual_mode == M_ATT_ABS)
+   if (mode == CM_MANUAL && manual_mode == M_ATT_ABS)
    {
       /* interpret sticks as pitch and roll setpoints: */
       pitch_roll_sp.x = -1.0f * channels[CH_PITCH];
@@ -383,7 +385,6 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    /************************************
     * combine auto stick and RC stick: *
     ************************************/
-
    float piid_sp[3] = {0.0f, 0.0f, 0.0f};
    f_local_t f_local = {{0.0f, 0.0f, 0.0f, 0.0f}};
    float norm_gas = 0.0f; /* interval: [0.0 ... 1.0] */
@@ -394,30 +395,29 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
       piid_sp[PIID_ROLL] = auto_stick.roll;
    }
 
+   /* CM_SAFE_AUTO or CM_FULL_AUTO: */
    if (mode >= CM_SAFE_AUTO)
    {
       piid_sp[PIID_YAW] = auto_stick.yaw;
       norm_gas = auto_stick.gas;
    }
 
-   if (rc_valid && channels[CH_SWITCH] > 0.5 && mode != CM_FULL_AUTO)
+   if (mode == CM_MANUAL && manual_mode == M_ATT_REL)
    {
-      /* mix in rc signals: */
-      if (manual_mode == M_ATT_REL)
-      {
-         piid_sp[PIID_PITCH] += RC_PITCH_ROLL_STICK_P * channels[CH_PITCH];
-         piid_sp[PIID_ROLL] += RC_PITCH_ROLL_STICK_P * channels[CH_ROLL];
-      }
-      piid_sp[PIID_YAW] -= RC_YAW_STICK_P * channels[CH_YAW];
-
-      /* limit thrust using "gas" stick: */
-      float stick_gas = channels[CH_GAS];
-      if (   (mode == CM_SAFE_AUTO && stick_gas < norm_gas)
-          || (mode == CM_MANUAL))
-      {
-         norm_gas = stick_gas;
-      }
+      piid_sp[PIID_PITCH] = RC_PITCH_ROLL_STICK_P * channels[CH_PITCH];
+      piid_sp[PIID_ROLL] = RC_PITCH_ROLL_STICK_P * channels[CH_ROLL];
+      piid_sp[PIID_YAW] = -RC_YAW_STICK_P * channels[CH_YAW];
+      norm_gas = channels[CH_GAS];
    }
+
+   if (mode == CM_SAFE_AUTO && rc_valid)
+   {
+      piid_sp[PIID_PITCH] += RC_PITCH_ROLL_STICK_P * channels[CH_PITCH];
+      piid_sp[PIID_ROLL] += RC_PITCH_ROLL_STICK_P * channels[CH_ROLL];
+      piid_sp[PIID_YAW] -= RC_YAW_STICK_P * channels[CH_YAW];
+      norm_gas = limit(norm_gas, 0.0f, channels[CH_GAS]);
+   }
+
    /* scale relative gas value to absolute newtons: */
    f_local.gas = norm_gas * platform.max_thrust_n;
 
@@ -476,10 +476,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    }
 
    /* run convex optimization: */
-   FOR_N(i, platform.n_motors)
-   {
-      setpoints[i] = 0.0f;
-   }
+   memset(setpoints, 0, sizeof(float) * platform.n_motors);
    float opt_forces[4];
    memcpy(opt_forces, f_local.vec, sizeof(opt_forces));
    force_opt_run(opt_forces);
