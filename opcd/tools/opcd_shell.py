@@ -1,0 +1,68 @@
+#!/usr/bin/env python
+"""
+  ___________________________________________________
+ |  _____                       _____ _ _       _    |
+ | |  __ \                     |  __ (_) |     | |   |
+ | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
+ | |  ___/ _ \ '_ \ / _` | | | |  ___/ | |/ _ \| __| |
+ | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
+ | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
+ |                   __/ |                           |
+ |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
+ |___________________________________________________|
+  
+ OPCD Shell
+
+ Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details. """
+
+
+import atexit
+import os
+import readline
+import pprint
+from opcd_interface import OPCD_Interface
+from scl import generate_map
+from misc import user_data_dir
+
+
+# set-up command history:
+_path = user_data_dir() + os.sep + 'OPCD_shell.history'
+_history = os.path.expanduser(_path)
+def _save_history(historyPath = _history):
+   readline.write_history_file(_history)
+if os.path.exists(_history):
+   readline.read_history_file(_history)
+readline.parse_and_bind("tab: complete")
+atexit.register(_save_history)
+
+
+#initialize and define interface:
+_interface = OPCD_Interface(generate_map('opcd_shell')['ctrl'])
+_pp = pprint.PrettyPrinter(indent = 3)
+
+
+def get(key = ''):
+   try:
+      _pp.pprint(_interface.get(key))
+   except KeyError:
+      print('key not found')
+
+def set(key, val):
+   try:
+      _interface.set(key, val)
+   except KeyError:
+      print('key not found')
+
+def persist():
+   print 'status:', _interface.persist()
+

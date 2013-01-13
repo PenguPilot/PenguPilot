@@ -1,4 +1,3 @@
-
      ___________________________________________________
     |  _____                       _____ _ _       _    |
     | |  __ \                     |  __ (_) |     | |   |
@@ -16,16 +15,14 @@ PenguPilot Contents
 
 Build System and Supporting Infrastructures:
 
-- util: Utility Code
 - scripts: Various Scripts
 - SConstruct: Build System
 - site\_scons: related to build system
 - scl: Signaling and Communication Link
-- svctrl: service control utility
 - opcd: Online Parameter Configuration Daemon
+- shared: shared libraries
 
 Flight Infrastructure:
-
 - autopilot: autopilot software
 - config: configuration files (opcd, scl, svctrl)
 - powerman: Power Management Daemon

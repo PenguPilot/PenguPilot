@@ -1,0 +1,95 @@
+
+//
+// file: pilot.proto
+// purpose: message format for interfacing the pilot
+// author: Tobias Simon, Ilmenau University of Technology
+//
+
+
+/////////////////////////
+// REQUEST-REPLY DATA: //
+/////////////////////////
+
+
+enum RequestType
+{
+   // requests without parameters:
+   MODE_NORMAL = 1;
+   MODE_CAL =    2;
+   SPIN_UP =     3; // spin up motors
+   SPIN_DOWN =   4; // spin down motors
+   RESET_CTRL =  5; // reset controllers (I-parts)
+   GET_PARAMS =  6; // get parameters
+
+   // request with parameters:
+   SET_CTRL_PARAM = 7; // requires CtrlData */
+}
+
+
+enum CtrlParam
+{
+   // position setpoints:
+   POS_X =        1; // X position, relative to starting point
+   POS_Y =        2; // Y position, relative to starting point
+   POS_Z_GROUND = 3; // altitude above ground
+   POS_Z =        4; // altitude above msl
+   POS_YAW =      5; // absolute yaw position, north = 0.0
+
+   // speed setpoints:
+   SPEED_XY =  6; // xy speed */
+   SPEED_Z =   7; // z speed */
+   SPEED_YAW = 8; // yaw speed */
+}
+
+
+message CtrlData
+{
+   required CtrlParam param = 1;
+   required float val =       2;
+}
+
+
+message Params
+{
+   // initial position reported by GPS:
+   required double start_lon = 1;
+   required double start_lat = 2;
+   required double start_alt = 3;
+
+   // position setpoints:
+   required float setp_x =        4;
+   required float setp_y =        5;
+   required float setp_z =        6;
+   optional float setp_z_ground = 7; // one of them is required, ...
+   optional float setp_yaw =      8; // ... but not both!
+
+   // speed control setpoints:
+   required float setp_speed_xy =   9;
+   required float setp_speed_z =   10;
+   required float setp_speed_yaw = 11;
+};
+
+
+message PilotReq
+{
+   required RequestType type =   1;
+   optional CtrlData ctrl_data = 2; // needed if type == SET_CTRL_DATA
+}
+
+
+enum Status
+{
+   OK =         0; // everything OK
+   E_SYNTAX =   1; // syntactic error in data
+   E_SEMANTIC = 2; // semantic errror in protobuf data
+   E_HARDWARE = 3; // hardware error
+}
+
+
+message PilotRep
+{
+   required Status status =  1;
+   optional string err_msg = 2;
+   optional Params params =  3; // required if type == GET_PARAMS
+}
+

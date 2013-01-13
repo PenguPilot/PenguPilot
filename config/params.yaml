@@ -6,7 +6,7 @@
 # | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
 # | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
 # |                   __/ |                           |
-# |  GNU/Linux based |___/  Multirotor UAV Autopilot  |
+# |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
 # |___________________________________________________|
 #
 # System Parameters Configuration File
@@ -109,9 +109,29 @@ pilot:
       debug_host: "10.0.1.5"
       debug_port: 5555
 
+<<<<<<< HEAD
       xy_speed:
          p: 0.4
 
+=======
+      stabilizing:
+         att_kd: 0.02352953418
+         att_kp: 0.32876523028
+         att_ki: 2.20026754887
+         att_kii: 4.37086296837
+         yaw_kp: 0.108
+         yaw_kd: 0.00648
+         yaw_ki: 0.45
+         filt_fg: 10.0
+         filt_d: 0.95
+         jxx_jyy: 0.0097
+         jzz: 0.0057292965
+         tmc: 0.06
+
+      xy_speed:
+         p: 0.4
+     
+>>>>>>> 5e786a236d07f74b292fbf4f554fbe04668a5e12
       attitude:
          p: 3.0
          i: 0.0005
