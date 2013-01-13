@@ -23,48 +23,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-<<<<<<< HEAD
-opcd:
-  binary: 'opcd/service/opcd.py'
-
-gps_sensor:
-  binary: 'sensors/gps/service/gps'
-  depends: [opcd]
-
-powerman:
-  binary: 'powerman/service/powerman.py'
-  depends: [opcd]
-
-autopilot:
-  binary: 'autopilot/service/autopilot'
-  depends: [opcd, gps_sensor, powerman]
-
-autopilot_debug_logger:
-  binary: 'autopilot/logging/debug_logger.py'
-
-aircomm_swarm:
-  binary: 'missions/aircomm_swarm/aircomm_swarm.py'
-  depends: [aircomm]
-
-aircomm:
-  binary: 'aircomm/aircomm_server.py'
-  depends: [opcd]
-
-icarus:
-  binary: 'icarus/icarus.py'
-  depends: [autopilot, powerman]
-
-imms_sensor:
-  binary: 'sensors/imms/imms_sensor'
-
-wifi_sensor:
-  binary: 'sensors/wifi/wifi_sensor.py'
-
-wifi_logger:
-  binary: 'logging/wifi/wifi_logger.py'
-  depends: [pilot, wifi_sensor]
-
-=======
 
 opcd:
   binary: 'opcd/services/opcd.py'
@@ -84,5 +42,4 @@ autopilot:
 autopilot_debug_logger:
   binary: 'autopilot/services/debug_logger.py'
   depends: [autopilot]
->>>>>>> 5e786a236d07f74b292fbf4f554fbe04668a5e12
 

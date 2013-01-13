@@ -109,11 +109,6 @@ pilot:
       debug_host: "10.0.1.5"
       debug_port: 5555
 
-<<<<<<< HEAD
-      xy_speed:
-         p: 0.4
-
-=======
       stabilizing:
          att_kd: 0.02352953418
          att_kp: 0.32876523028
@@ -131,7 +126,6 @@ pilot:
       xy_speed:
          p: 0.4
      
->>>>>>> 5e786a236d07f74b292fbf4f554fbe04668a5e12
       attitude:
          p: 3.0
          i: 0.0005
