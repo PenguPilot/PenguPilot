@@ -30,7 +30,7 @@
 #include <stdio.h>
 
 
-#include "../geometry/orientation.h"
+#include "../geometry/quat.h"
 #include "ahrs.h"
 
 
@@ -231,7 +231,7 @@ int ahrs_update(ahrs_t *ahrs, marg_data_t *marg_data, float dt)
    ahrs->quat.q3 += qDot3 * dt;
 
    /* normalise quaternion: */
-   quat_normalize(&ahrs->quat);
+   quat_normalize_self(&ahrs->quat);
 
 out:
    return ret;

@@ -31,7 +31,7 @@
 #include "../hardware/util/force_to_setpoint.h"
 #include "../hardware/util/rc_channels.h"
 #include "../hardware/util/marg_data.h"
-#include "../geometry/orientation.h"
+#include "../geometry/quat.h"
 #include "inv_coupling.h"
 
 

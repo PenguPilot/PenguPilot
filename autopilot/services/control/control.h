@@ -46,7 +46,7 @@
 #include <pilot.pb-c.h>
 
 #include "../estimators/pos.h"
-#include "../geometry/orientation.h"
+#include "../geometry/quat.h"
 
 
 typedef struct
@@ -56,7 +56,7 @@ typedef struct
    float yaw;
    float gas;
 }
-ctrl_out_t;
+stick_t;
 
 
 
@@ -82,7 +82,7 @@ void ctrl_reset(void);
 /*
  * run the controllers
  */
-void ctrl_step(ctrl_out_t *out, float dt, pos_t *pos, euler_t *euler);
+//void ctrl_step(ctrl_out_t *out, float dt, pos_t *pos, euler_t *euler);
 
 
 /*

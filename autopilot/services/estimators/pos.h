@@ -32,7 +32,7 @@
 #define __POS_H__
 
 
-#include "../geometry/orientation.h"
+#include "../geometry/quat.h"
 
 
 typedef struct

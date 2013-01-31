@@ -37,7 +37,7 @@
 #include <sclhelper.h>
 
 #include "pos.h"
-#include "../geometry/orientation.h"
+#include "../geometry/quat.h"
 #include "../filters/sliding_avg.h"
 #include "../util/logger/logger.h"
 

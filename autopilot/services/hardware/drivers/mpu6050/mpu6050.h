@@ -31,7 +31,7 @@
 
 #include <util.h>
 
-#include "../../../geometry/orientation.h"
+#include "../../../geometry/quat.h"
 #include "../../bus/i2c/i2c.h"
 
 

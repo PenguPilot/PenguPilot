@@ -339,7 +339,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
     * run high-level controllers: *
     *******************************/
 
-   ctrl_out_t auto_stick;
+   stick_t auto_stick;
    float yaw_err, z_err;
    auto_stick.yaw = yaw_ctrl_step(&yaw_err, euler.yaw, marg_data->gyro.z, dt);
    auto_stick.gas = z_ctrl_step(&z_err, pos_estimate.ultra_z.pos,
@@ -459,7 +459,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    }
 
    int motors_enabled = 0;
-   if (rc_valid)
+   if (rc_valid && mode != CM_FULL_AUTO)
    {
       motors_enabled = mode == CM_MANUAL && channels[CH_SWITCH] > 0.5;
    }
