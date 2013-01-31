@@ -49,9 +49,9 @@ void holger_blmc_init(i2c_bus_t *bus, const uint8_t *addrs, const unsigned int _
 }
 
 
-float holger_blmc_characteristic(float force, float voltage)
+float holger_blmc_characteristic(float force, float voltage, float a, float b)
 {
-   return powf((force / 609.6137f * powf(voltage, -1.5f)), 0.760225);
+   return powf((force / a * powf(voltage, -1.5f)), 1.0f / b);
 }
 
 

@@ -44,6 +44,9 @@
 void holger_blmc_init(i2c_bus_t *bus, const uint8_t *addrs, const unsigned int n_motors);
 
 
+
+float holger_blmc_characteristic(float force, float voltage, float a, float b);
+
 /*
  * writes holger BLMC setpoints and reads rpm
  */
