@@ -38,6 +38,9 @@
 #include <sys/time.h>
 
 
+void user_data_dir(char *buffer);
+
+
 #define PITCH 0
 #define ROLL  1
 #define YAW   2

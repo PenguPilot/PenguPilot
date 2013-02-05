@@ -24,7 +24,18 @@
  GNU General Public License for more details. */
 
 
-#include "util.h"
+#include <string.h>
+#include <stdlib.h>
+
+#include <util.h>
+
+
+void user_data_dir(char *buffer)
+{
+   char *home = getenv("HOME");
+   assert(home);
+   sprintf(buffer, "%s/.PenguPilot", home);
+}
 
 
 int compare_floats(const void *a, const void *b)

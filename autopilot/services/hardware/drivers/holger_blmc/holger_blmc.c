@@ -25,6 +25,7 @@
 
 
 #include <malloc.h>
+#include <math.h>
 
 #include <util.h>
 

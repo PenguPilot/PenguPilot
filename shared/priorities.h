@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-"""
-  ___________________________________________________
+/*___________________________________________________
  |  _____                       _____ _ _       _    |
  | |  __ \                     |  __ (_) |     | |   |
  | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
@@ -11,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- File Purpose
+ Process Scheduler Configuration Library Interface
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -23,25 +21,15 @@
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. """
+ GNU General Public License for more details. */
 
 
-# ARCADE svctrl
-# definitions for colorful terminal output
+#ifndef __PRIORITIES_H__
+#define __PRIORITIES_H__
 
 
-def colored_text(text, color):
-   return "\033[%sm%s\033[0m" % (color, text)
+int set_priority(char *name);
 
 
-def red(text):
-   return colored_text(text, '31')
-
-
-def blue(text):
-   return colored_text(text, '34')
-
-
-def green(text):
-   return colored_text(text, '32')
+#endif /* __PRIORITIES_H__ */
 
