@@ -4,7 +4,7 @@ import numpy
 from util import quat
 
 
-def inv_coupling_matrix(l, c, d):
+def inv_coupling_matrix_4(l, c, d):
    '''
    computes inverse coupling matrix with parameters:
       l = rigger length
@@ -25,6 +25,15 @@ def inv_coupling_matrix(l, c, d):
    return new_matrix.transpose()
 
 
+def inv_coupling_matrix_to_config(matrix):
+   class InvCoupling(object):
+      pass
+   coupling = InvCoupling()
+   for (x, y), val in numpy.ndenumerate(matrix):
+      setattr(coupling, '%d %d' % (x, y), val)
+   return coupling
+
+
 
 def marg_quats(*args, **kwargs):
    '''
@@ -37,4 +46,5 @@ def marg_quats(*args, **kwargs):
       assert isinstance(sensor_quat, quat)
       quats[name] = marg_quat * sensor_quat
    return quats
+
 
