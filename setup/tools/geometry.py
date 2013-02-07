@@ -34,6 +34,18 @@ def inv_coupling_matrix_to_config(matrix):
    return coupling
 
 
+def vector_to_config(vec):
+   class VecConf(object):
+      pass
+   vec_conf = VecConf()
+   m = 'xyz'
+   i = 0
+   for val in vec:
+      setattr(vec_conf, '%s' % m[i], val)
+      i += 1
+   return vec_conf
+
+
 
 def marg_quats(*args, **kwargs):
    '''

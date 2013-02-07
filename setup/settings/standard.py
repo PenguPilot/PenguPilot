@@ -42,10 +42,11 @@ class Highlevel_Control(object):
 class Calibration(object):
    
    def __init__(self):
-      self.acc_biases = [ 0.0 ] * 3
-      self.mag_biases = [ 0.0 ] * 3
-      self.acc_scales = [ 1.0 ] * 3
-      self.mag_scales = [ 1.0 ] * 3
+      from tools.geometry import vector_to_config
+      self.acc_biases = vector_to_config([ 0.0 ] * 3)
+      self.mag_biases = vector_to_config([ 0.0 ] * 3)
+      self.acc_scales = vector_to_config([ 1.0 ] * 3)
+      self.mag_scales = vector_to_config([ 1.0 ] * 3)
 
 
 
