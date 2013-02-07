@@ -1,7 +1,7 @@
 
 
 import numpy
-from util import quat
+import quat
 
 
 def inv_coupling_matrix_4(l, c, d):

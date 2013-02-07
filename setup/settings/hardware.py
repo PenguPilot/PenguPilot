@@ -54,8 +54,8 @@ class MARG(object):
 
 class DrotekMARG(MARG):
 
-   def __init__(self, bus, orientation):
-      MARG.__init__(self, orientation)
+   def __init__(self, bus):
+      MARG.__init__(self)
       self.bus = bus
 
 

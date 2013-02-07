@@ -1,13 +1,5 @@
 
 
-from math import pi
-from mixers import *
-from hardware import *
-from geometry import*
-from control_mode import *
-from arcade import *
-
-
 class Highlevel_Control(object):
 
    '''hopefully, these are independent of the lower control system's parameters'''
@@ -65,13 +57,6 @@ class Behavior(object):
       self.landing_z_motors_off = 0.4
 
 
-class Priorities(object):
-
-   def __init__(self, dict):
-      self.autopilot: 99
-      self.gps: 98
-
-
 class Safety(object):
 
    def __init__(self):
@@ -84,7 +69,6 @@ class StandardSettings(object):
       self.hl_control = Highlevel_Control()
       self.calibration = Calibration()
       self.behavior = Behavior()
-      self.priorities = Priorities()
       self.safety = Safety()
 
 
@@ -93,17 +77,9 @@ class Settings(StandardSettings):
 
    def __init__(self):
       StandardSettings.__init__(self)
-      self.modes = []
-      self.modes.append(GyroMode('indoor', 1.0, 1.0))
-      self.modes.append(GyroMode('outdoor', 2.0, 3.0))
       
       # select and configure platform:
       cap = ['ultra', 'gps', 'baro', 'voltage', 'current']
       self.platform = ARCADE_Quad('holger', cap)
       self.battery = Battery(4, 6.6, 3.3)
-
-
-conf = Settings()
-from walk import walk
-walk(conf)
 

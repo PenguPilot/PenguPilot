@@ -1,14 +1,13 @@
 
 
 from math import pi
-from hardware.hardware import *
-from standard.standard import *
-from algorithms.geometry import *
-from control_modes.control_modes import *
+from settings.hardware import *
+from settings.standard import *
+from tools.geometry import *
+from settings.ctrl_modes import *
 
-from platforms.arcade import *
-from platforms.standard import *
-from emitter.emitter import *
+from settings.arcade import *
+from tools.emitter import *
 
 class Settings(StandardSettings):
 
@@ -22,6 +21,6 @@ class Settings(StandardSettings):
 
 
 conf = Settings()
-from walk import walk
+from tools.emitter import walk
 walk(conf)
 
