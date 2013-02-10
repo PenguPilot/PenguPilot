@@ -10,22 +10,30 @@
     |___________________________________________________|
 
 
+Overview
+--------
+PenguPilot is a Free and Open Source Multi-Rotor UAV autopilot
+for Linux-based computer modules.
+The whole state estimation and control system runs as a Linux
+user-space task, which is ideal for prototyping and experimentation.
+PenguPilot's architecture allows to distribute the control code
+among several processes (e.g. high-level control and low-level control).
 
-autopilot  config  opcd  powerman  README.md  scl
 
-PenguPilot Contents
--------------------
+Contents
+--------
 
-Build System:
+Build System and Environment:
 - site\_scons: related to build system
 - SConstruct: scons build file
+- scripts: Various Scripts
 
 Supporting Infrastructures:
-- scripts: Various Scripts
+- setup: config file creation scripts
 - scl: Signaling and Communication Link
 - opcd: Online Parameter Configuration Daemon
-- shared: shared libraries
-- setup: config file creation scripts
+- svctrl: Service Management and Control Utility
+- shared: Shared Libraries
 
 Flight Infrastructure:
 - autopilot: autopilot software
