@@ -11,20 +11,26 @@ class ARCADE_Common(object):
 
    def __init__(self, cap):
       # always required:
-      self.i2c_bus = I2C_Bus("/dev/i2c-3")
-      self.marg = DrotekMARG(self.i2c_bus)
+      self.i2c_bus = I2C_Bus(1, "/dev/i2c-3")
+      self.marg = DrotekMARG(self.i2c_bus.id)
       self.rc = ACT_DSL('/dev/ttyO0')
       # optional devices:
       if 'baro' in cap:
-         self.baro = MS5611(self.i2c_bus)
+         self.baro = MS5611(self.i2c_bus.id)
       if 'gps' in cap:
          self.gps = SerialGPS("/dev/ttyO2")
       if 'ultra' in cap:
-         self.ultra = I2CXL(self.i2c_bus)
+         self.ultra = I2CXL(self.i2c_bus.id)
       if 'voltage' in cap:
          self.voltage = MADC(7, 'lambda x: (x - 56.0) / 134.0')
       if 'current' in cap:
          self.current = MADC(2, 'lambda x: (2.5 - x / 1024.0) / 0.028')
+
+
+class Motors(object):
+   
+   def __init__(self, count):
+      self.count = count
 
 
 class ARCADE_Quad(ARCADE_Common):
@@ -56,9 +62,12 @@ class ARCADE_Quad(ARCADE_Common):
       self.process_noise = 1.0e-6
 
       # set up motors:
+      self.motors = Motors(4)
       if motor_type == 'holger':
-         motor_addrs = [0x29, 0x2a, 0x2b, 0x2c]
-         self.motors = [HolgerMotor(self.i2c_bus, addr) for addr in motor_addrs]
+         self.motors.front = HolgerMotor(self.i2c_bus.id, 0x29)
+         self.motors.rear = HolgerMotor(self.i2c_bus.id, 0x2a)
+         self.motors.left = HolgerMotor(self.i2c_bus.id, 0x2b)
+         self.motors.right = HolgerMotor(self.i2c_bus.id, 0x2c)
       elif motor_type == 'pwm_esc':
          pass
       else:

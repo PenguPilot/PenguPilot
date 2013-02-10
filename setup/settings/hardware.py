@@ -72,7 +72,8 @@ class HolgerMotor(object):
 
 class I2C_Bus(object):
    
-   def __init__(self, path):
+   def __init__(self, id, path):
+      self.id = id
       self.path = path
 
 

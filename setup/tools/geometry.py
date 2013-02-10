@@ -46,7 +46,6 @@ def vector_to_config(vec):
    return vec_conf
 
 
-
 def marg_quats(*args, **kwargs):
    '''
    computes MARG sensor rotation quaternions
