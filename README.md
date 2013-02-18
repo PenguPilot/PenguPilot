@@ -19,7 +19,6 @@ user-space task, which is ideal for prototyping and experimentation.
 PenguPilot's architecture allows to distribute the control code
 among several processes (e.g. high-level control and low-level control).
 
-
 Contents
 --------
 
