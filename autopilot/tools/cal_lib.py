@@ -32,17 +32,19 @@ class Calibration(object):
 
 
    def __init__(self, init = None):
+      #if 1:
       try:
          if isinstance(init, list):
-            x, y, z = numpy.array(init).T
-            self._cal = self._calibrate(x, y, z)
+            if len(init) == 6:
+               # calibration given in values:
+               self._cal = numpy.array(init[0:3]), numpy.array(init[3:6])
+            else:
+               x, y, z = numpy.array(init).T
+               self._cal = self._calibrate(x, y, z)
          elif isinstance(init, str):
             # calibrate from file:
             x, y, z = numpy.loadtxt(init).T
             self._cal = self._calibrate(x, y, z)
-         elif len(init) == 6:
-            # calibration given in values:
-            self._cal = numpy.array(init[0:3]), numpy.array(init[3:6])
          else:
             # use stdin:
             from sys import stdin
@@ -88,13 +90,3 @@ class Calibration(object):
       for vec in data:
          adj_data.append(self.apply(vec))
       return numpy.array(adj_data)
-
-
-if __name__ == "__main__":
-   f = "magn.txt"
-   cal = Calibration(f)
-   cal2 = Calibration(cal.get_cal())
-   raw_data = numpy.loadtxt(f)
-   data = cal2.apply_array(raw_data)
-   for vec in data:
-      print vec[0], vec[1], vec[2]

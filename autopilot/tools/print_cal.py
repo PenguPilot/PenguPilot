@@ -11,7 +11,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
 
- Computes calibration from stdin and writes aligned measurements to stdout
+ Computes calibration from stdin and writes coefficients to stdout
 
  Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
@@ -29,11 +29,5 @@
 if __name__ == '__main__':
    from sys import stdin
    from cal_lib import Calibration
-   lines = stdin.readlines()
-   array = []
-   for line in lines:
-      array.append(map(float, line.split(' ')))
-   cal = Calibration(array)
-   for entry in array:
-      x, y, z = cal.apply(entry)
-      print x, y, z
+   cal = Calibration(stdin)
+   print ' '.join(map(str, cal.get_cal()))
