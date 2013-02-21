@@ -39,3 +39,4 @@ Flight Infrastructure:
 - powerman: Power Management Daemon
 - sensors: Sensor Publisher Services
 
+[![Build Status](https://travis-ci.org/PenguPilot/PenguPilot.png)(https://travis-ci.org/PenguPilot/PenguPilot.png)
