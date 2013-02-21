@@ -1,3 +1,3 @@
-before_script: sudo apt-get install libprotobuf-dev python-yaml protobuf-c-compiler libprotobuf-c0-dev  libzmq-dev python-zmq libyaml-dev libtinyxml-dev graphviz  openjdk-7-jre-headless libcv-dev libglib2.0-dev libmeschach-dev
+before_script: sudo apt-get install libyaml-cpp-dev libprotobuf-dev python-yaml protobuf-c-compiler libprotobuf-c0-dev  libzmq-dev python-zmq libyaml-dev libtinyxml-dev graphviz  openjdk-7-jre-headless libcv-dev libglib2.0-dev libmeschach-dev
 language: c
 script: scons
