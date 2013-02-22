@@ -6,4 +6,4 @@
 *.pb-c.c
 *.pb-c.h
 sensors/gps/services/gps
-autopilot/service/autopilot
+autopilot/services/autopilot
