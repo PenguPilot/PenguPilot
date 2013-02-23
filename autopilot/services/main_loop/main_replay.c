@@ -130,7 +130,6 @@ void main_replay(char *file_name)
    {
       printf("could not read from file: %s\n", file_name);
    }
-   
 
    msgpack_unpacked msg;
    msgpack_unpacked_init(&msg);
@@ -156,5 +155,6 @@ void main_replay(char *file_name)
    free(buffer);
    msgpack_unpacked_destroy(&msg);
    close(file);
+   sleep(1);
 }
 

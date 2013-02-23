@@ -10,8 +10,8 @@
  |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
-  
- MessagPack Log File Compare Utility
+
+ Replays a recorded file (arg 1) and dumps result to file (arg 2)
 
  Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
@@ -27,45 +27,16 @@
 
 
 from sys import argv
-from msgpack import Unpacker
-
-
-def unpack_gen(file, size):
-   u = Unpacker()
-   while True:
-      data = file.read(size)
-      if not data:
-         break
-      u.feed(data)
-      for o in u:
-         yield o
-
-
-def unpack_file(f):
-   data = []
-   for o in unpack_gen(f, 1024):
-      data.append(o)
-   return data
-
-
 assert len(argv) == 3
 
-a = unpack_file(open(argv[1]))
-b = unpack_file(open(argv[2]))
+from os import environ, system
+pre = environ['PENGUPILOT_PATH'] + '/'
+from misc import user_data_dir
 
-ha = a[0]
-hb = b[0]
-
-a = a[1:]
-b = b[1:]
-
-print 'lengths', len(a), len(b)
-
-for i in range(len(a) - 1):
-   for j in range(len(ha)):
-      try:
-         if a[i][j] != b[i][j]:
-            print i, ha[j], a[i][j], b[i][j]
-      except IndexError:
-         pass
+system(pre + 'svctrl/svctrl.py --start opcd')
+system(pre + 'svctrl/svctrl.py --start debug_logger')
+system(pre + 'autopilot/services/autopilot %s' % argv[1])
+system(pre + 'svctrl/svctrl.py --stop debug_logger')
+system(pre + 'autopilot/tools/compare_msgpack.py %s ' % argv[1] 
+    + user_data_dir() + '/log/autopilot_debug.msgpack > %s' % argv[2])
 
