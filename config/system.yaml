@@ -24,14 +24,6 @@
 # GNU General Public License for more details.
 
 
-# component definitions:
-# - each component needs to define:
-#    - its name
-#    -  a list of gates
-# - every gate consists of a name mapped to a type 
-#   [pub, sub, req, rep]
-#
-
 components:
 
 
@@ -99,7 +91,7 @@ components:
       - opcd_ctrl: req
       - cal: sub
 
-   - name: autopilot_debug_logger
+   - name: debug_logger
      gates:
       - debug: sub
 
@@ -172,9 +164,9 @@ components:
 #
 
 connections:
-   - [ pilot.debug,               autopilot_debug_logger.debug]
-   - [ pilot.cal,                 cal_server.cal]
-   - [ pilot.ctrl,                cal_server.pilot_ctrl]
+   - [ pilot.debug,              debug_logger.debug]
+   - [ pilot.cal,                cal_server.cal]
+   - [ pilot.ctrl,               cal_server.pilot_ctrl]
    - [ opcd.ctrl,                cal_server.opcd_ctrl]
    - [ demo_mission.gps,         gps_sensor.gps]
    - [ demo_mission.net,         wifi_sensor.networks]

@@ -1,3 +1,4 @@
+#!/bin/bash
 #  ___________________________________________________
 # |  _____                       _____ _ _       _    |
 # | |  __ \                     |  __ (_) |     | |   |
@@ -9,7 +10,7 @@
 # |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
 # |___________________________________________________|
 #
-# Services Configuration File
+# Replay PenguPilot log file (argument 1) and validates output (dump to argument 2)
 #
 # Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
 #
@@ -23,22 +24,9 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-
-opcd:
-  binary: 'opcd/services/opcd.py'
-
-gps_sensor:
-  binary: 'sensors/gps/services/gps'
-  depends: [opcd]
-
-powerman:
-  binary: 'powerman/services/powerman.py'
-  depends: [opcd]
-
-autopilot:
-  binary: 'autopilot/services/autopilot'
-  depends: [opcd, gps_sensor, powerman]
-
-debug_logger:
-  binary: 'autopilot/services/debug_logger.py'
+$PENGUPILOT_PATH/svctrl/svctrl.py --start opcd
+$PENGUPILOT_PATH/svctrl/svctrl.py --start debug_logger
+$PENGUPILOT_PATH/autopilot/services/autopilot $1
+$PENGUPILOT_PATH/svctrl/svctrl.py --stop debug_logger
+$PENGUPILOT_PATH/autopilot/tools/compare_msgpack.py $1 $HOME/.PenguPilot/log/autopilot_debug.msgpack > $2
 

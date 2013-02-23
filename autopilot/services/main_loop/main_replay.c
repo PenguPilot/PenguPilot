@@ -135,12 +135,13 @@ void main_replay(char *file_name)
    msgpack_unpacked msg;
    msgpack_unpacked_init(&msg);
                 
-   int c = 0;
    size_t off = 0;
    DATA_DEFINITION();
+   msgpack_unpack_next(&msg, buffer, size, &off);
+   handle_array(msg.data, 1);
    while (msgpack_unpack_next(&msg, buffer, size, &off))
    {
-      handle_array(msg.data, c++ == 0);
+      handle_array(msg.data, 0);
       dt = float_data[0];
       memcpy(&marg_data.gyro.vec[0], &float_data[1], sizeof(float) * 3);
       memcpy(&marg_data.acc.vec[0],  &float_data[4], sizeof(float) * 3);
@@ -148,7 +149,7 @@ void main_replay(char *file_name)
       ultra_z = float_data[10];
       baro_z = float_data[11];
       voltage = float_data[17];
-      uint16_t sensor_status = int_data[18];
+      uint16_t sensor_status = 0xFFFF; //int_data[18];
       memcpy(channels, &float_data[12], sizeof(channels));
       main_step(dt, &marg_data, &gps_data, ultra_z, baro_z, voltage, channels, sensor_status, 1);
    }

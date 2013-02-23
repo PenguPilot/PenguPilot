@@ -35,7 +35,7 @@ re_pb = re.compile('.*\.proto$')
 
 
 def set_compiler_dependent_cflags():
-   cflags = '-pipe -std=gnu99 -Wall -Wextra -O3 '
+   cflags = '-pipe -std=gnu99 -Wall -Wextra -O3 -g '
    pipe = subprocess.Popen([env['CC'], '-v'], env=env['ENV'], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
    if 'armv7a' in pipe.stderr.read():
       cflags += ' -march=armv7-a -mtune=cortex-a8 -mfpu=neon -ftree-vectorize -mfpu=neon -mfloat-abi=softfp -ffast-math -fomit-frame-pointer -funroll-loops'

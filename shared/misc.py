@@ -75,16 +75,12 @@ def _main_wrapper(name, main):
 
 
 def daemonize(name, main):
-   try:
-      run_dir = user_data_dir() + sep + 'run'
-      pidf = pidlockfile.PIDLockFile(run_dir + sep + name + '.pid')
-      pidf.acquire(timeout = 1.0)
-      pidf.release()
-      with DaemonContext(pidfile = pidf):
-         _main_wrapper(name, main)
-   except Exception as e:
-      print 'Could not daemonize:', str(e)
-      exit(1)
+   run_dir = user_data_dir() + sep + 'run'
+   pidf = pidlockfile.PIDLockFile(run_dir + sep + name + '.pid')
+   pidf.acquire(timeout = 1.0)
+   pidf.release()
+   with DaemonContext(pidfile = pidf):
+      _main_wrapper(name, main)
 
 
 def start_daemon_thread(target):

@@ -1,27 +1,33 @@
 """
+  ___________________________________________________
+ |  _____                       _____ _ _       _    |
+ | |  __ \                     |  __ (_) |     | |   |
+ | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
+ | |  ___/ _ \ '_ \ / _` | | | |  ___/ | |/ _ \| __| |
+ | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
+ | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
+ |                   __/ |                           |
+ |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
+ |___________________________________________________|
 
-Ellipsoid into Sphere calibration library based upon numpy and linalg
-Copyright (C) 2012 Fabio Varesano <fabio at varesano dot net>
-Copyright (C) 2013 Tobias Simon <tobias.simon@tu-ilmenau.de>
+ MAG/ACC Calibration Library
 
-Development of this code has been supported by the Department of Computer Science,
-Universita' degli Studi di Torino, Italy within the Piemonte Project
-http://www.piemonte.di.unito.it/
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2012 Fabio Varesano <fabio at varesano dot net>
 
+ Development of this code has been supported by the Department of Computer Science,
+ Universita' degli Studi di Torino, Italy within the Piemonte Project
+ http://www.piemonte.di.unito.it
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the version 3 GNU General Public License as
-published by the Free Software Foundation.
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-"""
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details. """
 
 
 import numpy
@@ -32,7 +38,6 @@ class Calibration(object):
 
 
    def __init__(self, init = None):
-      #if 1:
       try:
          if isinstance(init, list):
             if len(init) == 6:

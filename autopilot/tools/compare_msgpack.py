@@ -26,32 +26,44 @@
  GNU General Public License for more details. """
 
 
-from os import sep, symlink, unlink
-from scl import generate_map
-from misc import daemonize, user_data_dir
-from datetime import datetime
+from sys import argv
+from msgpack import Unpacker
 
 
-def main(name):
-   socket = generate_map(name)['debug']
-   prefix = user_data_dir() + sep + 'log' + sep
-   try:
-      now = datetime.today().isoformat().replace(':', '')
-      symlink_file = prefix + 'autopilot_debug.msgpack'
+def unpack_gen(file, size):
+   u = Unpacker()
+   while True:
+      data = file.read(size)
+      if not data:
+         break
+      u.feed(data)
+      for o in u:
+         yield o
+
+def unpack_file(f):
+   data = []
+   for o in unpack_gen(f, 1024):
+      data.append(o)
+   return data
+
+
+assert len(argv) == 3
+
+a = unpack_file(open(argv[1]))
+b = unpack_file(open(argv[2]))
+
+ha = a[0]
+hb = b[0]
+
+a = a[1:]
+b = b[1:]
+
+for i in range(len(a) - 1):
+   for j in range(len(ha)):
       try:
-         unlink(symlink_file)
-      except:
+         print i, j
+         if a[i][j] != b[i][j]:
+            print i, ha[j], a[i][j], b[i][j]
+      except IndexError:
          pass
-      new_file = prefix + 'autopilot_debug_%s.msgpack' % now
-      symlink(new_file, symlink_file)
-      f = open(new_file, "wb")
-      while True:
-         f.write(socket.recv())
-   finally:
-      try:
-         f.close()
-      except:
-         pass
-
-daemonize('debug_logger', main)
 
