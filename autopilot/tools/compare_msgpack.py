@@ -11,9 +11,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Debug Writer Service
+ MessagPack Log File Compare Utility
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ def unpack_gen(file, size):
       for o in u:
          yield o
 
+
 def unpack_file(f):
    data = []
    for o in unpack_gen(f, 1024):
@@ -61,7 +62,6 @@ b = b[1:]
 for i in range(len(a) - 1):
    for j in range(len(ha)):
       try:
-         print i, j
          if a[i][j] != b[i][j]:
             print i, ha[j], a[i][j], b[i][j]
       except IndexError:
