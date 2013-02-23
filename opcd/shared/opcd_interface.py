@@ -84,7 +84,7 @@ class OPCD_Interface:
       setattr(req.val, self.map[val.__class__], val)
       rep = self._send_and_recv(req)
       if rep.status != 0:
-         raise KeyError
+         raise KeyError(id)
 
 
    def persist(self):

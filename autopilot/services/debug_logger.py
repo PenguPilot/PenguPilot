@@ -34,7 +34,7 @@ from datetime import datetime
 
 def main(name):
    socket = generate_map(name)['debug']
-   prefix = user_data_dir() + sep + 'log' + sep
+   prefix = user_data_dir + sep + 'log' + sep
    try:
       now = datetime.today().isoformat().replace(':', '')
       symlink_file = prefix + 'autopilot_debug.msgpack'

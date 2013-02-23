@@ -35,7 +35,7 @@ from misc import user_data_dir
 
 
 def pidfile_from_name(name):
-   return user_data_dir() + os.sep + 'run' + os.sep + name + '.pid'
+   return user_data_dir + os.sep + 'run' + os.sep + name + '.pid'
 
 
 def kill(pid):

@@ -38,7 +38,8 @@ class Calibration(object):
 
 
    def __init__(self, init = None):
-      try:
+      if 1:
+      #try:
          if isinstance(init, list):
             if len(init) == 6:
                # calibration given in values:
@@ -55,8 +56,8 @@ class Calibration(object):
             from sys import stdin
             x, y, z = numpy.loadtxt(stdin).T
             self._cal = self._calibrate(x, y, z)
-      except:
-         raise ValueError('expected filename or 6-element float array')
+      #except:
+      #   raise ValueError('expected filename or 6-element float array')
       self.sm = numpy.diag(self._cal[1] ** -1)
 
 
@@ -65,25 +66,28 @@ class Calibration(object):
 
 
    def _calibrate(self, x, y, z):
-      # prepare arrays:
-      H = numpy.array([x, y, z, -y ** 2, -z ** 2, numpy.ones([len(x), 1])]).T
-      w = x ** 2
-      # solve least-squares problem:
-      (X, residues, rank, shape) = linalg.lstsq(H, w)
-      # compute offsets:
-      ox = X[0] / 2
-      oy = X[1] / (2 * X[3])
-      oz = X[2] / (2 * X[4])
-      # compute helper values:
-      A = X[5] + ox ** 2 + X[3] * oy ** 2 + X[4] * oz ** 2
-      B = A / X[3]
-      C = A / X[4]
-      # compute scales:
-      sx = numpy.sqrt(A)
-      sy = numpy.sqrt(B)
-      sz = numpy.sqrt(C)
-      # return offset and scale arrays
-      return numpy.array([ox, oy, oz]), numpy.array([sx, sy, sz])
+      import warnings
+      with warnings.catch_warnings():
+         warnings.simplefilter("ignore")
+         # prepare arrays:
+         H = numpy.array([x, y, z, -y ** 2, -z ** 2, numpy.ones([len(x), 1])]).T
+         w = x ** 2
+         # solve least-squares problem:
+         (X, residues, rank, shape) = linalg.lstsq(H, w)
+         # compute offsets:
+         ox = X[0] / 2
+         oy = X[1] / (2 * X[3])
+         oz = X[2] / (2 * X[4])
+         # compute helper values:
+         A = X[5] + ox ** 2 + X[3] * oy ** 2 + X[4] * oz ** 2
+         B = A / X[3]
+         C = A / X[4]
+         # compute scales:
+         sx = numpy.sqrt(A)
+         sy = numpy.sqrt(B)
+         sz = numpy.sqrt(C)
+         # return offset and scale arrays
+         return numpy.array([ox, oy, oz]), numpy.array([sx, sy, sz])
 
 
    def apply(self, vec):

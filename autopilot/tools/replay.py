@@ -38,5 +38,5 @@ system(pre + 'svctrl/svctrl.py --start debug_logger')
 system(pre + 'autopilot/services/autopilot %s' % argv[1])
 system(pre + 'svctrl/svctrl.py --stop debug_logger')
 system(pre + 'autopilot/tools/compare_msgpack.py %s ' % argv[1] 
-    + user_data_dir() + '/log/autopilot_debug.msgpack > %s' % argv[2])
+    + user_data_dir + '/log/autopilot_debug.msgpack > %s' % argv[2])
 

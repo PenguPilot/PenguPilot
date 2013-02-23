@@ -34,7 +34,7 @@ from misc import user_data_dir
 def set_priority(name):
    try:
       from yaml import load
-      path = user_data_dir() + sep + 'priorities.yaml'
+      path = user_data_dir + sep + 'priorities.yaml'
       prio = load(open(path))[name]
       _sched_set_prio(prio)
    except IOError:

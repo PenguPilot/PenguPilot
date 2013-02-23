@@ -23,27 +23,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-#
-# Priority Constraints:
-# """""""""""""""""""""
-# Autopilot > ICARUS
-# Autopilot > GPS
-# GPS > ICARUS
-# ICARUS > PowerMan
-# ICARUS > Mission
-# Mission > PowerMan
-# PowerMan > MAVLink
-#
-# Resulting Priorities:
-# """""""""""""""""""""
-# Autopilot: 98
-# GPS: 97
-# ICARUS: 96
-# Mission: 95
-# PowerMan: 94
-# MAVLink: 93
-#
-
 
 aircomm:
    id: 0
@@ -51,7 +30,6 @@ aircomm:
 
 sensors:
    gps:
-      priority: 97
       serial_path: "/dev/ttyO2"
       serial_speed: 57600
       min_sats: 4
@@ -74,8 +52,6 @@ powerman:
    adc_2_current: 'lambda x: (2.5 - x / 1024.0) / 0.028'
 
 icarus:
-   priority: 96
-
    takeoff:
       standard_rel_z: 4.0
 
@@ -85,8 +61,6 @@ icarus:
 
 
 pilot:
-   priority: 98
-
    logger:
       level: 3
       details: 2
@@ -106,8 +80,6 @@ pilot:
       mag_scale_z: 1.0
 
    controllers:
-      debug_host: "10.0.1.5"
-      debug_port: 5555
 
       stabilizing:
          att_kd: 0.02352953418

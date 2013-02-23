@@ -43,9 +43,9 @@ import ctypes, ctypes.util
 
 # user data directory:
 
-def user_data_dir():
-   return getenv('HOME') + sep + '.PenguPilot'
-
+user_data_dir = getenv('HOME') + sep + '.PenguPilot'
+msgpack_log_path = user_data_dir + sep + 'log'
+msgpack_lastlog_path = msgpack_log_path + sep + 'autopilot_debug.msgpack'
 
 # Hysteresis class:
 
@@ -75,7 +75,7 @@ def _main_wrapper(name, main):
 
 
 def daemonize(name, main):
-   run_dir = user_data_dir() + sep + 'run'
+   run_dir = user_data_dir + sep + 'run'
    pidf = pidlockfile.PIDLockFile(run_dir + sep + name + '.pid')
    pidf.acquire(timeout = 1.0)
    pidf.release()

@@ -51,7 +51,7 @@ class PowerMan:
 
    def __init__(self, name):
       # set-up logger:
-      logfile = user_data_dir() + sep + 'PowerMan.log'
+      logfile = user_data_dir + sep + 'PowerMan.log'
       log_config(filename = logfile, filemode = 'w', level = DEBUG,
                  format = '%(asctime)s - %(levelname)s: %(message)s')
       # initialized and load config:
