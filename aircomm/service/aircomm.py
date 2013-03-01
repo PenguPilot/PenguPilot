@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from aircomm.interface import Interface as ACI
+from interface import Interface as ACI
 from scl import generate_map
 from time import sleep
 from threading import Thread

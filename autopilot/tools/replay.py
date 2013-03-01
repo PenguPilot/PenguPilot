@@ -11,7 +11,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
 
- Replays a recorded file (arg 1) and dumps result to file (arg 2)
+ Functions for running Replays
 
  Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
@@ -26,17 +26,21 @@
  GNU General Public License for more details. """
 
 
-from sys import argv
-assert len(argv) == 3
-
 from os import environ, system
-pre = environ['PENGUPILOT_PATH'] + '/'
 from misc import user_data_dir
+pre = environ['PENGUPILOT_PATH'] + '/'
 
-system(pre + 'svctrl/svctrl.py --start opcd')
-system(pre + 'svctrl/svctrl.py --start debug_logger')
-system(pre + 'autopilot/services/autopilot %s' % argv[1])
-system(pre + 'svctrl/svctrl.py --stop debug_logger')
-system(pre + 'autopilot/tools/compare_msgpack.py %s ' % argv[1] 
-    + user_data_dir + '/log/autopilot_debug.msgpack > %s' % argv[2])
+
+def replay(f):
+   system(pre + 'svctrl/svctrl.py --start opcd')
+   system(pre + 'svctrl/svctrl.py --start debug_logger')
+   system(pre + 'autopilot/services/autopilot %s' % argv[1])
+   system(pre + 'svctrl/svctrl.py --stop debug_logger')
+   
+
+if __name__ == '__main__':
+   from sys import argv
+   assert len(argv) == 2
+   replay(argv[1])
+   system(pre + 'autopilot/tools/msgpack_to_txt.py < %s | ' % (user_data_dir + '/log/autopilot_debug.msgpack') + pre + 'autopilot/tools/txt_col.py raw_n pos_n > kalman.txt')
 
