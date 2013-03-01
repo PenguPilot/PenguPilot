@@ -38,8 +38,7 @@ class Calibration(object):
 
 
    def __init__(self, init = None):
-      if 1:
-      #try:
+      try:
          if isinstance(init, list):
             if len(init) == 6:
                # calibration given in values:
@@ -56,8 +55,8 @@ class Calibration(object):
             from sys import stdin
             x, y, z = numpy.loadtxt(stdin).T
             self._cal = self._calibrate(x, y, z)
-      #except:
-      #   raise ValueError('expected filename or 6-element float array')
+      except:
+         raise ValueError('expected filename or 6-element float array')
       self.sm = numpy.diag(self._cal[1] ** -1)
 
 

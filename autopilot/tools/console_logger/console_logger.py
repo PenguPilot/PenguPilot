@@ -10,10 +10,10 @@
  |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
+  
+ Autopilot Console Logger
 
- Computes calibration from stdin and writes coefficients to stdout
-
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2013 Tobias Simon
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -26,8 +26,35 @@
  GNU General Public License for more details. """
 
 
+import log_data_pb2
+import sys
+from scl import generate_map
+from os.path import basename
+
+
+def logdata_2_string(log_data):
+   LOG_LEVEL_NAMES = ["ERROR", " WARN", " INFO", "DEBUG"];
+   level_name = LOG_LEVEL_NAMES[log_data.level]
+   file = basename(log_data.file)
+   if log_data.details == 1:
+      return "[%s] %s: %s" % (level_name, file, log_data.message)
+   elif log_data.details == 2:
+      return "[%s] %s,%d: %s" % (level_name, file, log_data.line, log_data.message)
+   else:
+      return "[%s] %s" % (level_name, log_data.message)
+
+
+
 if __name__ == '__main__':
-   from sys import stdin
-   from cal_lib import Calibration
-   cal = Calibration(stdin)
-   print ' '.join(map(str, cal.get_cal()))
+   socket = generate_map('pilot_logger')['log']
+   while True:
+      try:
+         log_data = log_data_pb2.log_data()
+         raw_data = socket.recv()
+         log_data.ParseFromString(raw_data)
+         print logdata_2_string(log_data)
+      except KeyboardInterrupt:
+         break
+      except Exception, e:
+         print str(e)
+

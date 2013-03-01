@@ -45,7 +45,7 @@ components:
      gates:
       - gps: sub
 
-   - name: pilot_logger
+   - name: console_logger
      gates:
       - log: sub
 
@@ -192,7 +192,7 @@ connections:
    - [ mavlink.state,            icarus.state         ]
    - [ remote.ctrl,              pilot.ctrl            ]
    - [ wifi_logger.networks,     wifi_sensor.networks ]
-   - [ pilot_logger.log,          pilot.log             ]
+   - [ console_logger.log,          pilot.log             ]
    - [ gps_sensor.gps,           pilot.gps             ]
    - [ gps_sensor.gps,           mavlink.gps          ]
    - [ icarus.ctrl,              ferry_ctrl.ctrl      ]
