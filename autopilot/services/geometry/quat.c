@@ -1,37 +1,35 @@
+/*___________________________________________________
+ |  _____                       _____ _ _       _    |
+ | |  __ \                     |  __ (_) |     | |   |
+ | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
+ | |  ___/ _ \ '_ \ / _` | | | |  ___/ | |/ _ \| __| |
+ | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
+ | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
+ |                   __/ |                           |
+ |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
+ |___________________________________________________|
+  
+ Quaternion Implementation
 
-/*
-   quaternion library - implementation
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Most of the code was borrowed from the Internet
 
-   Copyright (C) 2013 Tobias Simon
-   most of the code was stolen from the Internet
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
 
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
-   (at your option) any later version.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-*/
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details. */
 
 
 #include <string.h>
 #include <math.h>
+#include <util.h>
 
 #include "quat.h"
-
-
-#ifndef FOR_N
-#define FOR_N(v, m) for (int v = 0; v < m; ++v)
-#endif /* FOR_N */
-
-
-void vec3_copy(vec3_t *vo, vec3_t *vi)
-{
-   memcpy(vo, vi, sizeof(vec3_t));   
-}
 
 
 void quat_init(quat_t *q, const vec3_t *acc, const vec3_t *mag)
@@ -124,7 +122,9 @@ float quat_len(const quat_t *q)
 {
    float s = 0.0f;
    FOR_N(i, 4)
+   {
       s += q->vec[i] * q->vec[i];
+   }
    return sqrtf(s);
 }
 
@@ -209,8 +209,11 @@ void quat_normalize_self(quat_t *q)
 
 float normalize_euler_0_2pi(float a)
 {
-   while (a < 0)
-      a += (float)(2 * M_PI);
+   a = fmod(a, M_PI * 2);
+   if (a < 0)
+   {
+      a += M_PI * 2;
+   }
    return a;
 }
 

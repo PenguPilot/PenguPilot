@@ -14,15 +14,10 @@
 enum RequestType
 {
    // requests without parameters:
-   MODE_NORMAL = 1;
-   MODE_CAL =    2;
-   SPIN_UP =     3; // spin up motors
-   SPIN_DOWN =   4; // spin down motors
-   RESET_CTRL =  5; // reset controllers (I-parts)
-   GET_PARAMS =  6; // get parameters
-
+   RESET_CTRL =  1; // reset controllers (I-parts)
+   GET_PARAMS =  2; // get parameters
    // request with parameters:
-   SET_CTRL_PARAM = 7; // requires CtrlData */
+   SET_CTRL_PARAM = 3; // requires CtrlData */
 }
 
 

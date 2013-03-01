@@ -1,38 +1,36 @@
+/*___________________________________________________
+ |  _____                       _____ _ _       _    |
+ | |  __ \                     |  __ (_) |     | |   |
+ | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
+ | |  ___/ _ \ '_ \ / _` | | | |  ___/ | |/ _ \| __| |
+ | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
+ | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
+ |                   __/ |                           |
+ |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
+ |___________________________________________________|
+  
+ Quaternion Interface
 
-/*
-   quaternion library - interface
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Most of the code was borrowed from the Internet
 
-   Copyright (C) 2013 Tobias Simon
-   most of the code was stolen from the Internet
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
 
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
-   (at your option) any later version.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-*/
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details. */
 
 
 #ifndef __QUAT_H__
 #define __QUAT_H__
 
 
-/* generic 3d vector */
-typedef union
-{
-   struct
-   {
-      float x;
-      float y;
-      float z;
-   };
-   float vec[3];
-}
-vec3_t;
+#include "vec3.h"
+#include "euler.h"
 
 
 /* quaternion */
@@ -56,23 +54,6 @@ typedef union
 }
 quat_t;
 
-
-/* euler angle */
-typedef union
-{
-   struct
-   {
-      float yaw;
-      float pitch;
-      float roll;
-   };
-   float vec[3];
-}
-euler_t;
-
-
-/* copy vector vi to vo */
-void vec3_copy(vec3_t *vo, vec3_t *vi);
 
 /* init orientation quaternion from measurements */
 void quaternion_init(quat_t *quat, const vec3_t *acc, const vec3_t *mag);

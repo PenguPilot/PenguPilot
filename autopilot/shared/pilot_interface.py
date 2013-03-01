@@ -29,7 +29,7 @@
 from pilot_pb2 import *
 
 
-class AutopilotError(Exception):
+class PilotError(Exception):
 
    def __init__(self, status, err_msg):
       self.status = status
@@ -49,46 +49,26 @@ class PilotInterface:
 
    def _exec(self, req):
       self.ctrl_socket.send(req.SerializeToString())
-      rep = AutopilotRep()
+      rep = PilotRep()
       rep.ParseFromString(self.ctrl_socket.recv())
       if rep.status != 0:
-         raise AutopilotError(rep.status, rep.err_msg)
+         raise PilotError(rep.status, rep.err_msg)
       return rep
 
-   def mode_normal(self):
-      req = AutopilotReq()
-      req.type = MODE_NORMAL
-      self._exec(req)
-
-   def mode_cal(self):
-      req = AutopilotReq()
-      req.type = MODE_CAL
-      self._exec(req)
-
-   def spin_up(self):
-      req = AutopilotReq()
-      req.type = SPIN_UP
-      self._exec(req)
-
-   def spin_down(self):
-      req = AutopilotReq()
-      req.type = SPIN_DOWN
-      self._exec(req)
-
    def reset_ctrl(self):
-      req = AutopilotReq()
+      req = PilotReq()
       req.type = RESET_CTRL
       self._exec(req)
   
    def set_ctrl_param(self, param, val):
-      req = AutopilotReq()
+      req = PilotReq()
       req.type = SET_CTRL_PARAM
       req.ctrl_data.param = param
       req.ctrl_data.val = val
       self._exec(req)
 
    def get_params(self):
-      req = AutopilotReq()
+      req = PilotReq()
       req.type = GET_PARAMS
       rep = self._exec(req)
       return rep.params

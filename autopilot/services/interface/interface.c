@@ -196,28 +196,6 @@ SIMPLE_THREAD_BEGIN(thread_func)
       {
          switch (request->type)
          {
-            case REQUEST_TYPE__MODE_CAL:
-               main_calibrate(1);
-               break;
-
-            case REQUEST_TYPE__MODE_NORMAL:
-               main_calibrate(0);
-               break;
-            
-            case REQUEST_TYPE__SPIN_UP:
-               LOG(LL_DEBUG, "SPIN_UP");
-               //if (platform_start_motors() < 0)
-               {
-                  reply.err_msg = "could not start motors";
-                  reply.status = STATUS__E_HARDWARE;
-               }
-               break;
-
-            case REQUEST_TYPE__SPIN_DOWN:
-               LOG(LL_DEBUG, "SPIN_DOWN");
-               //platform_stop_motors();
-               break;
-
             case REQUEST_TYPE__RESET_CTRL:
                LOG(LL_DEBUG, "RESET_CTRL");
                //ctrl_reset();
