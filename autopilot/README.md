@@ -12,7 +12,8 @@
 
 Autopilot Subsystem
 -------------------
-The PenguPilot autopilot service is located in the folder "service".
+The autopilot service is located in the folder "service",
+along with a debug logger service.
 Folder "shell" provides an interactive Python-based command shell
 for controlling the autopilot manually.
 The logging framework located in "logging" consists of a

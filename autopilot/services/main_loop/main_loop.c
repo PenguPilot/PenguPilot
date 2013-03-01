@@ -52,7 +52,6 @@
 #include "../control/position/yaw_ctrl.h"
 #include "../control/speed/xy_speed.h"
 #include "../state/motors_state.h"
-#include "../calpub.h"
 #include "../filters/sliding_var.h"
 #include "../behaviors/landing.h"
 #include "../force_opt/force_opt.h"
@@ -190,7 +189,7 @@ void main_init(int override_hw)
       LOG(LL_ERROR, "could not initialize platform");
       die();
    }
-   calpub_init();
+   acc_mag_cal_init();
  
    force_opt_init(platform.imtx1, platform.imtx2, platform.imtx3, platform.rpm_square_min, platform.rpm_square_max);
    const size_t array_len = sizeof(float) * platform.n_motors;
@@ -286,12 +285,6 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
       cal_reset(&gyro_cal);
    }
 
-   if (calibrate)
-   {
-      EVERY_N_TIMES(10, calpub_send(marg_data));
-      return;
-   }
-   
    if (sensor_status & GPS_VALID)
    {
       gps_util_update(&gps_rel_data, &gps_util, gps_data);
@@ -302,7 +295,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    }
 
    /* calibration: */
-   acc_mag_apply_cal(&marg_data->acc, &marg_data->mag);
+   acc_mag_cal_apply(&marg_data->acc, &marg_data->mag);
 
 
    /********************************
