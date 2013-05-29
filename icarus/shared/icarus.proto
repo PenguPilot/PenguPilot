@@ -1,0 +1,143 @@
+
+/*
+ * File: icarus.proto
+ * Purpose: ICARUS high-level protocol
+ *
+ * Author: Tobias Simon, Ilmenau University of Technology
+ */
+
+
+enum RequestType 
+{
+   TAKEOFF = 1;
+   LAND = 2;
+   MOVE = 3; 
+   STOP = 4; 
+   ROT = 5;
+}
+
+
+message TakeoffData
+{
+   required float z = 1; // depends on glob
+}
+
+
+message MoveData // depends on rel, glob
+{
+   optional double p0 = 1;
+   optional double p1 = 2;
+   optional double p2 = 3;
+}
+
+
+
+message RotData
+{
+   // exactly one of the following has to be set:
+   repeated double poi = 1; // depends on glob, rel
+   optional float heading = 2; // depends on rel
+}
+
+
+message IcarusReq
+{
+   required RequestType type = 1;
+
+   // type-depending fields:
+   optional TakeoffData takeoff_data = 2;
+   optional MoveData move_data = 3;
+   optional RotData rot_data = 4;
+   
+   // generic fields:
+   optional bool rel = 5;
+   optional bool glob = 6;
+   optional float speed = 7;
+
+   /*
+    * if type == TAKEOFF:
+    *    assert rel not set
+    *    if pos[0] set:
+    *       interpret as start altitude
+    *       if glob:
+    *          use MSL altitude,
+    *       else:
+    *          use ground-relative altitude
+    *    else:
+    *       assert glob not set
+    *    if speed available:
+    *       interpret speed as maximum takeoff speed
+    * 
+    * elif type == LAND:
+    *    assert (pos, rel, glob) not set
+    *    if speed available:
+    *       interpret speed as maximum landing speed
+    * 
+    * elif type == MOVE:
+    *    assert len(pos) in [1, 2, 3]
+    *    if glob:
+    *       interpret pos as GPS global
+    *    else:
+    *       interpret pos relative to starting point
+    *    if len(pos) == 3:
+    *       interpret pos[2] as target altitude
+    *    if speed set:
+    *       interpret speed as maximum ground speed
+    *
+    * elif type == STOP:
+    *    assert nothing set
+    *
+    * else:
+    *    assert type == ROT
+    *    if len(pos) == 1:
+    *       pos[0] denotes fixed angle
+    *       if rel:
+    *          pos[0] is in [-PI, PI]
+    *       else:
+    *          pos[0] is in [0, 2PI]
+    *    else:
+    *       pos[0,1] denotes fixed POI
+    *       assert len(pos) == 2
+    *       if rel:
+    *          interpret pos[0,1] as x, y
+    *       else:
+    *          interpret pos[0,1] as lon, lat
+    *    if speed available:
+    *       maximum rotation speed
+    */
+
+}
+
+
+enum Status
+{
+   OK =           0; /* everything ok */
+   E_SYNTAX =    -1; /* syntactic error in data */
+   E_SEMANTIC =  -2; /* semantic errror in protobuf data */
+   E_HARDWARE =  -3; /* hardware error */
+}
+
+
+message IcarusRep
+{
+   required Status status = 1;
+   optional string message = 2;
+}
+ 
+
+enum State
+{
+   STANDING = 1;
+   TAKING_OFF = 2;
+   HOVERING = 3;
+   LANDING = 4;
+   MOVING = 5;
+   STOPPING = 6;
+}
+
+
+message StateUpdate
+{
+   required State state = 1;
+}
+

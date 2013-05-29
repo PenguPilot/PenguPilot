@@ -106,6 +106,15 @@ gps_pb_lib = make_proto_lib(gps_pb_dir, 'gps_pb')
 gps_bin = env.Program('sensors/gps/services/gps', collect_files(gps_dir + 'services', re_cc), LIBS = ['pthread', 'opcd', 'opcd_pb', 'shared', 'scl', 'yaml-cpp', 'zmq', 'glib-2.0', 'gps_pb', 'protobuf-c'])
 Requires(gps_bin, scl_lib + shared_lib + gps_pb_lib + opcd_pb_lib)
 
+# build rc input:
+rc_dir = 'input/rc/'
+rc_pb_dir = rc_dir + 'shared/'
+rc_pb = 'rc_data.proto'
+rc_pb_lib = make_proto_lib(rc_pb_dir, 'rc_pb')
+rc_bin = env.Program('input/rc/services/rc', collect_files(rc_dir + 'services', re_cc), LIBS = ['pthread', 'opcd', 'opcd_pb', 'shared', 'scl', 'yaml-cpp', 'zmq', 'glib-2.0', 'rc_pb', 'protobuf-c'])
+Requires(rc_bin, scl_lib + shared_lib + rc_pb_lib + opcd_pb_lib)
+
+
 # build powerman:
 pm_pb_lib = make_proto_lib('powerman/shared/', 'powerman_pb')
 
