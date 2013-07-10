@@ -109,6 +109,14 @@ Requires(gps_bin, scl_lib + shared_lib + gps_pb_lib + opcd_pb_lib)
 # build powerman:
 pm_pb_lib = make_proto_lib('powerman/shared/', 'powerman_pb')
 
+# build rc:
+rc_dir = 'rc/'
+rc_pb_dir = rc_dir + 'shared/'
+rc_src = collect_files(rc_dir + 'service', re_cc)
+rc_pb_lib = make_proto_lib(rc_pb_dir, 'rc_pb')
+rc_bin = env.Program(rc_dir + 'service/rc', rc_src, LIBS = ['opcd', 'opcd_pb', 'shared', 'scl', 'protobuf-c', 'rc_pb', 'yaml-cpp', 'zmq', 'glib-2.0'])
+Requires(rc_bin, scl_lib + shared_lib + opcd_lib + opcd_pb_lib + rc_pb_lib)
+
 # build autopilot:
 ap_dir = 'autopilot/'
 ap_pb_dir = ap_dir + 'shared/'
