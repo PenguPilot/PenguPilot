@@ -1,0 +1,13 @@
+
+message RCData
+{
+   required float rssi = 1;
+   required float pitch = 2;
+   required float roll = 3;
+   required float yaw = 4;
+   required float gas = 5;
+
+   optional float switch1 = 6;
+   optional float switch2 = 7;
+};
+
