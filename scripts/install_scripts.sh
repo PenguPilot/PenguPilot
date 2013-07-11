@@ -26,5 +26,5 @@
 
 
 sudo ln -f -s $PENGUPILOT_PATH/svctrl/svctrl.py /usr/local/bin/pp_svctrl
-sudo ln -f -s $PENGUPILOT_PATH/autopilot/services/general_logger.py /usr/local/bin/pp_general_logger
+sudo ln -f -s $PENGUPILOT_PATH/autopilot/service/general_logger.py /usr/local/bin/pp_general_logger
 sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/convert_txt.py /usr/local/bin/pp_convert_txt

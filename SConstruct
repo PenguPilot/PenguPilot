@@ -98,10 +98,10 @@ Requires(opcd_lib, scl_lib + opcd_pb_lib)
 append_inc_lib('opcd/shared')
 
 # build gps:
-gps_dir = 'sensors/gps/'
+gps_dir = 'gps/'
 gps_pb_dir = gps_dir + 'shared/'
 gps_pb_lib = make_proto_lib(gps_pb_dir, 'gps_pb')
-gps_bin = env.Program('sensors/gps/service/gps', collect_files(gps_dir + 'service', re_cc), LIBS = ['pthread', 'opcd', 'opcd_pb', 'shared', 'scl', 'yaml-cpp', 'zmq', 'glib-2.0', 'gps_pb', 'protobuf-c'])
+gps_bin = env.Program('gps/service/gps', collect_files(gps_dir + 'service', re_cc), LIBS = ['pthread', 'opcd', 'opcd_pb', 'shared', 'scl', 'yaml-cpp', 'zmq', 'glib-2.0', 'gps_pb', 'protobuf-c'])
 Requires(gps_bin, scl_lib + shared_lib + gps_pb_lib + opcd_pb_lib)
 
 # build powerman:

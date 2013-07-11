@@ -45,7 +45,12 @@
 
 
 static char running = 1;
-
+static char *serial_path = "/dev/ttyACM0";
+static tsint_t serial_speed;
+static tsint_t min_sats;
+static void *gps_socket;
+static serialport_t port;
+ 
 
 static void generate_time_str(char str[TIME_STR_LEN], nmeaTIME *time)
 {
@@ -81,44 +86,6 @@ void _main(int argc, char *argv[])
 {
    (void)argc;
    (void)argv;
-
-   if (scl_init("gps_sensor") != 0)
-   {
-      syslog(LOG_CRIT, "could not init scl module");
-      exit(EXIT_FAILURE);
-   }
-
-   void *gps_socket = scl_get_socket("gps");
-   if (gps_socket == NULL)
-   {
-      syslog(LOG_CRIT, "could not get scl gate");   
-      exit(EXIT_FAILURE);
-   }
-   int64_t hwm = 1;
-   zmq_setsockopt(gps_socket, ZMQ_HWM, &hwm, sizeof(hwm));
-
-   char *serial_path = "/dev/ttyACM0";
-   tsint_t serial_speed;
-   tsint_t min_sats;
-   
-   opcd_param_t params[] =
-   {
-      {"serial_path", &serial_path},
-      {"serial_speed", &serial_speed},
-      {"min_sats", &min_sats},
-      OPCD_PARAMS_END
-   };
-   
-   opcd_params_init("sensors.gps.", 0);
-   opcd_params_apply("", params);
-   
-   serialport_t port;
-   int status = serial_open(&port, serial_path, tsint_get(&serial_speed), 0, 0, 0);
-   if (status < 0)
-   {
-      syslog(LOG_CRIT, "could not open serial port");
-      exit(EXIT_FAILURE);
-   }
 
    nmeaPARSER parser;
    nmea_parser_init(&parser);
@@ -237,7 +204,40 @@ void _cleanup(void)
 
 int main(int argc, char *argv[])
 {
-   daemonize("/var/run/gps_sensor.pid", _main, _cleanup, argc, argv);
+   if (scl_init("gps_sensor") != 0)
+   {
+      syslog(LOG_CRIT, "could not init scl module");
+      exit(EXIT_FAILURE);
+   }
+
+   gps_socket = scl_get_socket("gps");
+   if (gps_socket == NULL)
+   {
+      syslog(LOG_CRIT, "could not get scl gate");   
+      exit(EXIT_FAILURE);
+   }
+   int64_t hwm = 1;
+   zmq_setsockopt(gps_socket, ZMQ_HWM, &hwm, sizeof(hwm));
+  
+   opcd_param_t params[] =
+   {
+      {"serial_path", &serial_path},
+      {"serial_speed", &serial_speed},
+      {"min_sats", &min_sats},
+      OPCD_PARAMS_END
+   };
+   
+   opcd_params_init("sensors.gps.", 0);
+   opcd_params_apply("", params);
+   
+   int status = serial_open(&port, serial_path, tsint_get(&serial_speed), 0, 0, 0);
+   if (status < 0)
+   {
+      syslog(LOG_CRIT, "could not open serial port: %s", serial_path);
+      exit(EXIT_FAILURE);
+   }
+
+   daemonize("/var/run/gps.pid", _main, _cleanup, argc, argv);
    return 0;
 }
 
