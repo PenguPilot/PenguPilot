@@ -38,5 +38,7 @@ Flight Infrastructure:
 - autopilot: autopilot software
 - powerman: Power Management Daemon
 - sensors: Sensor Publisher Services
+- gps: gps sensor, similar to gpsd
+- icarus: high-level control and complex commands
 
 ![Build Status](https://travis-ci.org/PenguPilot/PenguPilot.png)

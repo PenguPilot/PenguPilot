@@ -108,12 +108,12 @@ Requires(gps_bin, scl_lib + shared_lib + gps_pb_lib + opcd_pb_lib)
 pm_pb_lib = make_proto_lib('powerman/shared/', 'powerman_pb')
 
 # build rc:
-rc_dir = 'rc/'
-rc_pb_dir = rc_dir + 'shared/'
-rc_src = collect_files(rc_dir + 'service', re_cc)
-rc_pb_lib = make_proto_lib(rc_pb_dir, 'rc_pb')
-rc_bin = env.Program(rc_dir + 'service/rc', rc_src, LIBS = ['opcd', 'opcd_pb', 'shared', 'scl', 'protobuf-c', 'rc_pb', 'yaml-cpp', 'zmq', 'glib-2.0'])
-Requires(rc_bin, scl_lib + shared_lib + opcd_lib + opcd_pb_lib + rc_pb_lib)
+remote_dir = 'remote/'
+remote_pb_dir = remote_dir + 'shared/'
+remote_src = collect_files(remote_dir + 'service', re_cc)
+remote_pb_lib = make_proto_lib(remote_pb_dir, 'remote_pb')
+remote_bin = env.Program(remote_dir + 'service/rc', remote_src, LIBS = ['opcd', 'opcd_pb', 'shared', 'scl', 'protobuf-c', 'remote_pb', 'yaml-cpp', 'zmq', 'glib-2.0'])
+Requires(remote_bin, scl_lib + shared_lib + opcd_lib + opcd_pb_lib + remote_pb_lib)
 
 # build autopilot:
 ap_dir = 'autopilot/'
