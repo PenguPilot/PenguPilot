@@ -92,7 +92,6 @@ append_inc_lib(shared_dir)
 
 # build opcd:
 opcd_pb_dir = 'opcd/shared/'
-opcd_pb = 'opcd.proto'
 opcd_pb_lib = make_proto_lib(opcd_pb_dir, 'opcd_pb')
 opcd_lib = env.Library('opcd/shared/opcd', collect_files('opcd', re_cc))
 Requires(opcd_lib, scl_lib + opcd_pb_lib)
@@ -101,9 +100,8 @@ append_inc_lib('opcd/shared')
 # build gps:
 gps_dir = 'sensors/gps/'
 gps_pb_dir = gps_dir + 'shared/'
-gps_pb = 'gps_data.proto'
 gps_pb_lib = make_proto_lib(gps_pb_dir, 'gps_pb')
-gps_bin = env.Program('sensors/gps/services/gps', collect_files(gps_dir + 'services', re_cc), LIBS = ['pthread', 'opcd', 'opcd_pb', 'shared', 'scl', 'yaml-cpp', 'zmq', 'glib-2.0', 'gps_pb', 'protobuf-c'])
+gps_bin = env.Program('sensors/gps/service/gps', collect_files(gps_dir + 'service', re_cc), LIBS = ['pthread', 'opcd', 'opcd_pb', 'shared', 'scl', 'yaml-cpp', 'zmq', 'glib-2.0', 'gps_pb', 'protobuf-c'])
 Requires(gps_bin, scl_lib + shared_lib + gps_pb_lib + opcd_pb_lib)
 
 # build powerman:
@@ -120,7 +118,7 @@ Requires(rc_bin, scl_lib + shared_lib + opcd_lib + opcd_pb_lib + rc_pb_lib)
 # build autopilot:
 ap_dir = 'autopilot/'
 ap_pb_dir = ap_dir + 'shared/'
-ap_src = collect_files(ap_dir + 'services', re_cc)
+ap_src = collect_files(ap_dir + 'service', re_cc)
 ap_pb_lib = make_proto_lib(ap_pb_dir, 'autopilot_pb')
-ap_bin = env.Program(ap_dir + 'services/autopilot', ap_src, LIBS = ['m', 'msgpack', 'meschach', 'pthread', 'opcd', 'opcd_pb', 'shared', 'scl', 'powerman_pb', 'gps_pb', 'autopilot_pb', 'protobuf-c', 'yaml-cpp', 'zmq', 'glib-2.0'])
+ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = ['m', 'msgpack', 'meschach', 'pthread', 'opcd', 'opcd_pb', 'shared', 'scl', 'powerman_pb', 'gps_pb', 'autopilot_pb', 'protobuf-c', 'yaml-cpp', 'zmq', 'glib-2.0'])
 Requires(ap_bin, pm_pb_lib + scl_lib + opcd_lib + opcd_pb_lib + ap_pb_lib)

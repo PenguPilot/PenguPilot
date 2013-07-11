@@ -1,35 +1,8 @@
-#!/usr/bin/env python
-"""
-  ___________________________________________________
- |  _____                       _____ _ _       _    |
- | |  __ \                     |  __ (_) |     | |   |
- | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
- | |  ___/ _ \ '_ \ / _` | | | |  ___/ | |/ _ \| __| |
- | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
- | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
- |                   __/ |                           |
- |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
- |___________________________________________________|
-  
- Autopilot Interface
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
-
- This program is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
- (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. """
+from core_pb2 import *
 
 
-from pilot_pb2 import *
-
-
-class PilotError(Exception):
+class CoreError(Exception):
 
    def __init__(self, status, err_msg):
       self.status = status
@@ -40,7 +13,7 @@ class PilotError(Exception):
       return 'class: ' + err_map[self.status] + ' message: ' + self.err_msg
 
 
-class PilotInterface:
+class CoreInterface:
 
    def __init__(self, ctrl_socket, mon_socket):
       self.ctrl_socket = ctrl_socket
@@ -49,26 +22,46 @@ class PilotInterface:
 
    def _exec(self, req):
       self.ctrl_socket.send(req.SerializeToString())
-      rep = PilotRep()
+      rep = CoreRep()
       rep.ParseFromString(self.ctrl_socket.recv())
       if rep.status != 0:
-         raise PilotError(rep.status, rep.err_msg)
+         raise CoreError(rep.status, rep.err_msg)
       return rep
 
+   def mode_normal(self):
+      req = CoreReq()
+      req.type = MODE_NORMAL
+      self._exec(req)
+
+   def mode_cal(self):
+      req = CoreReq()
+      req.type = MODE_CAL
+      self._exec(req)
+
+   def spin_up(self):
+      req = CoreReq()
+      req.type = SPIN_UP
+      self._exec(req)
+
+   def spin_down(self):
+      req = CoreReq()
+      req.type = SPIN_DOWN
+      self._exec(req)
+
    def reset_ctrl(self):
-      req = PilotReq()
+      req = CoreReq()
       req.type = RESET_CTRL
       self._exec(req)
   
    def set_ctrl_param(self, param, val):
-      req = PilotReq()
+      req = CoreReq()
       req.type = SET_CTRL_PARAM
       req.ctrl_data.param = param
       req.ctrl_data.val = val
       self._exec(req)
 
    def get_params(self):
-      req = PilotReq()
+      req = CoreReq()
       req.type = GET_PARAMS
       rep = self._exec(req)
       return rep.params
