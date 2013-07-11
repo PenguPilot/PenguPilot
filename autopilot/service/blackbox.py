@@ -11,9 +11,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Debug Writer Service
+ Blackbox Service
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ from datetime import datetime
 
 
 def main(name):
-   socket = generate_map(name)['debug']
+   socket = generate_map(name)['data']
    prefix = user_data_dir + sep + 'log' + sep
    try:
       now = datetime.today().isoformat().replace(':', '')
@@ -53,5 +53,5 @@ def main(name):
       except:
          pass
 
-daemonize('debug_logger', main)
+daemonize('blackbox', main)
 

@@ -58,11 +58,6 @@ components:
       - state: sub
       - ctrl: req
 
-   - name: blackbox
-     gates:
-      - state_machine: sub
-      - pilot_log: sub
-
    - name: icarus
      gates:
       - mon: sub
@@ -91,15 +86,15 @@ components:
       - opcd_ctrl: req
       - cal: sub
 
-   - name: debug_logger
+   - name: blackbox
      gates:
-      - debug: sub
+      - data: sub
 
    - name: pilot
      gates:
       - cal: pub
       - log: pub
-      - debug: pub
+      - blackbox: pub
       - gps: sub
       - ctrl: rep
       - mon: pub
@@ -164,7 +159,7 @@ components:
 #
 
 connections:
-   - [ pilot.debug,              debug_logger.debug]
+   - [ pilot.blackbox,           blackbox.data]
    - [ pilot.cal,                cal_server.cal]
    - [ pilot.ctrl,               cal_server.pilot_ctrl]
    - [ opcd.ctrl,                cal_server.opcd_ctrl]
@@ -199,8 +194,6 @@ connections:
    - [ icarus.power_ctrl,        powerman.ctrl        ]
    - [ icarus.power_mon,         powerman.mon         ]
    - [ ferry_ctrl.state,         icarus.state         ]
-   - [ blackbox.state_machine,   icarus.state         ]
-   - [ blackbox.pilot_log,        pilot.log             ]
    - [ icarus.ctrl,              icarus_shell.ctrl    ]
    - [ pilot.ctrl,                icarus.pilot          ]
    - [ pilot.mon,                 icarus.mon           ]

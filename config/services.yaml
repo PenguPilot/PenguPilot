@@ -39,6 +39,6 @@ autopilot:
   binary: 'autopilot/service/autopilot'
   depends: [opcd, gps_sensor, powerman]
 
-debug_writer:
-  binary: 'autopilot/service/debug_writer.py'
+blackbox:
+  binary: 'autopilot/service/blackbox.py'
 

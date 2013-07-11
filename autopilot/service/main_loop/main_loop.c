@@ -43,6 +43,7 @@
 #include "../platform/arcade_quadro.h"
 #include "../control/control.h"
 #include "../control/stabilizing/piid.h"
+#include "../hardware/util/acc_mag_cal.h"
 #include "../hardware/util/calibration.h"
 #include "../hardware/util/gps_util.h"
 #include "../hardware/util/mag_decl.h"
@@ -62,7 +63,7 @@ static int calibrate = 0;
 static int motors_locked = 0;
 static float *rpm_square = NULL;
 static float *setpoints = NULL;
-static void *debug_socket = NULL;
+static void *blackbox_socket = NULL;
 static msgpack_sbuffer *msgpack_buf;
 static msgpack_packer *pk;
 static float mag_bias = 0.0f;
@@ -212,9 +213,9 @@ void main_init(int override_hw)
    cmd_init();
 
    motors_state_init(0.12f, 0.8f);
-   debug_socket = scl_get_socket("debug");
+   blackbox_socket = scl_get_socket("blackbox");
 
-   /* send debug header: */
+   /* send blackbox header: */
    msgpack_buf = msgpack_sbuffer_new();
    pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
    msgpack_pack_array(pk, ARRAY_SIZE(dbg_spec));
@@ -224,7 +225,7 @@ void main_init(int override_hw)
       msgpack_pack_raw(pk, len);
       msgpack_pack_raw_body(pk, dbg_spec[i], len);
    }
-   scl_copy_send_dynamic(debug_socket, msgpack_buf->data, msgpack_buf->size);
+   scl_copy_send_dynamic(blackbox_socket, msgpack_buf->data, msgpack_buf->size);
 
    /* init calibration data: */
    cal_init(&gyro_cal, 3, 500);
@@ -499,7 +500,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    }
 
 out:
-   /* publish debug data; this is also executed in case of a sensor error: */
+   /* publish blackbox data; this is also executed in case of a sensor error: */
    msgpack_sbuffer_clear(msgpack_buf);
    msgpack_pack_array(pk, ARRAY_SIZE(dbg_spec));
    #define PACKI(val) msgpack_pack_int(pk, val) /* pack integer */
@@ -526,6 +527,6 @@ out:
    PACKI(sensor_status);
    PACKI(init);
    PACKF(voltage);
-   scl_copy_send_dynamic(debug_socket, msgpack_buf->data, msgpack_buf->size);
+   scl_copy_send_dynamic(blackbox_socket, msgpack_buf->data, msgpack_buf->size);
 }
 
