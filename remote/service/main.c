@@ -39,6 +39,7 @@
 
 static struct sched_param sp;
 static int running = 1;
+static void *rc_socket = NULL;
 
 
 static int realtime_init(void)
@@ -70,25 +71,10 @@ void _main(int argc, char *argv[])
 {
    (void)argc;
    (void)argv;
-   realtime_init();
-   rc_dsl_reader_init();
-   float channels[64];
-   
-   if (scl_init("rc") != 0)
-   {
-      syslog(LOG_CRIT, "could not init scl module");
-      exit(EXIT_FAILURE);
-   }
-
-   void *rc_socket = scl_get_socket("data");
-   if (rc_socket == NULL)
-   {
-      syslog(LOG_CRIT, "could not get scl gate");
-      exit(EXIT_FAILURE);
-   }
-   
+  
    while (running)
    {
+      float channels[64];
       float rssi = rc_dsl_reader_get(channels);
       printf("rssi: %f\n", rssi);
       RCData rc_data = RCDATA__INIT;
@@ -112,6 +98,29 @@ void _cleanup(void)
 
 int main(int argc, char *argv[])
 {
+   if (realtime_init() < 0)
+   {
+      return EXIT_FAILURE;
+   }
+
+   if (rc_dsl_reader_init() < 0)
+   {
+      return EXIT_FAILURE;
+   }
+   
+   if (scl_init("rc") != 0)
+   {
+      syslog(LOG_CRIT, "could not init scl module");
+      return EXIT_FAILURE;
+   }
+
+   rc_socket = scl_get_socket("data");
+   if (rc_socket == NULL)
+   {
+      syslog(LOG_CRIT, "could not get scl gate");
+      return EXIT_FAILURE;
+   }
+ 
    daemonize("/var/run/rc.pid", _main, _cleanup, argc, argv);
    return 0;
 }

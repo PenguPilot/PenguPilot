@@ -42,3 +42,7 @@ autopilot:
 blackbox:
   binary: 'autopilot/service/blackbox.py'
 
+remote:
+  binary: 'remote/service/remote'
+  depends: [opcd]
+

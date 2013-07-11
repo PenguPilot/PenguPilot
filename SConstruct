@@ -10,9 +10,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- scons build script
+ SCons Build Script
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -107,12 +107,12 @@ Requires(gps_bin, scl_lib + shared_lib + gps_pb_lib + opcd_pb_lib)
 # build powerman:
 pm_pb_lib = make_proto_lib('powerman/shared/', 'powerman_pb')
 
-# build rc:
+# build remote:
 remote_dir = 'remote/'
 remote_pb_dir = remote_dir + 'shared/'
 remote_src = collect_files(remote_dir + 'service', re_cc)
 remote_pb_lib = make_proto_lib(remote_pb_dir, 'remote_pb')
-remote_bin = env.Program(remote_dir + 'service/rc', remote_src, LIBS = ['opcd', 'opcd_pb', 'shared', 'scl', 'protobuf-c', 'remote_pb', 'yaml-cpp', 'zmq', 'glib-2.0'])
+remote_bin = env.Program(remote_dir + 'service/remote', remote_src, LIBS = ['opcd', 'opcd_pb', 'shared', 'scl', 'protobuf-c', 'remote_pb', 'yaml-cpp', 'zmq', 'glib-2.0'])
 Requires(remote_bin, scl_lib + shared_lib + opcd_lib + opcd_pb_lib + remote_pb_lib)
 
 # build autopilot:
