@@ -107,7 +107,7 @@ PERIODIC_THREAD_BEGIN(mon_emitter)
 PERIODIC_THREAD_END
 
 
-static char *blackbox_spec[] = {"dt",                           /*  1 */
+static char *blackbox_spec[] = {"dt",                      /*  1      */
    "gyro_x", "gyro_y", "gyro_z",                           /*  2 -  4 */
    "acc_x", "acc_y", "acc_z",                              /*  5 -  7 */
    "mag_x", "mag_y", "mag_z",                              /*  8 - 10 */
@@ -134,10 +134,10 @@ typedef union
 {
    struct
    {
-      float gas; /* [N] */
-      float roll; /* rad/s */
+      float gas;   /* [N] */
+      float roll;  /* rad/s */
       float pitch; /* rad/s */
-      float yaw; /* rad/s */
+      float yaw;   /* rad/s */
    };
    float vec[4];
 }
