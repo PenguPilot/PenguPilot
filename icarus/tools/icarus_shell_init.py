@@ -11,7 +11,7 @@ from misc import user_data_dir
 
 
 # set-up command history:
-_path = user_data_dir() + os.sep + 'ICARUS_shell.history'
+_path = user_data_dir + os.sep + 'ICARUS_shell.history'
 _history = os.path.expanduser(_path)
 def _save_history(historyPath = _history):
    readline.write_history_file(_history)
