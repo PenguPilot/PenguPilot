@@ -1,8 +1,8 @@
 
-from core_pb2 import *
+from pilot_pb2 import *
 
 
-class CoreError(Exception):
+class PilotError(Exception):
 
    def __init__(self, status, err_msg):
       self.status = status
@@ -13,55 +13,56 @@ class CoreError(Exception):
       return 'class: ' + err_map[self.status] + ' message: ' + self.err_msg
 
 
-class CoreInterface:
+class PilotInterface:
 
    def __init__(self, ctrl_socket, mon_socket):
       self.ctrl_socket = ctrl_socket
       self.params = self.get_params()
       self.mon_socket = mon_socket
+      self.mon = MonData()
 
    def _exec(self, req):
       self.ctrl_socket.send(req.SerializeToString())
-      rep = CoreRep()
+      rep = PilotRep()
       rep.ParseFromString(self.ctrl_socket.recv())
       if rep.status != 0:
-         raise CoreError(rep.status, rep.err_msg)
+         raise PilotError(rep.status, rep.err_msg)
       return rep
 
    def mode_normal(self):
-      req = CoreReq()
+      req = PilotReq()
       req.type = MODE_NORMAL
       self._exec(req)
 
    def mode_cal(self):
-      req = CoreReq()
+      req = PilotReq()
       req.type = MODE_CAL
       self._exec(req)
 
    def spin_up(self):
-      req = CoreReq()
+      req = PilotReq()
       req.type = SPIN_UP
       self._exec(req)
 
    def spin_down(self):
-      req = CoreReq()
+      req = PilotReq()
       req.type = SPIN_DOWN
       self._exec(req)
 
    def reset_ctrl(self):
-      req = CoreReq()
+      req = PilotReq()
       req.type = RESET_CTRL
       self._exec(req)
   
    def set_ctrl_param(self, param, val):
-      req = CoreReq()
+      req = PilotReq()
       req.type = SET_CTRL_PARAM
       req.ctrl_data.param = param
       req.ctrl_data.val = val
       self._exec(req)
 
    def get_params(self):
-      req = CoreReq()
+      req = PilotReq()
       req.type = GET_PARAMS
       rep = self._exec(req)
       return rep.params

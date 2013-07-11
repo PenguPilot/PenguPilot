@@ -193,7 +193,7 @@ class ICARUS:
                pass
 
 
-   # called by ICARUS protocol driver:
+   # called by ICARUS command interface:
    def handle(self, req, local = False):
       if not local and self.icarus_takeover:
          msg = 'request rejected due to emergency take-over'
@@ -213,7 +213,7 @@ class ICARUS:
 
 
    # following _prefix methods are called internally from state machine
-   # and should not be called explicit (a) externally or (b) internally
+   # and must not be called explicitly
 
    def _error(self):
       msg = 'flight state machine error'

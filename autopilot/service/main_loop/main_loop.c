@@ -31,6 +31,7 @@
 #include <util.h>
 #include <sclhelper.h>
 #include <msgpack.h>
+#include <periodic_thread.h>
 
 #include "main_loop.h"
 #include "main_util.h"
@@ -78,7 +79,26 @@ static gps_util_t gps_util;
 static interval_t gyro_move_interval;
 static int init = 0;
 
-static char *dbg_spec[] = {"dt",                           /*  1 */
+static pthread_mutex_t mon_data_mutex = PTHREAD_MUTEX_INITIALIZER;
+static void *mon_socket = NULL;
+static MonData mon_data = MON_DATA__INIT;
+static periodic_thread_t emitter_thread;
+
+
+PERIODIC_THREAD_BEGIN(mon_emitter)
+{
+   PERIODIC_THREAD_LOOP_BEGIN
+   {
+      pthread_mutex_lock(&mon_data_mutex);
+      SCL_PACK_AND_SEND_DYNAMIC(mon_socket, mon_data, mon_data);
+      pthread_mutex_unlock(&mon_data_mutex);
+   }
+   PERIODIC_THREAD_LOOP_END
+}
+PERIODIC_THREAD_END
+
+
+static char *blackbox_spec[] = {"dt",                           /*  1 */
    "gyro_x", "gyro_y", "gyro_z",                           /*  2 -  4 */
    "acc_x", "acc_y", "acc_z",                              /*  5 -  7 */
    "mag_x", "mag_y", "mag_z",                              /*  8 - 10 */
@@ -217,12 +237,12 @@ void main_init(int override_hw)
    /* send blackbox header: */
    msgpack_buf = msgpack_sbuffer_new();
    pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
-   msgpack_pack_array(pk, ARRAY_SIZE(dbg_spec));
-   FOR_EACH(i, dbg_spec)
+   msgpack_pack_array(pk, ARRAY_SIZE(blackbox_spec));
+   FOR_EACH(i, blackbox_spec)
    {
-      size_t len = strlen(dbg_spec[i]);
+      size_t len = strlen(blackbox_spec[i]);
       msgpack_pack_raw(pk, len);
-      msgpack_pack_raw_body(pk, dbg_spec[i], len);
+      msgpack_pack_raw_body(pk, blackbox_spec[i], len);
    }
    scl_copy_send_dynamic(blackbox_socket, msgpack_buf->data, msgpack_buf->size);
 
@@ -242,6 +262,16 @@ void main_init(int override_hw)
    gps_data_init(&gps_data);
    
    filter1_lp_init(&rc_valid_filter, 0.5, REALTIME_PERIOD, 1);
+
+   /* open monitoring socket: */
+   mon_socket = scl_get_socket("mon");
+   ASSERT_NOT_NULL(mon_socket);
+   int64_t hwm = 1;
+   zmq_setsockopt(mon_socket, ZMQ_HWM, &hwm, sizeof(hwm));
+
+   /* create monitoring connection: */
+   const struct timespec period = {0, 100 * NSEC_PER_MSEC};
+   periodic_thread_start(&emitter_thread, mon_emitter, "mon_thread", 0, period, NULL);
 
    LOG(LL_INFO, "entering main loop");
 }
@@ -412,6 +442,15 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    /* scale relative gas value to absolute newtons: */
    f_local.gas = norm_gas * platform.max_thrust_n;
 
+   /* set monitoring data: */
+   if (pthread_mutex_trylock(&mon_data_mutex) == 0)
+   {
+      mon_data.x_err = pos_estimate.x.pos - navi_get_dest_x();
+      mon_data.y_err = pos_estimate.y.pos - navi_get_dest_y();
+      mon_data.z_err = z_err;
+      mon_data.yaw_err = yaw_err;
+      pthread_mutex_unlock(&mon_data_mutex);
+   }
 
    /************************************************************
     * run feed-forward system and stabilizing PIID controller: *
@@ -493,7 +532,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
 out:
    /* publish blackbox data; this is also executed in case of a sensor error: */
    msgpack_sbuffer_clear(msgpack_buf);
-   msgpack_pack_array(pk, ARRAY_SIZE(dbg_spec));
+   msgpack_pack_array(pk, ARRAY_SIZE(blackbox_spec));
    #define PACKI(val) msgpack_pack_int(pk, val) /* pack integer */
    #define PACKF(val) msgpack_pack_float(pk, val) /* pack float */
    #define PACKFV(ptr, n) FOR_N(i, n) PACKF(ptr[i]) /* pack float vector */
