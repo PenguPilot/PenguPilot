@@ -9,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- File Purpose
+ Deadzone Interface
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,14 +24,8 @@
  GNU General Public License for more details. */
 
 
-/*
- * deadzone.h
- * purpose: interface to deadzone calculations for remote control sticks
- */
-
-
-#ifndef DEADZONE_H
-#define DEADZONE_H
+#ifndef __DEADZONE_H__
+#define __DEADZONE_H__
 
 
 #include <math.h>
@@ -51,5 +45,5 @@ void deadzone_init(deadzone_t *dz, float xmin, float xmax, float ymax);
 float deadzone_calc(deadzone_t *dz, float x);
 
 
-#endif /* DEADZONE_H */
+#endif /* __DEADZONE_H__ */
 

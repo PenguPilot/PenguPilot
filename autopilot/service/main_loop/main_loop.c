@@ -54,7 +54,6 @@
 #include "../control/speed/xy_speed.h"
 #include "../state/motors_state.h"
 #include "../filters/sliding_var.h"
-#include "../behaviors/landing.h"
 #include "../force_opt/force_opt.h"
 #include "../filters/filter.h"
 
@@ -243,8 +242,6 @@ void main_init(int override_hw)
    gps_data_init(&gps_data);
    
    filter1_lp_init(&rc_valid_filter, 0.5, REALTIME_PERIOD, 1);
-
-   landing_init();
 
    LOG(LL_INFO, "entering main loop");
 }
@@ -456,12 +453,6 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    if (rc_valid && mode != CM_FULL_AUTO)
    {
       motors_enabled = mode == CM_MANUAL && channels[CH_SWITCH] > 0.5;
-   }
-   
-   /* emergency landing: */
-   if (!rc_valid || landing_started())
-   {
-      //motors_enabled = landing_run(&f_local.gas, pos_estimate.ultra_z.pos, pos_estimate.baro_z.pos, dt);
    }
    
    if (motors_state_safe())
