@@ -1,13 +1,32 @@
-/*
- * commands.h
- *
- *  Created on: 14.06.2010
- *      Author: tobi
- */
+
+/*___________________________________________________
+ |  _____                       _____ _ _       _    |
+ | |  __ \                     |  __ (_) |     | |   |
+ | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
+ | |  ___/ _ \ '_ \ / _` | | | |  ___/ | |/ _ \| __| |
+ | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
+ | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
+ |                   __/ |                           |
+ |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
+ |___________________________________________________|
+  
+ Mikrokopter Command Lookup Table Interface
+ 
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details. */
 
 
-#ifndef COCO_COMMANDS_H
-#define COCO_COMMANDS_H
+#ifndef __MK_COMMANDS_H__
+#define __MK_COMMANDS_H__
 
 
 #include "addresses.h"
@@ -75,4 +94,5 @@ extern const char *COMMAND_NAMES_IN[];
 int in_command_exists(int value);
 
 
-#endif /* COCO_COMMANDS_H */
+#endif /* __MK_COMMANDS_H__ */
+
