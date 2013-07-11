@@ -32,6 +32,7 @@
 #include <sclhelper.h>
 #include <msgpack.h>
 #include <periodic_thread.h>
+#include <pilot.pb-c.h>
 
 #include "main_loop.h"
 #include "main_util.h"
@@ -42,7 +43,6 @@
 #include "../estimators/pos.h"
 #include "../platform/platform.h"
 #include "../platform/arcade_quadro.h"
-#include "../control/control.h"
 #include "../control/stabilizing/piid.h"
 #include "../hardware/util/acc_mag_cal.h"
 #include "../hardware/util/calibration.h"
@@ -58,6 +58,15 @@
 #include "../force_opt/force_opt.h"
 #include "../filters/filter.h"
 
+
+typedef struct
+{
+   float pitch;
+   float roll;
+   float yaw;
+   float gas;
+}
+stick_t;
 
 static int calibrate = 0;
 static int motors_locked = 0;
