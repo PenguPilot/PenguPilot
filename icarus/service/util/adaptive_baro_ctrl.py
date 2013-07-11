@@ -1,3 +1,29 @@
+"""
+  ___________________________________________________
+ |  _____                       _____ _ _       _    |
+ | |  __ \                     |  __ (_) |     | |   |
+ | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
+ | |  ___/ _ \ '_ \ / _` | | | |  ___/ | |/ _ \| __| |
+ | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
+ | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
+ |                   __/ |                           |
+ |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
+ |___________________________________________________|
+ 
+ Adaptive Barometric Control
+
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details. """
+
 
 class AdaptiveBaroCtrl:
 
@@ -15,15 +41,4 @@ class AdaptiveBaroCtrl:
       if self.baro_shift < 0:
          self.baro_shift = 0
       return self.baro_setpoint + self.baro_shift
-
-
-
-if __name__ == '__main__':
-   abc = AdaptiveBaroCtrl(6, 5, 0.5)
-   altitudes = [0,1,1,2,2,2,2,1,1,1,3,4,5,6,7,8,9,10,11,11,11,11,11,11,10,9,8,7,6,7,8,9,10,9,7,5,3,1,0,0,1,2,3,2,1]
-   baro = abc.baro_setpoint
-   for alt in altitudes:
-      ultra = baro - alt # simulated ultrasonic value
-      baro = abc.calc(ultra)
-      print alt, baro
 

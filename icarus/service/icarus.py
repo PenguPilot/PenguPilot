@@ -1,23 +1,42 @@
 #!/usr/bin/env python
+"""
+  ___________________________________________________
+ |  _____                       _____ _ _       _    |
+ | |  __ \                     |  __ (_) |     | |   |
+ | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
+ | |  ___/ _ \ '_ \ / _` | | | |  ___/ | |/ _ \| __| |
+ | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
+ | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
+ |                   __/ |                           |
+ |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
+ |___________________________________________________|
+ 
+ ICARUS
+ - takes care that the UAV system is always in a valid state by using the flight state machine
+ - accepts or rejects user commands
+ - performs emergency landing if battery voltage is too low
+ - performs flight distance estimation based on speed and estimated flight time
+ - learns possible landing spots and navigates there if the battery goes low
+ - publishes state updates via SCL
 
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
-#
-# ICARUS
-# responsibilities:
-# - takes care that the UAV system is always in a valid state by using the flight state machine
-# - accepts or rejects user commands
-# - performs emergency landing if battery voltage is too low
-# - performs flight distance estimation based on speed and estimated flight time
-# - learns possible landing spots and navigates there if the battery goes low
-# - publishes state updates via SCL
-#
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details. """
 
 
 from core_pb2 import *
 from math import atan2
 from time import sleep, time
 from icarus_pb2 import TAKEOFF, LAND, MOVE, STOP, ROT
-from protocols.icarus_server import ICARUS_Exception
+from interface.icarus_server import ICARUS_Server, ICARUS_Exception
 from activities.takeoff import TakeoffActivity
 from activities.land import LandActivity
 from activities.move import MoveActivity
@@ -29,10 +48,9 @@ from util.geomath import bearing, gps_add_meters
 from misc import *
 from misc import daemonize
 from scl import generate_map
-from protocols.icarus_server import ICARUS_Server
 from core_interface import CoreInterface
-from protocols.state_emitter import StateEmitter
-from protocols.powerman import PowerMan
+from interface.state_emitter import StateEmitter
+from powerman import PowerMan
 from logging import basicConfig as log_config, debug as log_debug
 from logging import info as log_info, warning as log_warn, error as log_err
 from logging import DEBUG

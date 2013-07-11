@@ -9,8 +9,8 @@
  |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
- 
- Stop Activity Class
+  
+ PowerMan Interface
 
  Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
@@ -25,25 +25,40 @@
  GNU General Public License for more details. """
 
 
-from core_pb2 import *
-from activity import Activity, StabMixIn
+from power_pb2 import *
 
 
-class StopActivity(Activity, StabMixIn):
+class PowerException(Exception):
+   pass
 
-   def __init__(self, fsm, core, mon_data):
-      Activity.__init__(self)
-      self.fsm = fsm
-      self.core = core
-      self.mon_data = mon_data
-      self.canceled = False
 
-   def run(self):
-      core = self.core
-      mon_data = self.mon_data
-      self.core.set_ctrl_param(POS_X, mon_data.x)
-      self.core.set_ctrl_param(POS_Y, mon_data.y)
-      self.core.set_ctrl_param(POS_Z, mon_data.z)
-      self.stabilize()
-      self.fsm.done()
+class PowerMan:
+   
+   def __init__(self, ctrl_socket, mon_socket):
+      self.ctrl_socket = ctrl_socket
+      self.mon_socket = mon_socket
+
+   def _exec(self, cmd):
+      req = PowerReq()
+      req.cmd = cmd
+      self.ctrl_socket.send(req.SerializeToString())
+      rep = PowerRep()
+      rep.ParseFromString(self.ctrl_socket.recv())
+      if rep.status != OK:
+         if rep.status == E_SYNTAX:
+            print 'received reply garbage'
+         else:
+            raise PowerException
+
+   def stand_power(self):
+      self._exec(STAND_POWER)
+
+   def flight_power(self):
+      self._exec(FLIGHT_POWER)
+
+   def read(self):
+      state = PowerState()
+      data = self.mon_socket.recv()
+      state.ParseFromString(data)
+      return state
 

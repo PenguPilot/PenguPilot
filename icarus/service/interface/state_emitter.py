@@ -10,7 +10,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
  
- Stop Activity Class
+ ICARUS State Emitter
+ - translates flight_sm states to icarus StateUpdate messages
+ - sends icarus StateUpdate messages using the given socket
 
  Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
@@ -25,25 +27,17 @@
  GNU General Public License for more details. """
 
 
-from core_pb2 import *
-from activity import Activity, StabMixIn
+from icarus_pb2 import StateUpdate
+from util.flight_state import to_protocol
 
 
-class StopActivity(Activity, StabMixIn):
+class StateEmitter:
 
-   def __init__(self, fsm, core, mon_data):
-      Activity.__init__(self)
-      self.fsm = fsm
-      self.core = core
-      self.mon_data = mon_data
-      self.canceled = False
+   def __init__(self, socket):
+      self._socket = socket
 
-   def run(self):
-      core = self.core
-      mon_data = self.mon_data
-      self.core.set_ctrl_param(POS_X, mon_data.x)
-      self.core.set_ctrl_param(POS_Y, mon_data.y)
-      self.core.set_ctrl_param(POS_Z, mon_data.z)
-      self.stabilize()
-      self.fsm.done()
+   def send(self, state):
+      sm = StateUpdate()
+      sm.state = to_protocol(state)
+      self._socket.send(sm.SerializeToString())
 

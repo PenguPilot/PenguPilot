@@ -1,12 +1,28 @@
+"""
+  ___________________________________________________
+ |  _____                       _____ _ _       _    |
+ | |  __ \                     |  __ (_) |     | |   |
+ | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
+ | |  ___/ _ \ '_ \ / _` | | | |  ___/ | |/ _ \| __| |
+ | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
+ | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
+ |                   __/ |                           |
+ |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
+ |___________________________________________________|
+ 
+ Geometric Functions Library
 
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
-#
-# file: geomath.py
-# purpose: various geodetic math functions
-#
-# authors: Tobias Simon, Ilmenau University of Technology
-#          Jan Roemisch, Ilmenau University of Technology
-#
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details. """
 
 
 from math import sin, cos, acos, atan2, pi, fmod, hypot, asin
@@ -57,22 +73,4 @@ def gps_meters_offset((lat1, lon1), (lat2, lon2)):
    y1, x1 = transform(_gps, _aeqd, lat1, lon1)
    y2, x2 = transform(_gps, _aeqd, lat2, lon2)
    return x2 - x1, y2 - y1
-
-
-
-if __name__ == '__main__':
-
-   import unittest
-
-   class TestGeoMath(unittest.TestCase):
-
-      def test_bearing(self):
-         self.assertEqual(bearing_deg(50.0, 5.0, 55.0, 7.0), 12.896821904227854)
-         self.assertEqual(bearing_deg(50.0, 5.0, 50.0, 7.0), 89.23392341814612)
-
-      def test_transformations(self):
-         self.assertEqual(gps_add_meters(50.0, 10.0, 1000000, 0), (51.292293466969085, 17.86742449270132))
-         self.assertEqual(gps_meters_offset(0, 0, 0.1, 1), (110574.3885577996, 11130.830075575039))
-
-   unittest.main()
 
