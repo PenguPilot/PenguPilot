@@ -38,13 +38,12 @@ static gps_data_t gps_data = {FIX_NOT_SEEN, 0, 0, 0, 0};
 static simple_thread_t thread;
 static void *scl_socket;
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-static int ret_code = 0;
+static interval_t interval;
+static float interval_sum = 0.0f;
 
 
 SIMPLE_THREAD_BEGIN(thread_func)
 {
-   interval_t interval;
-   interval_init(&interval);
    SIMPLE_THREAD_LOOP_BEGIN
    {
       GpsData *_gps_data;
@@ -52,10 +51,7 @@ SIMPLE_THREAD_BEGIN(thread_func)
       if (_gps_data != NULL)
       {
          pthread_mutex_lock(&mutex);
-         if (interval_measure(&interval) > 2.0f)
-         {
-            ret_code = -EAGAIN;
-         }
+         interval_sum = 0.0f;
          gps_data.fix = _gps_data->fix;
          gps_data.sats = _gps_data->sats;
          gps_data.lat = _gps_data->lat;
@@ -72,22 +68,29 @@ SIMPLE_THREAD_END
 
 int scl_gps_init(void)
 {
+   ASSERT_ONCE();
    scl_socket = scl_get_socket("gps");
    if (scl_socket == NULL)
    {
       return -1;
    }
    simple_thread_start(&thread, thread_func, "gps_reader", 0, NULL);
+   interval_init(&interval);
    return 0;
 }
 
 
 int scl_gps_read(gps_data_t *data_out)
 {
+   int ret_code = 0;
    pthread_mutex_lock(&mutex);
+   interval_sum += interval_measure(&interval);
+   if (interval_sum > 1.0f)
+   {
+      ret_code = -EIO;
+   }
    *data_out = gps_data;
-   int _ret_code = ret_code;
    pthread_mutex_unlock(&mutex);
-   return _ret_code;
+   return ret_code;
 }
 
