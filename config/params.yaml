@@ -33,7 +33,8 @@ sensors:
       serial_path: "/dev/ttyO2"
       serial_speed: 57600
       min_sats: 4
-
+   remote:
+      serial_path: "/dev/ttyO0"
 
 powerman:
    beeper_enabled: False

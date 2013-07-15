@@ -33,7 +33,7 @@
 
 int rc_dsl_reader_init(void);
 
-float rc_dsl_reader_get(float channels_out[RC_DSL_CHANNELS]);
+int rc_dsl_reader_get(float *rssi, float channels_out[RC_DSL_CHANNELS]);
 
 
 #endif /* __RC_DSL_READER_H__ */

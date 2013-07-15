@@ -9,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Real-Time Main Implementation
+ Remote Control Service Implementation
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -39,7 +39,6 @@
 
 static struct sched_param sp;
 static int running = 1;
-static void *rc_socket = NULL;
 
 
 static int realtime_init(void)
@@ -71,20 +70,45 @@ void _main(int argc, char *argv[])
 {
    (void)argc;
    (void)argv;
+   
+   /*if (realtime_init() < 0)
+   {
+      return EXIT_FAILURE;
+   }*/
+
+   if (rc_dsl_reader_init() < 0)
+   {
+      exit(EXIT_FAILURE);
+   }
+   
+   if (scl_init("remote") != 0)
+   {
+      syslog(LOG_CRIT, "could not init scl module");
+      exit(EXIT_FAILURE);
+   }
+
+   void *rc_socket = scl_get_socket("data");
+   if (rc_socket == NULL)
+   {
+      syslog(LOG_CRIT, "could not get scl gate");
+      exit(EXIT_FAILURE);
+   }
   
    while (running)
    {
+      float rssi;
       float channels[64];
-      float rssi = rc_dsl_reader_get(channels);
-      printf("rssi: %f\n", rssi);
-      RCData rc_data = RCDATA__INIT;
-      rc_data.pitch = channels[0];
-      rc_data.roll = channels[1];
-      rc_data.yaw = channels[2];
-      rc_data.gas = channels[3];
-      rc_data.switch1 = channels[4];
-      rc_data.has_switch1 = 1;
-      SCL_PACK_AND_SEND_DYNAMIC(rc_socket, rcdata, rc_data);
+      int status = rc_dsl_reader_get(&rssi, channels);
+      if (status == 0 && rssi > 0.027)
+      {
+         /* send data only if parser status ok and rssi above treshold */
+         RCData rc_data = RCDATA__INIT;
+         rc_data.pitch = channels[0];
+         rc_data.roll = channels[1];
+         rc_data.yaw = channels[2];
+         rc_data.gas = channels[3];
+         SCL_PACK_AND_SEND_DYNAMIC(rc_socket, rcdata, rc_data);
+      }
       msleep(50);
    }
 }
@@ -98,29 +122,6 @@ void _cleanup(void)
 
 int main(int argc, char *argv[])
 {
-   if (realtime_init() < 0)
-   {
-      return EXIT_FAILURE;
-   }
-
-   if (rc_dsl_reader_init() < 0)
-   {
-      return EXIT_FAILURE;
-   }
-   
-   if (scl_init("rc") != 0)
-   {
-      syslog(LOG_CRIT, "could not init scl module");
-      return EXIT_FAILURE;
-   }
-
-   rc_socket = scl_get_socket("data");
-   if (rc_socket == NULL)
-   {
-      syslog(LOG_CRIT, "could not get scl gate");
-      return EXIT_FAILURE;
-   }
- 
    daemonize("/var/run/rc.pid", _main, _cleanup, argc, argv);
    return 0;
 }

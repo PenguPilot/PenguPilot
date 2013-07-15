@@ -51,7 +51,8 @@ components:
 
    - name: remote
      gates:
-      - ctrl: req
+      - data: pub
+      - opcd_ctrl: req
 
    - name: ferry_ctrl
      gates:
@@ -96,6 +97,7 @@ components:
       - log: pub
       - blackbox: pub
       - gps: sub
+      - rc: sub
       - ctrl: rep
       - mon: pub
       - power: sub
@@ -176,6 +178,7 @@ connections:
    - [ pilot.mon,                 girlscamp.pilot_data  ]
    - [ opcd.event,               pilot.opcd_event      ]
    - [ opcd.ctrl,                opcd_shell.ctrl      ]
+   - [ opcd.ctrl,                remote.opcd_ctrl      ]
    - [ opcd.ctrl,                pilot.opcd_ctrl       ]
    - [ opcd.ctrl,                gps_sensor.opcd_ctrl ]
    - [ opcd.ctrl,                powerman.opcd_ctrl   ]
@@ -185,7 +188,7 @@ connections:
    - [ mavlink.ctrl,             opcd.ctrl            ]
    - [ mavlink.icarus_ctrl,      icarus.ctrl          ]
    - [ mavlink.state,            icarus.state         ]
-   - [ remote.ctrl,              pilot.ctrl            ]
+   - [ remote.data,              pilot.rc            ]
    - [ wifi_logger.networks,     wifi_sensor.networks ]
    - [ console_logger.log,          pilot.log             ]
    - [ gps_sensor.gps,           pilot.gps             ]

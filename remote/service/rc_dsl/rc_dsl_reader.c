@@ -47,6 +47,7 @@ static serialport_t port;
 static rc_dsl_t rc_dsl;
 static char *dev_path = NULL;
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static int status = -1;
 static float signal_out = 0.0f;
 static float channels[RC_DSL_CHANNELS];
 
@@ -56,18 +57,24 @@ SIMPLE_THREAD_BEGIN(thread_func)
    SIMPLE_THREAD_LOOP_BEGIN
    {
       int b = serial_read_char(&port);
+      pthread_mutex_lock(&mutex);
       if (b < 0)
       {
+         status = -1; /* something went wrong; immediately signal this condition */
          msleep(1);
       }
-      int status = rc_dsl_parse_dsl_data(&rc_dsl, (uint8_t)b);
-      if (status == 1)
+      int _status = rc_dsl_parse_dsl_data(&rc_dsl, (uint8_t)b);
+      if (_status == 1)
       {
-         pthread_mutex_lock(&mutex);
          memcpy(channels, rc_dsl.channels, sizeof(channels));   
          signal_out = rc_dsl.RSSI;
-         pthread_mutex_unlock(&mutex);
+         status = 0;
       }
+      else if (_status < 0)
+      {
+         status = -1;
+      }
+      pthread_mutex_unlock(&mutex);
    }
    SIMPLE_THREAD_LOOP_END
 }
@@ -85,7 +92,8 @@ int rc_dsl_reader_init(void)
       {"serial_port", &dev_path},
       OPCD_PARAMS_END   
    };
-   opcd_params_apply("sensors.rc_dsl.", params);
+   opcd_params_init("sensors.rc_dsl.", 0);
+   opcd_params_apply("", params);
    THROW_ON_ERR(serial_open(&port, dev_path, 38400, 0, 0, 0));
    rc_dsl_init(&rc_dsl);
    simple_thread_start(&thread, thread_func, THREAD_NAME, THREAD_PRIORITY, NULL);
@@ -94,11 +102,13 @@ int rc_dsl_reader_init(void)
 }
 
 
-float rc_dsl_reader_get(float channels_out[RC_DSL_CHANNELS])
+int rc_dsl_reader_get(float *rssi, float channels_out[RC_DSL_CHANNELS])
 {
    pthread_mutex_lock(&mutex);
    memcpy(channels_out, channels, sizeof(channels));
+   *rssi = signal_out;
+   int _status = status;
    pthread_mutex_unlock(&mutex);
-   return signal_out;
+   return _status;
 }
 
