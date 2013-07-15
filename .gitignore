@@ -7,3 +7,4 @@
 *.pb-c.h
 sensors/gps/services/gps
 autopilot/services/autopilot
+remote/service/remote
