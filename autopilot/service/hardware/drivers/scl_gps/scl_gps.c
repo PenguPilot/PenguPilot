@@ -82,10 +82,7 @@ int scl_gps_init(void)
 {
    ASSERT_ONCE();
    scl_socket = scl_get_socket("gps");
-   if (scl_socket == NULL)
-   {
-      return -1;
-   }
+   ASSERT_NOT_NULL(scl_socket);
    simple_thread_start(&thread, thread_func, "gps_reader", 0, NULL);
    interval_init(&interval);
    return 0;
@@ -94,6 +91,7 @@ int scl_gps_init(void)
 
 int scl_gps_read(gps_data_t *data_out)
 {
+   ASSERT_NOT_NULL(data_out);
    int ret_code = 0;
    pthread_mutex_lock(&mutex);
    timer += interval_measure(&interval);
