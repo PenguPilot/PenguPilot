@@ -33,13 +33,22 @@
 #include "scl_gps.h"
 
 
+/* if we receive no valid GPS fix for more than this amount of time,
+   indicate an error;
+   this condition applies if:
+     - the gps service does not send data (driver or bus problem)
+     - the gps service sends data but the fix is not 2D/3D */
+
+#define GPS_TIMEOUT (5.0f)
+
+
 
 static gps_data_t gps_data = {FIX_NOT_SEEN, 0, 0, 0, 0};
 static simple_thread_t thread;
 static void *scl_socket;
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static interval_t interval;
-static float interval_sum = 0.0f;
+static float timer = 0.0f;
 
 
 SIMPLE_THREAD_BEGIN(thread_func)
@@ -50,14 +59,17 @@ SIMPLE_THREAD_BEGIN(thread_func)
       SCL_RECV_AND_UNPACK_DYNAMIC(_gps_data, scl_socket, gps_data);
       if (_gps_data != NULL)
       {
-         pthread_mutex_lock(&mutex);
-         interval_sum = 0.0f;
-         gps_data.fix = _gps_data->fix;
-         gps_data.sats = _gps_data->sats;
-         gps_data.lat = _gps_data->lat;
-         gps_data.lon = _gps_data->lon;
-         gps_data.alt = _gps_data->alt;
-         pthread_mutex_unlock(&mutex);
+         if (_gps_data->fix >= 2)
+         {
+            pthread_mutex_lock(&mutex);
+            timer = 0.0f; /* reset timer */
+            gps_data.fix = _gps_data->fix;
+            gps_data.sats = _gps_data->sats;
+            gps_data.lat = _gps_data->lat;
+            gps_data.lon = _gps_data->lon;
+            gps_data.alt = _gps_data->alt;
+            pthread_mutex_unlock(&mutex);
+         }
          SCL_FREE(gps_data, _gps_data);
       }
    }
@@ -84,10 +96,10 @@ int scl_gps_read(gps_data_t *data_out)
 {
    int ret_code = 0;
    pthread_mutex_lock(&mutex);
-   interval_sum += interval_measure(&interval);
-   if (interval_sum > 1.0f)
+   timer += interval_measure(&interval);
+   if (timer > GPS_TIMEOUT)
    {
-      ret_code = -EIO;
+      ret_code = -1;
    }
    *data_out = gps_data;
    pthread_mutex_unlock(&mutex);
