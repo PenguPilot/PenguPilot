@@ -49,8 +49,8 @@ powerman:
    power_save_timeout: 60.0
    voltage_adc: 7
    current_adc: 2
-   adc_2_voltage: 'lambda x: (x - 56.0) / 134.0'
-   adc_2_current: 'lambda x: (2.5 - x / 1024.0) / 0.028'
+   adc_2_voltage: 'lambda x: (x + 27.0951) / 117.1319'
+   adc_2_current: 'lambda x: (x + 27.0951) / 117.1319'
 
 icarus:
    takeoff:

@@ -71,22 +71,22 @@ void _main(int argc, char *argv[])
    (void)argc;
    (void)argv;
    
-   /*if (realtime_init() < 0)
-   {
-      return EXIT_FAILURE;
-   }*/
-
-   if (rc_dsl_reader_init() < 0)
+   if (realtime_init() < 0)
    {
       exit(EXIT_FAILURE);
    }
-   
+
    if (scl_init("remote") != 0)
    {
       syslog(LOG_CRIT, "could not init scl module");
       exit(EXIT_FAILURE);
    }
 
+   if (rc_dsl_reader_init() < 0)
+   {
+      exit(EXIT_FAILURE);
+   }
+   
    void *rc_socket = scl_get_socket("data");
    if (rc_socket == NULL)
    {
@@ -109,7 +109,7 @@ void _main(int argc, char *argv[])
          rc_data.gas = channels[3];
          SCL_PACK_AND_SEND_DYNAMIC(rc_socket, rcdata, rc_data);
       }
-      msleep(50);
+      msleep(20);
    }
 }
 
@@ -122,7 +122,9 @@ void _cleanup(void)
 
 int main(int argc, char *argv[])
 {
-   daemonize("/var/run/rc.pid", _main, _cleanup, argc, argv);
+   char pid_file[1024];
+   sprintf(pid_file, "%s/.PenguPilot/run/remote.pid", getenv("HOME"));
+   daemonize(pid_file, _main, _cleanup, argc, argv);
    return 0;
 }
 

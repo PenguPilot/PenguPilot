@@ -89,10 +89,10 @@ int rc_dsl_reader_init(void)
    memset(channels, 0, sizeof(channels));
    opcd_param_t params[] =
    {
-      {"serial_port", &dev_path},
+      {"serial_path", &dev_path},
       OPCD_PARAMS_END   
    };
-   opcd_params_init("sensors.rc_dsl.", 0);
+   opcd_params_init("sensors.remote.", 0);
    opcd_params_apply("", params);
    THROW_ON_ERR(serial_open(&port, dev_path, 38400, 0, 0, 0));
    rc_dsl_init(&rc_dsl);

@@ -186,6 +186,5 @@ def main(name):
    PowerMan(name)
    await_signal()
 
-
 daemonize('powerman', main)
 
