@@ -126,11 +126,12 @@ void _main(int argc, char *argv[])
             generate_time_str(time_str, &info.utc);
             gps_data.fix = 0;
             gps_data.time = time_str;
-
+ 
             /* set system time to gps time once: */
-            if (!time_set)
+            if (!time_set && info.fix >= 2)
             {
                char shell_date_cmd[TIME_STR_LEN + 8];
+               linux_sys_set_timezone(convert(info.lat), convert(info.lon));
                sprintf(shell_date_cmd, "date -s \"%s\"", time_str);
                time_set = system(shell_date_cmd) == 0;
             }
