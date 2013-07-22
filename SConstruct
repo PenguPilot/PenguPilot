@@ -123,11 +123,11 @@ ap_pb_lib = make_proto_lib(ap_pb_dir, 'autopilot_pb')
 ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = ['m', 'msgpack', 'meschach', 'pthread', 'opcd', 'opcd_pb', 'shared', 'scl', 'powerman_pb', 'gps_pb', 'autopilot_pb', 'protobuf-c', 'yaml-cpp', 'zmq', 'glib-2.0'])
 Requires(ap_bin, pm_pb_lib + scl_lib + opcd_lib + opcd_pb_lib + ap_pb_lib)
 
-# build calibrationt:
-cal_src = ['autopilot/service/hardware/bus/i2c/i2c.c', 'autopilot/service/hardware/drivers/mpu6050/mpu6050.c',
+# build acc_mag_dump:
+amd_src = ['autopilot/service/hardware/bus/i2c/i2c.c', 'autopilot/service/hardware/drivers/mpu6050/mpu6050.c',
               'autopilot/service/platform/drotek_marg2.c', 'autopilot/service/hardware/drivers/hmc5883/hmc5883.c',
-              'autopilot/tools/calibration/acc_mag_reader.c']
-cal_bin = env.Program('autopilot/tools/calibration/acc_mag_reader', cal_src, LIBS = ['rt', 'shared'])
+              'autopilot/tools/calibration/acc_mag_dump.c']
+amd_bin = env.Program('autopilot/tools/calibration/acc_mag_dump', amd_src, LIBS = ['rt', 'shared'])
 
 # build icarus:
 ic_dir = 'icarus/'
