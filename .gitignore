@@ -7,4 +7,5 @@
 *.pb-c.h
 gps/service/gps
 autopilot/service/autopilot
+autopilot/tools/acc_mag_cal/acc_mag_dump
 remote/service/remote
