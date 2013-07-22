@@ -26,16 +26,15 @@
 
 components:
 
-
    - name: demo_mission
      gates:
       - gps: sub
       - net: sub
 
-   - name: gps_sensor
+   - name: gps
      gates:
       - opcd_ctrl: req
-      - gps: pub
+      - data: pub
 
    - name: gps_test
      gates:
@@ -165,13 +164,13 @@ connections:
    - [ pilot.cal,                cal_server.cal]
    - [ pilot.ctrl,               cal_server.pilot_ctrl]
    - [ opcd.ctrl,                cal_server.opcd_ctrl]
-   - [ demo_mission.gps,         gps_sensor.gps]
+   - [ demo_mission.gps,         gps.data]
    - [ demo_mission.net,         wifi_sensor.networks]
    - [ aircomm.in,               aircomm_swarm.aircomm_out]
    - [ aircomm.out,              aircomm_swarm.aircomm_in ]
    - [ opcd.ctrl,                aircomm.opcd_ctrl    ]
    - [ icarus.ctrl,              aircomm_swarm.ctrl   ]
-   - [ gps_sensor.gps,           aircomm_swarm.gps    ]
+   - [ gps.data,           aircomm_swarm.gps    ]
    - [ pilot.power,               powerman.mon         ]
    - [ imms_sensor.data,         girlscamp.imms_data  ]
    - [ icarus.ctrl,              girlscamp.ctrl       ]
@@ -180,7 +179,7 @@ connections:
    - [ opcd.ctrl,                opcd_shell.ctrl      ]
    - [ opcd.ctrl,                remote.opcd_ctrl      ]
    - [ opcd.ctrl,                pilot.opcd_ctrl       ]
-   - [ opcd.ctrl,                gps_sensor.opcd_ctrl ]
+   - [ opcd.ctrl,                gps.opcd_ctrl ]
    - [ opcd.ctrl,                powerman.opcd_ctrl   ]
    - [ wifi_logger.mon,          pilot.mon             ]
    - [ mavlink.pilot_mon,         pilot.mon             ]
@@ -191,8 +190,8 @@ connections:
    - [ remote.data,              pilot.rc            ]
    - [ wifi_logger.networks,     wifi_sensor.networks ]
    - [ console_logger.log,          pilot.log             ]
-   - [ gps_sensor.gps,           pilot.gps             ]
-   - [ gps_sensor.gps,           mavlink.gps          ]
+   - [ gps.data,           pilot.gps             ]
+   - [ gps.data,           mavlink.gps          ]
    - [ icarus.ctrl,              ferry_ctrl.ctrl      ]
    - [ icarus.power_ctrl,        powerman.ctrl        ]
    - [ icarus.power_mon,         powerman.mon         ]
@@ -202,6 +201,6 @@ connections:
    - [ pilot.mon,                 icarus.mon           ]
    - [ pilot.ctrl,                pilot_shell.ctrl      ]
    - [ pilot.mon,                 pilot_shell.mon       ]
-   - [ gpx_logger.gps,           gps_sensor.gps       ]
-   - [ gps_sensor.gps,           gps_test.gps         ]
+   - [ gpx_logger.gps,           gps.data       ]
+   - [ gps.data,           gps_test.gps         ]
    

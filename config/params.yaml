@@ -31,7 +31,7 @@ aircomm:
 sensors:
    gps:
       serial_path: "/dev/ttyO2"
-      serial_speed: 57600
+      serial_speed: 115200
       min_sats: 4
    remote:
       serial_path: "/dev/ttyO0"
