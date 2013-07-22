@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- 3D Vector Interface
+ vector transformations interface
 
  Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
@@ -24,28 +24,27 @@
  GNU General Public License for more details. */
 
 
-#ifndef __VEC3_H__
-#define __VEC3_H__
+#ifndef __TRANSFORM_H__
+#define __TRANSFORM_H__
 
 
-/* generic 3d vector */
-typedef union
-{
-   struct
-   {
-      float x;
-      float y;
-      float z;
-   };
-   float vec[3];
-}
-vec3_t;
+#include "vec3.h"
+#include "quat.h"
 
 
-/* copy vector vi to vo */
-void vec3_copy(vec3_t *vo, vec3_t *vi);
+/* compute global vector in frame:
+ *
+ * North
+ * Y (latitude)
+ * ^
+ * |
+ * |
+ * o-----> X (longitude)
+ * Z Up    East
+ *
+ */
+void transform_local_global(vec3_t *gv, vec3_t *lv, quat_t *quat);
 
 
-
-#endif /* __VEC3_H__ */
+#endif /* __TRANSFORM_H__ */
 

@@ -12,8 +12,8 @@
  Madgwick AHRS Algorithm Interface
  See: http://www.x-io.co.uk/open-source-imu-and-ahrs-algorithms
 
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
  Copyright (C) 2012 SOH Madgwick, X-IO Technologies
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ void ahrs_init(ahrs_t *ahrs, float beta_start, float beta_step, float beta_end);
  *          1 if the ahrs became ready
  *          0 on normal operation
  */
-int ahrs_update(ahrs_t *ahrs, marg_data_t *marg_data, float dt);
+int ahrs_update(ahrs_t *ahrs, marg_data_t *marg_data, int imu, float dt);
 
 
 #endif /* __AHRS_H__ */

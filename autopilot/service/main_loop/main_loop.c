@@ -57,6 +57,7 @@
 #include "../filters/sliding_var.h"
 #include "../force_opt/force_opt.h"
 #include "../filters/filter.h"
+#include "../geometry/transform.h"
 
 
 typedef struct
@@ -75,14 +76,14 @@ static float *setpoints = NULL;
 static void *blackbox_socket = NULL;
 static msgpack_sbuffer *msgpack_buf;
 static msgpack_packer *pk;
-static float mag_bias = 0.0f;
+static float mag_bias = -0.2f;
 static float mag_decl = 0.0f;
 static gps_data_t gps_data;
 static gps_rel_data_t gps_rel_data = {0.0, 0.0, 0.0};
 static Filter1 rc_valid_filter;
 static calibration_t gyro_cal;
 static calibration_t rc_cal;
-static ahrs_t ahrs;
+static ahrs_t ahrs, imu;
 static quat_t start_quat;
 static gps_util_t gps_util;
 static interval_t gyro_move_interval;
@@ -263,6 +264,7 @@ void main_init(int override_hw)
    piid_init(REALTIME_PERIOD);
 
    ahrs_init(&ahrs, 10.0f, 2.0f * REALTIME_PERIOD, 0.02f);
+   ahrs_init(&imu, 10.0f, 2.0f * REALTIME_PERIOD, 0.02f);
    gps_util_init(&gps_util);
    flight_state_init(50, 30, 4.0, 150.0, 1.3);
    
@@ -327,38 +329,40 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
       gps_util_update(&gps_rel_data, &gps_util, gps_data);
       pos_in.dx = gps_rel_data.dx;
       pos_in.dy = gps_rel_data.dy;
-      ONCE(LOG(LL_ERROR, "declination lookup yields: %f", mag_decl);
-           mag_decl = mag_decl_lookup(gps_data->lat, gps_data->lon));
+      ONCE(mag_decl = mag_decl_lookup(gps_data->lat, gps_data->lon);
+           LOG(LL_ERROR, "declination lookup yields: %f", mag_decl));
    }
 
-   /* calibration: */
+   /* acc/mag calibration: */
    acc_mag_cal_apply(&marg_data->acc, &marg_data->mag);
-
 
    /********************************
     * perform sensor data fusion : *
     ********************************/
 
-   int ahrs_state = ahrs_update(&ahrs, marg_data, dt);
-   flight_state_t flight_state = flight_state_update(&marg_data->acc.vec[0], pos_in.ultra_z);
-   
+   int ahrs_state = ahrs_update(&ahrs, marg_data, 0, dt);
+   ahrs_update(&imu, marg_data, 1, dt);
+   flight_state_t flight_state = 0; //flight_detect(&marg_data->acc.vec[0]);
+
    /* global z orientation calibration: */
-   quat_t zrot_quat = {{mag_decl + mag_bias, 0, 0, -1}};
-   quat_t quat;
-   quat_mul(&quat, &zrot_quat, &ahrs.quat);
-   
+   quat_t zrot_quat;
+   quat_init_axis(&zrot_quat, 0.0, 0.0, 1.0, mag_bias);
+   quat_t ahrs_quat;
+   quat_mul(&ahrs_quat, &zrot_quat, &ahrs.quat);
+
    /* compute euler angles from quaternion: */
    euler_t euler;
-   quat_to_euler(&euler, &quat);
+   quat_to_euler(&euler, &ahrs_quat);
+   euler_t imu_euler;
+   quat_to_euler(&imu_euler, &imu.quat);
 
    if (ahrs_state < 0 || !cal_complete(&gyro_cal))
       goto out;
 
-   ONCE(start_quat = quat; init = 1; LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
+   ONCE(start_quat = ahrs_quat; init = 1; LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
    
-   /* compute NEU accelerations using quaternion: */
-   quat_rot_vec(&pos_in.acc, &marg_data->acc, &quat);
-   pos_in.acc.z *= -1.0f; /* <-- transform from NED to NEU frame */
+   /* local ACC to global ACC rotation: */
+   transform_local_global(&pos_in.acc, &marg_data->acc, &ahrs_quat);
    
    /* compute next 3d position estimate: */
    pos_t pos_estimate;
@@ -509,14 +513,14 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    }
 
    /* run convex optimization: */
-   memset(setpoints, 0, sizeof(float) * platform.n_motors);
+   /*memset(setpoints, 0, sizeof(float) * platform.n_motors);
    float opt_forces[4];
    memcpy(opt_forces, f_local.vec, sizeof(opt_forces));
    force_opt_run(opt_forces);
    if (ultra > CONVEXOPT_MIN_GROUND_DIST)
    {
       //memcpy(f_local.vec, opt_forces, sizeof(f_local.vec));
-   }
+   }*/
    
    /* computation of rpm ^ 2 out of the desired forces */
    inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
@@ -525,7 +529,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    if (1) //motors_enabled)
    {
       piid_int_enable(forces_to_setpoints(&platform.ftos, setpoints, voltage, rpm_square, platform.n_motors));
-      printf("%f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]);
+      //printf("%f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]);
    }
    else
    {
@@ -549,7 +553,7 @@ out:
    PACKFV(marg_data->gyro.vec, 3);
    PACKFV(marg_data->acc.vec, 3);
    PACKFV(marg_data->mag.vec, 3);
-   PACKFV(quat.vec, 4);
+   PACKFV(ahrs_quat.vec, 4);
    PACKFV(euler.vec, 3);
    PACKFV(pos_in.acc.vec, 3);
    PACKF(pos_in.dx); PACKF(pos_in.dy);

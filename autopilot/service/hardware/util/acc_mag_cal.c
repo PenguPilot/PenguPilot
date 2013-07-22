@@ -71,8 +71,8 @@ void acc_mag_cal_apply(vec3_t *acc, vec3_t *mag)
 {
    FOR_N(i, 3)
    {
-      acc->vec[i] = 9.81 * (acc->vec[i] - tsfloat_get(&acc_bias[i]) * tsfloat_get(&acc_scale[i]));
-      mag->vec[i] = /* normalized val is OK here */ (mag->vec[i] - tsfloat_get(&mag_bias[i]) * tsfloat_get(&mag_scale[i]));
+      acc->vec[i] = (acc->vec[i] - tsfloat_get(&acc_bias[i]) / tsfloat_get(&acc_scale[i]));
+      mag->vec[i] = (mag->vec[i] - tsfloat_get(&mag_bias[i]) / tsfloat_get(&mag_scale[i]));
    }
 }
 

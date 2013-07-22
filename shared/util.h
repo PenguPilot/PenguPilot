@@ -198,7 +198,7 @@ int binsearch(int x, const int v[], int n);
 #define THROW_PROPAGATE(err) \
    if (err < 0) \
    { \
-      /*fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, err, errno);*/ \
+      fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, err, errno); \
    } \
    return err;
 
@@ -206,7 +206,7 @@ int binsearch(int x, const int v[], int n);
    ___return_code = err; \
    if (___return_code < 0) \
    { \
-      /*fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, ___return_code, errno);*/ \
+      fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, ___return_code, errno); \
       goto __catch_label; \
    }
 
@@ -214,7 +214,7 @@ int binsearch(int x, const int v[], int n);
    ___return_code = err; \
    if ((___return_code < 0) && (___return_code != code)) \
    { \
-      /*fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, ___return_code, errno);*/ \
+      fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, ___return_code, errno); \
       goto __catch_label; \
    }
    

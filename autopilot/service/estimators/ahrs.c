@@ -12,8 +12,8 @@
  Madgwick AHRS Algorithm Implementation
  See: http://www.x-io.co.uk/open-source-imu-and-ahrs-algorithms
 
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
  Copyright (C) 2012 SOH Madgwick, X-IO Technologies
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -27,11 +27,10 @@
 
 
 #include <math.h>
-#include <stdio.h>
 
 
-#include "../geometry/quat.h"
 #include "ahrs.h"
+#include "../geometry/quat.h"
 
 
 void ahrs_init(ahrs_t *ahrs, float beta_start, float beta_step, float beta_end)
@@ -128,7 +127,7 @@ static void ahrs_update_imu(ahrs_t *ahrs, float gx, float gy, float gz,
 
 
 
-int ahrs_update(ahrs_t *ahrs, marg_data_t *marg_data, float dt)
+int ahrs_update(ahrs_t *ahrs, marg_data_t *marg_data, int imu, float dt)
 {
    int ret;
    if (ahrs->beta > ahrs->beta_end)
@@ -160,7 +159,7 @@ int ahrs_update(ahrs_t *ahrs, marg_data_t *marg_data, float dt)
    float mz = marg_data->mag.z;
 
    /* use IMU algorithm if magnetometer measurement invalid (avoids NaN in magnetometer normalisation): */
-   if ((mx == 0.0f) && (my == 0.0f) && (mz == 0.0f))
+   if (((mx == 0.0f) && (my == 0.0f) && (mz == 0.0f)) || imu)
    {
       ahrs_update_imu(ahrs, gx, gy, gz, ax, ay, az, dt);
       goto out;

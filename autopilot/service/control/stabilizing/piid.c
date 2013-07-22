@@ -46,6 +46,7 @@ static tsfloat_t att_kii;
 static tsfloat_t att_kd;
 static tsfloat_t yaw_kp;
 static tsfloat_t yaw_ki;
+static tsfloat_t yaw_kii;
 static tsfloat_t yaw_kd;
 static tsfloat_t filt_fg;
 static tsfloat_t filt_d;
@@ -92,6 +93,7 @@ void piid_init(float _Ts)
       {"att_kd", &att_kd},
       {"yaw_kp", &yaw_kp},
       {"yaw_ki", &yaw_ki},
+      {"yaw_kii", &yaw_kii},
       {"yaw_kd", &yaw_kd},
       {"filt_fg", &filt_fg},
       {"filt_d", &filt_d},
@@ -218,9 +220,11 @@ void piid_run(float u_ctrl[4], float gyro[3], float rc[3])
                    + tsfloat_get(&att_kii) * xii_err[i] 
                    + tsfloat_get(&att_kd)  * derror[i];
    }
+
    /* yaw feedback: */
    u_ctrl[PIID_YAW] +=   tsfloat_get(&yaw_kp) * error[PIID_YAW] 
                        + tsfloat_get(&yaw_ki) * xi_err[PIID_YAW]
+                       + tsfloat_get(&yaw_kii) * xii_err[PIID_YAW]
                        + tsfloat_get(&yaw_kd) * derror[PIID_YAW];
 }
 

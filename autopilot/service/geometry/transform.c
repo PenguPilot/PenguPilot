@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- 3D Vector Interface
+ vector transformations implementation
 
  Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
@@ -24,28 +24,23 @@
  GNU General Public License for more details. */
 
 
-#ifndef __VEC3_H__
-#define __VEC3_H__
+#include <math.h>
+
+#include "transform.h"
 
 
-/* generic 3d vector */
-typedef union
+void transform_local_global(vec3_t *gv, vec3_t *lv, quat_t *quat)
 {
-   struct
-   {
-      float x;
-      float y;
-      float z;
-   };
-   float vec[3];
+   /* rotate orientation "right": */
+   quat_t zrot_quat;
+   quat_init_axis(&zrot_quat, 0.0, 0.0, 1.0, M_PI / 2.0f);
+   quat_t tq;
+   quat_mul(&tq, &zrot_quat, quat);
+   /* rotate vector according to new quaternion: */
+   vec3_t tv;
+   quat_rot_vec(&tv, lv, &tq);
+   tv.y *= -1.0f;
+   tv.z *= -1.0f;
+   *gv = tv;
 }
-vec3_t;
-
-
-/* copy vector vi to vo */
-void vec3_copy(vec3_t *vo, vec3_t *vi);
-
-
-
-#endif /* __VEC3_H__ */
 

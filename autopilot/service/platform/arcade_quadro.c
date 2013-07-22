@@ -77,14 +77,15 @@ static int write_motors(float *setpoints)
 
 static int read_rc(float channels[MAX_CHANNELS])
 {
-   float dsl_channels[RC_DSL_CHANNELS];
+   /*float dsl_channels[RC_DSL_CHANNELS];
    int ret = rc_dsl_reader_get(dsl_channels);
    int c;
    for (c = 0; c < MAX_CHANNELS; c++)
    {
       channels[c] = rc_channels_get(&rc_channels, dsl_channels, c);
    }
-   return ret;
+   return ret;*/
+   return -1;
 }
 
 
@@ -150,8 +151,8 @@ int arcade_quadro_init(platform_t *plat, int override_hw)
       THROW_ON_ERR(drotek_marg2_init(&marg, &i2c_3));
       plat->read_marg = read_marg;
 
-      LOG(LL_INFO, "initializing i2cxl sonar sensor");
-      THROW_ON_ERR(i2cxl_reader_init(&i2c_3));
+      /*LOG(LL_INFO, "initializing i2cxl sonar sensor");
+      THROW_ON_ERR(i2cxl_reader_init(&i2c_3));*/
       plat->read_ultra = i2cxl_reader_get_alt;
       
       LOG(LL_INFO, "initializing ms5611 barometric pressure sensor");
@@ -172,11 +173,11 @@ int arcade_quadro_init(platform_t *plat, int override_hw)
 
       /* set-up dsl reader: */
       LOG(LL_INFO, "initializing DSL reader");
-      if (rc_dsl_reader_init() < 0)
+      /*if (rc_dsl_reader_init() < 0)
       {
          LOG(LL_ERROR, "could not initialize dsl reader");
          exit(1);
-      }
+      }*/
       deadzone_init(&deadzone, 0.01f, 1.0f, 1.0f);
       rc_channels_init(&rc_channels, channel_mapping, channel_scale, &deadzone);
       plat->read_rc = read_rc;
