@@ -125,8 +125,8 @@ Requires(ap_bin, pm_pb_lib + scl_lib + opcd_lib + opcd_pb_lib + ap_pb_lib)
 
 # build acc_mag_dump:
 amd_src = ['autopilot/service/hardware/bus/i2c/i2c.c', 'autopilot/service/hardware/drivers/mpu6050/mpu6050.c',
-              'autopilot/service/platform/drotek_marg2.c', 'autopilot/service/hardware/drivers/hmc5883/hmc5883.c',
-              'autopilot/tools/acc_mag_cal/acc_mag_dump.c']
+           'autopilot/service/platform/drotek_marg2.c', 'autopilot/service/hardware/drivers/hmc5883/hmc5883.c',
+           'shared/util.c', 'autopilot/tools/acc_mag_cal/acc_mag_dump.c']
 amd_bin = env.Program('autopilot/tools/acc_mag_cal/acc_mag_dump', amd_src, LIBS = ['rt', 'shared'])
 
 # build icarus:
