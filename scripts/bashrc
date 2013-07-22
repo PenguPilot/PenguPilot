@@ -24,6 +24,8 @@
 # GNU General Public License for more details.
 
 
+export SCONSFLAGS="--warn=no-duplicate-environment"
+
 export SCL_CACHE_GENERATOR=$PENGUPILOT_PATH/scl/tools/gen_cache.sh
 export SCL_CONFIG=$PENGUPILOT_PATH/config/system.yaml
 

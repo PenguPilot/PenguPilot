@@ -11,8 +11,8 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Reads latest MessagePack Logfile, computes MAG/ACC 
- Calibration and commits calibration to OPCD, if valid
+ reads mag/acc log text file from stdin and writes
+ calibration to stdout
 
  Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
@@ -27,12 +27,19 @@
  GNU General Public License for more details. """
 
 
-print 'loading acc/mag data'
-from msgpack import Unpacker
-from misc import msgpack_lastlog_path as log_path
-unpacker = Unpacker(open(log_path))
-header = unpacker.next()
 
+def read_array():
+   line = stdin.readline()
+   if not line:
+      raise Error
+   arr = line.split(' ')
+   arr[5] = arr[5][0:-1]
+   return arr
+
+
+# read acc/mag data to array:
+from sys import stdin
+header = read_array()
 mag_indices = []
 for name in ['mag_x', 'mag_y', 'mag_z']:
    mag_indices.append(header.index(name))
@@ -43,47 +50,46 @@ for name in ['acc_x', 'acc_y', 'acc_z']:
 from numpy import array
 mag_list = []
 acc_list = []
-for msg in unpacker:
-   mag = []
-   for i in mag_indices:
-      mag.append(msg[i])
-   mag_list.append(array(mag))
-   acc = []
-   for i in acc_indices:
-      acc.append(msg[i])
-   acc_list.append(array(acc))
+try:
+   while True:
+      msg = map(float, read_array())
+      mag = []
+      for i in mag_indices:
+         mag.append(msg[i])
+      mag_list.append(array(mag))
+      acc = []
+      for i in acc_indices:
+         acc.append(msg[i])
+      acc_list.append(array(acc))
+except:
+   pass
 
-
-print 'computing calibration'
+# compute calibration:
 from cal_lib import Calibration
 mag_cal = Calibration(mag_list)
 acc_cal = Calibration(acc_list)
 
-print 'checking calibration'
+# verify calibration:
 from math import isnan
 from sys import exit
 mag_cal_data = mag_cal.get_cal()
 for val in mag_cal_data:
    if isnan(val):
-      print 'mag calibration invalid'
+      print 'calibration invalid'
       exit(1)
 acc_cal_data = acc_cal.get_cal()
 for val in acc_cal_data:
    if isnan(val):
-      print 'acc calibration invalid'
+      print 'calibration invalid'
       exit(2)
 
-print 'saving calibration via OPCD'
-from scl import generate_map
-from opcd_interface import OPCD_Interface
-opcd = OPCD_Interface(generate_map('opcd_shell')['ctrl'])
-
+# print calibration to stdout:
+cal_data = list(mag_cal_data) + list(acc_cal_data)
 prefix = 'pilot.cal.'
 i = 0
 for sensor in ['mag', 'acc']:
    for type in ['bias', 'scale']:
       for axis in 'xyz':
-         opcd.set(prefix + sensor + '_' + type + '_' + axis, cal_data[i])
+         print prefix + sensor + '_' + type + '_' + axis, cal_data[i]
          i += 1
-opcd.persist()
 

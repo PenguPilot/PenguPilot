@@ -80,11 +80,9 @@ components:
       - networks: sub
       - mon: sub
     
-   - name: cal_server
+   - name: calibration
      gates:
-      - pilot_ctrl: req
-      - opcd_ctrl: req
-      - cal: sub
+      - data: pub
 
    - name: blackbox
      gates:
@@ -92,7 +90,6 @@ components:
 
    - name: pilot
      gates:
-      - cal: pub
       - log: pub
       - blackbox: pub
       - gps: sub
@@ -160,10 +157,8 @@ components:
 #
 
 connections:
+   - [ calibration.data,         blackbox.data]
    - [ pilot.blackbox,           blackbox.data]
-   - [ pilot.cal,                cal_server.cal]
-   - [ pilot.ctrl,               cal_server.pilot_ctrl]
-   - [ opcd.ctrl,                cal_server.opcd_ctrl]
    - [ demo_mission.gps,         gps.data]
    - [ demo_mission.net,         wifi_sensor.networks]
    - [ aircomm.in,               aircomm_swarm.aircomm_out]
