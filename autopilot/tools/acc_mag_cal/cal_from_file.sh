@@ -26,12 +26,12 @@
 # GNU General Public License for more details.
 
 
-script=`realpath "$0"`
-dir=`dirname $script`
-cd $dir
-
 if [ "$#" -eq 1 ]; then
-   cat $1 | ./calibrate.py | ./cal_to_opcd.py
+   path=`realpath $1`
+   script=`realpath "$0"`
+   dir=`dirname $script`
+   cd $dir
+   cat $path | ./calibrate.py | ./cal_to_opcd.py
 else
    echo Usage: "$0" file
 fi

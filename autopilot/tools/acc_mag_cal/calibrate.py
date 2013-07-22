@@ -157,12 +157,11 @@ for val in acc_cal_data:
 
 # print calibration to stdout:
 cal_data = list(mag_cal_data) + list(acc_cal_data)
-prefix = 'pilot.cal.'
 i = 0
 for sensor in ['mag', 'acc']:
    for type in ['bias', 'scale']:
       for axis in 'xyz':
-         print prefix + sensor + '_' + type + '_' + axis, cal_data[i]
+         print sensor + '_' + type + '_' + axis, cal_data[i]
          i += 1
 
 

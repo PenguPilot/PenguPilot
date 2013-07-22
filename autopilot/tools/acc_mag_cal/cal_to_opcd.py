@@ -38,7 +38,7 @@ while True:
       break
    key, val = line.split(' ')
    val = float(val)
-   opcd.set(key, val)
+   opcd.set('pilot.cal.' + key, val)
 
 opcd.persist()
 
