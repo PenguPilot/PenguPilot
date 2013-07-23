@@ -102,3 +102,12 @@ void vec2_project(vec2_t *vo, const vec2_t *vi1, const vec2_t *vi2)
    vec2_scale(vo, vi2, scale);
 }
 
+
+void vec2_rotate(vec2_t *vo, const vec2_t *vi, float angle)
+{
+   float sa = sinf(angle);
+   float ca = cosf(angle);
+   vo->x = vi->x * ca - vi->y * sa;
+   vo->y = vi->x * sa + vi->y * ca;
+}
+

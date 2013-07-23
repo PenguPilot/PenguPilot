@@ -32,15 +32,15 @@
 #include <sclhelper.h>
 #include <msgpack.h>
 #include <periodic_thread.h>
-#include <pilot.pb-c.h>
-#include <threadsafe_types.h>
 
+#include "mon.h"
+#include "control_mode.h"
 #include "main_loop.h"
 #include "main_util.h"
 #include "../util/time/interval.h"
+#include "../interface/interface.h"
 #include "../util/math/conv.h"
 #include "../util/logger/logger.h"
-#include "../interface/interface.h"
 #include "../estimators/ahrs.h"
 #include "../estimators/pos.h"
 #include "../platform/ac.h"
@@ -57,23 +57,10 @@
 #include "../control/position/yaw_ctrl.h"
 #include "../control/speed/xy_speed.h"
 #include "../state/motors_state.h"
-#include "../filters/sliding_var.h"
 #include "../force_opt/force_opt.h"
-#include "../filters/filter.h"
 #include "../geometry/transform.h"
 
 
-typedef struct
-{
-   float pitch;
-   float roll;
-   float yaw;
-   float gas;
-}
-stick_t;
-
-static int calibrate = 0;
-static int motors_locked = 0;
 static float *rpm_square = NULL;
 static float *setpoints = NULL;
 static void *blackbox_socket = NULL;
@@ -83,32 +70,13 @@ static float mag_bias = -0.2f;
 static float mag_decl = 0.0f;
 static gps_data_t gps_data;
 static gps_rel_data_t gps_rel_data = {0.0, 0.0, 0.0};
-static Filter1 rc_valid_filter;
 static calibration_t gyro_cal;
-static calibration_t rc_cal;
 static ahrs_t ahrs, imu;
 static quat_t start_quat;
 static gps_util_t gps_util;
 static interval_t gyro_move_interval;
 static int init = 0;
 
-static pthread_mutex_t mon_data_mutex = PTHREAD_MUTEX_INITIALIZER;
-static void *mon_socket = NULL;
-static MonData mon_data = MON_DATA__INIT;
-static periodic_thread_t emitter_thread;
-
-
-PERIODIC_THREAD_BEGIN(mon_emitter)
-{
-   PERIODIC_THREAD_LOOP_BEGIN
-   {
-      pthread_mutex_lock(&mon_data_mutex);
-      SCL_PACK_AND_SEND_DYNAMIC(mon_socket, mon_data, mon_data);
-      pthread_mutex_unlock(&mon_data_mutex);
-   }
-   PERIODIC_THREAD_LOOP_END
-}
-PERIODIC_THREAD_END
 
 
 static char *blackbox_spec[] = {"dt",                      /*  1      */
@@ -129,12 +97,6 @@ static char *blackbox_spec[] = {"dt",                      /*  1      */
 };
 
 
-void main_calibrate(int enabled)
-{
-   calibrate = enabled;   
-}
-
-
 typedef union
 {
    struct
@@ -149,38 +111,15 @@ typedef union
 f_local_t;
 
 
-enum
-{
-   CM_MANUAL,    /* direct remote control without any position control
-                    if the RC signal is lost, altitude stabilization is enabled and the GPS setpoint is reset */
-   CM_SAFE_AUTO, /* device works autonomously, stick movements disable autonomous operation with some hysteresis */
-   CM_FULL_AUTO  /* remote control interface is unused */
-}
-mode = CM_MANUAL; //SAFE_AUTO;
-
-
-static enum
-{
-   M_ATT_REL, /* relative attitude control (aka heading hold, axis lock,...) */
-   M_ATT_ABS, /* absolute attitude control (aka acc-mode) */
-   M_ATT_GPS_SPEED /* stick defines GPS speed for local coordinate frame */
-}
-manual_mode = M_ATT_ABS;
-
-static tsfloat_t stick_pitch_roll_p;
-static tsfloat_t stick_pitch_roll_angle_max;
-static tsfloat_t stick_yaw_p;
 static int marg_err = 0;
+static pos_in_t pos_in;
 
-#define STICK_GPS_SPEED_MAX 5.0
-
-#define CONVEXOPT_MIN_GROUND_DIST 1.0f
 
 static int gyro_moved(vec3_t *gyro)
 {
    FOR_N(i, 3)
    {
-      if (fabs(gyro->vec[i]) >  0.15)
+      if (fabs(gyro->vec[i]) > 0.15)
       {
          return 1;   
       }
@@ -191,6 +130,9 @@ static int gyro_moved(vec3_t *gyro)
 
 void main_init(int override_hw)
 {
+   /* init data structures: */
+   memset(&pos_in, 0, sizeof(pos_in_t));
+
    /* init SCL subsystem: */
    syslog(LOG_INFO, "initializing signaling and communication link (SCL)");
    if (scl_init("pilot") != 0)
@@ -214,17 +156,6 @@ void main_init(int override_hw)
    sleep(1); /* give scl some time to establish
                 a link between publisher and subscriber */
    
-   /* read parameters: */
-   opcd_param_t params[] =
-   {
-      {"pitch_roll_p", &stick_pitch_roll_p},
-      {"pitch_roll_angle_max", &stick_pitch_roll_angle_max},
-      {"yaw_p", &stick_yaw_p},
-      OPCD_PARAMS_END
-   };
-   opcd_params_apply("sticks.", params);
-
-
    LOG(LL_INFO, "autopilot initializing");
 
    LOG(LL_INFO, "initializing platform");
@@ -270,9 +201,11 @@ void main_init(int override_hw)
    }
    scl_copy_send_dynamic(blackbox_socket, msgpack_buf->data, msgpack_buf->size);
 
+   /* init control modes: */
+   cm_init();
+
    /* init calibration data: */
    cal_init(&gyro_cal, 3, 500);
-   cal_init(&rc_cal, 3, 500);
    
    ahrs_init(&ahrs, 10.0f, 2.0f * REALTIME_PERIOD, 0.02f);
    ahrs_init(&imu, 10.0f, 2.0f * REALTIME_PERIOD, 0.02f);
@@ -282,31 +215,18 @@ void main_init(int override_hw)
    piid_init(REALTIME_PERIOD);
 
    interval_init(&gyro_move_interval);
-
    gps_data_init(&gps_data);
-   
-   filter1_lp_init(&rc_valid_filter, 0.5, REALTIME_PERIOD, 1);
-
-   /* open monitoring socket: */
-   mon_socket = scl_get_socket("mon");
-   ASSERT_NOT_NULL(mon_socket);
-   int64_t hwm = 1;
-   zmq_setsockopt(mon_socket, ZMQ_HWM, &hwm, sizeof(hwm));
-
-   /* create monitoring connection: */
-   const struct timespec period = {0, 100 * NSEC_PER_MSEC};
-   periodic_thread_start(&emitter_thread, mon_emitter, "mon_thread", 0, period, NULL);
-
    LOG(LL_INFO, "entering main loop");
 }
 
 
 void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ultra, float baro, float voltage, float channels[MAX_CHANNELS], uint16_t sensor_status, int override_hw)
 {
-   /*******************************************
-    * read sensor data and calibrate sensors: *
-    *******************************************/
-   pos_in_t pos_in;
+   /* set the control mode: */
+   control_mode_t cm;
+   cm_update(&cm, sensor_status, channels);
+   
+   /* read sensor data and calibrate sensors: */
    pos_in.dt = dt;
    pos_in.ultra_z = ultra;
    pos_in.baro_z = baro;
@@ -325,21 +245,6 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    }
    marg_err = 0;
    
-   float rc_valid_f = (sensor_status & RC_VALID) ? 1.0f : 0.0f;
-   filter1_run(&rc_valid_filter, &rc_valid_f, &rc_valid_f);
-   int rc_valid = rc_valid_f > 0.5f;
-   if (!rc_valid)
-   {
-      memset(channels, 0, sizeof(channels));   
-   }
-   else
-   {
-      float cal_channels[3] = {channels[CH_PITCH], channels[CH_ROLL], channels[CH_YAW]};
-      cal_sample_apply(&rc_cal, cal_channels);
-      channels[CH_PITCH] = cal_channels[0];
-      channels[CH_ROLL] = cal_channels[1];
-      channels[CH_YAW] = cal_channels[2];
-   }
 
    if (cal_sample_apply(&gyro_cal, &marg_data->gyro.vec[0]) == 0 && gyro_moved(&marg_data->gyro))
    {
@@ -395,49 +300,60 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    pos_t pos_estimate;
    pos_update(&pos_estimate, &pos_in);
 
-
-   /*******************************
-    * run high-level controllers: *
-    *******************************/
-
    stick_t auto_stick;
    float yaw_err, z_err;
    auto_stick.yaw = yaw_ctrl_step(&yaw_err, euler.yaw, marg_data->gyro.z, dt);
-   auto_stick.gas = z_ctrl_step(&z_err, pos_estimate.ultra_z.pos,
-                                pos_estimate.baro_z.pos, pos_estimate.baro_z.speed, dt);
-   
-   vec2_t speed_sp = {{0.0f, 0.0f}};
-   if (mode == CM_MANUAL && manual_mode == M_ATT_GPS_SPEED)
+   if (cm.z.type == Z_AUTO)
    {
-      /* direct speed control via stick: */
-      speed_sp.x = 10.0f * channels[CH_PITCH] * cosf(euler.yaw);
-      speed_sp.y = 10.0f * channels[CH_ROLL] * sinf(euler.yaw);
+      auto_stick.gas = z_ctrl_step(&z_err, pos_estimate.ultra_z.pos,
+                                   pos_estimate.baro_z.pos, pos_estimate.baro_z.speed, dt);
+      auto_stick.gas = fmin(auto_stick.gas, cm.z.setp);
    }
-   else
+   
+   /* the following code sets the x/y speed setpoint: */
+   vec2_t speed_sp;
+   if (cm.xy.type == XY_GPS_SPEED)
    {
-      /* run xy navigation controller: */
+      /* direct speed control mode: */
+      if (cm.xy.global)
+      {
+         /* move according to global speed vector: */
+         speed_sp.x = cm.xy.setp.x;
+         speed_sp.y = cm.xy.setp.y;
+      }
+      else /* local */
+      {
+         /* rotate desired speed vector with copter orientation: */
+         vec2_rotate(&speed_sp, &cm.xy.setp, euler.yaw);
+      }
+   }
+   else /* GPS_POS */
+   {
+      /* x/y position mode: */
       vec2_t pos_vec = {{pos_estimate.x.pos, pos_estimate.y.pos}};
       navi_run(&speed_sp, &pos_vec, dt);
    }
 
    /* run speed vector controller: */
-   vec2_t pitch_roll_sp = {{0.0f, 0.0f}};
+   vec2_t pitch_roll_sp;
    vec2_t speed_vec = {{pos_estimate.x.speed, pos_estimate.y.speed}};
    xy_speed_ctrl_run(&pitch_roll_sp, &speed_sp, &speed_vec, euler.yaw);
-   FOR_N(i, 2) pitch_roll_sp.vec[i] = sym_limit(pitch_roll_sp.vec[i], 0.2);
 
-   /****************************
-    * run attitude controller: *
-    ****************************/
+   /* run attitude controller: */
    vec2_t pitch_roll = {{imu_euler.pitch, imu_euler.roll}};
-   if (mode == CM_MANUAL && manual_mode == M_ATT_ABS)
+   if (cm.xy.type == XY_ATT_POS)
    {
-      /* interpret sticks as pitch and roll setpoints: */
-      pitch_roll_sp.x = tsfloat_get(&stick_pitch_roll_angle_max) * channels[CH_PITCH];
-      pitch_roll_sp.y = tsfloat_get(&stick_pitch_roll_angle_max) * channels[CH_ROLL];
+      if (cm.xy.global)
+      {
+         /* "carefree" mode */
+         vec2_rotate(&pitch_roll_sp, &cm.xy.setp, euler.yaw);
+      }
+      else
+      {
+         /* pitch/roll direction  */
+         pitch_roll_sp = cm.xy.setp;
+      }
    }
-   pitch_roll_sp.x = 0.0f;
-   pitch_roll_sp.y = 0.0f;
    vec2_t att_err;
    vec2_t pitch_roll_speed = {{marg_data->gyro.y, marg_data->gyro.x}};
    vec2_t pitch_roll_ctrl;
@@ -445,119 +361,33 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    auto_stick.pitch = pitch_roll_ctrl.x;
    auto_stick.roll = pitch_roll_ctrl.y;
 
-   /************************************
-    * combine auto stick and RC stick: *
-    ************************************/
    float piid_sp[3] = {0.0f, 0.0f, 0.0f};
    f_local_t f_local = {{0.0f, 0.0f, 0.0f, 0.0f}};
-   float norm_gas = 0.0f; /* interval: [0.0 ... 1.0] */
 
-   if (mode >= CM_SAFE_AUTO || (mode == CM_MANUAL && manual_mode == M_ATT_ABS))
+   /* direct rate control: */
+   if (cm.xy.type == XY_ATT_RATE)
    {
-      piid_sp[PIID_PITCH] = auto_stick.pitch;
-      piid_sp[PIID_ROLL] = auto_stick.roll;
-   }
-
-   /* CM_SAFE_AUTO or CM_FULL_AUTO: */
-   if (mode >= CM_SAFE_AUTO)
-   {
-      piid_sp[PIID_YAW] = auto_stick.yaw;
-      norm_gas = auto_stick.gas;
-   }
-
-   if (mode == CM_MANUAL && rc_valid)
-   {
-      if (manual_mode == M_ATT_REL)
-      {
-         piid_sp[PIID_PITCH] = tsfloat_get(&stick_pitch_roll_p) * channels[CH_PITCH];
-         piid_sp[PIID_ROLL] = tsfloat_get(&stick_pitch_roll_p) * channels[CH_ROLL];
-      }
-      piid_sp[PIID_YAW] = tsfloat_get(&stick_yaw_p) * channels[CH_YAW];
-      norm_gas = channels[CH_GAS];
-   }
-
-   if (mode == CM_SAFE_AUTO && rc_valid)
-   {
-      piid_sp[PIID_PITCH] += tsfloat_get(&stick_pitch_roll_p) * channels[CH_PITCH];
-      piid_sp[PIID_ROLL] += tsfloat_get(&stick_pitch_roll_p) * channels[CH_ROLL];
-      piid_sp[PIID_YAW] = tsfloat_get(&stick_yaw_p) * channels[CH_YAW];
-      norm_gas = limit(norm_gas, 0.0f, channels[CH_GAS]);
+      piid_sp[PIID_PITCH] = cm.xy.setp.x;
+      piid_sp[PIID_ROLL] = cm.xy.setp.y;
    }
 
    /* scale relative gas value to absolute newtons: */
-   f_local.gas = norm_gas * platform.max_thrust_n;
+   f_local.gas = auto_stick.gas * platform.max_thrust_n;
 
    /* set monitoring data: */
-   if (pthread_mutex_trylock(&mon_data_mutex) == 0)
-   {
-      mon_data.x_err = pos_estimate.x.pos - navi_get_dest_x();
-      mon_data.y_err = pos_estimate.y.pos - navi_get_dest_y();
-      mon_data.z_err = z_err;
-      mon_data.yaw_err = yaw_err;
-      pthread_mutex_unlock(&mon_data_mutex);
-   }
-
-   /************************************************************
-    * run feed-forward system and stabilizing PIID controller: *
-    ************************************************************/
-
-   float gyro_vals[3] = {marg_data->gyro.x, marg_data->gyro.y, marg_data->gyro.z};
-   piid_run(&f_local.vec[1], gyro_vals, piid_sp);
-
-   /********************
-    * actuator output: *
-    ********************/
-
-   /* requirements specification for take-off: */
-   int common_require = sensor_status & (VOLTAGE_VALID | ULTRA_VALID);
-   int manual_require = common_require && (manual_mode == M_ATT_GPS_SPEED ? (sensor_status & GPS_VALID) : 1) && rc_valid && channels[CH_SWITCH] > 0.5;
-   int full_auto_require = common_require && (sensor_status & (BARO_VALID | GPS_VALID));
-   int safe_auto_require = full_auto_require && rc_valid && channels[CH_SWITCH] > 0.5;
+   mon_data_set(pos_estimate.x.pos - navi_get_dest_x(),
+                pos_estimate.y.pos - navi_get_dest_y(),
+                z_err, yaw_err);
    
-   int satisfied = 0; /* initial value applies to CM_DISABLED */
-   if (mode == CM_MANUAL)
-      satisfied = manual_require;
-   else if (mode == CM_FULL_AUTO)
-      satisfied = full_auto_require;
-   else if (mode == CM_SAFE_AUTO)
-      satisfied = safe_auto_require;
+   /* run feed-forward system and stabilizing PIID controller: */
+   piid_run(&f_local.vec[1], marg_data->gyro.vec, piid_sp);
 
-   /* start motors if requirements are met AND conditions apply;
-    * stopping the motors does not depend on requirements: */
-   motors_state_update(flight_state, motors_locked, norm_gas, dt, satisfied);
-   if (!motors_state_controllable())
-   {
-      //memset(&f_local, 0, sizeof(f_local)); /* all moments are 0 / minimum motor RPM */
-      /* TODO: also reset higher-level controllers */
-   }
-
-   int motors_enabled = 0;
-   if (rc_valid && mode != CM_FULL_AUTO)
-   {
-      motors_enabled = mode == CM_MANUAL && channels[CH_SWITCH] > 0.5;
-   }
-   
-   if (motors_state_safe())
-   {
-      //motors_enabled = 0;
-   }
-
-   /* run convex optimization: */
-   /*memset(setpoints, 0, sizeof(float) * platform.n_motors);
-   float opt_forces[4];
-   memcpy(opt_forces, f_local.vec, sizeof(opt_forces));
-   force_opt_run(opt_forces);
-   if (ultra > CONVEXOPT_MIN_GROUND_DIST)
-   {
-      //memcpy(f_local.vec, opt_forces, sizeof(f_local.vec));
-   }*/
-   
    /* computation of rpm ^ 2 out of the desired forces */
    inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
    
    /* compute motor set points out of rpm ^ 2: */
-   piid_int_enable(platform_ac_calc(setpoints, motors_enabled, voltage, rpm_square));
-   if (!motors_enabled)
+   piid_int_enable(platform_ac_calc(setpoints, cm.motors_enabled, voltage, rpm_square));
+   if (!cm.motors_enabled)
    {
       memset(setpoints, 0, sizeof(float) * platform.n_motors);
       piid_reset(); /* reset piid integrators so that we can move the device manually */
@@ -594,6 +424,7 @@ out:
    PACKF(0.0f);
    PACKFV(pitch_roll_sp.vec, 2);
    PACKI(flight_state);
+   int rc_valid = 0;
    PACKI(rc_valid);
    PACKFV(channels, 5);
    PACKI(sensor_status);

@@ -83,6 +83,7 @@ static void rot2_calc(rot2_t *rot2, vec2_t *out, vec2_t *in, float angle)
 
 static rot2_t rot2;
 static tsfloat_t p;
+static tsfloat_t angle_max;
 
 
 void xy_speed_ctrl_init(void)
@@ -91,6 +92,7 @@ void xy_speed_ctrl_init(void)
    opcd_param_t params[] =
    {
       {"p", &p},
+      {"angle_max", &angle_max},
       OPCD_PARAMS_END
    };
    opcd_params_apply("controllers.xy_speed.", params);
@@ -104,11 +106,12 @@ void xy_speed_ctrl_run(vec2_t *control, vec2_t *speed_setpoint, vec2_t *speed, f
    vec2_t speed_err;
    vec2_sub(&speed_err, speed_setpoint, speed);
    
-   /* calculate 2d speed feedback: */
+   /* calculate 2d speed feedback (angle): */
    vec2_t world_thrust;
    vec2_scale(&world_thrust, &speed_err, tsfloat_get(&p));
 
    /* rotate global speed feedback into local control primitives: */
    rot2_calc(&rot2, control, &world_thrust, yaw);
+   FOR_N(i, 2) control->vec[i] = sym_limit(control->vec[i], deg2rad(tsfloat_get(&angle_max)));
 }
 

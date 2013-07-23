@@ -59,6 +59,8 @@ float vec2_inner(const vec2_t *v1, const vec2_t *v2);
  
 void vec2_project(vec2_t *vo, const vec2_t *vi1, const vec2_t *vi2);
 
+void vec2_rotate(vec2_t *vo, const vec2_t *vi, float angle);
+
 
 #endif /* __VEC2_H__ */
 

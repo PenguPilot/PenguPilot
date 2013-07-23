@@ -9,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Main Loop Interface
+ Control Modes Interface
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,41 +24,61 @@
  GNU General Public License for more details. */
 
 
-#ifndef __MAIN_LOOP_H__
-#define __MAIN_LOOP_H__
+#ifndef __CONTROL_MODE_H__
+#define __CONTROL_MODE_H__
+
 
 #include <stdint.h>
-#include "../platform/platform.h"
 
-
-#define REALTIME_PERIOD (0.006)
-
-
-#define DATA_DEFINITION() \
-   float channels[MAX_CHANNELS]; \
-   marg_data_t marg_data; \
-   float dt; \
-   float ultra_z; \
-   float baro_z; \
-   float voltage; \
-   gps_data_t gps_data
+#include "../hardware/util/rc_channels.h"
+#include "../util/math/vec2.h"
 
 
 typedef struct
 {
-   float pitch;
-   float roll;
-   float yaw;
-   float gas;
-}
-stick_t;
+   struct
+   {
+      enum
+      {
+         XY_GPS_POS,   /* GPS position*/
+         XY_GPS_SPEED, /* GPS speed */
+         XY_ATT_POS,   /* attitude angle */
+         XY_ATT_RATE   /* attitude rate */
+      }
+      type;
+      int global;
+      vec2_t setp; /* setpoint in global x/y or body frame pitch/roll direction */
+   }
+   xy;
+
+   struct
+   {
+      enum
+      {
+         Z_STICK, /* stick controls gas directly */
+         Z_AUTO /* ultra/baro, stick limits gas */
+      }
+      type;
+      float setp; /* setpoint from stick */
+   }
+   z;
+
+   struct
+   {
+      float setp; /* yaw rate; to be extended  */   
+   }
+   yaw;
+
+   int motors_enabled;
+} 
+control_mode_t;
 
 
-void main_init(int override_hw);
+void cm_init(void);
 
-void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ultra, float baro, float voltage, float channels[MAX_CHANNELS], uint16_t sensor_status, int override_hw);
 
-void main_calibrate(int enabled);
+void cm_update(control_mode_t *cm, uint16_t sensor_status, float channels[MAX_CHANNELS]);
 
-#endif /* __MAIN_LOOP_H__ */
+
+#endif /* __CONTROL_MODE_H__ */
 
