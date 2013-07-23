@@ -172,6 +172,7 @@ void piid_int_enable(int val)
 
 void piid_reset(void)
 {
+   int_enable = 0;
    adams4_reset(&int_err1);
    adams4_reset(&int_err2);
 }

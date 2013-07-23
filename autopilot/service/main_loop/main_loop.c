@@ -46,7 +46,7 @@
 #include "../platform/ac.h"
 #include "../platform/platform.h"
 #include "../platform/arcade_quad.h"
-#include "../control/stabilizing/piid.h"
+#include "../control/basic/piid.h"
 #include "../hardware/util/acc_mag_cal.h"
 #include "../hardware/util/calibration.h"
 #include "../hardware/util/gps_util.h"
@@ -188,7 +188,6 @@ static int gyro_moved(vec3_t *gyro)
 }
 
 
-
 void main_init(int override_hw)
 {
    /* init SCL subsystem: */
@@ -274,14 +273,13 @@ void main_init(int override_hw)
    cal_init(&gyro_cal, 3, 500);
    cal_init(&rc_cal, 3, 500);
    
-   /* init stabilizing controller: */
-   piid_init(REALTIME_PERIOD);
-
    ahrs_init(&ahrs, 10.0f, 2.0f * REALTIME_PERIOD, 0.02f);
    ahrs_init(&imu, 10.0f, 2.0f * REALTIME_PERIOD, 0.02f);
    gps_util_init(&gps_util);
    flight_state_init(50, 30, 4.0, 150.0, 1.3);
    
+   piid_init(REALTIME_PERIOD);
+
    interval_init(&gyro_move_interval);
 
    gps_data_init(&gps_data);
@@ -317,7 +315,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    
    float rc_valid_f = (sensor_status & RC_VALID) ? 1.0f : 0.0f;
    filter1_run(&rc_valid_filter, &rc_valid_f, &rc_valid_f);
-   int rc_valid = rc_valid_f > 0.5f;
+   int rc_valid = rc_valid_f > 0.75f;
    if (!rc_valid)
    {
       memset(channels, 0, sizeof(channels));   
@@ -451,7 +449,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
       norm_gas = auto_stick.gas;
    }
 
-   if (mode == CM_MANUAL && manual_mode == M_ATT_REL)
+   if (mode == CM_MANUAL && manual_mode == M_ATT_REL && rc_valid)
    {
       piid_sp[PIID_PITCH] = tsfloat_get(&stick_pitch_roll_p) * channels[CH_PITCH];
       piid_sp[PIID_ROLL] = tsfloat_get(&stick_pitch_roll_p) * channels[CH_ROLL];
@@ -487,16 +485,15 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    float gyro_vals[3] = {marg_data->gyro.x, -marg_data->gyro.y, -marg_data->gyro.z};
    piid_run(&f_local.vec[1], gyro_vals, piid_sp);
 
-
    /********************
     * actuator output: *
     ********************/
 
    /* requirements specification for take-off: */
    int common_require = sensor_status & (VOLTAGE_VALID | ULTRA_VALID);
-   int manual_require = common_require && (manual_mode == M_ATT_GPS_SPEED ? (sensor_status & GPS_VALID) : 1) && rc_valid && channels[CH_SWITCH] > 0.5;
+   int manual_require = common_require && (manual_mode == M_ATT_GPS_SPEED ? (sensor_status & GPS_VALID) : 1) && rc_valid && channels[CH_SWITCH] > 0.75;
    int full_auto_require = common_require && (sensor_status & (BARO_VALID | GPS_VALID));
-   int safe_auto_require = full_auto_require && rc_valid && channels[CH_SWITCH] > 0.5;
+   int safe_auto_require = full_auto_require && rc_valid && channels[CH_SWITCH] > 0.75;
    
    int satisfied = 0; /* initial value applies to CM_DISABLED */
    if (mode == CM_MANUAL)
@@ -512,14 +509,13 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    if (!motors_state_controllable())
    {
       //memset(&f_local, 0, sizeof(f_local)); /* all moments are 0 / minimum motor RPM */
-      //piid_reset(); /* reset piid integrators so that we can move the device manually */
       /* TODO: also reset higher-level controllers */
    }
 
    int motors_enabled = 0;
    if (rc_valid && mode != CM_FULL_AUTO)
    {
-      motors_enabled = mode == CM_MANUAL && channels[CH_SWITCH] > 0.5;
+      motors_enabled = mode == CM_MANUAL && channels[CH_SWITCH] > 0.75;
    }
    
    if (motors_state_safe())
@@ -541,13 +537,11 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
    
    /* compute motor set points out of rpm ^ 2: */
-   if (motors_enabled)
+   piid_int_enable(platform_ac_calc(setpoints, motors_enabled, voltage, rpm_square));
+   if (!motors_enabled)
    {
-      piid_int_enable(platform_ac_calc(setpoints, motors_enabled, voltage, rpm_square));
-   }
-   else
-   {
-      piid_int_enable(0);   
+      memset(setpoints, 0, sizeof(float) * platform.n_motors);
+      piid_reset(); /* reset piid integrators so that we can move the device manually */
    }
 
    /* write motors: */

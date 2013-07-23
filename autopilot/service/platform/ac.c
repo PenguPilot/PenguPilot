@@ -90,6 +90,6 @@ int ac_calc(float *out, const ac_t *ac, const int enabled,
          }
       }
    }
-   return saturated;
+   return !saturated;
 }
 
