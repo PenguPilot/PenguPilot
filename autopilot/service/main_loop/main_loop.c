@@ -58,7 +58,7 @@
 #include "../control/speed/xy_speed.h"
 #include "../state/motors_state.h"
 #include "../force_opt/force_opt.h"
-#include "../geometry/transform.h"
+#include "../geometry/quat.h"
 
 
 static float *rpm_square = NULL;
