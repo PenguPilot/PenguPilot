@@ -9,8 +9,8 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Euler Angle Interface
-
+ z speed controller interface
+ 
  Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
@@ -24,23 +24,16 @@
  GNU General Public License for more details. */
 
 
-#ifndef __EULER_H__
-#define __EULER_H__
+#ifndef __Z_SPEED_H__
+#define __Z_SPEED_H__
 
 
-/* euler angle */
-typedef union
-{
-   struct
-   {
-      float yaw;
-      float pitch;
-      float roll;
-   };
-   float vec[3];
-}
-euler_t;
+float z_speed_step(float setpoint, float speed, float dt);
+
+void z_speed_init(float neutral_gas);
+
+void z_speed_reset(void);
 
 
-#endif /* __EULER_H__ */
+#endif /* __Z_SPEED_H__ */
 

@@ -33,8 +33,9 @@
 #include "../geometry/quat.h"
 
 
-void ahrs_init(ahrs_t *ahrs, float beta_start, float beta_step, float beta_end)
+void ahrs_init(ahrs_t *ahrs, ahrs_type_t type, float beta_start, float beta_step, float beta_end)
 {
+   ahrs->type = type;
    ahrs->beta = beta_start;
    ahrs->beta_step = beta_step;
    ahrs->beta_end = beta_end;
@@ -127,7 +128,7 @@ static void ahrs_update_imu(ahrs_t *ahrs, float gx, float gy, float gz,
 
 
 
-int ahrs_update(ahrs_t *ahrs, marg_data_t *marg_data, int imu, float dt)
+int ahrs_update(ahrs_t *ahrs, marg_data_t *marg_data, float dt)
 {
    int ret;
    if (ahrs->beta > ahrs->beta_end)
@@ -158,8 +159,9 @@ int ahrs_update(ahrs_t *ahrs, marg_data_t *marg_data, int imu, float dt)
    float my = marg_data->mag.y;
    float mz = marg_data->mag.z;
 
-   /* use IMU algorithm if magnetometer measurement invalid (avoids NaN in magnetometer normalisation): */
-   if (((mx == 0.0f) && (my == 0.0f) && (mz == 0.0f)) || imu)
+   /* use IMU algorithm if magnetometer measurement invalid (avoids NaN in magnetometer normalisation)
+      or if requested upon initialization: */
+   if (((mx == 0.0f) && (my == 0.0f) && (mz == 0.0f)) || ahrs->type == AHRS_ACC)
    {
       ahrs_update_imu(ahrs, gx, gy, gz, ax, ay, az, dt);
       goto out;

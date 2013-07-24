@@ -32,25 +32,33 @@
 
 #include "../hardware/util/marg_data.h"
 
+typedef enum
+{
+   AHRS_ACC_MAG,
+   AHRS_ACC
+}
+ahrs_type_t;
+
 
 typedef struct
 {
    float beta; /* 2 * beta (Kp) */
    float beta_step;
    float beta_end;
+   ahrs_type_t type; /* AHRS_ACC_MAG or AHRS_ACC */
    quat_t quat; /* quaternion of sensor frame relative to auxiliary frame */
 }
 ahrs_t;
 
 
-void ahrs_init(ahrs_t *ahrs, float beta_start, float beta_step, float beta_end);
+void ahrs_init(ahrs_t *ahrs, ahrs_type_t type, float beta_start, float beta_step, float beta_end);
 
 /*
  * returns -1 if the ahrs is not ready
  *          1 if the ahrs became ready
  *          0 on normal operation
  */
-int ahrs_update(ahrs_t *ahrs, marg_data_t *marg_data, int imu, float dt);
+int ahrs_update(ahrs_t *ahrs, marg_data_t *marg_data, float dt);
 
 
 #endif /* __AHRS_H__ */
