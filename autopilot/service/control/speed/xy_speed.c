@@ -32,6 +32,8 @@
 #include <opcd_interface.h>
 #include <meschach/matrix.h>
 
+#include "../../util/math/conv.h"
+
 
 typedef struct
 {

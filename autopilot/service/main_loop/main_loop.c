@@ -339,7 +339,11 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    /* run speed vector controller: */
    vec2_t pitch_roll_sp;
    vec2_t speed_vec = {{pos_estimate.x.speed, pos_estimate.y.speed}};
-   xy_speed_ctrl_run(&pitch_roll_sp, &speed_sp, &speed_vec, euler.yaw);
+   EVERY_N_TIMES(20, printf("%f %f\n", pos_estimate.x.speed, pos_estimate.y.speed));
+   vec2_t tmp;
+   xy_speed_ctrl_run(&tmp, &speed_sp, &speed_vec, euler.yaw);
+   pitch_roll_sp.x = -tmp.y;
+   pitch_roll_sp.y = -tmp.x;
 
    /* run attitude controller: */
    vec2_t pitch_roll = {{-imu_euler.pitch, imu_euler.roll}};
@@ -405,7 +409,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    /* write motors: */
    if (!override_hw)
    {
-      platform_write_motors(setpoints);
+      //platform_write_motors(setpoints);
    }
 
 out:
