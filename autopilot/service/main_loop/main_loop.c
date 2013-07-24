@@ -54,6 +54,7 @@
 #include "../control/position/att_ctrl.h"
 #include "../control/position/z_ctrl.h"
 #include "../control/position/yaw_ctrl.h"
+#include "../control/speed/z_speed.h"
 #include "../control/speed/piid.h"
 #include "../control/speed/xy_speed.h"
 #include "../state/motors_state.h"
@@ -180,7 +181,7 @@ void main_init(int override_hw)
    xy_speed_ctrl_init();
    att_ctrl_init();
    yaw_ctrl_init();
-   z_ctrl_init(platform.mass_kg * 10.0f / platform.max_thrust_n);
+   z_speed_init(platform.mass_kg * 10.0f / platform.max_thrust_n);
    navi_init();
 
    LOG(LL_INFO, "initializing command interface");
@@ -207,8 +208,8 @@ void main_init(int override_hw)
    /* init calibration data: */
    cal_init(&gyro_cal, 3, 500);
    
-   ahrs_init(&ahrs, 10.0f, 2.0f * REALTIME_PERIOD, 0.02f);
-   ahrs_init(&imu, 10.0f, 2.0f * REALTIME_PERIOD, 0.02f);
+   ahrs_init(&ahrs, AHRS_ACC_MAG, 10.0f, 2.0f * REALTIME_PERIOD, 0.02f);
+   ahrs_init(&imu, AHRS_ACC, 10.0f, 2.0f * REALTIME_PERIOD, 0.02f);
    gps_util_init(&gps_util);
    flight_state_init(50, 30, 4.0, 150.0, 1.3);
    
@@ -267,9 +268,11 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    acc_mag_cal_apply(&marg_data->acc, &marg_data->mag);
 
    /* perform sensor data fusion: */
-   int ahrs_state = ahrs_update(&ahrs, marg_data, 0, dt);
-   ahrs_update(&imu, marg_data, 1, dt);
-   //EVERY_N_TIMES(20, printf("%f %f %f\n", marg_data->acc.x, marg_data->acc.y, marg_data->acc.z));
+   int ahrs_state = ahrs_update(&ahrs, marg_data, dt);
+   if (ahrs_state < 0 || !cal_complete(&gyro_cal))
+      goto out;
+   
+   ahrs_update(&imu, marg_data, dt);
    flight_state_t flight_state = 0; //flight_detect(&marg_data->acc.vec[0]);
 
    /* global z orientation calibration: */
@@ -284,8 +287,6 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    euler_t imu_euler;
    quat_to_euler(&imu_euler, &imu.quat);
 
-   if (ahrs_state < 0 || !cal_complete(&gyro_cal))
-      goto out;
 
    ONCE(start_quat = ahrs_quat; init = 1; LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
    
@@ -303,8 +304,11 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    //auto_stick.yaw = yaw_ctrl_step(&yaw_err, euler.yaw, marg_data->gyro.z, dt);
    if (cm.z.type == Z_AUTO)
    {
-      gas = z_ctrl_step(&z_err, pos_estimate.ultra_z.pos,
+      /*float speed_sp = z_ctrl_step(&z_err, pos_estimate.ultra_z.pos,
                                    pos_estimate.baro_z.pos, pos_estimate.baro_z.speed, dt);
+      */
+      float speed_sp = 0.0f;
+      gas = z_speed_step(speed_sp, pos_estimate.baro_z.speed, dt);
       gas = fmin(gas, cm.z.setp);
    }
    else /* Z_STICK */
@@ -387,7 +391,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
                 z_err, yaw_err);
    
    /* run feed-forward system and stabilizing PIID controller: */
-   f_local_t f_local = {{gas, 0.0f, 0.0f, 0.0f}};
+   f_local_t f_local = {{gas * platform.max_thrust_n, 0.0f, 0.0f, 0.0f}};
    piid_run(&f_local.vec[1], marg_data->gyro.vec, piid_sp);
 
    /* computation of rpm ^ 2 out of the desired forces */

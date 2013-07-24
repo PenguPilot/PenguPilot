@@ -107,7 +107,7 @@ void cm_update(control_mode_t *cm, uint16_t sensor_status, float channels[MAX_CH
       cm->xy.setp.y = p * roll;   
    }
    cm->z.type = Z_STICK;
-   cm->z.setp = gas * platform.max_thrust_n;
+   cm->z.setp = gas;
    cm->yaw.type = YAW_STICK;
    cm->yaw.setp = yaw * tsfloat_get(&stick_yaw_p);
    cm->motors_enabled = rc_valid && sw > 0.5;
