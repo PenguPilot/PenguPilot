@@ -106,7 +106,7 @@ void cm_update(control_mode_t *cm, uint16_t sensor_status, float channels[MAX_CH
       cm->xy.setp.x = p * pitch;   
       cm->xy.setp.y = p * roll;   
    }
-   cm->z.type = Z_STICK;
+   cm->z.type = Z_AUTO;
    cm->z.setp = gas;
    cm->yaw.type = YAW_STICK;
    cm->yaw.setp = yaw * tsfloat_get(&stick_yaw_p);
