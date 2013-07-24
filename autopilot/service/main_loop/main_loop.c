@@ -332,14 +332,12 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    else /* GPS_POS */
    {
       /* x/y position mode: */
-      vec2_t pos_vec = {{pos_estimate.x.pos, pos_estimate.y.pos}};
-      navi_run(&speed_sp, &pos_vec, dt);
+      navi_run(&speed_sp, &pos_estimate.xy_pos, dt);
    }
 
    /* run speed vector controller: */
    vec2_t pitch_roll_sp;
-   vec2_t speed_vec = {{pos_estimate.x.speed, pos_estimate.y.speed}};
-   xy_speed_ctrl_run(&pitch_roll_sp, &speed_sp, &speed_vec, euler.yaw);
+   xy_speed_ctrl_run(&pitch_roll_sp, &speed_sp, &pos_estimate.xy_speed, euler.yaw);
 
    /* run attitude controller: */
    vec2_t pitch_roll = {{-imu_euler.pitch, imu_euler.roll}};
@@ -382,8 +380,8 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    piid_sp[PIID_YAW] = cm.yaw.setp;
 
    /* set monitoring data: */
-   mon_data_set(pos_estimate.x.pos - navi_get_dest_x(),
-                pos_estimate.y.pos - navi_get_dest_y(),
+   mon_data_set(pos_estimate.xy_pos.x - navi_get_dest_x(),
+                pos_estimate.xy_pos.y - navi_get_dest_y(),
                 z_err, yaw_err);
    
    /* run feed-forward system and stabilizing PIID controller: */
@@ -425,9 +423,9 @@ out:
    PACKFV(pos_in.acc.vec, 3);
    PACKF(pos_in.dx); PACKF(pos_in.dy);
    PACKF(pos_in.ultra_z); PACKF(pos_in.baro_z);
-   PACKF(pos_estimate.x.pos); PACKF(pos_estimate.y.pos);
+   PACKFV(pos_estimate.xy_pos.vec, 2);
    PACKF(pos_estimate.ultra_z.pos); PACKF(pos_estimate.baro_z.pos);
-   PACKF(pos_estimate.x.speed); PACKF(pos_estimate.y.speed);
+   PACKFV(pos_estimate.xy_speed.vec, 2);
    PACKF(pos_estimate.ultra_z.speed); PACKF(pos_estimate.baro_z.speed);
    PACKF(0.0f);
    PACKFV(pitch_roll_sp.vec, 2);

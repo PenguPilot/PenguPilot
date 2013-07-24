@@ -33,6 +33,7 @@
 
 
 #include "../geometry/quat.h"
+#include "../util/math/vec2.h"
 
 
 typedef struct
@@ -46,8 +47,8 @@ pos_speed_t;
 typedef struct
 {
    /* system positions/speeds in NEU ground reference frame: */
-   pos_speed_t x; /* east direction */
-   pos_speed_t y; /* north direction */
+   vec2_t xy_pos;
+   vec2_t xy_speed;
    pos_speed_t ultra_z; /* ultrasonic altitude altitude above ground */
    pos_speed_t baro_z; /* barometric altitude above MSL */
 }

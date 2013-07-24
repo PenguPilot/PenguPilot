@@ -145,8 +145,8 @@ void pos_update(pos_t *out, pos_in_t *in)
    }
 
    /* run kalman filters: */
-   kalman_run(&x_kalman,       &out->x.pos,       &out->x.speed,       in->dx,      world_acc.x, in->dt);
-   kalman_run(&y_kalman,       &out->y.pos,       &out->y.speed,       in->dy,      world_acc.y, in->dt);
+   kalman_run(&x_kalman,       &out->xy_pos.x,    &out->xy_speed.x,    in->dx,      world_acc.x, in->dt);
+   kalman_run(&y_kalman,       &out->xy_pos.y,    &out->xy_speed.y,    in->dy,      world_acc.y, in->dt);
    kalman_run(&ultra_z_kalman, &out->ultra_z.pos, &out->ultra_z.speed, in->ultra_z, world_acc.z, in->dt);
    kalman_run(&baro_z_kalman,  &out->baro_z.pos,  &out->baro_z.speed,  in->baro_z,  world_acc.z, in->dt);
 }
