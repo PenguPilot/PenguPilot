@@ -30,7 +30,6 @@
 
 
 #include "vec3.h"
-#include "euler.h"
 
 
 /* quaternion */
@@ -99,6 +98,21 @@ void quat_normalize(quat_t *qo, const quat_t *qi);
 
 /* normalize q in-place */
 void quat_normalize_self(quat_t *q);
+
+
+/* euler angles */
+typedef union
+{
+   struct
+   {
+      float yaw;
+      float pitch;
+      float roll;
+   };
+   float vec[3];
+}
+euler_t;
+
 
 /* convert quaternion to euler angles */
 void quat_to_euler(euler_t *e, const quat_t *q);
