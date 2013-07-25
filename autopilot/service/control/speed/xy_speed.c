@@ -60,12 +60,12 @@ void xy_speed_ctrl_run(vec2_t *control, vec2_t *speed_setpoint, vec2_t *speed, f
    
    /* calculate 2d speed feedback (angle): */
    vec2_t world_thrust;
-   vec2_scale(&world_thrust, &speed_err, 1.0/*tsfloat_get(&p)*/);
+   vec2_scale(&world_thrust, &speed_err, tsfloat_get(&p));
 
    /* rotate global speed feedback into local control primitives: */
    vec2_rotate(control, &world_thrust, yaw + M_PI / 2);
    float a_max = deg2rad(tsfloat_get(&angle_max));
-   control->vec[0] = sym_limit(-control->vec[0], a_max);
+   control->vec[0] = -sym_limit(control->vec[0], a_max);
    control->vec[1] = sym_limit(control->vec[1], a_max);
 }
 

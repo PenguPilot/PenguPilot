@@ -217,7 +217,7 @@ void transform_local_global(vec3_t *gv, vec3_t *lv, quat_t *quat)
    /* rotate vector according to new quaternion: */
    vec3_t tv;
    quat_rot_vec(&tv, lv, &tq);
-   tv.y *= -1.0f;
+   tv.x *= -1.0f;
    tv.z *= -1.0f;
    *gv = tv;
 }
