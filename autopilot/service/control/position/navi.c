@@ -66,6 +66,7 @@ static tsfloat_t dest_y; /* destination in lat direction, in m */
 float desired_speed(float dist)
 {
    float _square_shift = tsfloat_get(&square_shift);
+   
    if (dist < _square_shift)
    {
       return 0.0f;
@@ -84,6 +85,7 @@ float desired_speed(float dist)
    {
       speed = _speed_max;
    }
+
    return speed;
 }
 
@@ -187,16 +189,25 @@ void navi_run(vec2_t *speed_setpoint, vec2_t *pos, float dt)
    vec2_t pos_err;
    vec2_sub(&pos_err, &dest_pos, pos);
  
+
    /* add correction for inter-setpoint trajectory */
-   vec2_t setpoints_dir;
-   vec2_sub(&setpoints_dir, &dest_pos, &prev_dest_pos);
-   vec2_t ortho_vec;
-   vec2_ortho_right(&ortho_vec, &setpoints_dir);
-   vec2_t ortho_pos_err;
-   vec2_project(&ortho_pos_err, &pos_err, &ortho_vec);
    vec2_t ortho_thrust;
-   vec2_scale(&ortho_thrust, &ortho_pos_err, tsfloat_get(&ortho_p));
- 
+   if ((prev_dest_pos.x == dest_pos.x)
+       && (prev_dest_pos.y == dest_pos.y))
+   {
+      vec2_set(&ortho_thrust, 0.0, 0.0);
+   }
+   else
+   {
+      vec2_t setpoints_dir;
+      vec2_sub(&setpoints_dir, &dest_pos, &prev_dest_pos);
+      vec2_t ortho_vec;
+      vec2_ortho_right(&ortho_vec, &setpoints_dir);
+      vec2_t ortho_pos_err;
+      vec2_project(&ortho_pos_err, &pos_err, &ortho_vec);
+      vec2_scale(&ortho_thrust, &ortho_pos_err, tsfloat_get(&ortho_p));
+   }
+
    /* calculate speed setpoint vector: */
    vec2_t virt_dest_pos;
    virt_dest_pos = dest_pos;
@@ -207,7 +218,8 @@ void navi_run(vec2_t *speed_setpoint, vec2_t *pos, float dt)
    vec2_sub(speed_setpoint, &virt_dest_pos, pos);
    float target_dist = vec2_norm(speed_setpoint);
 
-   /* caluclate error sum for "i-part" of controller,
+   
+   /* calculate error sum for "i-part" of controller,
       if sum is below pos_i_max: */
    if (vec2_norm(&pos_err_sum) < tsfloat_get(&pos_i_max))
    {

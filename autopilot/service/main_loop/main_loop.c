@@ -337,10 +337,11 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
          vec2_rotate(&speed_sp, &cm.xy.setp, euler.yaw);
       }
    }
-   else /* GPS_POS */
+   //else /* GPS_POS */
    {
       /* x/y position mode: */
       navi_run(&speed_sp, &pos_estimate.xy_pos, dt);
+      // printf("%f %f\n", speed_sp.x, speed_sp.y);
    }
 
    /* run speed vector controller: */
