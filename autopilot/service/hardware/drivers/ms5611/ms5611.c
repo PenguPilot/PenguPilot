@@ -172,39 +172,34 @@ static void ms5611_compensate(ms5611_t *ms5611)
    int64_t C6 = ms5611->prom[6];
    int64_t D1 = ms5611->raw_p;
    int64_t D2 = ms5611->raw_t;
+   uint16_t *C = ms5611->prom;
    
-   /* calculate temperature: */
-   int64_t dT = D2 - (C5 << 8); /* reference temperature delta */
-   int64_t TEMP = 2000 + ((dT * C6) >> 23);
-  
-   /* compute temperature compensation: */
-   int64_t OFF = (C2 << 16) + ((C4 * dT) >> 7);
-   int64_t SENS = (C1 << 15) + ((C3 * dT) >> 8);
+   int32_t off2=0,sens2=0;
+   float temperature, delt;
+ 
+   int32_t dT   = D2 - ((uint32_t)C5 << 8);
+   int64_t off  = ((uint32_t)C2 <<16) + (((int64_t)dT * C4) >> 7);
+   int64_t sens = ((uint32_t)C1 <<15) + (((int64_t)dT * C3) >> 8);
+   temperature  = 2000 + (((int64_t)dT * C6) / (float) (1 << 23));
    
-   /* compute 2nd order temperature compensation, if required: */
-   if (TEMP < 2000)
-   {
-      /* low temperature: */
-      int64_t T2 = (dT * dT) >> 31;
-      int64_t tmp = (TEMP - 2000) * (TEMP - 2000);
-      int64_t OFF2 = 5 * tmp >> 1;
-      int64_t SENS2 = 5 * tmp >> 2;
-      if (TEMP < -1500)
-      {
-         /* very low temperature: */
-         tmp = (TEMP + 1500) * (TEMP + 1500);
-         OFF2 = OFF2 + 7 * tmp;
-         SENS2 = SENS2 + (11 * tmp >> 1);
-      }
-      TEMP = TEMP - T2;
-      OFF = OFF - OFF2;
-      SENS = SENS - SENS2;
-   }
-
-   /* compute compensated pressure: */
-   ms5611->c_p = (((D1 * SENS) >> 21) - OFF) >> 15;
-   ms5611->c_a = (44330.0 * (1.0 - pow((float)ms5611->c_p / 101325.0, 0.190295)));
-   ms5611->c_t = (float)TEMP / 100.0;
+   if (temperature < 2000) { // temperature lower than 20st.C 
+     delt = temperature-2000;
+     delt  = delt*delt;
+     off2  = (5 * delt) / 2; 
+     sens2 = (5 * delt) / 4; 
+     if (temperature < -1500) { // temperature lower than -15st.C
+       delt  = temperature+1500;
+       delt  = delt*delt;
+       off2  += 7 * delt; 
+       sens2 += (11 * delt) / 2; 
+     }
+   } 
+   off  -= off2; 
+   sens -= sens2;
+   float pressure     = (( (D1 * sens ) >> 21) - off) / (float) (1 << 15);
+   ms5611->c_p = pressure / 100.0; //(((D1 * SENS) >> 21) - OFF) >> 15;
+   ms5611->c_a = (44330.0 * (1.0 - pow((double)ms5611->c_p / 101325.0, 0.190295)));
+   ms5611->c_t = (float)0 / 100.0;
 }
 
 

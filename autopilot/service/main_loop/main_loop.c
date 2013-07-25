@@ -312,7 +312,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
       float speed_sp = 0.0f;
       gas = z_speed_step(speed_sp, pos_estimate.baro_z.speed, dt);
       
-      //EVERY_N_TIMES(20, printf("%f %f\n", pos_in.baro_z, pos_estimate.baro_z.pos));
+      //EVERY_N_TIMES(10, printf("%f %f\n", pos_in.baro_z, pos_estimate.baro_z.pos));
       gas = fmin(gas, cm.z.setp);
    }
    else /* Z_STICK */
@@ -412,7 +412,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    /* write motors: */
    if (!override_hw)
    {
-      platform_write_motors(setpoints);
+      //platform_write_motors(setpoints);
    }
 
 out:
