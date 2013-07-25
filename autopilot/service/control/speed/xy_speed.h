@@ -34,8 +34,7 @@
 
 void xy_speed_ctrl_init(void);
 
-
-void xy_speed_ctrl_run(vec2_t *control, vec2_t *speed_setpoint, vec2_t *speed, float yaw);
+void xy_speed_ctrl_run(vec2_t *ctrl_body, const vec2_t *setp, const float dt, const vec2_t *speed, float yaw);
 
 
 #endif /* __XY_SPEED_H__ */

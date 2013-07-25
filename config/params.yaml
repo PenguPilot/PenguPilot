@@ -104,6 +104,8 @@ pilot:
 
       xy_speed:
          p: 0.4
+         i: 0.01
+         i_max: 0.3
          angle_max: 30.0
      
       attitude:

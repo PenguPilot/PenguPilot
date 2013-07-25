@@ -346,7 +346,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
 
    /* run speed vector controller: */
    vec2_t pitch_roll_sp;
-   xy_speed_ctrl_run(&pitch_roll_sp, &speed_sp, &pos_estimate.xy_speed, euler.yaw);
+   xy_speed_ctrl_run(&pitch_roll_sp, &speed_sp, dt, &pos_estimate.xy_speed, euler.yaw);
 
    /* run attitude controller: */
    vec2_t pitch_roll = {{-imu_euler.pitch, imu_euler.roll}};

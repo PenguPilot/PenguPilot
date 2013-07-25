@@ -111,3 +111,12 @@ void vec2_rotate(vec2_t *vo, const vec2_t *vi, float angle)
    vo->y = vi->x * sa + vi->y * ca;
 }
 
+
+void vec2_world_to_body(vec2_t *vb, const vec2_t *vw, float yaw)
+{
+   vec2_t tmp;
+   vec2_rotate(&tmp, vw, yaw + M_PI / 2);
+   vb->x = -tmp.x;
+   vb->y = tmp.y;
+}
+

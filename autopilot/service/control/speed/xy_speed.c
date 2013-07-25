@@ -26,46 +26,71 @@
 
 #include "xy_speed.h"
 
-#include <math.h>
-#include <util.h>
 #include <threadsafe_types.h>
 #include <opcd_interface.h>
+#include <util.h>
 
 #include "../../util/math/conv.h"
 #include "../../util/math/vec2.h"
+#include "../util/pid.h"
 
 
-static tsfloat_t p;
 static tsfloat_t angle_max;
+static tsfloat_t speed_p;
+static tsfloat_t speed_i;
+static tsfloat_t speed_i_max;
+
+static pid_controller_t controllers[2];
 
 
 void xy_speed_ctrl_init(void)
 {
    ASSERT_ONCE();
+
+   /* load parameters: */
    opcd_param_t params[] =
    {
-      {"p", &p},
-      {"angle_max", &angle_max},
+      {"angle_max", &angle_max.value},
+      {"p", &speed_p.value},
+      {"i", &speed_i.value},
+      {"i_max", &speed_i_max.value},
       OPCD_PARAMS_END
    };
    opcd_params_apply("controllers.xy_speed.", params);
+   
+   /* initialize controllers: */
+   FOR_EACH(i, controllers)
+   {
+      pid_init(&controllers[i], &speed_p, &speed_i, NULL, &speed_i_max);
+   }
 }
 
 
-void xy_speed_ctrl_run(vec2_t *control, vec2_t *speed_setpoint, vec2_t *speed, float yaw)
+void xy_speed_ctrl_reset(void)
 {
-   /* calculate 2d speed error: */
-   vec2_t speed_err;
-   vec2_sub(&speed_err, speed_setpoint, speed);
-   
-   /* calculate 2d speed feedback (angle): */
-   vec2_t world_thrust;
-   vec2_scale(&world_thrust, &speed_err, tsfloat_get(&p));
+   FOR_EACH(i, controllers)
+   {
+      pid_reset(&controllers[i]);
+   }
+}
 
-   /* rotate global speed feedback into local control primitives: */
-   vec2_rotate(control, &world_thrust, yaw + M_PI / 2);
-   float a_max = deg2rad(tsfloat_get(&angle_max));
-   control->vec[0] = -sym_limit(control->vec[0], a_max);
-   control->vec[1] = sym_limit(control->vec[1], a_max);
+
+void xy_speed_ctrl_run(vec2_t *ctrl_body, const vec2_t *setp, const float dt, const vec2_t *speed, float yaw)
+{
+   vec2_t ctrl_world;
+   /* run controllers: */
+   FOR_EACH(i, controllers)
+   {
+      float error = setp->vec[i] - speed->vec[i];
+      ctrl_world.vec[i] = pid_control(&controllers[i], error, 0.0, dt);
+   }
+   /* rotate global speed feedback into local coordinates: */
+   vec2_t ctrl;
+   vec2_world_to_body(&ctrl, &ctrl_world, yaw);
+   /* limit speed controller output: */
+   FOR_EACH(i, controllers)
+   {
+      ctrl_body->vec[i] = sym_limit(ctrl.vec[i], deg2rad(tsfloat_get(&angle_max)));
+   } 
 }
 
