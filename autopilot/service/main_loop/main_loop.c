@@ -267,7 +267,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
 
    /* perform sensor data fusion: */
    euler_t euler;
-   int ahrs_state = cal_ahrs_update(euler, marg_data, dt);
+   int ahrs_state = cal_ahrs_update(&euler, marg_data, dt);
    if (ahrs_state < 0 || !cal_complete(&gyro_cal))
       goto out;
    
