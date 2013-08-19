@@ -38,7 +38,7 @@ def set_compiler_dependent_cflags():
    cflags = '-pipe -std=gnu99 -Wall -Wextra -g '
    pipe = subprocess.Popen([env['CC'], '-v'], env=env['ENV'], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
    if 'armv7a' in pipe.stderr.read():
-      cflags += ' -march=armv7-a -mtune=cortex-a8 -mfpu=neon -ftree-vectorize -mfpu=neon -mfloat-abi=softfp -ffast-math -fomit-frame-pointer -funroll-loops'
+      cflags += ' -O2 -ftree-vectorize -ffast-math -fomit-frame-pointer -funroll-loops -O2 -march=armv7-a -mtune=cortex-a8 -mfpu=vfpv3-d16 -mfloat-abi=hard'
    env['CFLAGS'] = cflags
 
 
