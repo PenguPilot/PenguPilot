@@ -41,7 +41,7 @@
 #include "../interface/interface.h"
 #include "../util/math/conv.h"
 #include "../util/logger/logger.h"
-#include "../estimators/ahrs.h"
+#include "../estimators/cal_ahrs.h"
 #include "../estimators/pos.h"
 #include "../platform/ac.h"
 #include "../platform/platform.h"
@@ -72,7 +72,6 @@ static float mag_decl = 0.0f;
 static gps_data_t gps_data;
 static gps_rel_data_t gps_rel_data = {0.0, 0.0, 0.0};
 static calibration_t gyro_cal;
-static ahrs_t ahrs, imu;
 static quat_t start_quat;
 static gps_util_t gps_util;
 static interval_t gyro_move_interval;
@@ -206,8 +205,7 @@ void main_init(int override_hw)
    /* init calibration data: */
    cal_init(&gyro_cal, 3, 500);
    
-   ahrs_init(&ahrs, AHRS_ACC_MAG, 10.0f, 2.0f * REALTIME_PERIOD, 0.02f);
-   ahrs_init(&imu, AHRS_ACC, 10.0f, 2.0f * REALTIME_PERIOD, 0.02f);
+   cal_ahrs_init(10.0f, 2.0f * REALTIME_PERIOD, 0.02f);
    gps_util_init(&gps_util);
    flight_state_init(50, 30, 4.0, 150.0, 1.3);
    
@@ -268,11 +266,11 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    //printf("%f\n", sqrt(marg_data->acc.x * marg_data->acc.x + marg_data->acc.y * marg_data->acc.y + marg_data->acc.z * marg_data->acc.z));
 
    /* perform sensor data fusion: */
-   int ahrs_state = ahrs_update(&ahrs, marg_data, dt);
+   euler_t euler;
+   int ahrs_state = cal_ahrs_update(euler, marg_data, dt);
    if (ahrs_state < 0 || !cal_complete(&gyro_cal))
       goto out;
    
-   ahrs_update(&imu, marg_data, dt);
    flight_state_t flight_state = 0; //flight_detect(&marg_data->acc.vec[0]);
 
    /* global z orientation calibration: */

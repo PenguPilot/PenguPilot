@@ -206,14 +206,3 @@ void quat_normalize_self(quat_t *q)
    quat_normalize(q, q);
 }
 
-
-float normalize_euler_0_2pi(float a)
-{
-   a = fmod(a, M_PI * 2);
-   if (a < 0)
-   {
-      a += M_PI * 2;
-   }
-   return a;
-}
-
