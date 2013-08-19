@@ -110,7 +110,7 @@ void pos_init(void)
       OPCD_PARAMS_END
    };
    opcd_params_apply("kalman_pos.", params);
-   LOG(LL_DEBUG, "process noise: %f, ultra noise: %f, baro noise: %f, gps noise: %f\n",
+   LOG(LL_DEBUG, "process noise: %f, ultra noise: %f, baro noise: %f, gps noise: %f",
        tsfloat_get(&process_noise),
        tsfloat_get(&ultra_noise),
        tsfloat_get(&baro_noise),

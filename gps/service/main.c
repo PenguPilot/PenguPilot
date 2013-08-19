@@ -101,7 +101,7 @@ void _main(int argc, char *argv[])
       exit(EXIT_FAILURE);
    }
    int64_t hwm = 1;
-   zmq_setsockopt(gps_socket, ZMQ_HWM, &hwm, sizeof(hwm));
+   zmq_setsockopt(gps_socket, ZMQ_SNDHWM, &hwm, sizeof(hwm));
   
    opcd_param_t params[] =
    {
