@@ -307,7 +307,6 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    {
       /*float speed_sp = u_ctrl_step(&u_err, pos_estimate.ultra_z.pos,
                                    pos_estimate.baro_z.pos, pos_estimate.baro_z.speed, dt);
-<<<<<<< HEAD
       */
       float speed_sp = 0.0f;
       gas = u_speed_step(speed_sp, pos_estimate.baro_z.speed, dt);
