@@ -47,8 +47,8 @@ pos_speed_t;
 typedef struct
 {
    /* system positions/speeds in NEU ground reference frame: */
-   vec2_t xy_pos;
-   vec2_t xy_speed;
+   vec2_t ne_pos;
+   vec2_t ne_speed;
    pos_speed_t ultra_z; /* ultrasonic altitude altitude above ground */
    pos_speed_t baro_z; /* barometric altitude above MSL */
 }
@@ -62,8 +62,8 @@ typedef struct
    /* positions input: */
    float ultra_z;
    float baro_z;
-   float dx;
-   float dy;
+   float dn;
+   float de;
 
    /* control acc input in NEU ground reference frame: */
    vec3_t acc;

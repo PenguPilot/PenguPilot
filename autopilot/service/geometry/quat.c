@@ -207,22 +207,6 @@ void quat_normalize_self(quat_t *q)
 }
 
 
-void transform_local_global(vec3_t *gv, vec3_t *lv, quat_t *quat)
-{
-   /* rotate orientation "right": */
-   quat_t zrot_quat;
-   quat_init_axis(&zrot_quat, 0.0, 0.0, 1.0, M_PI / 2.0f);
-   quat_t tq;
-   quat_mul(&tq, &zrot_quat, quat);
-   /* rotate vector according to new quaternion: */
-   vec3_t tv;
-   quat_rot_vec(&tv, lv, &tq);
-   tv.x *= -1.0f;
-   tv.z *= -1.0f;
-   *gv = tv;
-}
-
-
 float normalize_euler_0_2pi(float a)
 {
    a = fmod(a, M_PI * 2);

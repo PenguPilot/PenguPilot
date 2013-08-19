@@ -99,20 +99,6 @@ void quat_normalize(quat_t *qo, const quat_t *qi);
 /* normalize q in-place */
 void quat_normalize_self(quat_t *q);
 
-/* compute global vector in frame:
- *
- * North
- * Y (latitude)
- * ^
- * |
- * |
- * o-----> X (longitude)
- * Z Up    East
- *
- */
-void transform_local_global(vec3_t *gv, vec3_t *lv, quat_t *quat);
-
-
 
 /* euler angles */
 typedef union

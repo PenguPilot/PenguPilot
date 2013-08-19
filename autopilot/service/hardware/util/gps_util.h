@@ -43,9 +43,9 @@ gps_util_t;
 
 typedef struct
 {
-   double dx; /* delta x in meters */
-   double dy; /* delta y in meters */
-   double dz; /* delty z in meters */
+   double de; /* delta east in meters */
+   double dn; /* delta north in meters */
+   double du; /* delty up in meters */
 }
 gps_rel_data_t;
 

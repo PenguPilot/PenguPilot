@@ -27,7 +27,7 @@
 #include "gps_util.h"
 
 
-static void meter_offset(double *dx, double *dy, double lat1, double lon1, double lat2, double lon2);
+static void meter_offset(double *dn, double *de, double lat1, double lon1, double lat2, double lon2);
 
 
 void gps_util_init(gps_util_t *gps_util)
@@ -53,10 +53,10 @@ void gps_util_update(gps_rel_data_t *out, gps_util_t *gps_util, gps_data_t *in)
    /* calculate deltas: */
    if (in->fix >= FIX_2D && gps_util->initialized)
    {
-      meter_offset(&out->dx, &out->dy, in->lat, in->lon, gps_util->start_lat, gps_util->start_lon);
+      meter_offset(&out->dn, &out->de, in->lat, in->lon, gps_util->start_lat, gps_util->start_lon);
       if (in->fix == FIX_3D)
       {
-         out->dz = in->alt - gps_util->start_alt;
+         out->du = in->alt - gps_util->start_alt;
       }
    }
 }
@@ -161,7 +161,7 @@ static double earth_distance(double lat1, double lon1, double lat2, double lon2)
 
 
 /* return offset in meters */
-static void meter_offset(double *dx, double *dy, double lat1, double lon1, double lat2, double lon2)
+static void meter_offset(double *dn, double *de, double lat1, double lon1, double lat2, double lon2)
 {
    double _dx = (double)earth_distance(lat1, lon1, lat1, lon2);
    double _dy = (double)earth_distance(lat1, lon1, lat2, lon1);
@@ -182,7 +182,7 @@ static void meter_offset(double *dx, double *dy, double lat1, double lon1, doubl
    {
       _dy = 0.0f;
    }
-   *dx = _dx;
-   *dy = _dy;
+   *de = _dx;
+   *dn = _dy;
 }
 

@@ -85,8 +85,8 @@ static void kalman_run(kalman_t *kf, float *est_pos, float *est_speed, float pos
 /* kalman filters: */
 static kalman_t ultra_z_kalman;
 static kalman_t baro_z_kalman;
-static kalman_t y_kalman;
-static kalman_t x_kalman;
+static kalman_t n_kalman;
+static kalman_t e_kalman;
 
 /* averages: */
 static sliding_avg_t acc_avgs[3];
@@ -117,8 +117,8 @@ void pos_init(void)
        tsfloat_get(&gps_noise));
 
    /* set-up kalman filters: */
-   kalman_init(&x_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0);
-   kalman_init(&y_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0);
+   kalman_init(&n_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0);
+   kalman_init(&e_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0);
    kalman_init(&ultra_z_kalman, tsfloat_get(&process_noise), tsfloat_get(&ultra_noise), 0, 0);
    kalman_init(&baro_z_kalman, tsfloat_get(&process_noise), tsfloat_get(&baro_noise), 0, 0);
    
@@ -145,8 +145,8 @@ void pos_update(pos_t *out, pos_in_t *in)
    }
 
    /* run kalman filters: */
-   kalman_run(&x_kalman,       &out->xy_pos.x,    &out->xy_speed.x,    in->dx,      world_acc.x, in->dt);
-   kalman_run(&y_kalman,       &out->xy_pos.y,    &out->xy_speed.y,    in->dy,      world_acc.y, in->dt);
+   kalman_run(&n_kalman,       &out->ne_pos.y,    &out->ne_speed.y,    in->dn,      world_acc.y, in->dt);
+   kalman_run(&e_kalman,       &out->ne_pos.x,    &out->ne_speed.x,    in->de,      world_acc.x, in->dt);
    kalman_run(&ultra_z_kalman, &out->ultra_z.pos, &out->ultra_z.speed, in->ultra_z, world_acc.z, in->dt);
    kalman_run(&baro_z_kalman,  &out->baro_z.pos,  &out->baro_z.speed,  in->baro_z,  world_acc.z, in->dt);
 }
