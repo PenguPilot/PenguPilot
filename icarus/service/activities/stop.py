@@ -41,9 +41,9 @@ class StopActivity(Activity, StabMixIn):
    def run(self):
       core = self.core
       mon_data = self.mon_data
-      self.core.set_ctrl_param(POS_X, mon_data.x)
-      self.core.set_ctrl_param(POS_Y, mon_data.y)
-      self.core.set_ctrl_param(POS_Z, mon_data.z)
+      self.core.set_ctrl_param(POS_E, mon_data.e)
+      self.core.set_ctrl_param(POS_N, mon_data.n)
+      self.core.set_ctrl_param(POS_U, mon_data.u)
       self.stabilize()
       self.fsm.done()
 

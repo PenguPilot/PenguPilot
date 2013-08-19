@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- z speed controller interface
+ up speed controller interface
  
  Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
@@ -24,16 +24,16 @@
  GNU General Public License for more details. */
 
 
-#ifndef __Z_SPEED_H__
-#define __Z_SPEED_H__
+#ifndef __U_SPEED_H__
+#define __U_SPEED_H__
 
 
-float z_speed_step(float setpoint, float speed, float dt);
+float u_speed_step(float setpoint, float speed, float dt);
 
-void z_speed_init(float neutral_gas);
+void u_speed_init(float neutral_gas);
 
-void z_speed_reset(void);
+void u_speed_reset(void);
 
 
-#endif /* __Z_SPEED_H__ */
+#endif /* __U_SPEED_H__ */
 

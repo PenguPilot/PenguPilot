@@ -52,9 +52,9 @@
 #include "../hardware/util/mag_decl.h"
 #include "../control/position/navi.h"
 #include "../control/position/att_ctrl.h"
-#include "../control/position/z_ctrl.h"
+#include "../control/position/u_ctrl.h"
 #include "../control/position/yaw_ctrl.h"
-#include "../control/speed/z_speed.h"
+#include "../control/speed/u_speed.h"
 #include "../control/speed/piid.h"
 #include "../control/speed/ne_speed.h"
 #include "../state/motors_state.h"
@@ -179,7 +179,7 @@ void main_init(int override_hw)
    ne_speed_ctrl_init();
    att_ctrl_init();
    yaw_ctrl_init();
-   z_speed_init(platform.mass_kg * 10.0f / platform.max_thrust_n);
+   u_speed_init(platform.mass_kg * 10.0f / platform.max_thrust_n);
    navi_init();
 
    LOG(LL_INFO, "initializing command interface");
@@ -259,6 +259,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
       pos_in.de = gps_rel_data.de;
       pos_in.dn = gps_rel_data.dn;
       ONCE(mag_decl = mag_decl_lookup(gps_data->lat, gps_data->lon);
+           gps_start_set(gps_data);
            LOG(LL_ERROR, "declination lookup yields: %f", mag_decl));
    }
 
@@ -300,16 +301,16 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    marg_data->gyro.y *= -1.0;
 
    float gas = 0.0f;
-   float yaw_err, z_err;
+   float yaw_err, u_err;
    //auto_stick.yaw = yaw_ctrl_step(&yaw_err, euler.yaw, marg_data->gyro.z, dt);
    if (cm.z.type == Z_AUTO)
    {
-      /*float speed_sp = z_ctrl_step(&z_err, pos_estimate.ultra_z.pos,
+      /*float speed_sp = u_ctrl_step(&u_err, pos_estimate.ultra_z.pos,
                                    pos_estimate.baro_z.pos, pos_estimate.baro_z.speed, dt);
 <<<<<<< HEAD
       */
       float speed_sp = 0.0f;
-      gas = z_speed_step(speed_sp, pos_estimate.baro_z.speed, dt);
+      gas = u_speed_step(speed_sp, pos_estimate.baro_z.speed, dt);
       
       //EVERY_N_TIMES(10, printf("%f %f\n", pos_in.baro_z, pos_estimate.baro_z.pos));
       gas = fmin(gas, cm.z.setp);
@@ -388,9 +389,9 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    piid_sp[PIID_YAW] = cm.yaw.setp;
 
    /* set monitoring data: */
-   mon_data_set(pos_estimate.ne_pos.x - navi_get_dest_x(),
-                pos_estimate.ne_pos.y - navi_get_dest_y(),
-                z_err, yaw_err);
+   mon_data_set(pos_estimate.ne_pos.x - navi_get_dest_e(),
+                pos_estimate.ne_pos.y - navi_get_dest_n(),
+                u_err, yaw_err);
    
    /* run feed-forward system and stabilizing PIID controller: */
    f_local_t f_local = {{gas * platform.max_thrust_n, 0.0f, 0.0f, 0.0f}};

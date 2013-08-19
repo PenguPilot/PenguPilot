@@ -9,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Altitude Controller Interface
+ Up Position Controller Interface
  
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@
  GNU General Public License for more details. */
 
 
-#ifndef __Z_CTRL_H__
-#define __Z_CTRL_H__
+#ifndef __U_CTRL_H__
+#define __U_CTRL_H__
 
 
 typedef struct
@@ -33,22 +33,22 @@ typedef struct
    float val;
    int mode_is_ground;
 }
-z_setpoint_t;
+u_setpoint_t;
 
 
 
-void z_ctrl_init(float neutral_gas);
+void u_ctrl_init(float neutral_gas);
 
-void z_ctrl_set_setpoint(z_setpoint_t z_setpoint);
+void u_ctrl_set_setpoint(u_setpoint_t u_setpoint);
 
-float z_ctrl_get_setpoint(void);
+float u_ctrl_get_setpoint(void);
 
-int z_ctrl_mode_is_ground(void);
+int u_ctrl_mode_is_ground(void);
  
-float z_ctrl_step(float *z_err, float ground_z_pos, float z_pos, float speed, float dt);
+float u_ctrl_step(float *u_err, float ground_u_pos, float u_pos, float speed, float dt);
 
-void z_ctrl_reset(void);
+void u_ctrl_reset(void);
 
 
-#endif /* __ALT_CTRL_H__ */
+#endif /* __U_CTRL_H__ */
 

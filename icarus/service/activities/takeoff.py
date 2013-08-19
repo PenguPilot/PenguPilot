@@ -87,12 +87,12 @@ class TakeoffActivity(Activity, StabMixIn):
       # "point of no return":
       # reset controllers:
       core.set_ctrl_param(POS_YAW, mon_data.yaw)
-      core.set_ctrl_param(POS_X, mon_data.x)
-      core.set_ctrl_param(POS_Y, mon_data.y)
+      core.set_ctrl_param(POS_E, mon_data.e)
+      core.set_ctrl_param(POS_N, mon_data.n)
       core.reset_ctrl()
 
       # set new altitude setpoint and stabilize:
-      core.set_ctrl_param(POS_Z, z_setpoint)
+      core.set_ctrl_param(POS_U, u_setpoint)
       self.stabilize()
       self.fsm.done()
 

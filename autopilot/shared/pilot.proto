@@ -24,15 +24,15 @@ enum RequestType
 enum CtrlParam
 {
    // position setpoints:
-   POS_X =        1; // X position, relative to starting point
-   POS_Y =        2; // Y position, relative to starting point
-   POS_Z_GROUND = 3; // altitude above ground
-   POS_Z =        4; // altitude above msl
+   POS_E =        1; // East position, relative to starting point
+   POS_N =        2; // North position, relative to starting point
+   POS_U_GROUND = 3; // altitude above ground
+   POS_U =        4; // altitude above msl
    POS_YAW =      5; // absolute yaw position, north = 0.0
 
    // speed setpoints:
-   SPEED_XY =  6; // xy speed */
-   SPEED_Z =   7; // z speed */
+   SPEED_NE =  6; // ne speed */
+   SPEED_U =   7; // u speed */
    SPEED_YAW = 8; // yaw speed */
 }
 
@@ -54,13 +54,13 @@ message Params
    // position setpoints:
    required float setp_x =        4;
    required float setp_y =        5;
-   required float setp_z =        6;
-   optional float setp_z_ground = 7; // one of them is required, ...
+   required float setp_u =        6;
+   optional float setp_u_ground = 7; // one of them is required, ...
    optional float setp_yaw =      8; // ... but not both!
 
    // speed control setpoints:
    required float setp_speed_xy =   9;
-   required float setp_speed_z =   10;
+   required float setp_speed_u =   10;
    required float setp_speed_yaw = 11;
 };
 

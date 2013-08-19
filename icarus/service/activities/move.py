@@ -121,8 +121,8 @@ class MoveActivity(Activity, StabMixIn):
       print 'coord output:', coord
       self.icarus.setpoints = coord
       # set position
-      core.set_ctrl_param(POS_X, coord[0])
-      core.set_ctrl_param(POS_Y, coord[1])
+      core.set_ctrl_param(POS_E, coord[0])
+      core.set_ctrl_param(POS_N, coord[1])
       
       # did the altitude change?:
       if coord[2] != prev_setp_rel[2]:
@@ -134,9 +134,9 @@ class MoveActivity(Activity, StabMixIn):
          while target_dist > self.LAT_STAB_EPSILON:
             sleep(1)
             if self.canceled:
-               core.set_ctrl_param(POS_X, mon_data.x)
-               core.set_ctrl_param(POS_Y, mon_data.y)
-               core.set_ctrl_param(POS_Z, mon_data.z)
+               core.set_ctrl_param(POS_E, mon_data.e)
+               core.set_ctrl_param(POS_N, mon_data.n)
+               core.set_ctrl_param(POS_U, mon_data.u)
                self.stabilize()
                return # not going into hovering state
             z = z_interp(dist - target_dist)

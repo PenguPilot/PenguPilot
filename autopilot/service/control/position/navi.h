@@ -45,27 +45,27 @@ void navi_reset(void);
 
 
 /*
- * setter for x position
+ * setter for e position
  */
-void navi_set_dest_x(float x);
+void navi_set_dest_e(float x);
 
 
 /*
- * setter for y position
+ * setter for n position
  */
-void navi_set_dest_y(float y);
+void navi_set_dest_n(float y);
 
 
 /*
- * getter for x position
+ * getter for e position
  */
-float navi_get_dest_x(void);
+float navi_get_dest_e(void);
 
 
 /*
- * getter for y position
+ * getter for n position
  */
-float navi_get_dest_y(void);
+float navi_get_dest_n(void);
 
 
 /*

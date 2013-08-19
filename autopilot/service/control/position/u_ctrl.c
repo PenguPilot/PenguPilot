@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Altitude Controller Implementation
+ Up Position Controller Implementation
  
  Copyright (C) 2010 Tobias Simon, Ilmenau University of Technology
 
@@ -28,7 +28,7 @@
 #include <opcd_interface.h>
 #include <threadsafe_types.h>
 
-#include "z_ctrl.h"
+#include "u_ctrl.h"
 #include "../util/pid.h"
 
 
@@ -36,7 +36,7 @@ static pid_controller_t controller;
 
 
 /* initialized by "init" parameter: */
-static float z_neutral_gas;
+static float u_neutral_gas;
 
 /* following thread-safe variables are initialized by pid_init: */
 static tsfloat_t speed_p;
@@ -48,7 +48,7 @@ static tsfloat_t speed_d;
 static tsfloat_t init_setpoint;
 static tsint_t init_mode_is_ground;
 
-/* following thread-safe variables are initialized by z_ctrl_init: */
+/* following thread-safe variables are initialized by u_ctrl_init: */
 static tsfloat_t setpoint;
 static tsint_t mode_is_ground;
 
@@ -61,20 +61,20 @@ static float speed_func(float err)
 }
 
 
-void z_ctrl_set_setpoint(z_setpoint_t z_setpoint)
+void u_ctrl_set_setpoint(u_setpoint_t u_setpoint)
 {
-   tsfloat_set(&setpoint, z_setpoint.val);
-   tsint_set(&mode_is_ground, z_setpoint.mode_is_ground);
+   tsfloat_set(&setpoint, u_setpoint.val);
+   tsint_set(&mode_is_ground, u_setpoint.mode_is_ground);
 }
 
 
-float z_ctrl_get_setpoint(void)
+float u_ctrl_get_setpoint(void)
 {
    return tsfloat_get(&setpoint);
 }
 
 
-int z_ctrl_mode_is_ground(void)
+int u_ctrl_mode_is_ground(void)
 {
    return tsint_get(&mode_is_ground);
 }
@@ -82,30 +82,30 @@ int z_ctrl_mode_is_ground(void)
 
 /*
  * perform controller step
- * parameters ground_z_pos, z_pos, float speed: need to be filtered (e.g. kalman)
+ * parameters ground_u_pos, u_pos, float speed: need to be filtered (e.g. kalman)
  * returns vertical controller output
  */
-float z_ctrl_step(float *z_err, float ground_z_pos, float z_pos, float speed, float dt)
+float u_ctrl_step(float *u_err, float ground_u_pos, float u_pos, float speed, float dt)
 {   
-   float _z_err;
+   float _u_err;
    if (tsint_get(&mode_is_ground))
    {
-      _z_err = tsfloat_get(&setpoint) - ground_z_pos;
+      _u_err = tsfloat_get(&setpoint) - ground_u_pos;
    }
    else
    {
-      _z_err = tsfloat_get(&setpoint) - z_pos;
+      _u_err = tsfloat_get(&setpoint) - u_pos;
    }
-   float spd_sp = speed_func(_z_err);
+   float spd_sp = speed_func(_u_err);
    float spd_err = spd_sp - speed;
    float val;
-   val = z_neutral_gas + pid_control(&controller, /*spd_err*/ _z_err, -speed, dt);
-   *z_err = _z_err;
+   val = u_neutral_gas + pid_control(&controller, _u_err, -speed, dt);
+   *u_err = _u_err;
    return val;
 }
 
 
-void z_ctrl_init(float neutral_gas)
+void u_ctrl_init(float neutral_gas)
 {
    ASSERT_ONCE();
    
@@ -124,11 +124,11 @@ void z_ctrl_init(float neutral_gas)
    tsfloat_init(&setpoint, tsfloat_get(&init_setpoint));
    tsint_init(&mode_is_ground, tsint_get(&init_mode_is_ground));
    pid_init(&controller, &speed_p, &speed_i, &speed_d, &speed_imax);
-   z_neutral_gas = neutral_gas;
+   u_neutral_gas = neutral_gas;
 }
 
 
-void z_ctrl_reset(void)
+void u_ctrl_reset(void)
 {
    pid_reset(&controller);
 }

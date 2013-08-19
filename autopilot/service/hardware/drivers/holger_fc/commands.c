@@ -25,6 +25,8 @@
  GNU General Public License for more details. */
 
 
+#include <util.h>
+
 #include "commands.h"
 
 

@@ -37,7 +37,7 @@
 #include "interface.h"
 #include "../platform/platform.h"
 #include "../util/logger/logger.h"
-#include "../control/position/z_ctrl.h"
+#include "../control/position/u_ctrl.h"
 #include "../control/position/navi.h"
 #include "../control/position/yaw_ctrl.h"
 #include "../main_loop/main_loop.h"
@@ -46,9 +46,16 @@
 #define THREAD_PRIORITY 1
 
 
+static gps_data_t gps_start;
 static void *cmd_socket = NULL;
 static simple_thread_t thread;
 static bool locked = false;
+
+
+void gps_start_set(gps_data_t *gps_data)
+{
+   memcpy(&gps_start, gps_data, sizeof(gps_data_t));
+}
 
 
 void interface_lock(bool value)
@@ -57,38 +64,40 @@ void interface_lock(bool value)
 }
 
 
+
+
 int set_ctrl_param(CtrlParam param, float value)
 {
    int status = 0;
    switch (param)
    {
-      case CTRL_PARAM__POS_X:
+      case CTRL_PARAM__POS_E:
       {
-         LOG(LL_DEBUG, "x pos update: %f", value);
-         navi_set_dest_x(value); // can't fail
+         LOG(LL_DEBUG, "e pos update: %f", value);
+         navi_set_dest_e(value); // can't fail
          break;
       }
 
-      case CTRL_PARAM__POS_Y:
+      case CTRL_PARAM__POS_N:
       {
-         LOG(LL_DEBUG, "y pos update: %f", value);
-         navi_set_dest_y(value); // can't fail
+         LOG(LL_DEBUG, "n pos update: %f", value);
+         navi_set_dest_n(value); // can't fail
          break;
       }
 
-      case CTRL_PARAM__POS_Z_GROUND:
+      case CTRL_PARAM__POS_U_GROUND:
       {
-         LOG(LL_DEBUG, "ground z pos update: %f", value);
-         z_setpoint_t setpoint = {value, 1};
-         z_ctrl_set_setpoint(setpoint); // can't fail
+         LOG(LL_DEBUG, "u ground pos update: %f", value);
+         u_setpoint_t setpoint = {value, 1};
+         u_ctrl_set_setpoint(setpoint); // can't fail
          break;
       }
 
-      case CTRL_PARAM__POS_Z:
+      case CTRL_PARAM__POS_U:
       {
-         LOG(LL_DEBUG, "z pos update: %f", value);
-         z_setpoint_t setpoint = {value, 0};
-         z_ctrl_set_setpoint(setpoint);
+         LOG(LL_DEBUG, "u pos update: %f", value);
+         u_setpoint_t setpoint = {value, 0};
+         u_ctrl_set_setpoint(setpoint);
          break;
       }
 
@@ -99,14 +108,14 @@ int set_ctrl_param(CtrlParam param, float value)
          break;
       }
       
-      case CTRL_PARAM__SPEED_XY:
+      case CTRL_PARAM__SPEED_NE:
       {
-         LOG(LL_DEBUG, "xy speed update: %f", value);
+         LOG(LL_DEBUG, "ne speed update: %f", value);
          status = navi_set_travel_speed(value);
          break;
       }
 
-      case CTRL_PARAM__SPEED_Z:
+      case CTRL_PARAM__SPEED_U:
       {
          LOG(LL_ERROR, "[not implemented] z speed update: %f", value);
          break;
@@ -152,19 +161,19 @@ static void check_and_set_ctrl_param(PilotRep *reply, PilotReq *request)
 
 static void get_state(Params *params)
 {
-   params->start_lon = 0; //gps_start_coord[0];
-   params->start_lat = 0; //gps_start_coord[1];
-   params->start_alt = 0; //gps_start_coord[2];
-   params->setp_x = navi_get_dest_x();
-   params->setp_y = navi_get_dest_y();
-   float setp_z = z_ctrl_get_setpoint();
-   if (z_ctrl_mode_is_ground())
+   params->start_lon = gps_start.lon;
+   params->start_lat = gps_start.lat;
+   params->start_alt = gps_start.alt;
+   params->setp_x = navi_get_dest_e();
+   params->setp_y = navi_get_dest_n();
+   float setp_u = u_ctrl_get_setpoint();
+   if (u_ctrl_mode_is_ground())
    {
-      params->setp_z_ground = setp_z;
+      params->setp_u_ground = setp_u;
    }
    else
    {
-      params->setp_z = setp_z;
+      params->setp_u = setp_u;
    }
    params->setp_yaw = yaw_ctrl_get_pos();
 }

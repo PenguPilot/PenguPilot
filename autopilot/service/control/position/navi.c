@@ -59,8 +59,8 @@ static vec2_t prev_dest_pos;
 
 /* setpoints: */
 static tsfloat_t travel_speed;
-static tsfloat_t dest_x; /* destination in lon direction, in m */
-static tsfloat_t dest_y; /* destination in lat direction, in m */
+static tsfloat_t dest_e; /* destination in lon direction, in m */
+static tsfloat_t dest_n; /* destination in lat direction, in m */
 
 
 float desired_speed(float dist)
@@ -117,8 +117,8 @@ void navi_init(void)
    vec2_set(&prev_dest_pos, 0.0, 0.0);
 
    tsfloat_init(&travel_speed, 0.0f);
-   tsfloat_init(&dest_x, 0.0f);
-   tsfloat_init(&dest_y, 0.0f);
+   tsfloat_init(&dest_e, 0.0f);
+   tsfloat_init(&dest_n, 0.0f);
 
    navi_reset_travel_speed();
 }
@@ -130,27 +130,27 @@ void navi_reset(void)
 }
 
 
-void navi_set_dest_x(float x)
+void navi_set_dest_e(float e)
 {
-   tsfloat_set(&dest_x, x);
+   tsfloat_set(&dest_e, e);
 }
 
 
-void navi_set_dest_y(float y)
+void navi_set_dest_n(float n)
 {
-   tsfloat_set(&dest_y, y);
+   tsfloat_set(&dest_n, n);
 }
 
 
-float navi_get_dest_x(void)
+float navi_get_dest_e(void)
 {
-   return tsfloat_get(&dest_x);
+   return tsfloat_get(&dest_e);
 }
 
 
-float navi_get_dest_y(void)
+float navi_get_dest_n(void)
 {
-   return tsfloat_get(&dest_y);
+   return tsfloat_get(&dest_n);
 }
 
 
@@ -177,14 +177,14 @@ int navi_set_travel_speed(float speed)
 void navi_run(vec2_t *speed_setpoint, vec2_t *pos, float dt)
 {
    /* set-up input vectors: */
-   float _dest_x = tsfloat_get(&dest_x);
-   float _dest_y = tsfloat_get(&dest_y);
+   float _dest_e = tsfloat_get(&dest_e);
+   float _dest_n = tsfloat_get(&dest_n);
 
-   if (dest_pos.x != _dest_x ||
-       dest_pos.y != _dest_y)
+   if (dest_pos.x != _dest_e ||
+       dest_pos.y != _dest_n)
    {
       prev_dest_pos = dest_pos;
-      vec2_set(&dest_pos, _dest_x, _dest_y);
+      vec2_set(&dest_pos, _dest_e, _dest_n);
    }
    vec2_t pos_err;
    vec2_sub(&pos_err, &dest_pos, pos);

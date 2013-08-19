@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- z speed controller implementation
+ up speed controller implementation
  
  Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
@@ -28,28 +28,28 @@
 #include <opcd_interface.h>
 #include <threadsafe_types.h>
 
-#include "z_speed.h"
+#include "u_speed.h"
 #include "../util/pid.h"
 
 
 static pid_controller_t ctrl;
 
 
-static float z_neutral_gas;
+static float u_neutral_gas;
 static tsfloat_t speed_p;
 static tsfloat_t speed_i;
 static tsfloat_t speed_imax;
 static tsfloat_t speed_d;
 
 
-float z_speed_step(float setpoint, float speed, float dt)
+float u_speed_step(float setpoint, float speed, float dt)
 {   
    float err = setpoint - speed;
-   return z_neutral_gas + pid_control(&ctrl, err, -speed, dt);
+   return u_neutral_gas + pid_control(&ctrl, err, -speed, dt);
 }
 
 
-void z_speed_init(float neutral_gas)
+void u_speed_init(float neutral_gas)
 {
    ASSERT_ONCE();
    
@@ -64,11 +64,11 @@ void z_speed_init(float neutral_gas)
    opcd_params_apply("controllers.z_speed.", params);
 
    pid_init(&ctrl, &speed_p, &speed_i, &speed_d, &speed_imax);
-   z_neutral_gas = neutral_gas;
+   u_neutral_gas = neutral_gas;
 }
 
 
-void z_speed_reset(void)
+void u_speed_reset(void)
 {
    pid_reset(&ctrl);
 }
