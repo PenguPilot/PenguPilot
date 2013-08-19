@@ -157,8 +157,6 @@ void main_init(int override_hw)
    sleep(1); /* give scl some time to establish
                 a link between publisher and subscriber */
    
-   LOG(LL_INFO, "autopilot initializing");
-
    LOG(LL_INFO, "initializing platform");
    if (arcade_quad_init(&platform, override_hw) < 0)
    {
