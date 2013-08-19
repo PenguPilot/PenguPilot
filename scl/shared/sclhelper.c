@@ -28,6 +28,13 @@
 #include <malloc.h>
 #include <zmq.h>
 
+
+#if ZMQ_VERSION_MAJOR <= 2
+   #define zmq_sendmsg zmq_send
+   #define zmq_recvmsg zmq_recv
+#endif
+
+
 static void _simple_free(void *data, void *hint);
 static int _zmq_send(void *socket, void *data, size_t len, int free_str, int arg);
 

@@ -32,7 +32,7 @@ void mon_init(void)
    mon_socket = scl_get_socket("mon");
    ASSERT_NOT_NULL(mon_socket);
    int64_t hwm = 1;
-   zmq_setsockopt(mon_socket, ZMQ_SNDHWM, &hwm, sizeof(hwm));
+   zmq_setsockopt(mon_socket, ZMQ_HWM, &hwm, sizeof(hwm));
 
    /* create monitoring connection: */
    const struct timespec period = {0, 100 * NSEC_PER_MSEC};
