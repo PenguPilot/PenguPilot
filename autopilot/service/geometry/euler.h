@@ -48,8 +48,16 @@ euler_t;
 float normalize_euler_0_2pi(float a);
  
 
-/* normalize euler angles */
-float euler_norm(euler_t *euler);
+void euler_normalize(euler_t *euler);
+
+
+struct body_to_world;
+typedef struct body_to_world body_to_world_t;
+
+
+body_to_world_t *body_to_world_create(void);
+
+void body_to_world_transform(body_to_world_t *btw, vec3_t *world, const euler_t *euler, const vec3_t *body);
 
 
 #endif /* __EULER_H__ */

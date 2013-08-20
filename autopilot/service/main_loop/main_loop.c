@@ -59,7 +59,6 @@
 #include "../control/speed/ne_speed.h"
 #include "../state/motors_state.h"
 #include "../force_opt/force_opt.h"
-#include "../geometry/quat.h"
 
 
 static float *rpm_square = NULL;
@@ -67,16 +66,14 @@ static float *setpoints = NULL;
 static void *blackbox_socket = NULL;
 static msgpack_sbuffer *msgpack_buf;
 static msgpack_packer *pk;
-static float mag_bias = -0.2f;
 static float mag_decl = 0.0f;
 static gps_data_t gps_data;
 static gps_rel_data_t gps_rel_data = {0.0, 0.0, 0.0};
 static calibration_t gyro_cal;
-static quat_t start_quat;
 static gps_util_t gps_util;
 static interval_t gyro_move_interval;
 static int init = 0;
-
+static body_to_world_t *btw;
 
 
 static char *blackbox_spec[] = {"dt",                      /*  1      */
@@ -84,7 +81,7 @@ static char *blackbox_spec[] = {"dt",                      /*  1      */
    "sp_rate_x", "sp_rate_y", "sp_rate_z",                  /*  5 -  7 */
    "acc_x", "acc_y", "acc_z",                              /*  8 - 10 */
    "mag_x", "mag_y", "mag_z",                              /* 11 - 13 */
-   "q0", "q1", "q2", "q3",                                 /* 14 - 17 */
+   //"q0", "q1", "q2", "q3",                                 /* 14 - 17 */
    "yaw", "pitch", "roll",                                 /* 18 - 20 */
    "acc_e", "acc_n", "acc_u",                              /* 21 - 23 */
    "raw_e", "raw_n", "raw_ultra_u", "raw_baro_u",          /* 24 - 27 */
@@ -204,7 +201,8 @@ void main_init(int override_hw)
 
    /* init calibration data: */
    cal_init(&gyro_cal, 3, 500);
-   
+   btw = body_to_world_create();
+
    cal_ahrs_init(10.0f, 2.0f * REALTIME_PERIOD, 0.02f);
    gps_util_init(&gps_util);
    flight_state_init(50, 30, 4.0, 150.0, 1.3);
@@ -273,23 +271,12 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    
    flight_state_t flight_state = 0; //flight_detect(&marg_data->acc.vec[0]);
 
-   /* global z orientation calibration: */
-   quat_t zrot_quat;
-   quat_init_axis(&zrot_quat, 0.0, 0.0, 1.0, mag_bias);
-   quat_t ahrs_quat;
-   quat_mul(&ahrs_quat, &zrot_quat, &ahrs.quat);
-
-   /* compute euler angles from quaternion: */
-   euler_t euler;
-   quat_to_euler(&euler, &ahrs_quat);
-   euler_t imu_euler;
-   quat_to_euler(&imu_euler, &imu.quat);
-
-
-   ONCE(start_quat = ahrs_quat; init = 1; LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
+   ONCE(init = 1; LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
    
    /* local ACC to global ACC rotation: */
-   quat_rot_vec(&pos_in.acc, &marg_data->acc, &ahrs_quat);
+   body_to_world_transform(btw, &pos_in.acc, &euler, &marg_data->acc);
+   EVERY_N_TIMES(20, printf("y: %f, p: %f, r: %f\n", euler.yaw, euler.pitch, euler.roll));
+   //EVERY_N_TIMES(20, printf("n: %f, e: %f, d: %f\n", pos_in.acc.x, pos_in.acc.y, pos_in.acc.z));
    pos_in.acc.z *= -1.0f;
 
    /* compute next 3d position estimate: */
@@ -346,7 +333,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    ne_speed_ctrl_run(&pitch_roll_sp, &speed_sp, dt, &pos_estimate.ne_speed, euler.yaw);
 
    /* run attitude controller: */
-   vec2_t pitch_roll = {{-imu_euler.pitch, imu_euler.roll}};
+   vec2_t pitch_roll = {{-euler.pitch, euler.roll}};
    if (cm.xy.type == XY_ATT_POS)
    {
       if (cm.xy.global)
@@ -424,7 +411,6 @@ out:
    PACKFV(piid_sp, 3);
    PACKFV(marg_data->acc.vec, 3);
    PACKFV(marg_data->mag.vec, 3);
-   PACKFV(ahrs_quat.vec, 4);
    PACKFV(euler.vec, 3);
    PACKFV(pos_in.acc.vec, 3);
    PACKF(pos_in.dn); PACKF(pos_in.de);

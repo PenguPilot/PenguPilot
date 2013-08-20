@@ -24,8 +24,14 @@
  GNU General Public License for more details. */
 
 
+#include <meschach/matrix.h>
+#include <meschach/matrix2.h>
 #include <math.h>
+
+#include <util.h>
+
 #include "euler.h"
+#include "vec3.h"
 
 
 float normalize_euler_0_2pi(float a)
@@ -41,8 +47,133 @@ float normalize_euler_0_2pi(float a)
 
 void euler_normalize(euler_t *euler)
 {
-   euler->pitch = normalize_euler_0_2pi(euler->pitch);
-   euler->roll = normalize_euler_0_2pi(euler->roll);
-   euler->yaw = normalize_euler_0_2pi(euler->yaw);
+   float yaw = euler->yaw;
+   if (yaw < -M_PI)
+   {
+      yaw = fmod(yaw, M_PI * 2.0f);
+      if (yaw < -M_PI)
+      {
+         yaw += M_PI * 2.0f;
+      }
+   }
+   else if (yaw > M_PI)
+   {
+      yaw = fmod(yaw, M_PI * 2.0f);
+      if (yaw > M_PI)
+      {
+         yaw -= M_PI * 2.0f;
+      }
+   }
+
+   float pitch = euler->pitch;
+   if (pitch < -M_PI)
+   {
+      pitch = fmod(pitch, M_PI * 2.0f);
+      if (pitch < -M_PI)
+      {
+         pitch += M_PI * 2.0f;
+      }
+   }
+   else if (pitch > M_PI)
+   {
+      pitch = fmod(pitch, M_PI * 2.0f);
+      if (pitch > M_PI)
+      {
+         pitch -= M_PI * 2.0f;
+      }
+   }
+   
+   float roll = euler->roll;
+   if (roll < -M_PI)
+   {
+      roll = fmod(roll, M_PI * 2.0f);
+      if (roll < -M_PI)
+      {
+         roll += M_PI * 2.0f;
+      }
+   }
+   else if (roll > M_PI)
+   {
+      roll = fmod(roll, M_PI * 2.0f);
+      if(roll > M_PI)
+      {
+         roll -= M_PI * 2.0f;
+      }
+   }
+   euler->pitch = pitch;
+   euler->roll = roll;
+   euler->yaw = yaw;
+}
+
+
+struct body_to_world
+{
+   VEC *body_acc_vec;
+   VEC *world_acc_vec;
+   MAT *dcm;
+};
+
+
+void body_to_world_transform(body_to_world_t *btw, vec3_t *world, const euler_t *euler, const vec3_t *body)
+{
+   FOR_N(i, 3)
+   {
+      btw->body_acc_vec->ve[i] = body->vec[i];
+   }
+
+   float theta = euler->pitch;
+   float phi = euler->roll;
+   float psi = euler->yaw;
+
+   float cos_phi = cosf(phi);
+   float cos_theta = cosf(theta);
+   float cos_psi = cosf(psi);
+
+   float sin_phi = sinf(phi);
+   float sin_theta = sinf(theta);
+   float sin_psi = sinf(psi);
+
+   /*
+    * Rotation matrix from inertial frame to body frame (for computing expected sensor outputs given yaw, pitch, and roll angles)
+    * [ cos(psi) * cos(theta), cos(theta) * sin(psi), -sin(theta) ]
+    * [ cos(psi) * sin(phi) * sin(theta) - cos(phi) * sin(psi), cos(phi) * cos(psi) + sin(phi) * sin(psi) * sin(theta), cos(theta) * sin(phi) ]
+    * [ sin(phi) * sin(psi) + cos(phi) * cos(psi) * sin(theta), cos(phi) * sin(psi) * sin(theta) - cos(psi) * sin(phi), cos(phi) * cos(theta) ]
+    * the transpose of this is used as the inverse DCM below:
+    */
+
+   MAT *d = btw->dcm;
+   d->me[0][0] = cos_psi * cos_theta;
+   d->me[0][1] = cos_psi * sin_phi * sin_theta - cos_phi * sin_psi;
+   d->me[0][2] = sin_phi * sin_psi + cos_phi * cos_psi * sin_theta;
+
+   d->me[1][0] = cos_theta * sin_psi;
+   d->me[1][1] = cos_phi * cos_psi + sin_phi * sin_psi * sin_theta;
+   d->me[1][2] = cos_phi * sin_psi * sin_theta - cos_psi * sin_phi;
+
+   d->me[2][0] = -sin_theta;
+   d->me[2][1] = cos_theta * sin_phi;
+   d->me[2][2] = cos_phi * cos_theta;
+
+   /*
+    * multiply resulting matrix with input vector:
+    */
+   mv_mlt(d, btw->body_acc_vec, btw->world_acc_vec);
+
+   /*
+    * convert meschach vector to output:
+    */
+   world->x = btw->world_acc_vec->ve[1];
+   world->y = btw->world_acc_vec->ve[0];
+   world->z = btw->world_acc_vec->ve[2];
+}
+
+
+body_to_world_t *body_to_world_create(void)
+{
+   body_to_world_t *btw = (body_to_world_t *)malloc(sizeof(body_to_world_t));
+   btw->body_acc_vec = v_get(3);
+   btw->world_acc_vec = v_get(3);
+   btw->dcm = m_get(3, 3);
+   return btw;
 }
 
