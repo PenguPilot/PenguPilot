@@ -45,64 +45,34 @@ float normalize_euler_0_2pi(float a)
 }
 
 
+float normalize_euler_sym_pi(float a)
+{
+   if (a < -M_PI)
+   {
+      a = fmod(a, M_PI * 2.0f);
+      if (a < -M_PI)
+      {
+         a += M_PI * 2.0f;
+      }
+   }
+   else if (a > M_PI)
+   {
+      a = fmod(a, M_PI * 2.0f);
+      if (a > M_PI)
+      {
+         a -= M_PI * 2.0f;
+      }
+   }
+   return a;
+}
+
+
+
 void euler_normalize(euler_t *euler)
 {
-   float yaw = euler->yaw;
-   if (yaw < -M_PI)
-   {
-      yaw = fmod(yaw, M_PI * 2.0f);
-      if (yaw < -M_PI)
-      {
-         yaw += M_PI * 2.0f;
-      }
-   }
-   else if (yaw > M_PI)
-   {
-      yaw = fmod(yaw, M_PI * 2.0f);
-      if (yaw > M_PI)
-      {
-         yaw -= M_PI * 2.0f;
-      }
-   }
-
-   float pitch = euler->pitch;
-   if (pitch < -M_PI)
-   {
-      pitch = fmod(pitch, M_PI * 2.0f);
-      if (pitch < -M_PI)
-      {
-         pitch += M_PI * 2.0f;
-      }
-   }
-   else if (pitch > M_PI)
-   {
-      pitch = fmod(pitch, M_PI * 2.0f);
-      if (pitch > M_PI)
-      {
-         pitch -= M_PI * 2.0f;
-      }
-   }
-   
-   float roll = euler->roll;
-   if (roll < -M_PI)
-   {
-      roll = fmod(roll, M_PI * 2.0f);
-      if (roll < -M_PI)
-      {
-         roll += M_PI * 2.0f;
-      }
-   }
-   else if (roll > M_PI)
-   {
-      roll = fmod(roll, M_PI * 2.0f);
-      if(roll > M_PI)
-      {
-         roll -= M_PI * 2.0f;
-      }
-   }
-   euler->pitch = pitch;
-   euler->roll = roll;
-   euler->yaw = yaw;
+   euler->yaw = normalize_euler_0_2pi(euler->yaw);
+   euler->pitch = normalize_euler_sym_pi(euler->pitch);
+   euler->roll = normalize_euler_sym_pi(euler->roll);
 }
 
 
@@ -123,7 +93,7 @@ void body_to_world_transform(body_to_world_t *btw, vec3_t *world, const euler_t 
 
    float theta = euler->pitch;
    float phi = euler->roll;
-   float psi = euler->yaw;
+   float psi = euler->yaw + M_PI / 4;
 
    float cos_phi = cosf(phi);
    float cos_theta = cosf(theta);
@@ -162,9 +132,10 @@ void body_to_world_transform(body_to_world_t *btw, vec3_t *world, const euler_t 
    /*
     * convert meschach vector to output:
     */
-   world->x = btw->world_acc_vec->ve[1];
-   world->y = btw->world_acc_vec->ve[0];
-   world->z = btw->world_acc_vec->ve[2];
+   FOR_N(i, 3)
+   {
+      world->vec[i] = btw->world_acc_vec->ve[i];
+   }
 }
 
 

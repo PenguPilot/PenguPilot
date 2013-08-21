@@ -73,12 +73,12 @@ int cal_ahrs_update(euler_t *euler, marg_data_t *marg_data, float dt)
       euler_t ahrs_euler; /* yaw */
       euler_t imu_euler; /* pitch/roll */
       /* read euler angles from quaternions: */
-      quat_to_euler(&ahrs_euler, &imu.quat);
-      quat_to_euler(&imu_euler, &ahrs.quat);
+      quat_to_euler(&ahrs_euler, &ahrs.quat);
+      quat_to_euler(&imu_euler, &imu.quat);
       /* apply calibration: */
       euler->yaw = ahrs_euler.yaw + tsfloat_get(&yaw_bias);
       euler->pitch = imu_euler.pitch + tsfloat_get(&pitch_bias);
-      euler->roll = ahrs_euler.roll + tsfloat_get(&roll_bias);
+      euler->roll = imu_euler.roll + tsfloat_get(&roll_bias);
       euler_normalize(euler);
    }
    else
