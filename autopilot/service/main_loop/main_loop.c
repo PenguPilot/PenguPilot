@@ -274,14 +274,9 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    ONCE(init = 1; LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
    
    /* local ACC to global ACC rotation: */
-   marg_data->acc.x = 1;
-   marg_data->acc.y = 0;
-   marg_data->acc.z = 0;
-
    body_to_world_transform(btw, &pos_in.acc, &euler, &marg_data->acc);
-   //EVERY_N_TIMES(20, printf("y: %f, p: %f, r: %f\n", euler.yaw, euler.pitch, euler.roll));
    pos_in.acc.z *= -1.0f;
-   EVERY_N_TIMES(20, printf("n: %f, e: %f, d: %f\n", pos_in.acc.x, pos_in.acc.y, pos_in.acc.z));
+   //EVERY_N_TIMES(20, printf("n: %f, e: %f, d: %f\n", pos_in.acc.x, pos_in.acc.y, pos_in.acc.z));
 
    /* compute next 3d position estimate: */
    pos_t pos_estimate;
