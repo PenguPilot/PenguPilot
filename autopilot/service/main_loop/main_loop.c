@@ -275,11 +275,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    ONCE(init = 1; LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
    
    /* local ACC to global ACC rotation: */
-   /*marg_data->acc.x = 10;
-   marg_data->acc.y = 0;
-   marg_data->acc.z = 0;*/
    body_to_world_transform(btw, &pos_in.acc, &euler, &marg_data->acc);
-   //EVERY_N_TIMES(20, printf("y: %.1f, n: %.1f, e: %.1f, u: %.1f\n", euler.yaw, pos_in.acc.n, pos_in.acc.e, pos_in.acc.u));
 
    /* compute next 3d position estimate: */
    pos_t pos_estimate;
@@ -323,18 +319,14 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    }
    else /* GPS_POS */
    {
-      /* x/y position mode: */
+      /* navigation mode: */
       navi_run(&speed_sp, &pos_estimate.ne_pos, dt);
-      // printf("%f %f\n", speed_sp.x, speed_sp.y);
    }
 
    /* run speed vector controller: */
    vec2_t pitch_roll_sp;
-   /*speed_sp.n = 1;
-   speed_sp.e = 0;*/
    ne_speed_ctrl_run(&pitch_roll_sp, &speed_sp, dt, &pos_estimate.ne_speed, euler.yaw);
 
-   //EVERY_N_TIMES(20, printf("%.2f %.2f\n", pitch_roll_sp.x, pitch_roll_sp.y));
    /* run attitude controller: */
    vec2_t pitch_roll = {{euler.pitch, euler.roll}};
    if (cm.xy.type == XY_ATT_POS)
@@ -374,13 +366,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
       piid_sp[PIID_ROLL] = pitch_roll_ctrl.y;
    }
    piid_sp[PIID_YAW] = cm.yaw.setp;
-   //EVERY_N_TIMES(20, printf("%.1f %.1f %.1f\n", euler.yaw, pos_estimate.ne_pos.n, pos_estimate.ne_pos.e));
 
-   /* set monitoring data: */
-   mon_data_set(pos_estimate.ne_pos.n - navi_get_dest_n(),
-                pos_estimate.ne_pos.e - navi_get_dest_e(),
-                u_err, yaw_err);
-   
    /* run feed-forward system and stabilizing PIID controller: */
    f_local_t f_local = {{gas * platform.max_thrust_n, 0.0f, 0.0f, 0.0f}};
    piid_run(&f_local.vec[1], marg_data->gyro.vec, piid_sp);
@@ -403,6 +389,11 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
       platform_write_motors(setpoints);
    }
 
+   /* set monitoring data: */
+   mon_data_set(pos_estimate.ne_pos.n - navi_get_dest_n(),
+                pos_estimate.ne_pos.e - navi_get_dest_e(),
+                u_err, yaw_err);
+ 
 out:
    /* publish blackbox data; this is also executed in case of a sensor error: */
    msgpack_sbuffer_clear(msgpack_buf);
