@@ -32,9 +32,14 @@
 typedef union
 {
    struct
-   {
-      float x;
-      float y;
+   {  /* device coordinates: */
+      float x; /* pitch direction */
+      float y; /* roll direction */
+   };
+   struct
+   {  /* global coordinates: */
+      float e; /* east */
+      float n; /* north */
    };
    float vec[2];
 }

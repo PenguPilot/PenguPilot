@@ -56,7 +56,7 @@
 #include "../control/position/yaw_ctrl.h"
 #include "../control/speed/u_speed.h"
 #include "../control/speed/piid.h"
-#include "../control/speed/ne_speed.h"
+#include "../control/speed/en_speed.h"
 #include "../state/motors_state.h"
 #include "../force_opt/force_opt.h"
 
@@ -172,7 +172,7 @@ void main_init(int override_hw)
 
    LOG(LL_INFO, "initializing model/controller");
    pos_init();
-   ne_speed_ctrl_init();
+   en_speed_ctrl_init();
    att_ctrl_init();
    yaw_ctrl_init();
    u_speed_init(platform.mass_kg * 10.0f / platform.max_thrust_n);
@@ -252,8 +252,9 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    if (sensor_status & GPS_VALID)
    {
       gps_util_update(&gps_rel_data, &gps_util, gps_data);
-      pos_in.de = gps_rel_data.de;
-      pos_in.dn = gps_rel_data.dn;
+      pos_in.pos_e = gps_rel_data.de;
+      pos_in.pos_n = gps_rel_data.dn;
+      printf("e: %f n: %f\n", pos_in.pos_e, pos_in.pos_n);
       ONCE(mag_decl = mag_decl_lookup(gps_data->lat, gps_data->lon);
            gps_start_set(gps_data);
            LOG(LL_ERROR, "declination lookup yields: %f", mag_decl));
@@ -309,25 +310,25 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
       if (cm.xy.global)
       {
          /* move according to global speed vector: */
-         speed_sp.x = 0.0;
-         speed_sp.y = 0.0;
+         speed_sp.e = 0.0;
+         speed_sp.n = 0.0;
       }
       else /* local */
       {
          /* rotate desired speed vector with copter orientation: */
-         vec2_rotate(&speed_sp, &cm.xy.setp, euler.yaw);
+         vec2_rotate((vec2_t *)&speed_sp, &cm.xy.setp, euler.yaw);
       }
    }
    else /* GPS_POS */
    {
       /* x/y position mode: */
-      navi_run(&speed_sp, &pos_estimate.ne_pos, dt);
+      navi_run(&speed_sp, (vec2_t *)&pos_estimate.en_pos, dt);
       // printf("%f %f\n", speed_sp.x, speed_sp.y);
    }
 
    /* run speed vector controller: */
    vec2_t pitch_roll_sp;
-   ne_speed_ctrl_run(&pitch_roll_sp, &speed_sp, dt, &pos_estimate.ne_speed, euler.yaw);
+   en_speed_ctrl_run(&pitch_roll_sp, &speed_sp, dt, (vec2_t *)&pos_estimate.en_speed, euler.yaw);
 
    /* run attitude controller: */
    vec2_t pitch_roll = {{euler.pitch, euler.roll}};
@@ -370,8 +371,8 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    piid_sp[PIID_YAW] = cm.yaw.setp;
 
    /* set monitoring data: */
-   mon_data_set(pos_estimate.ne_pos.x - navi_get_dest_e(),
-                pos_estimate.ne_pos.y - navi_get_dest_n(),
+   mon_data_set(pos_estimate.en_pos.e - navi_get_dest_e(),
+                pos_estimate.en_pos.n - navi_get_dest_n(),
                 u_err, yaw_err);
    
    /* run feed-forward system and stabilizing PIID controller: */
@@ -410,11 +411,11 @@ out:
    PACKFV(marg_data->mag.vec, 3);
    PACKFV(euler.vec, 3);
    PACKFV(pos_in.acc.vec, 3);
-   PACKF(pos_in.dn); PACKF(pos_in.de);
+   PACKF(pos_in.pos_e); PACKF(pos_in.pos_n);
    PACKF(pos_in.ultra_z); PACKF(pos_in.baro_z);
-   PACKFV(pos_estimate.ne_pos.vec, 2);
+   PACKFV(pos_estimate.en_pos.vec, 2);
    PACKF(pos_estimate.ultra_z.pos); PACKF(pos_estimate.baro_z.pos);
-   PACKFV(pos_estimate.ne_speed.vec, 2);
+   PACKFV(pos_estimate.en_speed.vec, 2);
    PACKF(pos_estimate.ultra_z.speed); PACKF(pos_estimate.baro_z.speed);
    PACKF(0.0f);
    PACKFV(pitch_roll_sp.vec, 2);

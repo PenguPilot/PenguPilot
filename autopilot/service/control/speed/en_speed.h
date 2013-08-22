@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- North-East Speed Controller Interface
+ East-North Speed Controller Interface
 
  Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
 
@@ -25,17 +25,17 @@
 
 
 
-#ifndef __NE_SPEED_H__
-#define __NE_SPEED_H__
+#ifndef __EN_SPEED_H__
+#define __EN_SPEED_H__
 
 
 #include "../../util/math/vec2.h"
 
 
-void ne_speed_ctrl_init(void);
+void en_speed_ctrl_init(void);
 
-void ne_speed_ctrl_run(vec2_t *ctrl_body, const vec2_t *setp, const float dt, const vec2_t *speed, float yaw);
+void en_speed_ctrl_run(vec2_t *ctrl_body, const vec2_t *setp, const float dt, const vec2_t *speed, float yaw);
 
 
-#endif /* __NE_SPEED_H__ */
+#endif /* __EN_SPEED_H__ */
 

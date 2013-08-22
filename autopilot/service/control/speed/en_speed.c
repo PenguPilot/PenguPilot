@@ -24,7 +24,7 @@
  GNU General Public License for more details. */
 
 
-#include "ne_speed.h"
+#include "en_speed.h"
 
 #include <threadsafe_types.h>
 #include <opcd_interface.h>
@@ -43,7 +43,7 @@ static tsfloat_t speed_i_max;
 static pid_controller_t controllers[2];
 
 
-void ne_speed_ctrl_init(void)
+void en_speed_ctrl_init(void)
 {
    ASSERT_ONCE();
 
@@ -56,7 +56,7 @@ void ne_speed_ctrl_init(void)
       {"i_max", &speed_i_max.value},
       OPCD_PARAMS_END
    };
-   opcd_params_apply("controllers.ne_speed.", params);
+   opcd_params_apply("controllers.en_speed.", params);
    
    /* initialize controllers: */
    FOR_EACH(i, controllers)
@@ -66,7 +66,7 @@ void ne_speed_ctrl_init(void)
 }
 
 
-void ne_speed_ctrl_reset(void)
+void en_speed_ctrl_reset(void)
 {
    FOR_EACH(i, controllers)
    {
@@ -75,7 +75,7 @@ void ne_speed_ctrl_reset(void)
 }
 
 
-void ne_speed_ctrl_run(vec2_t *ctrl_body, const vec2_t *setp, const float dt, const vec2_t *speed, float yaw)
+void en_speed_ctrl_run(vec2_t *ctrl_body, const vec2_t *setp, const float dt, const vec2_t *speed, float yaw)
 {
    vec2_t ctrl_world;
    /* run controllers: */
