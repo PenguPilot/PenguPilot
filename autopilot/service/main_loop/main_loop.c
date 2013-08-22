@@ -316,19 +316,19 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
       else /* local */
       {
          /* rotate desired speed vector with copter orientation: */
-         vec2_rotate((vec2_t *)&speed_sp, &cm.xy.setp, euler.yaw);
+         vec2_rotate(&speed_sp, &cm.xy.setp, euler.yaw);
       }
    }
    else /* GPS_POS */
    {
       /* x/y position mode: */
-      navi_run(&speed_sp, (vec2_t *)&pos_estimate.en_pos, dt);
+      navi_run(&speed_sp, &pos_estimate.en_pos, dt);
       // printf("%f %f\n", speed_sp.x, speed_sp.y);
    }
 
    /* run speed vector controller: */
    vec2_t pitch_roll_sp;
-   en_speed_ctrl_run(&pitch_roll_sp, &speed_sp, dt, (vec2_t *)&pos_estimate.en_speed, euler.yaw);
+   en_speed_ctrl_run(&pitch_roll_sp, &speed_sp, dt, &pos_estimate.en_speed, euler.yaw);
 
    /* run attitude controller: */
    vec2_t pitch_roll = {{euler.pitch, euler.roll}};
