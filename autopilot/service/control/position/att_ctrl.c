@@ -79,7 +79,9 @@ void att_ctrl_step(vec2_t *ctrl, vec2_t *err, const float dt, const vec2_t *pos,
    {
       float error = setp->vec[i] +  pos->vec[i];
       err->vec[i] = error;
-      ctrl->vec[i] = pid_control(&controllers[i], error, speed->vec[i], dt);
+      ctrl->vec[i] = -pid_control(&controllers[i], error, speed->vec[i], dt);
    }
+   //printf("pitch %f %f %f\n", pos->x, speed->x, ctrl->x);
+   //printf("roll %f %f %f\n", pos->y, speed->y, ctrl->y);
 }
 

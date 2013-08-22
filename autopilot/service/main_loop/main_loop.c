@@ -282,8 +282,6 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    pos_t pos_estimate;
    pos_update(&pos_estimate, &pos_in);
    
-   marg_data->gyro.y *= -1.0;
-
    float gas = 0.0f;
    float yaw_err, u_err;
    //auto_stick.yaw = yaw_ctrl_step(&yaw_err, euler.yaw, marg_data->gyro.z, dt);
@@ -320,7 +318,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
          vec2_rotate(&speed_sp, &cm.xy.setp, euler.yaw);
       }
    }
-   //else /* GPS_POS */
+   else /* GPS_POS */
    {
       /* x/y position mode: */
       navi_run(&speed_sp, &pos_estimate.ne_pos, dt);
@@ -332,7 +330,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    ne_speed_ctrl_run(&pitch_roll_sp, &speed_sp, dt, &pos_estimate.ne_speed, euler.yaw);
 
    /* run attitude controller: */
-   vec2_t pitch_roll = {{-euler.pitch, euler.roll}};
+   vec2_t pitch_roll = {{euler.pitch, euler.roll}};
    if (cm.xy.type == XY_ATT_POS)
    {
       if (cm.xy.global)
@@ -395,7 +393,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    /* write motors: */
    if (!override_hw)
    {
-      //platform_write_motors(setpoints);
+      platform_write_motors(setpoints);
    }
 
 out:

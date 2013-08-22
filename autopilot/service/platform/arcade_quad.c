@@ -108,8 +108,8 @@ int arcade_quad_init(platform_t *plat, int override_hw)
    /* inverse coupling matrix for ARCADE quadrotor: */
    const float icmatrix[4 * N_MOTORS] =
    {         /* gas     roll    pitch    yaw */
-      /* m1 */ imtx1,   0.0f, -imtx2, -imtx3,
-      /* m2 */ imtx1,   0.0f,  imtx2, -imtx3,
+      /* m1 */ imtx1,   0.0f,  imtx2, -imtx3,
+      /* m2 */ imtx1,   0.0f, -imtx2, -imtx3,
       /* m3 */ imtx1, -imtx2,   0.0f,  imtx3,
       /* m4 */ imtx1,  imtx2,   0.0f,  imtx3
    };

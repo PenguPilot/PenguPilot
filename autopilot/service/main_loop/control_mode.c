@@ -84,21 +84,21 @@ void cm_update(control_mode_t *cm, uint16_t sensor_status, float channels[MAX_CH
    }
 
    /* select mode */
-   cm->xy.type = XY_GPS_SPEED;
-   cm->xy.global = 1;
+   cm->xy.type = XY_ATT_POS;
+   cm->xy.global = 0;
 
    /* fill data accoring to mode */
    if (cm->xy.type == XY_ATT_RATE)
    {
       float p = tsfloat_get(&stick_pitch_roll_p);
-      cm->xy.setp.x = p * pitch;
+      cm->xy.setp.x = -p * pitch;
       cm->xy.setp.y = p * roll;
    }
    else if (cm->xy.type == XY_ATT_POS)
    {
       float a = deg2rad(tsfloat_get(&stick_pitch_roll_angle_max));
       cm->xy.setp.x = a * pitch;
-      cm->xy.setp.y = a * roll;
+      cm->xy.setp.y = -a * roll;
    }
    else if (cm->xy.type == XY_GPS_SPEED)
    {
@@ -106,7 +106,7 @@ void cm_update(control_mode_t *cm, uint16_t sensor_status, float channels[MAX_CH
       cm->xy.setp.x = p * pitch;   
       cm->xy.setp.y = p * roll;   
    }
-   cm->z.type = Z_AUTO; //Z_STICK;
+   cm->z.type = Z_STICK;
    cm->z.setp = gas;
    cm->yaw.type = YAW_STICK;
    cm->yaw.setp = yaw * tsfloat_get(&stick_yaw_p);

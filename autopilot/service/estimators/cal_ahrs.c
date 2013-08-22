@@ -32,6 +32,7 @@
 #include "cal_ahrs.h"
 #include "ahrs.h"
 #include "../util/logger/logger.h"
+#include "../util/math/conv.h"
 
 
 static ahrs_t ahrs;
@@ -76,9 +77,9 @@ int cal_ahrs_update(euler_t *euler, marg_data_t *marg_data, float dt)
       quat_to_euler(&ahrs_euler, &ahrs.quat);
       quat_to_euler(&imu_euler, &imu.quat);
       /* apply calibration: */
-      euler->yaw = ahrs_euler.yaw + tsfloat_get(&yaw_bias);
-      euler->pitch = imu_euler.pitch + tsfloat_get(&pitch_bias);
-      euler->roll = imu_euler.roll + tsfloat_get(&roll_bias);
+      euler->yaw = ahrs_euler.yaw + deg2rad(tsfloat_get(&yaw_bias));
+      euler->pitch = imu_euler.pitch + deg2rad(tsfloat_get(&pitch_bias));
+      euler->roll = imu_euler.roll + deg2rad(tsfloat_get(&roll_bias));
       euler_normalize(euler);
    }
    else
