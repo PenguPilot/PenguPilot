@@ -84,8 +84,8 @@ void cm_update(control_mode_t *cm, uint16_t sensor_status, float channels[MAX_CH
    }
 
    /* select mode */
-   cm->xy.type = XY_ATT_POS;
-   cm->xy.global = 0;
+   cm->xy.type = XY_GPS_SPEED;
+   cm->xy.global = 1;
 
    /* fill data accoring to mode */
    if (cm->xy.type == XY_ATT_RATE)

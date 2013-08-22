@@ -87,7 +87,7 @@ void ne_speed_ctrl_run(vec2_t *pitch_roll_ctrl, const vec2_t *setp, const float 
    
    /* rotate global speed feedback into local coordinates: */
    vec2_t _pitch_roll_ctrl;
-   vec2_world_to_body(&_pitch_roll_ctrl, &ne_ctrl, yaw);
+   vec2_rotate(&_pitch_roll_ctrl, &ne_ctrl, yaw);
    
    /* limit speed controller output: */
    FOR_EACH(i, controllers)

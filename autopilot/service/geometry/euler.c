@@ -93,7 +93,7 @@ void body_to_world_transform(body_to_world_t *btw, vec3_t *world, const euler_t 
 
    float theta = euler->pitch;
    float phi = euler->roll;
-   float psi = euler->yaw + M_PI / 4;
+   float psi = euler->yaw;
 
    float cos_phi = cosf(phi);
    float cos_theta = cosf(theta);
@@ -132,8 +132,10 @@ void body_to_world_transform(body_to_world_t *btw, vec3_t *world, const euler_t 
    /*
     * convert meschach vector to output:
     */
-   world->n = btw->world_acc_vec->ve[0];
-   world->e = btw->world_acc_vec->ve[1];
+   FOR_N(i, 2)
+   {
+      world->vec[i] = btw->world_acc_vec->ve[i];
+   }
    world->u = -btw->world_acc_vec->ve[2];
 }
 

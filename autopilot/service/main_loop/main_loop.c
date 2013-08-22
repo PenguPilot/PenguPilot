@@ -275,11 +275,11 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    ONCE(init = 1; LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
    
    /* local ACC to global ACC rotation: */
-   /*marg_data->acc.x = 20;
+   /*marg_data->acc.x = 10;
    marg_data->acc.y = 0;
    marg_data->acc.z = 0;*/
    body_to_world_transform(btw, &pos_in.acc, &euler, &marg_data->acc);
-   //EVERY_N_TIMES(20, printf("e: %f, n: %f, u: %f\n", pos_in.acc.e, pos_in.acc.n, pos_in.acc.u));
+   //EVERY_N_TIMES(20, printf("y: %.1f, n: %.1f, e: %.1f, u: %.1f\n", euler.yaw, pos_in.acc.n, pos_in.acc.e, pos_in.acc.u));
 
    /* compute next 3d position estimate: */
    pos_t pos_estimate;
@@ -312,8 +312,8 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
       if (cm.xy.global)
       {
          /* move according to global speed vector: */
-         speed_sp.e = 0.0;
          speed_sp.n = 0.0;
+         speed_sp.e = 0.0;
       }
       else /* local */
       {
@@ -330,8 +330,11 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
 
    /* run speed vector controller: */
    vec2_t pitch_roll_sp;
+   /*speed_sp.n = 1;
+   speed_sp.e = 0;*/
    ne_speed_ctrl_run(&pitch_roll_sp, &speed_sp, dt, &pos_estimate.ne_speed, euler.yaw);
 
+   //EVERY_N_TIMES(20, printf("%.2f %.2f\n", pitch_roll_sp.x, pitch_roll_sp.y));
    /* run attitude controller: */
    vec2_t pitch_roll = {{euler.pitch, euler.roll}};
    if (cm.xy.type == XY_ATT_POS)
@@ -371,11 +374,11 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
       piid_sp[PIID_ROLL] = pitch_roll_ctrl.y;
    }
    piid_sp[PIID_YAW] = cm.yaw.setp;
-   EVERY_N_TIMES(20, printf("%f %f\n", pos_estimate.ne_pos.n, pos_estimate.ne_pos.e));
+   //EVERY_N_TIMES(20, printf("%.1f %.1f %.1f\n", euler.yaw, pos_estimate.ne_pos.n, pos_estimate.ne_pos.e));
 
    /* set monitoring data: */
-   mon_data_set(pos_estimate.ne_pos.e - navi_get_dest_e(),
-                pos_estimate.ne_pos.n - navi_get_dest_n(),
+   mon_data_set(pos_estimate.ne_pos.n - navi_get_dest_n(),
+                pos_estimate.ne_pos.e - navi_get_dest_e(),
                 u_err, yaw_err);
    
    /* run feed-forward system and stabilizing PIID controller: */

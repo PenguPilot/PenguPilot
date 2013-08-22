@@ -66,8 +66,5 @@ void vec2_project(vec2_t *vo, const vec2_t *vi1, const vec2_t *vi2);
 
 void vec2_rotate(vec2_t *vo, const vec2_t *vi, float angle);
 
-void vec2_world_to_body(vec2_t *vb, const vec2_t *vw, float yaw);
-
-
 #endif /* __VEC2_H__ */
 
