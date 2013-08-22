@@ -46,8 +46,8 @@ pos_speed_t;
 
 typedef struct
 {
-   vec2_t en_pos; /* east-north position, in m */
-   vec2_t en_speed; /* east-north speed, in m */
+   vec2_t ne_pos; /* north-east position, in m */
+   vec2_t ne_speed; /* north-east speed, in m */
    pos_speed_t ultra_z; /* ultrasonic altitude altitude above ground */
    pos_speed_t baro_z; /* barometric altitude above MSL */
 }

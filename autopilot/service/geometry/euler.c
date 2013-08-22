@@ -132,10 +132,9 @@ void body_to_world_transform(body_to_world_t *btw, vec3_t *world, const euler_t 
    /*
     * convert meschach vector to output:
     */
-   FOR_N(i, 3)
-   {
-      world->vec[i] = btw->world_acc_vec->ve[i];
-   }
+   world->n = btw->world_acc_vec->ve[0];
+   world->e = btw->world_acc_vec->ve[1];
+   world->u = -btw->world_acc_vec->ve[2];
 }
 
 

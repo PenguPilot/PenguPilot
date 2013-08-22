@@ -38,8 +38,8 @@ typedef union
    };
    struct
    {  /* global coordinates: */
-      float e; /* east */
       float n; /* north */
+      float e; /* east */
    };
    float vec[2];
 }

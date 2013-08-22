@@ -25,17 +25,17 @@
 
 
 
-#ifndef __EN_SPEED_H__
-#define __EN_SPEED_H__
+#ifndef __NE_SPEED_H__
+#define __NE_SPEED_H__
 
 
 #include "../../util/math/vec2.h"
 
 
-void en_speed_ctrl_init(void);
+void ne_speed_ctrl_init(void);
 
-void en_speed_ctrl_run(vec2_t *ctrl_body, const vec2_t *setp, const float dt, const vec2_t *speed, float yaw);
+void ne_speed_ctrl_run(vec2_t *ctrl_body, const vec2_t *setp, const float dt, const vec2_t *speed, float yaw);
 
 
-#endif /* __EN_SPEED_H__ */
+#endif /* __NE_SPEED_H__ */
 

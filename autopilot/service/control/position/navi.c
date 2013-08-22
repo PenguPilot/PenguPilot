@@ -180,8 +180,8 @@ void navi_run(vec2_t *speed_setpoint, vec2_t *pos, float dt)
    float _dest_e = tsfloat_get(&dest_e);
    float _dest_n = tsfloat_get(&dest_n);
 
-   if (dest_pos.x != _dest_e ||
-       dest_pos.y != _dest_n)
+   if (dest_pos.e != _dest_e ||
+       dest_pos.n != _dest_n)
    {
       prev_dest_pos = dest_pos;
       vec2_set(&dest_pos, _dest_e, _dest_n);
@@ -192,8 +192,8 @@ void navi_run(vec2_t *speed_setpoint, vec2_t *pos, float dt)
 
    /* add correction for inter-setpoint trajectory */
    vec2_t ortho_thrust;
-   if ((prev_dest_pos.x == dest_pos.x)
-       && (prev_dest_pos.y == dest_pos.y))
+   if ((prev_dest_pos.e == dest_pos.e)
+       && (prev_dest_pos.n == dest_pos.n))
    {
       vec2_set(&ortho_thrust, 0.0, 0.0);
    }
