@@ -40,16 +40,16 @@ typedef struct
    {
       enum
       {
-         XY_GPS_POS,   /* GPS position*/
-         XY_GPS_SPEED, /* GPS speed */
-         XY_ATT_POS,   /* attitude angle */
-         XY_ATT_RATE   /* attitude rate */
+         ATT_GPS_POS,   /* GPS position*/
+         ATT_GPS_SPEED, /* GPS speed */
+         ATT_POS,   /* attitude angle */
+         ATT_RATE   /* attitude rate */
       }
       type;
       int global;
       vec2_t setp; /* setpoint in global x/y or body frame pitch/roll direction */
    }
-   xy;
+   att;
 
    struct
    {
@@ -79,6 +79,10 @@ typedef struct
    int motors_enabled;
 } 
 control_mode_t;
+
+void cm_set_att_gyro(vec2_t *setp);
+void cm_set_att_acc(vec2_t *setp);
+void cm_set_att_acc(vec2_t *setp);
 
 
 void cm_init(void);
