@@ -1,38 +1,26 @@
 PenguPilot BlackBox
 ===================
 
-The PenguPilot BlackBox is intended to enable various applications
-by logging various variables of the autopilot's control loop in each step.
-
-Applications
-------------
+The PenguPilot BlackBox is intended to enable various applications by logging various variables of the autopilot's control loop in each step, such as:
    * continuous integration and software tests
    * rare event logging (e.g. crash, sensor failures)
    * offline filter tuning
    * performance evaluation
 
 Files and Tools
-----------------
-The service is started/stopped via "pp\_svctrl --start|--stop blackbox".
+---------------
+The service is started/stopped using the following command:
 
-It stores the log files in PenguPilot's log folder, which is typically "$HOME/.PenguPilot/log".
-In this folder, "core\_debug.msgpack" is a symbolic link to the most recent log file.
-A new log file with creation date/time in its name is created when the service is started.
-**CAUTION**: If the *AutoPilot is restarted without restarting the  BlackBox*,
+   $ pp\_svctrl --start|--stop blackbox
+
+It stores the log files in PenguPilot's log folder, which is typically "$HOME/.PenguPilot/log". In this folder, "core\_debug.msgpack" is a symbolic link to the most recent log file.
+A new log file with creation date/time in its name is created when the service is started. **CAUTION**: If the *AutoPilot is restarted without restarting the  BlackBox*,
 an additional header will appear in the log file. This might lead to confusions.
 
 Approach
 --------
-The requirements for the logging data format can be summarized as follows:
-   * low CPU load
-   * low flash memory usage (binary format)
-   * streaming capability
-   * C and Python support
-   * support for string, integer, float
-To realize a logging framework capable of writing real-time data to
-flash memory, synchronous write access is not feasible,
-as interrupting the real-time processing easily leads to flight instabilities.
-Thus, the logging framework is split into a real-time and a non-real-time
+To realize a logging framework capable of writing real-time data to flash memory, synchronous write access is not feasible,
+as interrupting the real-time processing easily leads to flight instabilities. Thus, the logging framework is split into a real-time and a non-real-time
 part, which are linked by buffered IPC, as follows:
 
 (**AutoPilot**) ----[Buffer]---> (**BlackBox**)
@@ -44,6 +32,12 @@ but do not influence the AutoPilot.
 
 Data Format
 -----------
+The requirements for the logging data format are summarized as follows:
+   * low CPU load
+   * low flash memory usage (binary format)
+   * streaming capability
+   * C and Python support
+   * support for string, integer, float
 Based on a survey on serialization formats covering these desirable properties,
 [MessagePack](http://www.msgpack.org) is selected.
 
