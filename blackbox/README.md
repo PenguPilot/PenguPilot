@@ -28,8 +28,8 @@ To realize a logging framework capable of writing real-time data to flash memory
 as interrupting the real-time processing easily leads to flight instabilities. Thus, the logging framework is split into a real-time and a non-real-time
 part, which are linked by buffered IPC, as follows:
 
-      AutoPilot ----[Buffered Data]---> BlackBox
-    Address Space A                 Address Space B
+    AutoPilot ----[Buffered Data]---> BlackBox
+    Address Space A            Address Space B
 
 Moving the log write process to another address space also increases the system's stability:
 Exceptions caused by accessing flash memory might only cause a crash in the BlackBox,
