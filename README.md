@@ -42,4 +42,3 @@ Build System and Environment:
 - SConstruct: scons build file
 - scripts: various scripts
 
-![Build Status](https://travis-ci.org/PenguPilot/PenguPilot.png)
