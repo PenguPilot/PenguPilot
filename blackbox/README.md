@@ -11,9 +11,9 @@ Files and Tools
 ---------------
 The service is started/stopped using the following command:
 
-    $ pp\_svctrl --start|--stop blackbox
+    $ pp_svctrl --start|--stop blackbox
 
-It stores the log files in PenguPilot's log folder, which is typically "$HOME/.PenguPilot/log". In this folder, "core\_debug.msgpack" is a symbolic link to the most recent log file.
+It stores the log files in PenguPilot's log folder, which is typically "$HOME/.PenguPilot/log". In this folder, "core_debug.msgpack" is a symbolic link to the most recent log file.
 A new log file with creation date/time in its name is created when the service is started. **CAUTION**: If the *AutoPilot is restarted without restarting the  BlackBox*,
 an additional header will appear in the log file. This might lead to confusions.
 
