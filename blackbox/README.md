@@ -18,9 +18,9 @@ A new log file with creation date/time in its name is created when the service i
 an additional header will appear in the log file. This might lead to confusions.
 
 Additional tools are:
-    * compare_msgpack.py: compares two BlackBox log files given as arguments
-    * filter_txt_col.py: filters human-readable log file (stdin) based on column name arguments
-    * msgpack_to_txt.py: converts log file (stdin) to human-readable log file (stdout)
+   * compare_msgpack.py: compares two BlackBox log files given as arguments
+   * filter_txt_col.py: filters human-readable log file (stdin) based on column name arguments
+   * msgpack_to_txt.py: converts log file (stdin) to human-readable log file (stdout)
 
 Approach
 --------
