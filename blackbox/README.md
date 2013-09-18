@@ -42,15 +42,12 @@ The requirements for the logging data format are summarized as follows:
    * low flash memory usage (binary format)
    * streaming capability
    * C and Python support
-   * support for string, integer, float
+   * support for integer, float, string values
+
 Based on a survey on serialization formats covering these desirable properties,
 [MessagePack](http://www.msgpack.org) is selected.
 
-A log file consists of a single header consisting of n strings,
-and m measurement vectors of length n.
-The data vectors must consist only of integer or float values.
-
-The figure below depicts the file layout:
+A log file consists of a single msgpack header containing n strings, and m measurement vectors of length n. The data vectors must consist only of integer or float values. The figure below depicts the file layout:
 
            c_1:        c2:        c3:
     r_0: "gyro_x" | "gyro_y" | "gyro_z" [header]
