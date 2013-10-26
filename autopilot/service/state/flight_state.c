@@ -11,6 +11,10 @@
   
  Flight State Tracking
 
+ The module integrates two sensor inputs:
+ - accelerometer variance
+ - ultrasonic sensor
+
  Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
