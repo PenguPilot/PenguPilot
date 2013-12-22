@@ -42,7 +42,7 @@ def kill(pid):
    try:
       while True:
          os.kill(pid, signal.SIGTERM)
-         time.sleep(0.1)
+         time.sleep(1.0)
    except OSError as err:
       err = str(err)
       if err.find("No such process") == 0:
@@ -94,7 +94,7 @@ def stop(name):
    if pid:
       kill(pid)
       while validate(name):
-         pass
+         times.sleep(1.0)
       print green('[OK]')
    else:
       print red('[ERROR: no such process]')

@@ -24,15 +24,18 @@
 # GNU General Public License for more details.
 
 
+export SCONSFLAGS="--warn=no-duplicate-environment"
+
 export SCL_CACHE_GENERATOR=$PENGUPILOT_PATH/scl/tools/gen_cache.sh
 export SCL_CONFIG=$PENGUPILOT_PATH/config/system.yaml
 
 export PYTHONDONTWRITEBYTECODE="TRUE"
-export PYTHONPATH="$PYTHONPATH:$PENGUPILOT_PATH/shared"
 export PYTHONPATH="$PYTHONPATH:$PENGUPILOT_PATH/opcd/shared"
 export PYTHONPATH="$PYTHONPATH:$PENGUPILOT_PATH/scl/shared"
 export PYTHONPATH="$PYTHONPATH:$PENGUPILOT_PATH/powerman/shared"
 export PYTHONPATH="$PYTHONPATH:$PENGUPILOT_PATH/autopilot/shared"
+export PYTHONPATH="$PYTHONPATH:$PENGUPILOT_PATH/icarus/shared"
+export PYTHONPATH="$PYTHONPATH:$PENGUPILOT_PATH/gps/shared"
 export PYTHONPATH="$PYTHONPATH:$PENGUPILOT_PATH/shared"
 
 PENGU_USER_PATH=$HOME/.PenguPilot

@@ -5,5 +5,7 @@
 *_pb2.py
 *.pb-c.c
 *.pb-c.h
-sensors/gps/services/gps
-autopilot/services/autopilot
+gps/service/gps
+autopilot/service/autopilot
+autopilot/tools/acc_mag_cal/acc_mag_dump
+remote/service/remote

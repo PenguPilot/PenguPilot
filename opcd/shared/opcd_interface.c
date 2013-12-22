@@ -69,6 +69,8 @@ ht_entry_t;
 
 static char *append_str(char *prefix, char *suffix)
 {
+   ASSERT_NOT_NULL(prefix);
+   ASSERT_NOT_NULL(suffix);
    char *str = malloc(strlen(prefix) + strlen(suffix) + 1);
    strcpy(str, prefix);
    strcat(str, suffix);

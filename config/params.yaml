@@ -31,9 +31,10 @@ aircomm:
 sensors:
    gps:
       serial_path: "/dev/ttyO2"
-      serial_speed: 57600
+      serial_speed: 115200
       min_sats: 4
-
+   remote:
+      serial_path: "/dev/ttyO0"
 
 powerman:
    beeper_enabled: False
@@ -48,8 +49,8 @@ powerman:
    power_save_timeout: 60.0
    voltage_adc: 7
    current_adc: 2
-   adc_2_voltage: 'lambda x: (x - 56.0) / 134.0'
-   adc_2_current: 'lambda x: (2.5 - x / 1024.0) / 0.028'
+   adc_2_voltage: 'lambda x: (x + 27.0951) / 117.1319'
+   adc_2_current: 'lambda x: (x + 27.0951) / 117.1319'
 
 icarus:
    takeoff:
@@ -65,6 +66,11 @@ pilot:
       level: 3
       details: 2
 
+   ahrs:
+      yaw_bias: -0.2
+      pitch_bias: 0.02
+      roll_bias: -0.02
+
    cal:
       acc_bias_x:  0.0
       acc_bias_y:  0.0
@@ -79,41 +85,50 @@ pilot:
       mag_scale_y: 1.0
       mag_scale_z: 1.0
 
+   sticks:
+      pitch_roll_p: 3.0
+      pitch_roll_angle_max: 45.0
+      yaw_p: 2.0
+
    controllers:
 
       stabilizing:
-         att_kd: 0.02352953418
-         att_kp: 0.32876523028
-         att_ki: 2.20026754887
-         att_kii: 4.37086296837
-         yaw_kp: 0.108
-         yaw_kd: 0.00648
-         yaw_ki: 0.45
+         att_kp: 4.19227650348e-01
+         att_ki: 3.13780298778e+00
+         att_kii: 3.45789342669e+00
+         att_kd: 2.94830266817e-02
+         yaw_kp: 0.08384553006960001 
+         yaw_ki: 0.6275605975560001
+         yaw_kii: 0.691578685338
+         yaw_kd: 0.00589660533634
          filt_fg: 10.0
          filt_d: 0.95
          jxx_jyy: 0.0097
          jzz: 0.0057292965
          tmc: 0.06
 
-      xy_speed:
+      ne_speed:
          p: 0.4
+         i: 0.01
+         i_max: 0.3
+         angle_max: 30.0
      
       attitude:
-         p: 3.0
-         i: 0.0005
-         i_max: 1.0
-         d: 0.1
-         pitch_bias: 0.0
-         roll_bias: 0.0
+         p: 2.0
+         i: 0.01
+         i_max: 0.7
+         d: -0.1
  
       altitude:
          manual: false
+         init_setpoint: 2.0
+         init_mode_is_ground: True
+
+      z_speed:
          speed_p: 0.1
          speed_d: 0.1
          speed_i: 0.05
          speed_imax: 1.0
-         init_setpoint: 2.0
-         init_mode_is_ground: True
 
       yaw:
          manual: false

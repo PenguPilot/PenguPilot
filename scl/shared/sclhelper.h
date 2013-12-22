@@ -107,5 +107,10 @@ while (0)
    var.has_##attr = 1;  \
    var.attr = val
 
+#if ZMQ_VERSION_MAJOR < 3
+   #define ZMQ_SNDHWM ZMQ_HWM
+   #define ZMQ_RCVHWM ZMQ_HWM
+#endif
+
 
 #endif /* __SCL_HELPER_H__ */

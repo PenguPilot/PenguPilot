@@ -21,22 +21,24 @@ among several processes (e.g. high-level control and low-level control).
 
 Contents
 --------
-
-Build System and Environment:
-- site\_scons: related to build system
-- SConstruct: scons build file
-- scripts: Various Scripts
+Flight Infrastructure:
+- autopilot: autopilot service and calibration tools
+- blackbox: black box service and tools
+- powerman: power management and monitoring service
+- gps: gps service, similar to gpsd but more efficient and much simpler
+- icarus: high-level control service for complex commands
 
 Supporting Infrastructures:
-- setup: config file creation scripts
-- scl: Signaling and Communication Link
-- opcd: Online Parameter Configuration Daemon
-- svctrl: Service Management and Control Utility
-- shared: Shared Libraries
+- scl: signaling and communication link (IPC framework)
+- opcd: online parameter configuration daemon
+- svctrl: service management and control utility
+- shared: shared Libraries
+- config: system architecture and parameter config files
+- setup: config file creation scripts (EXPERIMENTAL)
+- remote: remote control reader service (EXPERIMENTAL)
 
-Flight Infrastructure:
-- autopilot: autopilot software
-- powerman: Power Management Daemon
-- sensors: Sensor Publisher Services
+Build System and Environment:
+- site_scons: related to build system
+- SConstruct: scons build file
+- scripts: various scripts, e.g. bashrc for sourcing
 
-![Build Status](https://travis-ci.org/PenguPilot/PenguPilot.png)

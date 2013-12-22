@@ -25,20 +25,24 @@
 
 
 opcd:
-  binary: 'opcd/services/opcd.py'
+  binary: 'opcd/service/opcd.py'
 
-gps_sensor:
-  binary: 'sensors/gps/services/gps'
+gps:
+  binary: 'gps/service/gps'
   depends: [opcd]
 
 powerman:
-  binary: 'powerman/services/powerman.py'
+  binary: 'powerman/service/powerman.py'
   depends: [opcd]
 
 autopilot:
-  binary: 'autopilot/services/autopilot'
+  binary: 'autopilot/service/autopilot'
   depends: [opcd, gps_sensor, powerman]
 
-debug_logger:
-  binary: 'autopilot/services/debug_logger.py'
+blackbox:
+  binary: 'blackbox/service/blackbox.py'
+
+remote:
+  binary: 'remote/service/remote'
+  depends: [opcd]
 

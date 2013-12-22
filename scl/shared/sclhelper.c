@@ -28,6 +28,13 @@
 #include <malloc.h>
 #include <zmq.h>
 
+
+#if ZMQ_VERSION_MAJOR <= 2
+   #define zmq_sendmsg zmq_send
+   #define zmq_recvmsg zmq_recv
+#endif
+
+
 static void _simple_free(void *data, void *hint);
 static int _zmq_send(void *socket, void *data, size_t len, int free_str, int arg);
 
@@ -70,7 +77,7 @@ int scl_recv_static(void *socket, void *buffer, size_t buf_size)
 {
    zmq_msg_t message;
    zmq_msg_init(&message);
-   int result = zmq_recv(socket, &message, 0);
+   int result = zmq_recvmsg(socket, &message, 0);
    if (result < 0)
    {
       goto out;
@@ -99,7 +106,7 @@ void *scl_recv_dynamic(void *socket, size_t *size_out)
    char *buffer = NULL;
    zmq_msg_t message;
    zmq_msg_init(&message);
-   int result = zmq_recv(socket, &message, 0);
+   int result = zmq_recvmsg(socket, &message, 0);
    if (result < 0)
    {
       goto out;
@@ -126,7 +133,7 @@ static int _zmq_send(void *socket, void *data, size_t len, int free_str, int arg
 {
    zmq_msg_t message;
    zmq_msg_init_data(&message, data, len, free_str ? _simple_free : NULL, NULL);
-   int ret = zmq_send(socket, &message, arg);
+   int ret = zmq_sendmsg(socket, &message, arg);
    zmq_msg_close(&message);
    return ret;
 }
