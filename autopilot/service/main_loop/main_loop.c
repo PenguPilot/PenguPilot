@@ -332,22 +332,22 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    vec3_t f_ned = {{f_ne.vec[0], f_ne.vec[1], f_d}};
 
    /* transform requested forces in n,e,d direction into pitch/roll angles and overall thrust: */
-   vec2_t ne;
+   vec2_t pitch_roll_sp;
    float thrust;
-   att_thrust_calc(&ne, &thrust, &f_ned, platform.max_thrust_n, 0);
+   att_thrust_calc(&pitch_roll_sp, &thrust, &f_ned, platform.max_thrust_n, 0);
 
    /* run attitude controller: */
-   if (cm.xy.type == XY_ATT_POS)
+   if (cm.att.type == ATT_POS)
    {
       if (cm.att.global)
       {
          /* "carefree" mode */
-         vec2_rotate(&ne, &cm.att.setp, euler.yaw);
+         vec2_rotate(&pitch_roll_sp, &cm.att.setp, euler.yaw);
       }
       else
       {
          /* pitch/roll direction  */
-         ne = cm.att.setp;
+         pitch_roll_sp = cm.att.setp;
       }
    }
    vec2_t att_err;
@@ -424,7 +424,7 @@ out:
    PACKFV(pos_estimate.ne_speed.vec, 2);
    PACKF(pos_estimate.ultra_z.speed); PACKF(pos_estimate.baro_z.speed);
    PACKF(0.0f);
-   PACKFV(ne.vec, 2);
+   PACKFV(pitch_roll_sp.vec, 2);
    PACKI(flight_state);
    int rc_valid = 0;
    PACKI(rc_valid);

@@ -1,24 +1,28 @@
-/******************************************************************
- This is the core graphics library for all our displays, providing
- basic graphics primitives (points, lines, circles, etc.). It needs
- to be paired with a hardware-specific library for each display
- device we carry (handling the lower-level functions).
+/*___________________________________________________
+ |  _____                       _____ _ _       _    |
+ | |  __ \                     |  __ (_) |     | |   |
+ | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
+ | |  ___/ _ \ '_ \ / _` | | | |  ___/ | |/ _ \| __| |
+ | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
+ | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
+ |                   __/ |                           |
+ |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
+ |___________________________________________________|
  
- Adafruit invests time and resources providing this open
- source code, please support Adafruit and open-source hardware
- by purchasing products from Adafruit!
- 
- Written by Limor Fried/Ladyada for Adafruit Industries.
- BSD license, check license.txt for more information.
- All text above must be included in any redistribution.
- 
-02/18/2013 	Charles-Henri Hallard (http://hallard.me)
-						Modified for compiling and use on Raspberry ArduiPi Board
-						LCD size and connection are now passed as arguments on 
-						the command line (no more #define on compilation needed)
-						ArduiPi project documentation http://hallard.me/arduipi
+ SSD1306 Python Implementation Wrapper for SWIG
 
- ******************************************************************/
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details. */
+
 
 
 #include <assert.h>
@@ -38,14 +42,14 @@ static ssd1306_t ssd;
 static bool initialized = false;
 
 
-void init(char *_i2c_bus, int16_t w, int16_t h)
+void init(char *_i2c_bus)
 {
    assert(_i2c_bus);
    if (initialized)
       return;
    i2c_bus_open(&i2c_bus, _i2c_bus);
    i2c_dev_init(&i2c_dev, &i2c_bus, 0x3d);
-   ssd1306_init(&ssd, &i2c_dev, w, h);
+   ssd1306_init(&ssd, &i2c_dev);
    initialized = true;
 }
 
