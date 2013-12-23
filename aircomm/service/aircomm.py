@@ -1,50 +1,33 @@
 #!/usr/bin/env python
 
-from interface import Interface as ACI
+from interface import Interface
 from scl import generate_map
 from time import sleep
 from threading import Thread
 from opcd_interface import OPCD_Interface
-from aircomm_pb2 import AirComm
+#import msgpack
 from misc import daemonize
 
 
 class ACIReader(Thread):
 
-   def __init__(self, aci, scl_socket):
+   def __init__(self, sys_id, aci, scl_socket):
       Thread.__init__(self)
       self.daemon = True
+      self.sys_id = sys_id
       self.aci = aci
       self.scl_socket = scl_socket
 
    def run(self):
-      s = 0
-      next_seq = 0
       while True:
-         sleep(0.01)
          try:
             msg = self.aci.receive()
-            if msg:
-               #   if msg.dst == i.addr:
-               #      handle(msg)
-               #   elif msg.dst == BCAST:
-               #      handle(msg)
-               #      bcast(msg)
-               #   else:
-               #      bcast(msg)
-               if msg.seq != next_seq:
-                  c = abs(next_seq - msg.seq)
-                  if c < 127:
-                     s += c
-                  #print 'lost %d packets' % s
-               next_seq = (msg.seq + 1) % 256
-               pb_msg = AirComm()
-               pb_msg.addr = msg.src
-               pb_msg.type = msg.type
-               pb_msg.data = msg.data
-               self.scl_socket.send(pb_msg.SerializeToString())
+            if True: #msgpack.unpack(msg)[0] == self.sys_id:
+               sleep(0.01)
+               self.aci.send(msg)
+               self.scl_socket.send(msg)
          except:
-            pass
+            sleep(1)
 
 def main(name):
    sm = generate_map(name)
@@ -53,18 +36,15 @@ def main(name):
    out_socket = sm['out']
    in_socket = sm['in']
 
-   aci = ACI(sys_id, '/dev/ttyACM0')
-   acr = ACIReader(aci, out_socket)
+   aci = Interface('/dev/ttyACM0')
+   acr = ACIReader(sys_id, aci, out_socket)
    acr.start()
 
    # read from SCL in socket and send data via NRF
    while True:
-      try:
-         msg = AirComm()
-         raw = self.in_socket.recv()
-         msg.ParseFromString(raw)
-         aci.send(msg.addr, msg.type, msg.data)
-      except:
-         sleep(0.1)
+      raw = in_socket.recv()
+      aci.send(raw)
+
 
 daemonize('aircomm', main)
+

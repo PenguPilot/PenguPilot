@@ -12,7 +12,7 @@ class Interface:
       self.nrf._bus.timeout = None # disable read/write timeouts
 
    def send(self, data):
-      self.nrf._bus.write(raw)
+      self.nrf._bus.write(data)
 
    def receive(self):
       return self.nrf._bus.read()
