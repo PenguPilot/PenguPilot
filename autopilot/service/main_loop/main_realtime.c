@@ -48,13 +48,6 @@ static void main_realtime_init(void)
 {
    ASSERT_ONCE();
 
-   LOG(LL_INFO, "setting maximum CPU clock");
-   if (system("echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor") != 0)
-   {
-      LOG(LL_ERROR, "failed");
-      die();
-   }
- 
    LOG(LL_INFO, "setting up real-time scheduling");
    sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
    sched_setscheduler(getpid(), SCHED_FIFO, &sp);

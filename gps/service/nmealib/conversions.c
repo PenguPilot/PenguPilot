@@ -154,7 +154,6 @@ void nmea_GPGSA2info(const nmeaGPGSA *pack, nmeaINFO *info) {
 		info->fix = pack->fix_type;
 	}
 	if (nmea_INFO_is_present(pack->present, SATINUSE)) {
-		assert(sizeof(info->satinfo.in_use) == sizeof(info->satinfo.in_use));
 		info->satinfo.inuse = 0;
 		for (i = 0; i < NMEA_MAXSAT; i++) {
 			info->satinfo.in_use[i] = pack->sat_prn[i];

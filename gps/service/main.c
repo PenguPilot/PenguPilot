@@ -42,13 +42,12 @@
 #include "nmealib/nmea/nmea.h"
 
 
-#define TIME_STR_LEN 20
+#define TIME_STR_LEN 128
 
 
 static char running = 1;
-static char *serial_path = "/dev/ttyACM0";
+static char *serial_path = NULL;
 static tsint_t serial_speed;
-static tsint_t min_sats;
 static void *gps_socket;
 static serialport_t port;
  
@@ -107,7 +106,6 @@ void _main(int argc, char *argv[])
    {
       {"serial_path", &serial_path},
       {"serial_speed", &serial_speed},
-      {"min_sats", &min_sats},
       OPCD_PARAMS_END
    };
    
@@ -172,27 +170,23 @@ void _main(int argc, char *argv[])
             }
             
             /* set position data if a minimum of satellites is seen: */
-            if (info.satinfo.inuse >= tsint_get(&min_sats))
+            if (info.fix >= 2)
             {
-               /* set data for 2d fix: */
-               if (info.fix >= 2)
-               {
-                  gps_data.fix = 2;
-                  PB_SET(gps_data, hdop, info.HDOP);
-                  PB_SET(gps_data, vdop, info.VDOP);
-                  PB_SET(gps_data, lat, convert(info.lat));
-                  PB_SET(gps_data, lon, convert(info.lon));
-                  PB_SET(gps_data, sats, info.satinfo.inuse);
-                  PB_SET(gps_data, course, info.track);
-                  PB_SET(gps_data, speed, info.speed);
-               }
+               gps_data.fix = 2;
+               PB_SET(gps_data, hdop, info.HDOP);
+               PB_SET(gps_data, lat, convert(info.lat));
+               PB_SET(gps_data, lon, convert(info.lon));
+               PB_SET(gps_data, sats, info.satinfo.inuse);
+               PB_SET(gps_data, course, info.track);
+               PB_SET(gps_data, speed, info.speed);
+            }
               
-               /* set data for 3d fix: */
-               if (info.fix == 3)
-               {
-                  gps_data.fix = 3;
-                  PB_SET(gps_data, alt, info.elv);
-               }
+            /* set data for 3d fix: */
+            if (info.fix == 3)
+            {
+               gps_data.fix = 3;
+               PB_SET(gps_data, vdop, info.VDOP);
+               PB_SET(gps_data, alt, info.elv);
             }
 
             /* add satellit info: */
@@ -206,7 +200,7 @@ void _main(int argc, char *argv[])
                satinfo[i] = malloc(gps_data.n_satinfo * sizeof(SatInfo));
                sat_info__init(satinfo[i]);
                satinfo[i]->id = nmea_satinfo->id;
-               satinfo[i]->in_use = info.satinfo.in_use[i];
+               satinfo[i]->in_use = info.satinfo.in_use[i] ? 1 : 0;
                satinfo[i]->elv = nmea_satinfo->elv;
                satinfo[i]->azimuth = nmea_satinfo->azimuth;
                satinfo[i]->sig = nmea_satinfo->sig;

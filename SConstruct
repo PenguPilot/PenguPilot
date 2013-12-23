@@ -28,7 +28,7 @@
 import os
 import re
 import subprocess
-
+import distutils.sysconfig
 
 re_cc = re.compile('.*\.(c|cpp)$')
 re_pb = re.compile('.*\.proto$')
@@ -67,6 +67,9 @@ def make_proto_lib(path, name):
 
 
 env = Environment(
+    SWIGFLAGS=['-python'],
+    CPPPATH=[distutils.sysconfig.get_python_inc()],
+    SHLIBPREFIX="",
     ENV = {'PATH' : os.environ['PATH'],
            'TERM' : os.environ['TERM'],
            'HOME' : os.environ['HOME']},
@@ -140,6 +143,9 @@ gps_pb_lib = make_proto_lib(gps_pb_dir, 'gps_pb')
 gps_bin = env.Program('gps/service/gps', collect_files(gps_dir + 'service', re_cc), LIBS = ['pthread', 'opcd', 'opcd_pb', 'shared', 'scl', 'yaml-cpp', 'zmq', 'glib-2.0', 'gps_pb', 'protobuf-c', 'libstdc++'])
 Requires(gps_bin, scl_lib + shared_lib + gps_pb_lib + opcd_pb_lib)
 
+# build display:
+display_src = map(lambda x: 'display/shared/' + x, ['pyssd1306.c', 'pyssd1306.i', 'i2c/i2c.c', 'ssd1306.c'])
+env.SharedLibrary('display/shared/_pyssd1306.so', display_src)
 
 # build icarus:
 ic_dir = 'icarus/'

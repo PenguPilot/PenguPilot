@@ -37,7 +37,11 @@ powerman:
 
 autopilot:
   binary: 'autopilot/service/autopilot'
-  depends: [opcd, gps_sensor, powerman]
+  depends: [opcd, gps, powerman]
+
+display:
+  binary: 'display/service/display.py'
+  depends: [gps, powerman]
 
 blackbox:
   binary: 'blackbox/service/blackbox.py'

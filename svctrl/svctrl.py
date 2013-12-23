@@ -98,6 +98,8 @@ def read_config():
             for depend in depends:
                if not depend in services:
                   raise AssertionError('service %s dependency %s unknown' % (name, depend))
+         except AssertionError:
+            raise
          except:
             depends = []
          # insert the service:
