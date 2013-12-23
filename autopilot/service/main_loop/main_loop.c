@@ -59,6 +59,7 @@
 #include "../control/speed/ne_speed.h"
 #include "../state/motors_state.h"
 #include "../force_opt/force_opt.h"
+#include "../force_opt/att_thrust.h"
 
 
 static float *rpm_square = NULL;
@@ -284,7 +285,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    pos_t pos_estimate;
    pos_update(&pos_estimate, &pos_in);
    
-   float gas = 0.0f;
+   float f_d = 0.0f;
    float yaw_err, u_err;
    //auto_stick.yaw = yaw_ctrl_step(&yaw_err, euler.yaw, marg_data->gyro.z, dt);
    if (cm.z.type == Z_AUTO)
@@ -293,22 +294,21 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
                                    pos_estimate.baro_z.pos, pos_estimate.baro_z.speed, dt);
       */
       float speed_sp = 0.0f;
-      gas = u_speed_step(speed_sp, pos_estimate.baro_z.speed, dt);
-      
-      //EVERY_N_TIMES(10, printf("%f %f\n", pos_in.baro_z, pos_estimate.baro_z.pos));
-      gas = fmin(gas, cm.z.setp);
+      f_d = u_speed_step(speed_sp, pos_estimate.baro_z.speed, dt);
+      f_d = fmin(f_d, cm.z.setp);
    }
    else /* Z_STICK */
    {
-      gas = cm.z.setp;
+      f_d = cm.z.setp;
    }
+   f_d *= platform.max_thrust_n;
    
    /* the following code sets the x/y speed setpoint: */
    vec2_t speed_sp;
-   if (cm.xy.type == XY_GPS_SPEED)
+   if (cm.att.type == ATT_GPS_SPEED)
    {
       /* direct speed control mode: */
-      if (cm.xy.global)
+      if (cm.att.global)
       {
          /* move according to global speed vector: */
          speed_sp.n = 0.0;
@@ -317,7 +317,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
       else /* local */
       {
          /* rotate desired speed vector with copter orientation: */
-         vec2_rotate(&speed_sp, &cm.xy.setp, euler.yaw);
+         vec2_rotate(&speed_sp, &cm.att.setp, euler.yaw);
       }
    }
    else /* GPS_POS */
@@ -326,22 +326,28 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
       navi_run(&speed_sp, &pos_estimate.ne_pos, dt);
    }
 
-   /* run speed vector controller: */
-   vec2_t pitch_roll_sp;
-   ne_speed_ctrl_run(&pitch_roll_sp, &speed_sp, dt, &pos_estimate.ne_speed, euler.yaw);
+   /* run speed vector controller, which computes forces in n,e direction: */
+   vec2_t f_ne;
+   ne_speed_ctrl_run(&f_ne, &speed_sp, dt, &pos_estimate.ne_speed, euler.yaw);
+   vec3_t f_ned = {{f_ne.vec[0], f_ne.vec[1], f_d}};
+
+   /* transform requested forces in n,e,d direction into pitch/roll angles and overall thrust: */
+   vec2_t ne;
+   float thrust;
+   att_thrust_calc(&ne, &thrust, &f_ned, platform.max_thrust_n, 0);
 
    /* run attitude controller: */
    if (cm.xy.type == XY_ATT_POS)
    {
-      if (cm.xy.global)
+      if (cm.att.global)
       {
          /* "carefree" mode */
-         vec2_rotate(&pitch_roll_sp, &cm.xy.setp, euler.yaw);
+         vec2_rotate(&ne, &cm.att.setp, euler.yaw);
       }
       else
       {
          /* pitch/roll direction  */
-         pitch_roll_sp = cm.xy.setp;
+         ne = cm.att.setp;
       }
    }
    vec2_t att_err;
@@ -353,17 +359,17 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    float piid_sp[3] = {0.0f, 0.0f, 0.0f};
 
    /* direct rate control: */
-   if (cm.xy.type == XY_GPS_SPEED)
+   if (cm.att.type == ATT_RATE)
    {
-      piid_sp[PIID_PITCH] = pitch_roll_ctrl.x + cm.xy.setp.x;
-      piid_sp[PIID_ROLL] = pitch_roll_ctrl.y + cm.xy.setp.y;
+      piid_sp[PIID_PITCH] = pitch_roll_ctrl.x + cm.att.setp.x;
+      piid_sp[PIID_ROLL] = pitch_roll_ctrl.y + cm.att.setp.y;
    }
-   else if (cm.xy.type == XY_ATT_RATE)
+   else if (cm.att.type == ATT_RATE)
    {
-      piid_sp[PIID_PITCH] = cm.xy.setp.x;
-      piid_sp[PIID_ROLL] = cm.xy.setp.y;
+      piid_sp[PIID_PITCH] = cm.att.setp.x;
+      piid_sp[PIID_ROLL] = cm.att.setp.y;
    }
-   else if (cm.xy.type == XY_ATT_POS)
+   else if (cm.att.type == ATT_POS)
    {
       piid_sp[PIID_PITCH] = pitch_roll_ctrl.x;
       piid_sp[PIID_ROLL] = pitch_roll_ctrl.y;
@@ -371,7 +377,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    piid_sp[PIID_YAW] = cm.yaw.setp;
 
    /* run feed-forward system and stabilizing PIID controller: */
-   f_local_t f_local = {{gas * platform.max_thrust_n, 0.0f, 0.0f, 0.0f}};
+   f_local_t f_local = {{thrust, 0.0f, 0.0f, 0.0f}};
    piid_run(&f_local.vec[1], marg_data->gyro.vec, piid_sp);
 
    /* computation of rpm ^ 2 out of the desired forces */
@@ -418,7 +424,7 @@ out:
    PACKFV(pos_estimate.ne_speed.vec, 2);
    PACKF(pos_estimate.ultra_z.speed); PACKF(pos_estimate.baro_z.speed);
    PACKF(0.0f);
-   PACKFV(pitch_roll_sp.vec, 2);
+   PACKFV(ne.vec, 2);
    PACKI(flight_state);
    int rc_valid = 0;
    PACKI(rc_valid);
