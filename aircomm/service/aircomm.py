@@ -26,13 +26,18 @@
  GNU General Public License for more details. """
 
 
-from interface import Interface as ACI
+from interface import Interface
 from scl import generate_map
-from time import sleep
+from time import sleep, time
 from threading import Thread
 from opcd_interface import OPCD_Interface
 from aircomm_pb2 import AirComm
 from misc import daemonize
+from message_history import MessageHistory
+import crypt
+
+
+BCAST_ADDR = 0x7F
 
 
 class ACIReader(Thread):
@@ -42,44 +47,50 @@ class ACIReader(Thread):
       self.daemon = True
       self.aci = aci
       self.scl_socket = scl_socket
+      self.mhist = MessageHistory(60)
 
    def run(self):
       s = 0
-      next_seq = 0
       while True:
-         sleep(0.01)
          try:
-            msg = self.aci.receive()
-            if msg:
-               #   if msg.dst == i.addr:
-               #      handle(msg)
-               #   elif msg.dst == BCAST:
-               #      handle(msg)
-               #      bcast(msg)
-               #   else:
-               #      bcast(msg)
-               if msg.seq != next_seq:
-                  c = abs(next_seq - msg.seq)
-                  if c < 127:
-                     s += c
-                  #print 'lost %d packets' % s
-               next_seq = (msg.seq + 1) % 256
-               pb_msg = AirComm()
-               pb_msg.addr = msg.src
-               pb_msg.type = msg.type
-               pb_msg.data = msg.data
-               self.scl_socket.send(pb_msg.SerializeToString())
-         except:
-            pass
+            # receive encrypted message:
+            crypt_data = self.aci.receive()
+            if crypt_data:
+               
+               # check if we have seen this message before:
+               if !mhist.check(key)
+                  continue
+               
+               # decrypt message:
+               raw_msg = crypd.decode(crypt_data)
+               
+               # load msgpack contents:
+               msg = msgpack.loads(raw_msg)
+               
+               # if message is meant for us, forward to application(s)
+               if msg.dst in [THIS_SYS_ID, BCAST]:
+                  self.scl_socket.send(msg)
+               
+               # message might be intersting for others, too:
+               if msg.dst == BCAST:
+                  self.aci.send(crypt_data)
+
+         except Exception, e:
+            print e
+            sleep(0.1)
 
 def main(name):
    sm = generate_map(name)
    opcd = OPCD_Interface(sm['opcd_ctrl'], name)
-   sys_id = opcd.get('id')
+   global THIS_SYS_ID
+   THIS_SYS_ID = opcd.get('id')
+   key = opcd.get('psk')
+   crypt.init(key)
+
    out_socket = sm['out']
    in_socket = sm['in']
 
-   aci = ACI(sys_id, '/dev/ttyACM0')
+   aci = Interface('/dev/ttyACM0')
    acr = ACIReader(aci, out_socket)
    acr.start()
 

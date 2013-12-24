@@ -10,11 +10,11 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Crypto Service
+ Crypto Functionality for Aircomm
 
- Copyright (C) 2009 joonis new media
- Author: Thimo Kraemer <thimo.kraemer@joonis.de>
  Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Original Code Copyright (C) 2009 joonis new media
+ Author: Thimo Kraemer <thimo.kraemer@joonis.de>
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -27,41 +27,41 @@
  GNU General Public License for more details. """
 
 
-import random, base64
+import random
 from hashlib import sha1
 
 
-def crypt(data, key):
-    """RC4 algorithm"""
-    x = 0
-    box = range(256)
-    for i in range(256):
-        x = (x + box[i] + ord(key[i % len(key)])) % 256
-        box[i], box[x] = box[x], box[i]
-    x = y = 0
-    out = []
-    for char in data:
-        x = (x + 1) % 256
-        y = (y + box[x]) % 256
-        box[x], box[y] = box[y], box[x]
-        out.append(chr(ord(char) ^ box[(box[x] + box[y]) % 256]))
+def init(_key, _salt_len = 2):
+   global key, salt_len
+   key = _key
+   salt_len = _salt_len
 
-    return ''.join(out)
 
-def encrypt(data, key, encode=None, salt_length=4):
-    """RC4 encryption with random salt and final encoding"""
-    salt = ''
-    for n in range(salt_length):
-        salt += chr(random.randrange(256))
-    data = salt + crypt(data, sha1(key + salt).digest())
-    if encode:
-        data = encode(data)
-    return data
+def _crypt(data, key):
+   x = 0
+   box = range(256)
+   for i in range(256):
+      x = (x + box[i] + ord(key[i % len(key)])) % 256
+      box[i], box[x] = box[x], box[i]
+   x = y = 0
+   out = []
+   for char in data:
+      x = (x + 1) % 256
+      y = (y + box[x]) % 256
+      box[x], box[y] = box[y], box[x]
+      out.append(chr(ord(char) ^ box[(box[x] + box[y]) % 256]))
+   return ''.join(out)
 
-def decrypt(data, key, decode=None, salt_length=4):
-    """RC4 decryption of encoded data"""
-    if decode:
-        data = decode(data)
-    salt = data[:salt_length]
-    return crypt(data[salt_length:], sha1(key + salt).digest())
+
+def encrypt(data):
+   salt = ''
+   for n in range(salt_length):
+      salt += chr(random.randrange(256))
+   data = salt + _crypt(data, sha1(key + salt).digest())
+   return data
+
+
+def decrypt(data):
+   salt = data[:salt_length]
+   return _crypt(data[salt_length:], sha1(key + salt).digest())
 
