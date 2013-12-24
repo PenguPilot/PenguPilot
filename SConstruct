@@ -100,24 +100,6 @@ opcd_lib = env.Library('opcd/shared/opcd', collect_files('opcd', re_cc))
 Requires(opcd_lib, scl_lib + opcd_pb_lib)
 append_inc_lib('opcd/shared')
 
-# build rc input:
-#rc_dir = 'input/rc/'
-#rc_pb_dir = rc_dir + 'shared/'
-#rc_pb = 'rc_data.proto'
-#rc_pb_lib = make_proto_lib(rc_pb_dir, 'rc_pb')
-#rc_bin = env.Program('input/rc/services/rc', collect_files(rc_dir + 'services', re_cc), LIBS = ['pthread', 'opcd', 'opcd_pb', 'shared', 'scl', 'yaml-cpp', 'zmq', 'glib-2.0', 'rc_pb', 'protobuf-c'])
-#Requires(rc_bin, scl_lib + shared_lib + rc_pb_lib + opcd_pb_lib)
-
-
-# build rc input:
-rc_dir = 'input/rc/'
-rc_pb_dir = rc_dir + 'shared/'
-rc_pb = 'rc_data.proto'
-rc_pb_lib = make_proto_lib(rc_pb_dir, 'rc_pb')
-rc_bin = env.Program('input/rc/services/rc', collect_files(rc_dir + 'services', re_cc), LIBS = ['pthread', 'opcd', 'opcd_pb', 'shared', 'scl', 'yaml-cpp', 'zmq', 'glib-2.0', 'rc_pb', 'protobuf-c'])
-Requires(rc_bin, scl_lib + shared_lib + rc_pb_lib + opcd_pb_lib)
-
-
 # build powerman:
 pm_pb_lib = make_proto_lib('powerman/shared/', 'powerman_pb')
 
@@ -145,6 +127,7 @@ amd_bin = env.Program('autopilot/tools/acc_mag_cal/acc_mag_dump', amd_src, LIBS 
 
 # build gps:
 
+append_inc_lib('gps/shared')
 append_inc_lib('gps/service/nmealib')
 gps_dir = 'gps/'
 gps_pb_dir = gps_dir + 'shared/'

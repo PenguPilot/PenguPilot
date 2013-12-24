@@ -8,8 +8,8 @@
  |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
- 
- SSD1306 Python Interface for SWIG
+  
+ Linux System Misc Interface
 
  Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
@@ -24,12 +24,12 @@
  GNU General Public License for more details. */
 
 
-%feature("autodoc", "1");
+#ifndef __LINUX_SYS_H__
+#define __LINUX_SYS_H__
 
-%module(docstring="SSD1306 Interface") pyssd1306
-%{
-   #include "pyssd1306.h"
-%}
 
-%include "stdint.i"
-%include "pyssd1306.h"
+void linux_sys_set_timezone(float lat_dest, float lon_dest);
+
+
+#endif /* __LINUX_SYS_H__ */
+

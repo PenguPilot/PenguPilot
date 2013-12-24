@@ -1,4 +1,6 @@
-/*___________________________________________________
+#!/usr/bin/env python
+"""
+  ___________________________________________________
  |  _____                       _____ _ _       _    |
  | |  __ \                     |  __ (_) |     | |   |
  | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
@@ -8,10 +10,10 @@
  |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
- 
- SSD1306 Python Interface for SWIG
+  
+ A simple GPS Monitor
 
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2011 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -21,15 +23,21 @@
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. */
+ GNU General Public License for more details. """
 
 
-%feature("autodoc", "1");
+import sys
+from gps_data_pb2 import GpsData
+from scl import generate_map
 
-%module(docstring="SSD1306 Interface") pyssd1306
-%{
-   #include "pyssd1306.h"
-%}
 
-%include "stdint.i"
-%include "pyssd1306.h"
+socket = generate_map('gps_test')['gps']
+gps_data = GpsData()
+try:
+   while True:
+      str = socket.recv()
+      gps_data.ParseFromString(str)
+      print gps_data.hdop, gps_data.sats
+except:
+   print 'terminated by user'
+
