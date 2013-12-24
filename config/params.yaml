@@ -32,7 +32,6 @@ sensors:
    gps:
       serial_path: "/dev/ttyO2"
       serial_speed: 115200
-      min_sats: 4
    remote:
       serial_path: "/dev/ttyO0"
 
@@ -111,13 +110,13 @@ pilot:
          p: 0.4
          i: 0.01
          i_max: 0.3
-         angle_max: 30.0
+         angle_max: 12.0
      
       attitude:
          p: 2.0
          i: 0.01
          i_max: 0.7
-         d: -0.1
+         d: 0.1
  
       altitude:
          manual: false

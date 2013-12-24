@@ -9,9 +9,10 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Threadsafe Linux I2C Interface
+ Adafruit 128x64 SSD1307 Linux I2C Driver Interface
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Based on code written by Limor Fried/Ladyada.  
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,37 +25,38 @@
  GNU General Public License for more details. */
 
 
-#ifndef __I2C_H__
-#define __I2C_H__
+#ifndef __SSD1306_H__
+#define __SSD1306_H__
 
-
+#include "i2c/i2c.h"
 #include <stdint.h>
-#include <stddef.h>
 
 
-/* bus type definition: */
-typedef int i2c_bus_t;
-
-
-/* device type definition: */
 typedef struct
 {
-   i2c_bus_t *bus;
-   uint8_t addr;
+   i2c_dev_t *i2c_dev;
+   uint8_t *buf;
+   int16_t width;
+   int16_t height;
 }
-i2c_dev_t;
+ssd1306_t;
 
 
-int i2c_bus_open(i2c_bus_t *bus, char *path);
-int i2c_bus_close(i2c_bus_t *bus);
-void i2c_dev_init(i2c_dev_t *dev, i2c_bus_t *bus, uint8_t addr);
-int i2c_xfer(i2c_dev_t *dev, uint8_t len_wr, uint8_t *wr_data, uint8_t len_rd, uint8_t *rd_data);
-int i2c_write(i2c_dev_t *dev, uint8_t val);
-int i2c_write_reg(i2c_dev_t *dev, uint8_t reg, uint8_t val);
-int i2c_read(i2c_dev_t *dev);
-int i2c_read_reg(i2c_dev_t *dev, uint8_t reg);
-int i2c_read_block_reg(i2c_dev_t *dev, uint8_t reg, uint8_t *buf, size_t len);
+/* initializes display */
+void ssd1306_init(ssd1306_t *ssd, i2c_dev_t *i2c_dev);
+
+/* inverts display */
+void ssd1306_invert(ssd1306_t *ssd, uint8_t inv);
+
+/* writes buffer contents to display */
+void ssd1306_update(ssd1306_t *ssd);
+
+/* clears buffer */
+void ssd1306_clear(ssd1306_t *ssd);
+
+/* sets pixel in buffer */
+void ssd1306_set_pixel(ssd1306_t *ssd, int16_t x, int16_t y, uint16_t color);
 
 
-#endif /* __I2C_H__ */
+#endif /* __SSD1306_H__ */
 

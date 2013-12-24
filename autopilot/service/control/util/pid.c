@@ -56,7 +56,7 @@ float pid_control(pid_controller_t *controller, float error, float speed, float 
    }
    if (controller->d != NULL)
    {
-      val += tsfloat_get(controller->d) * speed;
+      val += tsfloat_get(controller->d) * (-speed);
    }
    return val;
 }

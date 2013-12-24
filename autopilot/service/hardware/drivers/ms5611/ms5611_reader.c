@@ -24,7 +24,7 @@
  GNU General Public License for more details. */
 
 
-
+#include <util.h>
 #include <serial.h>
 #include <simple_thread.h>
 #include <threadsafe_types.h>

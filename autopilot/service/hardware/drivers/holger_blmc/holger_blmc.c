@@ -62,7 +62,7 @@ void holger_blmc_write_read(uint8_t *setpoints, uint8_t *rpm)
    ASSERT_NOT_NULL(rpm);
    FOR_N(i, n_motors)
    {
-      i2c_rdwr(&devices[i], 1, &setpoints[i], 1, &rpm[i]);
+      i2c_xfer(&devices[i], 1, &setpoints[i], 1, &rpm[i]);
    }
 }
 

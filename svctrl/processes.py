@@ -40,9 +40,14 @@ def pidfile_from_name(name):
 
 def kill(pid):
    try:
+      c = 0
       while True:
          os.kill(pid, signal.SIGTERM)
          time.sleep(1.0)
+         c += 1
+         if c == 3:
+            break
+      os.kill(pid, signal.SIGKILL)
    except OSError as err:
       err = str(err)
       if err.find("No such process") == 0:

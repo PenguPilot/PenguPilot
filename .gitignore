@@ -1,6 +1,9 @@
 .sconsign.dblite
 *.pyc
 *.o
+*.os
+*_wrap.c
+*.so
 *.a
 *_pb2.py
 *.pb-c.c

@@ -8,10 +8,10 @@
  |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
-  
- Threadsafe Linux I2C Interface
+ 
+ SSD1306 Python Interface Wrapper for SWIG
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,37 +24,26 @@
  GNU General Public License for more details. */
 
 
-#ifndef __I2C_H__
-#define __I2C_H__
+#ifndef __PYSSD1306_H__
+#define __PYSSD1306_H__
 
 
 #include <stdint.h>
-#include <stddef.h>
+#include <stdbool.h>
 
 
-/* bus type definition: */
-typedef int i2c_bus_t;
+void init(char *i2c_bus, int16_t w, int16_t h);
+
+void blit(char *data);
+
+void set_pixel(int16_t x, int16_t y, uint16_t color);
+
+void invert(bool i);
+
+void clear(void);
+
+void update(void);
 
 
-/* device type definition: */
-typedef struct
-{
-   i2c_bus_t *bus;
-   uint8_t addr;
-}
-i2c_dev_t;
-
-
-int i2c_bus_open(i2c_bus_t *bus, char *path);
-int i2c_bus_close(i2c_bus_t *bus);
-void i2c_dev_init(i2c_dev_t *dev, i2c_bus_t *bus, uint8_t addr);
-int i2c_xfer(i2c_dev_t *dev, uint8_t len_wr, uint8_t *wr_data, uint8_t len_rd, uint8_t *rd_data);
-int i2c_write(i2c_dev_t *dev, uint8_t val);
-int i2c_write_reg(i2c_dev_t *dev, uint8_t reg, uint8_t val);
-int i2c_read(i2c_dev_t *dev);
-int i2c_read_reg(i2c_dev_t *dev, uint8_t reg);
-int i2c_read_block_reg(i2c_dev_t *dev, uint8_t reg, uint8_t *buf, size_t len);
-
-
-#endif /* __I2C_H__ */
+#endif /* __PYSSD1306_H__ */
 

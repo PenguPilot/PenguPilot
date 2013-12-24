@@ -204,7 +204,7 @@ void main_init(int override_hw)
    cal_init(&gyro_cal, 3, 500);
    btw = body_to_world_create();
 
-   cal_ahrs_init(10.0f, 2.0f * REALTIME_PERIOD, 0.02f);
+   cal_ahrs_init(10.0f, 5.0f * REALTIME_PERIOD, 0.02f);
    gps_util_init(&gps_util);
    flight_state_init(50, 30, 4.0, 150.0, 1.3);
    
@@ -268,6 +268,9 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    /* perform sensor data fusion: */
    euler_t euler;
    int ahrs_state = cal_ahrs_update(&euler, marg_data, dt);
+   //printf("%f %f %f\n", marg_data->gyro.x, marg_data->gyro.y, marg_data->gyro.z);
+   //printf("%f %f %f\n", marg_data->mag.x, marg_data->mag.y, marg_data->mag.z);
+   printf("%f %f %f\n", euler.yaw, euler.pitch, euler.roll);
    if (ahrs_state < 0 || !cal_complete(&gyro_cal))
       goto out;
    
@@ -329,29 +332,29 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    vec3_t f_ned = {{f_ne.vec[0], f_ne.vec[1], f_d}};
 
    /* transform requested forces in n,e,d direction into pitch/roll angles and overall thrust: */
-   vec2_t ne;
+   vec2_t pitch_roll_sp;
    float thrust;
-   att_thrust_calc(&ne, &thrust, &f_ned, platform.max_thrust_n, 0);
+   att_thrust_calc(&pitch_roll_sp, &thrust, &f_ned, platform.max_thrust_n, 0);
 
    /* run attitude controller: */
-   vec2_t pitch_roll = {{euler.pitch, euler.roll}};
    if (cm.att.type == ATT_POS)
    {
       if (cm.att.global)
       {
          /* "carefree" mode */
-         vec2_rotate(&ne, &cm.att.setp, euler.yaw);
+         vec2_rotate(&pitch_roll_sp, &cm.att.setp, euler.yaw);
       }
       else
       {
          /* pitch/roll direction  */
-         ne = cm.att.setp;
+         pitch_roll_sp = cm.att.setp;
       }
    }
    vec2_t att_err;
    vec2_t pitch_roll_speed = {{marg_data->gyro.y, marg_data->gyro.x}};
    vec2_t pitch_roll_ctrl;
-   att_ctrl_step(&pitch_roll_ctrl, &att_err, dt, &pitch_roll, &pitch_roll_speed, &ne);
+   vec2_t pitch_roll = {{euler.pitch, euler.roll}};
+   att_ctrl_step(&pitch_roll_ctrl, &att_err, dt, &pitch_roll, &pitch_roll_speed, &pitch_roll_sp);
 
    float piid_sp[3] = {0.0f, 0.0f, 0.0f};
 
@@ -392,7 +395,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    /* write motors: */
    if (!override_hw)
    {
-      platform_write_motors(setpoints);
+      //platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */
@@ -421,7 +424,7 @@ out:
    PACKFV(pos_estimate.ne_speed.vec, 2);
    PACKF(pos_estimate.ultra_z.speed); PACKF(pos_estimate.baro_z.speed);
    PACKF(0.0f);
-   PACKFV(ne.vec, 2);
+   PACKFV(pitch_roll_sp.vec, 2);
    PACKI(flight_state);
    int rc_valid = 0;
    PACKI(rc_valid);
