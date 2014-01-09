@@ -108,7 +108,7 @@ remote_dir = 'remote/'
 remote_pb_dir = remote_dir + 'shared/'
 remote_src = collect_files(remote_dir + 'service', re_cc)
 remote_pb_lib = make_proto_lib(remote_pb_dir, 'remote_pb')
-remote_bin = env.Program(remote_dir + 'service/remote', remote_src, LIBS = ['opcd', 'opcd_pb', 'shared', 'scl', 'protobuf-c', 'remote_pb', 'yaml-cpp', 'zmq', 'glib-2.0', 'libstdc++'])
+remote_bin = env.Program(remote_dir + 'service/remote', remote_src, LIBS = ['opcd', 'pthread', 'opcd_pb', 'shared', 'scl', 'protobuf-c', 'remote_pb', 'yaml-cpp', 'zmq', 'glib-2.0', 'libstdc++'])
 Requires(remote_bin, scl_lib + shared_lib + opcd_lib + opcd_pb_lib + remote_pb_lib)
 
 # build autopilot:
@@ -132,7 +132,7 @@ append_inc_lib('gps/service/nmealib')
 gps_dir = 'gps/'
 gps_pb_dir = gps_dir + 'shared/'
 gps_pb_lib = make_proto_lib(gps_pb_dir, 'gps_pb')
-gps_bin = env.Program('gps/service/gps', collect_files(gps_dir + 'service', re_cc), LIBS = ['pthread', 'opcd', 'opcd_pb', 'shared', 'scl', 'yaml-cpp', 'zmq', 'glib-2.0', 'gps_pb', 'protobuf-c', 'libstdc++'])
+gps_bin = env.Program('gps/service/gps', collect_files(gps_dir + 'service', re_cc), LIBS = ['m', 'pthread', 'opcd', 'opcd_pb', 'shared', 'scl', 'yaml-cpp', 'zmq', 'glib-2.0', 'gps_pb', 'protobuf-c', 'libstdc++'])
 Requires(gps_bin, scl_lib + shared_lib + gps_pb_lib + opcd_pb_lib)
 
 # build display:
