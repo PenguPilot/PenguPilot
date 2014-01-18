@@ -27,6 +27,10 @@
 opcd:
   binary: 'opcd/service/opcd.py'
 
+aircomm:
+  binary: 'aircomm/service/aircomm.py'
+  depends: [opcd]
+
 gps:
   binary: 'gps/service/gps'
   depends: [opcd]

@@ -56,6 +56,9 @@ void navi_set_dest_e(float x);
 void navi_set_dest_n(float y);
 
 
+void navi_set_dest(vec2_t vec);
+
+
 /*
  * getter for e position
  */

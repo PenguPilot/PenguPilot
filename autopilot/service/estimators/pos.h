@@ -48,8 +48,8 @@ typedef struct
 {
    vec2_t ne_pos; /* north-east position, in m */
    vec2_t ne_speed; /* north-east speed, in m */
-   pos_speed_t ultra_z; /* ultrasonic altitude altitude above ground */
-   pos_speed_t baro_z; /* barometric altitude above MSL */
+   pos_speed_t ultra_u; /* ultrasonic altitude altitude above ground */
+   pos_speed_t baro_u; /* barometric altitude above MSL */
 }
 pos_t;
 
@@ -59,8 +59,8 @@ typedef struct
    float dt;
 
    /* positions input: */
-   float ultra_z;
-   float baro_z;
+   float ultra_u;
+   float baro_u;
    float pos_n;
    float pos_e;
 

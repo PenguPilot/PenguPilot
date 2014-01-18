@@ -60,6 +60,7 @@
 #include "../state/motors_state.h"
 #include "../force_opt/force_opt.h"
 #include "../force_opt/att_thrust.h"
+#include "../flight_logic/flight_logic.h"
 
 
 static float *rpm_square = NULL;
@@ -75,6 +76,7 @@ static gps_util_t gps_util;
 static interval_t gyro_move_interval;
 static int init = 0;
 static body_to_world_t *btw;
+static flight_state_t flight_state;
 
 
 static char *blackbox_spec[] = {"dt",                      /*  1      */
@@ -182,7 +184,7 @@ void main_init(int override_hw)
    LOG(LL_INFO, "initializing command interface");
    cmd_init();
 
-   motors_state_init(0.12f, 0.8f);
+   motors_state_init();
    blackbox_socket = scl_get_socket("blackbox");
 
    /* send blackbox header: */
@@ -197,8 +199,8 @@ void main_init(int override_hw)
    }
    scl_copy_send_dynamic(blackbox_socket, msgpack_buf->data, msgpack_buf->size);
 
-   /* init control modes: */
-   cm_init();
+   /* init flight logic: */
+   flight_logic_init();
 
    /* init calibration data: */
    cal_init(&gyro_cal, 3, 500);
@@ -216,16 +218,21 @@ void main_init(int override_hw)
 }
 
 
-void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ultra, float baro, float voltage, float channels[MAX_CHANNELS], uint16_t sensor_status, int override_hw)
+void main_step(float dt,
+               marg_data_t *marg_data,
+               gps_data_t *gps_data,
+               float ultra,
+               float baro,
+               float voltage,
+               float channels[MAX_CHANNELS],
+               uint16_t sensor_status,
+               int override_hw)
 {
-   /* set the control mode: */
-   control_mode_t cm;
-   cm_update(&cm, sensor_status, channels);
    
    /* read sensor data and calibrate sensors: */
    pos_in.dt = dt;
-   pos_in.ultra_z = ultra;
-   pos_in.baro_z = baro;
+   pos_in.ultra_u = ultra;
+   pos_in.baro_u = baro;
    
    if (!(sensor_status & MARG_VALID))
    {
@@ -255,7 +262,7 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
       gps_util_update(&gps_rel_data, &gps_util, gps_data);
       pos_in.pos_e = gps_rel_data.de;
       pos_in.pos_n = gps_rel_data.dn;
-      printf("e: %f n: %f\n", pos_in.pos_e, pos_in.pos_n);
+      printf("n: %f e: %f\n", pos_in.pos_n, pos_in.pos_e);
       ONCE(mag_decl = mag_decl_lookup(gps_data->lat, gps_data->lon);
            gps_start_set(gps_data);
            LOG(LL_ERROR, "declination lookup yields: %f", mag_decl));
@@ -263,19 +270,13 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
 
    /* acc/mag calibration: */
    acc_mag_cal_apply(&marg_data->acc, &marg_data->mag);
-   //printf("%f\n", sqrt(marg_data->acc.x * marg_data->acc.x + marg_data->acc.y * marg_data->acc.y + marg_data->acc.z * marg_data->acc.z));
 
    /* perform sensor data fusion: */
    euler_t euler;
    int ahrs_state = cal_ahrs_update(&euler, marg_data, dt);
-   //printf("%f %f %f\n", marg_data->gyro.x, marg_data->gyro.y, marg_data->gyro.z);
-   //printf("%f %f %f\n", marg_data->mag.x, marg_data->mag.y, marg_data->mag.z);
-   printf("%f %f %f\n", euler.yaw, euler.pitch, euler.roll);
    if (ahrs_state < 0 || !cal_complete(&gyro_cal))
       goto out;
    
-   flight_state_t flight_state = 0; //flight_detect(&marg_data->acc.vec[0]);
-
    ONCE(init = 1; LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
    
    /* local ACC to global ACC rotation: */
@@ -284,118 +285,116 @@ void main_step(float dt, marg_data_t *marg_data, gps_data_t *gps_data, float ult
    /* compute next 3d position estimate: */
    pos_t pos_estimate;
    pos_update(&pos_estimate, &pos_in);
+   flight_state = flight_state_update(&marg_data->acc.vec[0], pos_estimate.ultra_u.pos);
    
-   float f_d = 0.0f;
-   float yaw_err, u_err;
-   //auto_stick.yaw = yaw_ctrl_step(&yaw_err, euler.yaw, marg_data->gyro.z, dt);
-   if (cm.z.type == Z_AUTO)
-   {
-      /*float speed_sp = u_ctrl_step(&u_err, pos_estimate.ultra_z.pos,
-                                   pos_estimate.baro_z.pos, pos_estimate.baro_z.speed, dt);
-      */
-      float speed_sp = 0.0f;
-      f_d = u_speed_step(speed_sp, pos_estimate.baro_z.speed, dt);
-      f_d = fmin(f_d, cm.z.setp);
-   }
-   else /* Z_STICK */
-   {
-      f_d = cm.z.setp;
-   }
-   f_d *= platform.max_thrust_n;
+   /* execute flight logic (sets cm_x parameters used below): */
+   flight_logic_run(sensor_status, flight_state == FS_FLYING, channels, euler.yaw, &pos_estimate.ne_pos, pos_estimate.baro_u.pos, pos_estimate.ultra_u.pos);
    
-   /* the following code sets the x/y speed setpoint: */
-   vec2_t speed_sp;
-   if (cm.att.type == ATT_GPS_SPEED)
+   /* RUN U POSITION AND SPEED CONTROLLER: */
+   float u_err = 0.0f;
+   float u_speed_sp = 0.0f;
+   if (cm_u_is_pos())
    {
-      /* direct speed control mode: */
-      if (cm.att.global)
-      {
-         /* move according to global speed vector: */
-         speed_sp.n = 0.0;
-         speed_sp.e = 0.0;
-      }
-      else /* local */
-      {
-         /* rotate desired speed vector with copter orientation: */
-         vec2_rotate(&speed_sp, &cm.att.setp, euler.yaw);
-      }
+      if (cm_u_is_baro_pos())
+         u_err = cm_u_setp() - pos_estimate.baro_u.pos;
+      else
+         u_err = cm_u_setp() - pos_estimate.ultra_u.pos;
+      u_speed_sp = u_ctrl_step(u_err);
    }
-   else /* GPS_POS */
+   
+   if (cm_u_is_spd())
+      u_speed_sp = cm_u_setp();
+   
+   float f_d_rel = u_speed_step(u_speed_sp, pos_estimate.baro_u.speed, dt);
+   if (cm_u_is_acc())
+      f_d_rel = cm_u_setp();
+
+   f_d_rel = fmin(f_d_rel, cm_u_acc_limit());
+   float f_d = f_d_rel * platform.max_thrust_n;
+
+   vec2_t speed_sp = {{0.0f, 0.0f}};
+   if (cm_att_is_gps_pos())
    {
-      /* navigation mode: */
-      navi_run(&speed_sp, &pos_estimate.ne_pos, dt);
+      navi_set_dest(cm_att_setp());
+      navi_run(&speed_sp, &pos_estimate.ne_pos, dt); /* attitude navigation control */
    }
 
-   /* run speed vector controller, which computes forces in n,e direction: */
+   if (cm_att_is_gps_spd())
+      speed_sp = cm_att_setp(); /* direct attitude speed control */
+
+   /* RUN ATT NORTH/EAST SPEED CONTROLLER: */
    vec2_t f_ne;
    ne_speed_ctrl_run(&f_ne, &speed_sp, dt, &pos_estimate.ne_speed, euler.yaw);
    vec3_t f_ned = {{f_ne.vec[0], f_ne.vec[1], f_d}};
 
-   /* transform requested forces in n,e,d direction into pitch/roll angles and overall thrust: */
    vec2_t pitch_roll_sp;
    float thrust;
    att_thrust_calc(&pitch_roll_sp, &thrust, &f_ned, platform.max_thrust_n, 0);
 
-   /* run attitude controller: */
-   if (cm.att.type == ATT_POS)
-   {
-      if (cm.att.global)
-      {
-         /* "carefree" mode */
-         vec2_rotate(&pitch_roll_sp, &cm.att.setp, euler.yaw);
-      }
-      else
-      {
-         /* pitch/roll direction  */
-         pitch_roll_sp = cm.att.setp;
-      }
-   }
+   if (cm_att_is_angle())
+      pitch_roll_sp = cm_att_setp(); /* direct attitude angle control */
+ 
+   /* RUN ATT ANGLE CONTROLLER: */
    vec2_t att_err;
    vec2_t pitch_roll_speed = {{marg_data->gyro.y, marg_data->gyro.x}};
    vec2_t pitch_roll_ctrl;
    vec2_t pitch_roll = {{euler.pitch, euler.roll}};
    att_ctrl_step(&pitch_roll_ctrl, &att_err, dt, &pitch_roll, &pitch_roll_speed, &pitch_roll_sp);
-
+ 
    float piid_sp[3] = {0.0f, 0.0f, 0.0f};
+   piid_sp[PIID_PITCH] = pitch_roll_ctrl.x;
+   piid_sp[PIID_ROLL] = pitch_roll_ctrl.y;
+ 
+   if (cm_att_is_rate())
+   {
+      /* direct attitude rate control */
+      vec2_t setp = cm_att_setp();
+      piid_sp[PIID_PITCH] = setp.x;
+      piid_sp[PIID_ROLL] = setp.y;
+   }
 
-   /* direct rate control: */
-   if (cm.att.type == ATT_RATE)
+   /* RUN YAW CONTROLLER: */
+   float yaw_speed_sp, yaw_err;
+   if (cm_yaw_is_pos())
    {
-      piid_sp[PIID_PITCH] = pitch_roll_ctrl.x + cm.att.setp.x;
-      piid_sp[PIID_ROLL] = pitch_roll_ctrl.y + cm.att.setp.y;
+      /* yaw position control */
+      float sp = cm_yaw_setp();
+      yaw_speed_sp = yaw_ctrl_step(&yaw_err, sp, euler.yaw, marg_data->gyro.z, dt);
    }
-   else if (cm.att.type == ATT_RATE)
-   {
-      piid_sp[PIID_PITCH] = cm.att.setp.x;
-      piid_sp[PIID_ROLL] = cm.att.setp.y;
-   }
-   else if (cm.att.type == ATT_POS)
-   {
-      piid_sp[PIID_PITCH] = pitch_roll_ctrl.x;
-      piid_sp[PIID_ROLL] = pitch_roll_ctrl.y;
-   }
-   piid_sp[PIID_YAW] = cm.yaw.setp;
+   else
+      yaw_speed_sp = cm_yaw_setp(); /* direct yaw speed control */
+   
+   piid_sp[PIID_YAW] = yaw_speed_sp;
 
-   /* run feed-forward system and stabilizing PIID controller: */
+   /* RUN STABLIZING PIID CONTROLLER: */
    f_local_t f_local = {{thrust, 0.0f, 0.0f, 0.0f}};
    piid_run(&f_local.vec[1], marg_data->gyro.vec, piid_sp);
 
    /* computation of rpm ^ 2 out of the desired forces */
    inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
    
-   /* compute motor set points out of rpm ^ 2: */
-   piid_int_enable(platform_ac_calc(setpoints, cm.motors_enabled, voltage, rpm_square));
-   if (!cm.motors_enabled)
+   /* update motors state: */
+   motors_state_update(flight_state, dt, cm_motors_enabled());
+
+   if (motors_starting())
    {
-      memset(setpoints, 0, sizeof(float) * platform.n_motors);
       piid_reset(); /* reset piid integrators so that we can move the device manually */
       att_ctrl_reset();
    }
 
+   if (!motors_controllable())
+   {
+      FOR_N(i, platform.n_motors)
+         rpm_square[i] = 100;
+   }
+   
+   /* compute motor set points out of rpm ^ 2: */
+   piid_int_enable(platform_ac_calc(setpoints, motors_spinning(), voltage, rpm_square));
+   
    /* write motors: */
    if (!override_hw)
    {
-      //platform_write_motors(setpoints);
+      platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */
@@ -418,11 +417,11 @@ out:
    PACKFV(euler.vec, 3);
    PACKFV(pos_in.acc.vec, 3);
    PACKF(pos_in.pos_e); PACKF(pos_in.pos_n);
-   PACKF(pos_in.ultra_z); PACKF(pos_in.baro_z);
+   PACKF(pos_in.ultra_u); PACKF(pos_in.baro_u);
    PACKFV(pos_estimate.ne_pos.vec, 2);
-   PACKF(pos_estimate.ultra_z.pos); PACKF(pos_estimate.baro_z.pos);
+   PACKF(pos_estimate.ultra_u.pos); PACKF(pos_estimate.baro_u.pos);
    PACKFV(pos_estimate.ne_speed.vec, 2);
-   PACKF(pos_estimate.ultra_z.speed); PACKF(pos_estimate.baro_z.speed);
+   PACKF(pos_estimate.ultra_u.speed); PACKF(pos_estimate.baro_u.speed);
    PACKF(0.0f);
    PACKFV(pitch_roll_sp.vec, 2);
    PACKI(flight_state);

@@ -99,7 +99,7 @@ def stop(name):
    if pid:
       kill(pid)
       while validate(name):
-         times.sleep(1.0)
+         time.sleep(1.0)
       print green('[OK]')
    else:
       print red('[ERROR: no such process]')

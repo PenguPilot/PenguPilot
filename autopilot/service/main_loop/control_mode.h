@@ -10,8 +10,9 @@
  |___________________________________________________|
   
  Control Modes Interface
+ used to set remote control or auto pilot inputs
 
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -28,67 +29,90 @@
 #define __CONTROL_MODE_H__
 
 
-#include <stdint.h>
+#include <stdbool.h>
 
-#include "../hardware/util/rc_channels.h"
 #include "../util/math/vec2.h"
 
 
-typedef struct
-{
-   struct
-   {
-      enum
-      {
-         ATT_GPS_POS,   /* GPS position*/
-         ATT_GPS_SPEED, /* GPS speed */
-         ATT_POS,   /* attitude angle */
-         ATT_RATE   /* attitude rate */
-      }
-      type;
-      int global;
-      vec2_t setp; /* setpoint in global x/y or body frame pitch/roll direction */
-   }
-   att;
+/*************************
+ * GENERIC MOTOR CONTROL *
+ *************************/
 
-   struct
-   {
-      enum
-      {
-         Z_STICK, /* stick controls gas directly */
-         Z_AUTO /* ultra/baro, stick limits gas */
-      }
-      type;
-      float setp; /* setpoint from stick */
-   }
-   z;
-
-   struct
-   {
-      enum
-      {
-         YAW_ANGLE,
-         YAW_POI,
-         YAW_STICK
-      }
-      type;
-      float setp; /* yaw rate; to be extended  */   
-   }
-   yaw;
-
-   int motors_enabled;
-} 
-control_mode_t;
-
-void cm_set_att_gyro(vec2_t *setp);
-void cm_set_att_acc(vec2_t *setp);
-void cm_set_att_acc(vec2_t *setp);
+bool cm_motors_enabled(void);
+void cm_enable_motors(bool enabled);
+void cm_disable_motors_persistent(void);
 
 
-void cm_init(void);
+/*******************
+ * U CONTROL MODES *
+ *******************/
+
+void cm_u_set_ultra_pos(float pos);
+void cm_u_set_baro_pos(float pos);
+void cm_u_set_spd(float spd);
+void cm_u_set_acc(float acc);
+
+/* true, if in u pos hold mode */
+bool cm_u_is_pos(void);
+
+/* true, if in baro position hold mode
+   false, if in ultra position hold mode */
+bool cm_u_is_baro_pos(void);
+
+/* true, if in u speed control mode */
+bool cm_u_is_spd(void);
+
+/* true, if in u acc mode without feedback loop */
+bool cm_u_is_acc(void);
+
+/* returns the setpoint */
+float cm_u_setp(void);
+
+/* returns the acc limit */
+float cm_u_acc_limit(void);
 
 
-void cm_update(control_mode_t *cm, uint16_t sensor_status, float channels[MAX_CHANNELS]);
+/*********************
+ * ATT CONTROL MODES *
+ *********************/
+
+void cm_att_set_gps_pos(vec2_t pos);
+void cm_att_set_gps_spd(vec2_t spd);
+void cm_att_set_angles(vec2_t angles);
+void cm_att_set_rates(vec2_t rates);
+
+/* true, if GPS navigation/position-hold */
+bool cm_att_is_gps_pos(void);
+
+/* true, if GPS speed */
+bool cm_att_is_gps_spd(void);
+
+/* true, if angle control */
+bool cm_att_is_angle(void);
+
+/* true, if rate control */
+bool cm_att_is_rate(void);
+
+/* the attitude setpoint */
+vec2_t cm_att_setp(void);
+
+
+/*********************
+ * YAW CONTROL MODES *
+ *********************/
+
+/* set yaw control mode to position */
+void cm_yaw_set_pos(float pos);
+
+/* set yaw control mode to speed */
+void cm_yaw_set_spd(float spd);
+
+/* true, if yaw control is position
+   false, if yaw control is speed */
+bool cm_yaw_is_pos(void);
+
+/* returns the current yaw setpoint */
+float cm_yaw_setp(void);
 
 
 #endif /* __CONTROL_MODE_H__ */

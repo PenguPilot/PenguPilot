@@ -32,23 +32,23 @@
 
 
 /* initializes motor state */
-void motors_state_init(float gas_start, float gas_stop);
-
-
-/* indicates if the motors are safe */
-int motors_state_safe(void);
+void motors_state_init(void);
 
 
 /* indicates if the motors are spinning */
-int motors_state_spinning(void);
+int motors_starting(void);
+
+
+/* indicates if the motors are spinning */
+int motors_spinning(void);
 
 
 /* indicates if the controller inputs are used  */
-int motors_state_controllable(void);
+int motors_controllable(void);
 
 
 /* updates the motor state machine */
-void motors_state_update(flight_state_t flight_state, int lock, float gas, float dt, int start_allowed);
+void motors_state_update(flight_state_t flight_state, float dt, int start);
 
 
 #endif /* __MOTORS_STATE_H__ */

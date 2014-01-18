@@ -30,11 +30,7 @@
 
 void yaw_ctrl_init(void);
 
-int yaw_ctrl_set_pos(float pos);
-
-float yaw_ctrl_get_pos(void);
-
-float yaw_ctrl_step(float *err_out, float yaw, float speed, float dt);
+float yaw_ctrl_step(float *err_out, float setpoint, float yaw, float speed, float dt);
 
 void yaw_ctrl_reset(void);
 

@@ -11,7 +11,7 @@
   
  Up Position Controller Interface
  
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -28,26 +28,7 @@
 #define __U_CTRL_H__
 
 
-typedef struct
-{
-   float val;
-   int mode_is_ground;
-}
-u_setpoint_t;
-
-
-
-void u_ctrl_init(float neutral_gas);
-
-void u_ctrl_set_setpoint(u_setpoint_t u_setpoint);
-
-float u_ctrl_get_setpoint(void);
-
-int u_ctrl_mode_is_ground(void);
- 
-float u_ctrl_step(float *u_err, float ground_u_pos, float u_pos, float speed, float dt);
-
-void u_ctrl_reset(void);
+float u_ctrl_step(float err);
 
 
 #endif /* __U_CTRL_H__ */

@@ -90,15 +90,16 @@ components:
 
    - name: pilot
      gates:
-      - log: pub
-      - blackbox: pub
-      - gps: sub
-      - rc: sub
-      - ctrl: rep
-      - mon: pub
-      - power: sub
-      - opcd_ctrl: req
-      - opcd_event: sub
+      - log: pub        # logs useful human-readable data at different verbosity levels
+      - blackbox: pub   # publishes data produced in every step of the main loop
+      - gps: sub        # subscribes to GPS data provider
+      - rc: sub         # experimental remote control input
+      - ctrl: rep       # control interface
+      - mon: pub        # controller error monitoring publisher
+      - power: sub      # power data subscriber
+      - flying: pub     # publishes
+      - opcd_ctrl: req  # OPCD request/reply interface
+      - opcd_event: sub # OPCD parameter update
 
    - name: optimizer
      gates:
@@ -157,11 +158,21 @@ components:
       - out: pub
       - opcd_ctrl: req
 
+   - name: display
+     gates:
+      - flying: sub
+      - gps: sub
+      - power: sub
+
+
 #
 # component connections (component_a.gate_x -- component_b.gate_y)
 #
 
 connections:
+   - [ display.flying,           pilot.flying]
+   - [ display.gps,              gps.data]
+   - [ display.power,            powerman.mon]
    - [ calibration.data,         blackbox.data]
    - [ pilot.blackbox,           blackbox.data]
    - [ demo_mission.gps,         gps.data]

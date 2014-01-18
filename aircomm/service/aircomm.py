@@ -31,7 +31,7 @@ from scl import generate_map
 from time import sleep, time
 from threading import Thread
 from opcd_interface import OPCD_Interface
-from aircomm_pb2 import AirComm
+#import msgpack
 from misc import daemonize
 from message_history import MessageHistory
 import crypt
@@ -42,9 +42,10 @@ BCAST_ADDR = 0x7F
 
 class ACIReader(Thread):
 
-   def __init__(self, aci, scl_socket):
+   def __init__(self, sys_id, aci, scl_socket):
       Thread.__init__(self)
       self.daemon = True
+      self.sys_id = sys_id
       self.aci = aci
       self.scl_socket = scl_socket
       self.mhist = MessageHistory(60)
@@ -58,7 +59,7 @@ class ACIReader(Thread):
             if crypt_data:
                
                # check if we have seen this message before:
-               if !mhist.check(key)
+               if not mhist.check(key):
                   continue
                
                # decrypt message:
@@ -96,12 +97,9 @@ def main(name):
 
    # read from SCL in socket and send data via NRF
    while True:
-      try:
-         msg = AirComm()
-         raw = self.in_socket.recv()
-         msg.ParseFromString(raw)
-         aci.send(msg.addr, msg.type, msg.data)
-      except:
-         sleep(0.1)
+      raw = in_socket.recv()
+      aci.send(raw)
+
 
 daemonize('aircomm', main)
+
