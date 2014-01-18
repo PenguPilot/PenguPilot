@@ -1,6 +1,6 @@
 
 #include <util.h>
-#include <sclhelper.h>
+#include <scl.h>
 #include <pilot.pb-c.h>
 #include <periodic_thread.h>
 

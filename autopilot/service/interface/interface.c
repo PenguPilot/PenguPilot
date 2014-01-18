@@ -32,7 +32,7 @@
 #include <simple_thread.h>
 #include <pilot.pb-c.h>
 #include <util.h>
-#include <sclhelper.h>
+#include <scl.h>
 
 #include "interface.h"
 #include "../platform/platform.h"

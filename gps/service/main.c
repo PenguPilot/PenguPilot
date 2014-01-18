@@ -35,7 +35,7 @@
 #include <opcd_interface.h>
 #include <serial.h>
 #include <gps_data.pb-c.h>
-#include <sclhelper.h>
+#include <scl.h>
 #include <daemon.h>
 
 #include "linux_sys.h"
@@ -219,10 +219,6 @@ void _main(int argc, char *argv[])
          }
       }
    }
-
-   nmea_parser_destroy(&parser);
-   scl_close(gps_socket);
-   scl_term();
 }
 
 

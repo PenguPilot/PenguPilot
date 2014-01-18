@@ -34,7 +34,6 @@
 #include <simple_thread.h>
 #include <opcd_interface.h>
 #include <threadsafe_types.h>
-#include <sclhelper.h>
 
 #include "pos.h"
 #include "../geometry/quat.h"

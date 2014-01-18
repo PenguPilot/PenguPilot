@@ -7,10 +7,10 @@
  |                                  |
  | Signaling and Communication Link |
  |__________________________________|
+ 
+ SCL C Binding Interface
 
- SCL Helper Functions
-
- Copyright (C) 2010 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -23,8 +23,8 @@
  GNU General Public License for more details. */
 
 
-#ifndef __SCL_HELPER_H__
-#define __SCL_HELPER_H__
+#ifndef __SCL_H__
+#define __SCL_H__
 
 
 #include <malloc.h>
@@ -32,10 +32,6 @@
 
 
 int scl_init(char *component);
-
-void scl_term(void);
-
-void scl_close(void *socket);
 
 void *scl_get_context(void);
 
@@ -113,4 +109,4 @@ while (0)
 #endif
 
 
-#endif /* __SCL_HELPER_H__ */
+#endif /* __SCL_H__ */
