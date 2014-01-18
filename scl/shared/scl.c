@@ -23,9 +23,11 @@
  GNU General Public License for more details. */
 
 
-#include <yaml.h>
-#include <stdio.h>
 #include <assert.h>
+#include <unistd.h>
+#include <stdio.h>
+
+#include <yaml.h>
 #include <glib.h>
 #include <zmq.h>
 

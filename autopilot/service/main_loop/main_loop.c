@@ -239,7 +239,10 @@ void main_step(float dt,
                bool override_hw)
 {
    if (calibrate)
+   {
+      ONCE(LOG(LL_INFO, "publishing calibration data; actuators disabled"));
       goto out;
+   }
    
    pos_in.dt = dt;
    pos_in.ultra_u = ultra;
@@ -273,7 +276,6 @@ void main_step(float dt,
       gps_util_update(&gps_rel_data, &gps_util, gps_data);
       pos_in.pos_e = gps_rel_data.de;
       pos_in.pos_n = gps_rel_data.dn;
-      //printf("n: %f e: %f\n", pos_in.pos_n, pos_in.pos_e);
       ONCE(mag_decl = mag_decl_lookup(gps_data->lat, gps_data->lon);
            gps_start_set(gps_data);
            LOG(LL_ERROR, "declination lookup yields: %f", mag_decl));
@@ -402,7 +404,7 @@ void main_step(float dt,
    if (!override_hw)
    {
       //EVERY_N_TIMES(10, printf("MOTORS: %f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]));
-      //platform_write_motors(setpoints);
+      platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */

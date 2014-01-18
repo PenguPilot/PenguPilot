@@ -83,7 +83,6 @@ def start(name, path, args):
       print 'starting', blue(name), '...',
       try:
          print path,
-         print path.split(' ')
          ps = subprocess.Popen(path.split(' '), shell = False, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
          ps.stdout.close()
          ps.stderr.close()
