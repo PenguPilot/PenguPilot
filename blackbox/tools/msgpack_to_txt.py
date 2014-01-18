@@ -35,8 +35,8 @@ if __name__ == '__main__':
    try:
       header = unpacker.next()
       print ' '.join(header)
-   except:
-      pass
+   except Exception, e:
+      print e
 
    # print data:
    for msg in unpacker:

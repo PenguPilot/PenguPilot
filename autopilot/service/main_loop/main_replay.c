@@ -111,24 +111,25 @@ void handle_array(msgpack_object array, int header)
 
 
 /* a replay of previously recorded flight data */
-void main_replay(char *file_name)
+void main_replay(int argc, char *argv[])
 {
-   main_init(1);
-   int file = open(file_name, O_RDONLY);
+   assert(argc > 1);
+   main_init(argc, argv);
+   int file = open(argv[1], O_RDONLY);
    if (file < 0)
    {
-      printf("could not open file: %s\n", file_name);
+      printf("could not open file: %s\n", argv[1]);
       return;
    }
    
    struct stat st;
-   stat(file_name, &st);
+   stat(argv[1], &st);
    size_t size = st.st_size;
 
    char *buffer = malloc(size);
    if (read(file, buffer, size) < 0)
    {
-      printf("could not read from file: %s\n", file_name);
+      printf("could not read from file: %s\n", argv[1]);
    }
 
    msgpack_unpacked msg;

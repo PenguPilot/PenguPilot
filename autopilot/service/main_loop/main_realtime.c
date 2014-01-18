@@ -74,9 +74,7 @@ static void main_realtime_init(void)
 /* executed on the actual hardware */
 void main_realtime(int argc, char *argv[])
 {
-   (void)argc;
-   (void)argv;
-   main_init(0);
+   main_init(argc, argv);
    main_realtime_init();
    interval_t interval;
    interval_init(&interval);

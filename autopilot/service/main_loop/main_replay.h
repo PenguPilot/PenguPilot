@@ -33,7 +33,7 @@
 
 
 /* a replay of previously recorded flight data */
-void main_replay(char *file_name);
+void main_replay(int argc, char *argv[]);
 
 
 #endif /* __MAIN_REPLAY_H__ */

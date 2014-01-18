@@ -63,6 +63,7 @@
 #include "../flight_logic/flight_logic.h"
 
 
+static bool calibrate = false;
 static float *rpm_square = NULL;
 static float *setpoints = NULL;
 static void *blackbox_socket = NULL;
@@ -128,8 +129,19 @@ static int gyro_moved(vec3_t *gyro)
 }
 
 
-void main_init(int override_hw)
+
+
+void main_init(int argc, char *argv[])
 {
+   bool override_hw = false;
+   if (argc > 1)
+   {
+      if (strcmp(argv[1], "calibrate") == 0)
+         calibrate = true;
+      else
+         override_hw = true;
+   }
+
    /* init data structures: */
    memset(&pos_in, 0, sizeof(pos_in_t));
 
@@ -153,8 +165,6 @@ void main_init(int override_hw)
       die();
    }
    syslog(LOG_CRIT, "logger opened");
-   sleep(1); /* give scl some time to establish
-                a link between publisher and subscriber */
    
    LOG(LL_INFO, "initializing platform");
    if (arcade_quad_init(&platform, override_hw) < 0)
@@ -226,8 +236,11 @@ void main_step(float dt,
                float voltage,
                float channels[MAX_CHANNELS],
                uint16_t sensor_status,
-               int override_hw)
+               bool override_hw)
 {
+   if (calibrate)
+      goto out;
+   
    pos_in.dt = dt;
    pos_in.ultra_u = ultra;
    pos_in.baro_u = baro;
@@ -389,7 +402,7 @@ void main_step(float dt,
    if (!override_hw)
    {
       //EVERY_N_TIMES(10, printf("MOTORS: %f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]));
-      platform_write_motors(setpoints);
+      //platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */

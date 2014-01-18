@@ -34,6 +34,7 @@ if __name__ == '__main__':
    indices = []
    for name in extract:
       indices.append(header.index(name))
+   print ' '.join(extract)
    for line in lines[1:]:
       array = []
       line_array = line.split(' ')

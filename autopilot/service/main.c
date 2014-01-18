@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <daemon.h>
+#include <stdbool.h>
 
 #include "main_loop/main_util.h"
 #include "main_loop/main_realtime.h"
@@ -41,15 +42,19 @@ int main(int argc, char *argv[])
       file = argv[1];
    }
 
-   if (file)
+   bool calibrate = false;
+   if (file && strcmp(file, "calibrate") == 0)
+      calibrate = true;
+
+   if (!calibrate && file)
    {
-      printf("replaying %s\n", file);
-      main_replay(file);
+      main_replay(argc, argv);
    }
    else
    {
-      main_realtime(argc, argv);
-      daemonize("/var/run/pilot.pid", main_realtime, die, argc, argv);
+      char pid_file[1024];
+      sprintf(pid_file, "%s/.PenguPilot/run/autopilot.pid", getenv("HOME"));
+      daemonize(pid_file, main_realtime, die, argc, argv);
    }
    return 0;
 }

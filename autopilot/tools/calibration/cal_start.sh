@@ -10,10 +10,9 @@
 # |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
 # |___________________________________________________|
 #
-# computes calibration from submitted acc/mag file argument
-# and saves computed values via OPCD
+# start the calibration procedure
 #
-# Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+# Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,13 +24,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+pp_svctrl --start blackbox
+pp_svctrl --start autopilot --args calibrate
 
-if [ "$#" -eq 1 ]; then
-   path=`realpath $1`
-   script=`realpath "$0"`
-   dir=`dirname $script`
-   cd $dir
-   cat $path | ./calibrate.py | ./cal_to_opcd.py
-else
-   echo Usage: "$0" file
-fi

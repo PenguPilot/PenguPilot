@@ -1,4 +1,6 @@
-/*___________________________________________________
+#!/usr/bin/env python
+"""
+  ___________________________________________________
  |  _____                       _____ _ _       _    |
  | |  __ \                     |  __ (_) |     | |   |
  | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
@@ -8,9 +10,8 @@
  |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
-  
- prints acc/mag measurements to standard output
- for later calibration
+ 
+ calibration from standard input and stores it to OPCD
 
  Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
 
@@ -22,31 +23,23 @@
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. */
+ GNU General Public License for more details. """
 
 
+from sys import stdin
+from scl import generate_map
+from opcd_interface import OPCD_Interface
 
-#include <util.h>
-#include <stdio.h>
+opcd = OPCD_Interface(generate_map('opcd_shell')['ctrl'])
 
-#include "../../service/platform/drotek_marg2.h"
-
-
-int main(void)
-{
-   i2c_bus_t i2c_3;
-   i2c_bus_open(&i2c_3, "/dev/i2c-3");
-   drotek_marg2_t marg;
-   drotek_marg2_init(&marg, &i2c_3);
-   printf("acc_x acc_y acc_z mag_x mag_y mag_z\n");
-   while (1)
-   {
-      msleep(10);
-      marg_data_t marg_data;
-      drotek_marg2_read(&marg_data, &marg);
-      printf("%f %f %f %f %f %f\n",
-             marg_data.acc.x, marg_data.acc.y, marg_data.acc.z,
-             marg_data.mag.x, marg_data.mag.y, marg_data.mag.z);
-   }
-}
-
+try:
+   while True:
+      line = stdin.readline()
+      if not line:
+         break
+      key, val = line.split(' ')
+      val = float(val)
+      opcd.set('pilot.cal.' + key, val)
+   opcd.persist()
+except:
+   print 'calibration invalid; please collect better data'
