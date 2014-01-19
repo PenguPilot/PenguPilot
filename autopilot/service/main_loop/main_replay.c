@@ -31,28 +31,17 @@
 #include <msgpack.h>
 #include <sys/stat.h>
 #include "main_loop.h"
+#include "../blackbox/blackbox.h"
 
 
-static char *names[] = 
-{
-   "dt",                         /* 0 */
-   "gyro_x", "gyro_y", "gyro_z", /* 1 - 3 */
-   "acc_x", "acc_y", "acc_z",    /* 4 - 6 */
-   "mag_x", "mag_y", "mag_z",    /* 7 - 9 */
-   "raw_ultra_u", "raw_baro_u",   /* 10 - 11 */
-   "rc_pitch", "rc_roll", "rc_yaw", "rc_gas", "rc_switch", /* 12 - 16 */
-   "voltage", "sensor_status" /* 17 - 18 */
-};
-
-
-#define INPUT_VARIABLES (sizeof(names) / sizeof(char *))
+#define INPUT_VARIABLES (sizeof(blackbox_spec) / sizeof(char *))
 
 
 static int get_index(char *name)
 {
    FOR_N(i, INPUT_VARIABLES)
    {
-      if (strcmp(name, names[i]) == 0)
+      if (strcmp(name, blackbox_spec[i]) == 0)
       {
          return i;
       }
@@ -146,11 +135,14 @@ void main_replay(int argc, char *argv[])
       memcpy(&marg_data.gyro.vec[0], &float_data[1], sizeof(float) * 3);
       memcpy(&marg_data.acc.vec[0],  &float_data[4], sizeof(float) * 3);
       memcpy(&marg_data.mag.vec[0],  &float_data[7], sizeof(float) * 3);
-      ultra_z = float_data[10];
-      baro_z = float_data[11];
-      voltage = float_data[17];
-      uint16_t sensor_status = 0xFFFF; //int_data[18];
-      memcpy(channels, &float_data[12], sizeof(channels));
+      gps_data.lat = float_data[10];
+      gps_data.lon = float_data[11];
+      ultra_z = float_data[12];
+      baro_z = float_data[13];
+      voltage = float_data[14];
+      float channels[6];
+      memcpy(channels, &float_data[15], sizeof(channels));
+      uint16_t sensor_status = int_data[21];
       main_step(dt, &marg_data, &gps_data, ultra_z, baro_z, voltage, channels, sensor_status, 1);
    }
    free(buffer);

@@ -41,7 +41,7 @@ static msgpack_sbuffer *msgpack_buf = NULL;
 static msgpack_packer *pk = NULL;
 
 
-static char *blackbox_spec[] = {
+char *blackbox_spec[22] = {
    "dt", /* time delta */
    "gyro_x", "gyro_y", "gyro_z", /* gyro */
    "acc_x", "acc_y", "acc_z", /* acc */

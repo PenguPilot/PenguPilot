@@ -32,6 +32,9 @@
 #include "../platform/platform.h"
 
 
+extern char *blackbox_spec[22];
+
+
 /* initialize blackbox */
 void blackbox_init(void);
 
