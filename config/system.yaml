@@ -97,7 +97,7 @@ components:
       - ctrl: rep       # control interface
       - mon: pub        # controller error monitoring publisher
       - power: sub      # power data subscriber
-      - flying: pub     # publishes
+      - motors_spinning: pub # "true", "false" depending on motors state
       - opcd_ctrl: req  # OPCD request/reply interface
       - opcd_event: sub # OPCD parameter update
 
@@ -160,7 +160,7 @@ components:
 
    - name: display
      gates:
-      - flying: sub
+      - motors_spinning: sub
       - gps: sub
       - power: sub
 
@@ -170,7 +170,7 @@ components:
 #
 
 connections:
-   - [ display.flying,           pilot.flying]
+   - [ display.motors_spinning,  pilot.motors_spinning]
    - [ display.gps,              gps.data]
    - [ display.power,            powerman.mon]
    - [ calibration.data,         blackbox.data]

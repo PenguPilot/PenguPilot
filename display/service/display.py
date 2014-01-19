@@ -43,18 +43,18 @@ WHITE = 1
 BLACK = 0
 W = 128
 H = 64
-flying = False
+spinning = False
 socket_map = None
 
 
-def flying_reader():
-   global flying, socket_map
-   socket = socket_map['flying']
+def spinning_reader():
+   global spinning, socket_map
+   socket = socket_map['motors_spinning']
    while True:
-      if socket.recv() == 'flying':
-         flying = True
+      if socket.recv() == 'true':
+         spinning = True
       else:
-         flying = False
+         spinning = False
 
 
 def gps():
@@ -250,13 +250,13 @@ def draw_gps2(draw):
 
 
 def main(name):
-   global socket_map, gps_lock, font, flying
+   global socket_map, gps_lock, font, spinning
    socket_map = generate_map(name)
 
    gps_lock = Lock()
    font = ImageFont.truetype(getenv('PENGUPILOT_PATH') + '/display/service/verdana.ttf', 11)
    
-   t = Thread(target = flying_reader)
+   t = Thread(target = spinning_reader)
    t.daemon = True
    t.start()
 
@@ -282,7 +282,7 @@ def main(name):
    try:
       while True:
          try:
-            if not flying:
+            if not spinning:
                t = time()
                while time() < t + screens[screen][1]:
                   image = Image.new("1", (W, H), BLACK)

@@ -9,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- File Purpose
+ Expiring Timer Interface
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@
  GNU General Public License for more details. */
 
 
-#ifndef __TIMER_H__
-#define __TIMER_H__
+#ifndef __ETIMER_H__
+#define __ETIMER_H__
 
 
 /* timer structure */
@@ -34,20 +34,20 @@ typedef struct
    float expire;
    float state;
 }
-timer_t;
+etimer_t;
 
 /* initializes a timer to expire in a given amout of time in seconds */
-void timer_init(timer_t *timer, float expire);
+void etimer_init(etimer_t *timer, float expire);
 
 
 /* resets the timer  */
-void timer_reset(timer_t *timer);
+void etimer_reset(etimer_t *timer);
 
 
 /* advances the timer by dt seconds
    returns 1 if the timer expired and 0 if not */
-int timer_check(timer_t *timer, float dt);
+int etimer_check(etimer_t *timer, float dt);
 
 
-#endif /* __TIMER_H__ */
+#endif /* __ETIMER_H__ */
 

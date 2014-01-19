@@ -9,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- File Purpose
+ Expiring Timer Implementation
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -25,23 +25,23 @@
 
 
 
-#include "timer.h"
+#include "etimer.h"
 
 
-void timer_init(timer_t *timer, float expire)
+void etimer_init(etimer_t *timer, float expire)
 {
    timer->expire = expire;
-   timer_reset(timer);
+   etimer_reset(timer);
 }
 
 
-void timer_reset(timer_t *timer)
+void etimer_reset(etimer_t *timer)
 {
    timer->state = 0.0f;
 }
 
 
-int timer_check(timer_t *timer, float dt)
+int etimer_check(etimer_t *timer, float dt)
 {
    timer->state += dt;
    if (timer->state > timer->expire)

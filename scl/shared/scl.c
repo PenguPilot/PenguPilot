@@ -209,9 +209,9 @@ int scl_copy_send_dynamic(void *socket, void *data, size_t len)
  * send data to a zmq socket and
  * do not automatically free it when it was sent
  */
-int scl_send_static(void *socket, void *data, size_t len, int arg)
+int scl_send_static(void *socket, void *data, size_t len)
 {
-    return _zmq_send(socket, data, len, 0, arg);
+    return _zmq_send(socket, data, len, 0, 0);
 }
 
 

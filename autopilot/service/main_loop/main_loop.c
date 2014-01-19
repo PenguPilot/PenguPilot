@@ -79,22 +79,17 @@ static int init = 0;
 static body_to_world_t *btw;
 static flight_state_t flight_state;
 
-
-static char *blackbox_spec[] = {"dt",                      /*  1      */
-   "gyro_x", "gyro_y", "gyro_z",                           /*  2 -  4 */
-   "sp_rate_x", "sp_rate_y", "sp_rate_z",                  /*  5 -  7 */
-   "acc_x", "acc_y", "acc_z",                              /*  8 - 10 */
-   "mag_x", "mag_y", "mag_z",                              /* 11 - 13 */
-   //"q0", "q1", "q2", "q3",                                 /* 14 - 17 */
-   "yaw", "pitch", "roll",                                 /* 18 - 20 */
-   "acc_e", "acc_n", "acc_u",                              /* 21 - 23 */
-   "raw_e", "raw_n", "raw_ultra_u", "raw_baro_u",          /* 24 - 27 */
-   "pos_e", "pos_n", "pos_ultra_u", "pos_baro_u",          /* 28 - 31 */
-   "speed_e",  "pos_n", "speed_ultra_u", "pos_ultra_u",    /* 32 - 35 */
-   "yaw_sp", "pitch_sp", "roll_sp",                        /* 36 - 38 */
-   "flight_state", "rc_valid",                             /* 39 - 40 */
-   "rc_pitch", "rc_roll", "rc_yaw", "rc_gas", "rc_switch", /* 41 - 45 */
-   "sensor_status", "init", "voltage"                      /* 46 - 48 */
+               
+static char *blackbox_spec[] = {
+   "dt", /* time delta */
+   "gyro_x", "gyro_y", "gyro_z", /* gyro */
+   "acc_x", "acc_y", "acc_z", /* acc */
+   "mag_x", "mag_y", "mag_z", /* mag */
+   "lat", "lon", /* gps */
+   "ultra", "baro", /* ultra / baro */
+   "voltage", /* voltage */
+   "rc_pitch", "rc_roll", "rc_yaw", "rc_gas", "rc_sw_l", "rc_sw_r", /* rc */
+   "sensor_status" /* sensors */
 };
 
 
@@ -393,8 +388,6 @@ void main_step(float dt,
    {
       piid_reset(); /* reset piid integrators so that we can move the device manually */
       att_ctrl_reset();
-      //FOR_N(i, platform.n_motors)
-      //   rpm_square[i] = 100;
    }
    
    /* compute motor set points out of rpm ^ 2: */
@@ -421,26 +414,13 @@ out:
    #define PACKFV(ptr, n) FOR_N(i, n) PACKF(ptr[i]) /* pack float vector */
    PACKF(dt);
    PACKFV(marg_data->gyro.vec, 3);
-   PACKFV(piid_sp, 3);
    PACKFV(marg_data->acc.vec, 3);
    PACKFV(marg_data->mag.vec, 3);
-   PACKFV(euler.vec, 3);
-   PACKFV(pos_in.acc.vec, 3);
-   PACKF(pos_in.pos_e); PACKF(pos_in.pos_n);
-   PACKF(pos_in.ultra_u); PACKF(pos_in.baro_u);
-   PACKFV(pos_estimate.ne_pos.vec, 2);
-   PACKF(pos_estimate.ultra_u.pos); PACKF(pos_estimate.baro_u.pos);
-   PACKFV(pos_estimate.ne_speed.vec, 2);
-   PACKF(pos_estimate.ultra_u.speed); PACKF(pos_estimate.baro_u.speed);
-   PACKF(0.0f);
-   PACKFV(pitch_roll_sp.vec, 2);
-   PACKI(flight_state);
-   int rc_valid = 0;
-   PACKI(rc_valid);
-   PACKFV(channels, 5);
-   PACKI(sensor_status);
-   PACKI(init);
+   PACKF(gps_data->lat); PACKF(gps_data->lon);
+   PACKF(ultra); PACKF(baro);
    PACKF(voltage);
+   PACKFV(channels, 6);
+   PACKI(sensor_status);
    scl_copy_send_dynamic(blackbox_socket, msgpack_buf->data, msgpack_buf->size);
 }
 

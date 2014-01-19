@@ -60,7 +60,7 @@ do { \
  * send data to a zmq socket and
  * do not automatically free it when it was sent
  */
-int scl_send_static(void *socket, void *data, size_t len, int arg);
+int scl_send_static(void *socket, void *data, size_t len);
 
 
 /*
