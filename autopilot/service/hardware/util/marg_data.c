@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- MARG Data Interface
+ MARG Data Implementation
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -24,26 +24,21 @@
  GNU General Public License for more details. */
 
 
-#ifndef __MARG_DATA_H__
-#define __MARG_DATA_H__
+#include <math.h>
+#include <util.h>
+
+#include "marg_data.h"
 
 
-#include <stdbool.h>
-
-#include "../../geometry/quat.h"
-
-
-typedef struct
+bool gyro_moved(vec3_t *gyro)
 {
-   vec3_t gyro;
-   vec3_t acc;
-   vec3_t mag;
+   FOR_N(i, 3)
+   {
+      if (fabs(gyro->vec[i]) > 0.15)
+      {
+         return 1;   
+      }
+   }
+   return 0;
 }
-marg_data_t;
-
-
-bool gyro_moved(vec3_t *gyro);
-
-
-#endif /* __MARG_DATA_H__ */
 

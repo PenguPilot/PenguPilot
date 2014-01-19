@@ -61,14 +61,12 @@
 #include "../force_opt/force_opt.h"
 #include "../force_opt/att_thrust.h"
 #include "../flight_logic/flight_logic.h"
+#include "../blackbox/blackbox.h"
 
 
 static bool calibrate = false;
 static float *rpm_square = NULL;
 static float *setpoints = NULL;
-static void *blackbox_socket = NULL;
-static msgpack_sbuffer *msgpack_buf;
-static msgpack_packer *pk;
 static float mag_decl = 0.0f;
 static gps_data_t gps_data;
 static gps_rel_data_t gps_rel_data = {0.0, 0.0, 0.0};
@@ -80,18 +78,6 @@ static body_to_world_t *btw;
 static flight_state_t flight_state;
 
                
-static char *blackbox_spec[] = {
-   "dt", /* time delta */
-   "gyro_x", "gyro_y", "gyro_z", /* gyro */
-   "acc_x", "acc_y", "acc_z", /* acc */
-   "mag_x", "mag_y", "mag_z", /* mag */
-   "lat", "lon", /* gps */
-   "ultra", "baro", /* ultra / baro */
-   "voltage", /* voltage */
-   "rc_pitch", "rc_roll", "rc_yaw", "rc_gas", "rc_sw_l", "rc_sw_r", /* rc */
-   "sensor_status" /* sensors */
-};
-
 
 typedef union
 {
@@ -109,20 +95,6 @@ f_local_t;
 
 static int marg_err = 0;
 static pos_in_t pos_in;
-
-
-static int gyro_moved(vec3_t *gyro)
-{
-   FOR_N(i, 3)
-   {
-      if (fabs(gyro->vec[i]) > 0.15)
-      {
-         return 1;   
-      }
-   }
-   return 0;
-}
-
 
 
 
@@ -190,19 +162,7 @@ void main_init(int argc, char *argv[])
    cmd_init();
 
    motors_state_init();
-   blackbox_socket = scl_get_socket("blackbox");
-
-   /* send blackbox header: */
-   msgpack_buf = msgpack_sbuffer_new();
-   pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
-   msgpack_pack_array(pk, ARRAY_SIZE(blackbox_spec));
-   FOR_EACH(i, blackbox_spec)
-   {
-      size_t len = strlen(blackbox_spec[i]);
-      msgpack_pack_raw(pk, len);
-      msgpack_pack_raw_body(pk, blackbox_spec[i], len);
-   }
-   scl_copy_send_dynamic(blackbox_socket, msgpack_buf->data, msgpack_buf->size);
+   blackbox_init();
 
    /* init flight logic: */
    flight_logic_init();
@@ -233,10 +193,11 @@ void main_step(float dt,
                uint16_t sensor_status,
                bool override_hw)
 {
+   blackbox_record(dt, marg_data, gps_data, ultra, baro, voltage, channels, sensor_status);
    if (calibrate)
    {
       ONCE(LOG(LL_INFO, "publishing calibration data; actuators disabled"));
-      goto out;
+      return;
    }
    
    pos_in.dt = dt;
@@ -253,7 +214,7 @@ void main_step(float dt,
          platform_write_motors(setpoints);
          die();
       }
-      goto out;
+      return;
    }
    marg_err = 0;
    
@@ -283,7 +244,7 @@ void main_step(float dt,
    euler_t euler;
    int ahrs_state = cal_ahrs_update(&euler, marg_data, mag_decl, dt);
    if (ahrs_state < 0 || !cal_complete(&gyro_cal))
-      goto out;
+      return;
 
    ONCE(init = 1; LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
    
@@ -380,24 +341,24 @@ void main_step(float dt,
 
    /* computation of rpm ^ 2 out of the desired forces */
    inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
-   float motors_enabled = (sensor_status & RC_VALID) && channels[CH_SWITCH_L] < 0.5;
+
    /* update motors state: */
-   //motors_state_update(flight_state, dt, f_d_rel > 0.1 || flight_state == FS_FLYING);
-   
-   if (!motors_enabled) //if (!motors_controllable())
+   motors_state_update(flight_state, dt, (sensor_status & RC_VALID) && channels[CH_SWITCH_L] < 0.5);
+
+   if (!motors_controllable())
    {
       piid_reset(); /* reset piid integrators so that we can move the device manually */
       att_ctrl_reset();
    }
    
    /* compute motor set points out of rpm ^ 2: */
-   piid_int_enable(platform_ac_calc(setpoints, motors_enabled, voltage, rpm_square));
+   piid_int_enable(platform_ac_calc(setpoints, motors_spinning(), voltage, rpm_square));
    
    /* write motors: */
    if (!override_hw)
    {
       //EVERY_N_TIMES(10, printf("MOTORS: %f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]));
-      platform_write_motors(setpoints);
+      //platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */
@@ -405,22 +366,5 @@ void main_step(float dt,
                 pos_estimate.ne_pos.e - navi_get_dest_e(),
                 u_err, yaw_err);
  
-out:
-   /* publish blackbox data; this is also executed in case of a sensor error: */
-   msgpack_sbuffer_clear(msgpack_buf);
-   msgpack_pack_array(pk, ARRAY_SIZE(blackbox_spec));
-   #define PACKI(val) msgpack_pack_int(pk, val) /* pack integer */
-   #define PACKF(val) msgpack_pack_float(pk, val) /* pack float */
-   #define PACKFV(ptr, n) FOR_N(i, n) PACKF(ptr[i]) /* pack float vector */
-   PACKF(dt);
-   PACKFV(marg_data->gyro.vec, 3);
-   PACKFV(marg_data->acc.vec, 3);
-   PACKFV(marg_data->mag.vec, 3);
-   PACKF(gps_data->lat); PACKF(gps_data->lon);
-   PACKF(ultra); PACKF(baro);
-   PACKF(voltage);
-   PACKFV(channels, 6);
-   PACKI(sensor_status);
-   scl_copy_send_dynamic(blackbox_socket, msgpack_buf->data, msgpack_buf->size);
 }
 

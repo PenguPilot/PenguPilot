@@ -168,7 +168,7 @@ void man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANN
    float sw_l = channels[CH_SWITCH_L];
    float sw_r = channels[CH_SWITCH_R];
 
-   /*if (rc_valid_f < 0.5 || sw_l > 0.5)
+   if (rc_valid_f < 0.5)
    {
       pitch = 0.0f;
       roll = 0.0f;
@@ -176,7 +176,7 @@ void man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANN
       gas_stick = 0.0f;
       sw_l = 0.0f;
       sw_r = 0.0f;
-   }*/
+   }
 
    cm_yaw_set_spd(yaw_stick); /* the only applied mode in manual operation */
    man_mode_t man_mode = channel_to_man_mode(sw_r);

@@ -46,7 +46,6 @@ H = 64
 spinning = False
 socket_map = None
 
-
 def spinning_reader():
    global spinning, socket_map
    socket = socket_map['motors_spinning']
@@ -58,39 +57,48 @@ def spinning_reader():
 
 
 def gps():
-   global gps_data, socket_map
+   global spinning, gps_data, socket_map
    gps_data = None
    socket = socket_map['gps']
    while True:
-      with gps_lock:
-         gps_data = GpsData()
-         gps_data.ParseFromString(socket.recv())
+      if spinning:
+         sleep(1)
+      else:
+         with gps_lock:
+            gps_data = GpsData()
+            gps_data.ParseFromString(socket.recv())
 
 
 def cpuavg():
-   global load
+   global spinning, load
    load = None
    while True:
-      if load is None:
-         load = cpu_percent()
+      if spinning:
+         sleep(1)
       else:
-         load = 0.9 * load + 0.1 * cpu_percent()
-      sleep(0.05)
+         if load is None:
+            load = cpu_percent()
+         else:
+            load = 0.8 * load + 0.2 * cpu_percent()
+         sleep(0.1)
 
 
 def pmreader():
    s = socket_map['power']
    p = PowerState()
-   global voltage, critical
+   global spinning, voltage, critical
    critical = False
    voltage = None
    while True:
-      p.ParseFromString(s.recv())
-      critical = p.critical
-      if voltage is None:
-         voltage = p.voltage
+      if spinning:
+         sleep(1)
       else:
-         voltage = 0.9 * voltage + 0.1 * p.voltage
+         p.ParseFromString(s.recv())
+         critical = p.critical
+         if voltage is None:
+            voltage = p.voltage
+         else:
+            voltage = 0.9 * voltage + 0.1 * p.voltage
 
 
 def show_image(image):
@@ -132,15 +140,28 @@ def batt_low():
    decorations(draw)
    show_image(image) 
 
+
+blink_state = True
+caution_written = False
 def caution():
-   image = Image.new("1", (W, H), BLACK)
-   txt = "CAUTION"
-   font = fit_text_width(txt, 1.0)
-   draw = ImageDraw.Draw(image)
-   dim = font.getsize(txt)
-   draw.text(((W - dim[0]) / 2, (H - dim[1]) / 2), txt, WHITE, font = font)
-   decorations(draw)
-   show_image(image) 
+   global caution_written, blink_state
+   if not caution_written:
+      caution_written = True
+      image = Image.new("1", (W, H), BLACK)
+      txt = "CAUTION"
+      font = fit_text_width(txt, 1.0)
+      draw = ImageDraw.Draw(image)
+      dim = font.getsize(txt)
+      draw.text(((W - dim[0]) / 2, (H - dim[1]) / 2), txt, WHITE, font = font)
+      decorations(draw)
+      show_image(image)
+   else:
+      oled.invert(blink_state)
+      if blink_state:
+         blink_state = False
+      else:
+         blink_state = True
+
 
 class Alert(Thread):
 
@@ -250,7 +271,7 @@ def draw_gps2(draw):
 
 
 def main(name):
-   global socket_map, gps_lock, font, spinning
+   global socket_map, gps_lock, font, spinning, caution_written
    socket_map = generate_map(name)
 
    gps_lock = Lock()
@@ -283,6 +304,8 @@ def main(name):
       while True:
          try:
             if not spinning:
+               caution_written = False
+               oled.invert(False)
                t = time()
                while time() < t + screens[screen][1]:
                   image = Image.new("1", (W, H), BLACK)
@@ -294,9 +317,11 @@ def main(name):
                      alert = Alert(1.0, 0.1, 1, batt_low, True)
                      alert.start()
                      alert.join()
+            else:
+               caution()
+               sleep(0.2)
          except Exception, e:
             print e
-         sleep(1)
          screen = (screen + 1) % len(screens)
    except:
       oled.invert(False)

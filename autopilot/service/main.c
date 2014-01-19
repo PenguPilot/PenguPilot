@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
    }
    else
    {
+      main_realtime(argc, argv);
       char pid_file[1024];
       sprintf(pid_file, "%s/.PenguPilot/run/autopilot.pid", getenv("HOME"));
       daemonize(pid_file, main_realtime, die, argc, argv);

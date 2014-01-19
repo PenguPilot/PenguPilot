@@ -35,7 +35,7 @@
 /* motor states: */
 typedef enum 
 {
-   MOTORS_HALTED =   0x01,
+   MOTORS_STOPPED =   0x01,
    MOTORS_STOPPING = 0x02,
    MOTORS_STARTING = 0x04,
    MOTORS_SPINNING = 0x08
@@ -43,25 +43,7 @@ typedef enum
 motors_state_t;
 
 
-static motors_state_t state = MOTORS_HALTED;
-
-
-/* state names: */
-static char *names[] =
-{
-   "HALTED", 
-   "STOPPING", 
-   "STARTING", 
-   "SPINNING",
-};
-
-
-static char *state_name(void)
-{
-   return names[((int)(logf(state)/logf(2)))];
-}
-
-
+static motors_state_t state = MOTORS_STOPPED;
 static etimer_t timer;
 static void *spinning_socket = NULL;
 
@@ -71,7 +53,8 @@ void motors_state_init(void)
 {
    ASSERT_ONCE();
    ASSERT_NULL(spinning_socket);
-   spinning_socket = scl_get_socket("spinning");
+   spinning_socket = scl_get_socket("motors_spinning");
+            scl_send_static(spinning_socket, "true", 4);
    ASSERT_NOT_NULL(spinning_socket);
    etimer_init(&timer, 2.0);
 }
@@ -102,13 +85,12 @@ void motors_state_update(flight_state_t flight_state, float dt, int start)
 {
    switch (state)
    {
-      case MOTORS_HALTED:
+      case MOTORS_STOPPED:
          if (start)
          {
             state = MOTORS_STARTING;
             etimer_reset(&timer);
-            printf("NEW STATE: %s\n", state_name());
-            scl_send_static(spinning_socket, "true", 5);
+            scl_send_static(spinning_socket, "true", 4);
          }
          break;
       
@@ -117,12 +99,10 @@ void motors_state_update(flight_state_t flight_state, float dt, int start)
          {
             state = MOTORS_STOPPING;
             etimer_reset(&timer);
-            printf("NEW STATE: %s\n", state_name());
          }
          else if (etimer_check(&timer, dt))
          {
             state = MOTORS_SPINNING;
-            printf("NEW STATE: %s\n", state_name());
          }
          break;
       
@@ -131,7 +111,6 @@ void motors_state_update(flight_state_t flight_state, float dt, int start)
          {
             state = MOTORS_STOPPING;
             etimer_reset(&timer);
-            printf("NEW STATE: %s\n", state_name());
          }
          break;
       
@@ -140,14 +119,12 @@ void motors_state_update(flight_state_t flight_state, float dt, int start)
          {
             state = MOTORS_STARTING;
             etimer_reset(&timer);
-            printf("NEW STATE: %s\n", state_name());
          }
          else if (etimer_check(&timer, dt))
          {
-            state = MOTORS_HALTED;
+            state = MOTORS_STOPPED;
             etimer_reset(&timer);
-            printf("NEW STATE: %s\n", state_name());
-            scl_send_static(spinning_socket, "false", 6);
+            scl_send_static(spinning_socket, "false", 5);
          }
          break;
    }
