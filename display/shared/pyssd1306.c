@@ -29,7 +29,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "i2c/i2c.h"
 #include "ssd1306.h"
 
 
