@@ -33,16 +33,18 @@
 #include "main_loop.h"
 
 
-static char *names[] = 
-{
-   "dt",                         /* 0 */
-   "gyro_x", "gyro_y", "gyro_z", /* 1 - 3 */
-   "acc_x", "acc_y", "acc_z",    /* 4 - 6 */
-   "mag_x", "mag_y", "mag_z",    /* 7 - 9 */
-   "raw_ultra_u", "raw_baro_u",   /* 10 - 11 */
-   "rc_pitch", "rc_roll", "rc_yaw", "rc_gas", "rc_switch", /* 12 - 16 */
-   "voltage", "sensor_status" /* 17 - 18 */
+static char *names[] = {
+   "dt", /* 0 time delta */
+   "gyro_x", "gyro_y", "gyro_z", /* 1, 2, 3 gyro */
+   "acc_x", "acc_y", "acc_z", /* 4, 5, 6 acc */
+   "mag_x", "mag_y", "mag_z", /* 7, 8, 9 mag */
+   "lat", "lon", /* 10, 11 gps */
+   "ultra", "baro", /* 12, 13 ultra / baro */
+   "voltage", /* 14, voltage */
+   "rc_pitch", "rc_roll", "rc_yaw", "rc_gas", "rc_sw_l", "rc_sw_r", /* 15, 16, 17, 18, 19, 20 rc */
+   "sensor_status" /* 21 sensors */
 };
+
 
 
 #define INPUT_VARIABLES (sizeof(names) / sizeof(char *))
@@ -79,6 +81,7 @@ void handle_array(msgpack_object array, int header)
          memcpy(name, p->via.raw.ptr, p->via.raw.size);
          name[p->via.raw.size] = '\0';
          int idx = get_index(name);
+         assert(idx != -1);
          index_table[index] = idx;
       }
       else
@@ -101,6 +104,7 @@ void handle_array(msgpack_object array, int header)
                   break;
 
                default:
+                  assert(0);
                   break;
             }
          }
@@ -146,11 +150,11 @@ void main_replay(int argc, char *argv[])
       memcpy(&marg_data.gyro.vec[0], &float_data[1], sizeof(float) * 3);
       memcpy(&marg_data.acc.vec[0],  &float_data[4], sizeof(float) * 3);
       memcpy(&marg_data.mag.vec[0],  &float_data[7], sizeof(float) * 3);
-      ultra_z = float_data[10];
-      baro_z = float_data[11];
-      voltage = float_data[17];
-      uint16_t sensor_status = 0xFFFF; //int_data[18];
-      memcpy(channels, &float_data[12], sizeof(channels));
+      gps_data.lat = float_data[10]; gps_data.lon = float_data[11];
+      ultra_z = float_data[12]; baro_z = float_data[13];
+      voltage = float_data[14];
+      memcpy(channels, &float_data[15], sizeof(channels));
+      uint16_t sensor_status = int_data[21];
       main_step(dt, &marg_data, &gps_data, ultra_z, baro_z, voltage, channels, sensor_status, 1);
    }
    free(buffer);
