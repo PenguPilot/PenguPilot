@@ -34,8 +34,8 @@ from gps_data_pb2 import GpsData
 from math import sin, cos, pi
 from misc import daemonize
 from power_pb2 import PowerState
-from msgpack import dumps
-from aircomm import BCAST, HEARTBEAT
+from msgpack import Packer
+from aircomm_shared import BCAST, HEARTBEAT
 
 socket_map = None
 
@@ -67,14 +67,20 @@ def cpuavg():
 def pmreader():
    s = socket_map['power']
    p = PowerState()
-   global voltage
+   global voltage, current
    voltage = None
+   current = None
    while True:
       p.ParseFromString(s.recv())
       if voltage is None:
          voltage = p.voltage
       else:
          voltage = 0.9 * voltage + 0.1 * p.voltage
+      if current is None:
+         current = p.current
+      else:
+         current = 0.9 * current + 0.1 * p.current
+
 
 
 def mem_used():
@@ -104,16 +110,15 @@ def main(name):
    t3.start()
 
    socket = socket_map['out']
+   packer = Packer(use_single_float = True)
    while True:
       try:
-         data = [BCAST, HEARTBEAT, int(voltage * 10), int(load), mem_used()]
+         data = [BCAST, HEARTBEAT, int(voltage * 10), int(current * 10), int(load), mem_used()]
          with gps_lock:
-            data += [gps_data.fix, gps_data.sats]
             if gps_data.fix >= 2:
                data += [gps_data.lon, gps_data.lat]
-         print len(dumps(data))
-         socket.send(dumps(data))
-         sleep(1)
+         socket.send(packer.pack(data))
+         sleep(5)
       except Exception, e:
          sleep(1)
 

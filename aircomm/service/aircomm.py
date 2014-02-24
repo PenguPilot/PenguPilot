@@ -36,9 +36,7 @@ from msgpack import loads, dumps
 from misc import daemonize
 from message_history import MessageHistory
 import crypt
-
-
-BCAST_ID = 0x7F
+from aircomm_shared import BCAST
 
 
 class ACIReader(Thread):
@@ -75,10 +73,10 @@ class ACIReader(Thread):
                   continue
                
                # if message is meant for us, forward to application(s)
-               if msg[0] in [THIS_SYS_ID, BCAST_ID]:
+               if msg[0] in [THIS_SYS_ID, BCAST]:
                   msg_tail = msg[1:]
                   print 'message for me:', msg_tail
-                  self.scl_socket.send(dumps(msg_tail))
+                  #self.scl_socket.send(dumps(msg_tail))
 
                if msg[0] != THIS_SYS_ID:
                   print 'broadcasting message'
@@ -97,7 +95,7 @@ def main(name):
    key = opcd.get('psk')
    crypt.init(key)
 
-   out_socket = sm['out']
+   out_socket = None#sm['out']
    in_socket = sm['in']
 
    aci = Interface('/dev/ttyACM0')
@@ -107,7 +105,6 @@ def main(name):
    # read from SCL in socket and send data via NRF
    while True:
       data = loads(in_socket.recv())
-      print data
       if len(data) == 2:
          msg = [data[0], THIS_SYS_ID, data[1]]
       elif len(data) > 2:
@@ -117,6 +114,5 @@ def main(name):
       crypt_msg = crypt.encrypt(dumps(msg))
       aci.send(crypt_msg)
 
-main('aircomm')
 daemonize('aircomm', main)
 

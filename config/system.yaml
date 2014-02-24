@@ -135,27 +135,9 @@ components:
      gates:
       - ctrl: req
 
-   - name: imms_sensor
-     gates:
-      - data: pub
-
-   - name: girlscamp
-     gates:
-      - ctrl: req
-      - imms_data: sub
-      - pilot_data: sub
-
-   - name: aircomm_swarm
-     gates:
-      - ctrl: req
-      - gps: sub
-      - aircomm_in: sub
-      - aircomm_out: pub
-
    - name: aircomm
      gates:
       - in: sub
-      - out: pub
       - opcd_ctrl: req
 
    - name: display
@@ -185,15 +167,8 @@ connections:
    - [ pilot.blackbox,           blackbox.data]
    - [ demo_mission.gps,         gps.data]
    - [ demo_mission.net,         wifi_sensor.networks]
-   - [ aircomm.in,               aircomm_swarm.aircomm_out]
-   - [ aircomm.out,              aircomm_swarm.aircomm_in ]
    - [ opcd.ctrl,                aircomm.opcd_ctrl    ]
-   - [ icarus.ctrl,              aircomm_swarm.ctrl   ]
-   - [ gps.data,                 aircomm_swarm.gps    ]
    - [ pilot.power,              powerman.mon         ]
-   - [ imms_sensor.data,         girlscamp.imms_data  ]
-   - [ icarus.ctrl,              girlscamp.ctrl       ]
-   - [ pilot.mon,                girlscamp.pilot_data  ]
    - [ opcd.event,               pilot.opcd_event      ]
    - [ opcd.ctrl,                opcd_shell.ctrl      ]
    - [ opcd.ctrl,                optimizer.opcd_ctrl   ]
