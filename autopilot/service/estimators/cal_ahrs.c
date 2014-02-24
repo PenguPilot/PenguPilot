@@ -42,9 +42,10 @@ static tsfloat_t pitch_bias;
 static tsfloat_t roll_bias;
 
 
-void cal_ahrs_init(float beta_start, float beta_step, float beta_end)
+void cal_ahrs_init(float beta_start, float beta_step)
 {
    ASSERT_ONCE();
+   tsfloat_t beta_end;
 
    /* read configuration and initialize scl gates: */
    opcd_param_t params[] =
@@ -52,6 +53,7 @@ void cal_ahrs_init(float beta_start, float beta_step, float beta_end)
       {"yaw_bias", &yaw_bias},
       {"pitch_bias", &pitch_bias},
       {"roll_bias", &roll_bias},
+      {"beta", &beta_end},
       OPCD_PARAMS_END
    };
    opcd_params_apply("ahrs.", params);
@@ -60,8 +62,8 @@ void cal_ahrs_init(float beta_start, float beta_step, float beta_end)
        tsfloat_get(&pitch_bias),
        tsfloat_get(&roll_bias));
 
-   ahrs_init(&ahrs, AHRS_ACC_MAG, beta_start, beta_step, beta_end);
-   ahrs_init(&imu, AHRS_ACC, beta_start, beta_step, beta_end);
+   ahrs_init(&ahrs, AHRS_ACC_MAG, beta_start, beta_step, tsfloat_get(&beta_end));
+   ahrs_init(&imu, AHRS_ACC, beta_start, beta_step, tsfloat_get(&beta_end));
 }
 
 

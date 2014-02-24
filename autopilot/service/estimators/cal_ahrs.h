@@ -33,8 +33,8 @@
 
 #include "ahrs.h"
 
-void cal_ahrs_init(float beta_start, float beta_step, float beta_end);
 
+void cal_ahrs_init(float beta_start, float beta_step);
 
 int cal_ahrs_update(euler_t *euler, marg_data_t *marg_data, float mag_decl, float dt);
 

@@ -76,8 +76,7 @@ static interval_t gyro_move_interval;
 static int init = 0;
 static body_to_world_t *btw;
 static flight_state_t flight_state;
-
-               
+ 
 
 typedef union
 {
@@ -95,7 +94,6 @@ f_local_t;
 
 static int marg_err = 0;
 static pos_in_t pos_in;
-
 
 
 void main_init(int argc, char *argv[])
@@ -171,7 +169,7 @@ void main_init(int argc, char *argv[])
    cal_init(&gyro_cal, 3, 500);
    btw = body_to_world_create();
 
-   cal_ahrs_init(10.0f, 5.0f * REALTIME_PERIOD, 0.02f);
+   cal_ahrs_init(10.0f, 5.0f * REALTIME_PERIOD);
    gps_util_init(&gps_util);
    flight_state_init(50, 30, 4.0, 150.0, 0.3);
    
@@ -253,8 +251,6 @@ void main_step(float dt,
    marg_data->acc.z = 0;*/
    /* local ACC to global ACC rotation: */
    body_to_world_transform(btw, &pos_in.acc, &euler, &marg_data->acc);
-   
-   //EVERY_N_TIMES(10, printf("%.1f %.1f %.1f\n", pos_in.acc.x, pos_in.acc.y, pos_in.acc.z));
 
    /* compute next 3d position estimate: */
    pos_t pos_estimate;
@@ -279,7 +275,7 @@ void main_step(float dt,
    if (cm_u_is_spd())
       u_speed_sp = cm_u_setp();
    
-   EVERY_N_TIMES(10, printf("%.1f, %.1f\n", pos_estimate.baro_u.speed, pos_estimate.baro_u.pos));
+   printf("%f %f\n", pos_estimate.baro_u.speed, pos_estimate.ultra_u.speed);
    float f_d_rel = u_speed_step(u_speed_sp, pos_estimate.baro_u.speed, dt);
    if (cm_u_is_acc())
       f_d_rel = cm_u_setp();
