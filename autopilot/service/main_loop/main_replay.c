@@ -31,6 +31,7 @@
 #include <msgpack.h>
 #include <sys/stat.h>
 #include "main_loop.h"
+#include "../blackbox/blackbox.h"
 
 
 static char *names[] = {
@@ -54,7 +55,7 @@ static int get_index(char *name)
 {
    FOR_N(i, INPUT_VARIABLES)
    {
-      if (strcmp(name, names[i]) == 0)
+      if (strcmp(name, blackbox_spec[i]) == 0)
       {
          return i;
       }
