@@ -26,11 +26,6 @@
 
 components:
 
-   - name: demo_mission
-     gates:
-      - gps: sub
-      - net: sub
-
    - name: gps
      gates:
       - opcd_ctrl: req
@@ -75,11 +70,6 @@ components:
      gates:
       - networks: pub
 
-   - name: wifi_logger
-     gates:
-      - networks: sub
-      - mon: sub
-    
    - name: calibration
      gates:
       - data: pub
@@ -152,11 +142,18 @@ components:
       - gps: sub
       - power: sub
 
+   - name: wifi_loc
+     gates:
+      - wifi: sub
+      - gps: sub
+
 #
 # component connections (component_a.gate_x -- component_b.gate_y)
 #
 
 connections:
+   - [ wifi_loc.wifi,            wifi_sensor.networks]
+   - [ wifi_loc.gps,             gps.data]
    - [ heartbeat.out,            aircomm.in]
    - [ heartbeat.gps,            gps.data]
    - [ heartbeat.power,          powerman.mon]
@@ -165,8 +162,6 @@ connections:
    - [ display.power,            powerman.mon]
    - [ calibration.data,         blackbox.data]
    - [ pilot.blackbox,           blackbox.data]
-   - [ demo_mission.gps,         gps.data]
-   - [ demo_mission.net,         wifi_sensor.networks]
    - [ opcd.ctrl,                aircomm.opcd_ctrl    ]
    - [ pilot.power,              powerman.mon         ]
    - [ opcd.event,               pilot.opcd_event      ]
@@ -177,14 +172,12 @@ connections:
    - [ opcd.ctrl,                pilot.opcd_ctrl       ]
    - [ opcd.ctrl,                gps.opcd_ctrl ]
    - [ opcd.ctrl,                powerman.opcd_ctrl   ]
-   - [ wifi_logger.mon,          pilot.mon             ]
    - [ mavlink.pilot_mon,        pilot.mon             ]
    - [ mavlink.power_mon,        powerman.mon         ]
    - [ mavlink.ctrl,             opcd.ctrl            ]
    - [ mavlink.icarus_ctrl,      icarus.ctrl          ]
    - [ mavlink.state,            icarus.state         ]
    - [ remote.data,              pilot.rc            ]
-   - [ wifi_logger.networks,     wifi_sensor.networks ]
    - [ console_logger.log,       pilot.log             ]
    - [ gps.data,                 pilot.gps             ]
    - [ gps.data,                 mavlink.gps          ]

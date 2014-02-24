@@ -61,3 +61,7 @@ heartbeat:
   binary: 'heartbeat/service/heartbeat.py'
   depends: [gps, powerman, aircomm]
 
+wifi_loc:
+  binary: 'wifi_loc/service/wifi_loc.py'
+  depends: [gps, wifi_sensor]
+
