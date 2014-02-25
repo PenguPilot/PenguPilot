@@ -44,7 +44,8 @@ static float fly_tresh;
 static float crash_tresh;
 static float min_ground_z;
 static float hyst;
-static int hyst_cnt = 0;
+static int fly_hyst_cnt = 0;
+static int stand_hyst_cnt = 0;
 
 static flight_state_t state = FS_STANDING;
 
@@ -67,7 +68,7 @@ void flight_state_init(size_t window, size_t hysteresis, float fly_treshold, flo
 }
 
 
-flight_state_t flight_state_update(float acc[3], float ground_z)
+flight_state_t flight_state_update(float acc[3])
 {
    /* perfom signal processing: */
    float sum = 0;
@@ -81,19 +82,20 @@ flight_state_t flight_state_update(float acc[3], float ground_z)
    /* signal/hysteresis-based state identification: */
    if (sum > fly_tresh)
    {
+      stand_hyst_cnt = 0;
       /* flying -> flying / standing -> flying */
-      state = FS_FLYING;
-      hyst_cnt = 0;
+      if (fly_hyst_cnt++ == hyst)
+      {
+         state = FS_FLYING;
+      }
    }
    else
    {
-      if (ground_z < min_ground_z)
+      fly_hyst_cnt = 0;
+      /* flying -> standing */
+      if (stand_hyst_cnt++ == hyst)
       {
-         /* flying -> standing */
-         if (hyst_cnt++ == hyst)
-         {
-            state = FS_STANDING;
-         }
+         state = FS_STANDING;
       }
    }
    return state;
