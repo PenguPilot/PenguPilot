@@ -168,7 +168,7 @@ void main_init(int argc, char *argv[])
    flight_logic_init();
 
    /* init calibration data: */
-   cal_init(&gyro_cal, 3, 500);
+   cal_init(&gyro_cal, 3, 100);
    btw = body_to_world_create();
 
    cal_ahrs_init(10.0f, 5.0f * REALTIME_PERIOD);
@@ -181,7 +181,7 @@ void main_init(int argc, char *argv[])
    gps_data_init(&gps_data);
    
    /* intitialize averages: */
-   const int ACC_AVG_SIZE = 10000;
+   const int ACC_AVG_SIZE = 50;
    sliding_avg_init(&acc_avgs[0], ACC_AVG_SIZE, 0.0f);
    sliding_avg_init(&acc_avgs[1], ACC_AVG_SIZE, 0.0f);
    sliding_avg_init(&acc_avgs[2], ACC_AVG_SIZE, -9.81f);
