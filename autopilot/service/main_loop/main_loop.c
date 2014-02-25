@@ -173,7 +173,7 @@ void main_init(int argc, char *argv[])
 
    cal_ahrs_init(10.0f, 5.0f * REALTIME_PERIOD);
    gps_util_init(&gps_util);
-   flight_state_init(50, 30, 4.0, 150.0, 0.3);
+   flight_state_init(50, 150, 4.0, 150.0, 0.3);
    
    piid_init(REALTIME_PERIOD);
 
@@ -253,7 +253,6 @@ void main_step(float dt,
       return;
 
    ONCE(init = 1; LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
-   //EVERY_N_TIMES(10, printf("%f %f\n", euler.pitch, euler.roll));
 
    /* local ACC to global ACC rotation: */
    vec3_t world_acc;
@@ -271,7 +270,7 @@ void main_step(float dt,
    /* compute next 3d position estimate: */
    pos_t pos_estimate;
    pos_update(&pos_estimate, &pos_in);
-   flight_state = flight_state_update(&marg_data->acc.vec[0], pos_estimate.ultra_u.pos);
+   flight_state = flight_state_update(&marg_data->acc.vec[0]);
    
    /* execute flight logic (sets cm_x parameters used below): */
    flight_logic_run(sensor_status, 1, channels, euler.yaw, &pos_estimate.ne_pos, pos_estimate.baro_u.pos, pos_estimate.ultra_u.pos);
@@ -291,12 +290,12 @@ void main_step(float dt,
    if (cm_u_is_spd())
       u_speed_sp = cm_u_setp();
    
-   float f_u_rel = u_speed_step(u_speed_sp, pos_estimate.baro_u.speed, pos_in.acc.u, dt);
+   float f_d_rel = u_speed_step(u_speed_sp, pos_estimate.baro_u.speed, pos_in.acc.u, dt);
    if (cm_u_is_acc())
-      f_u_rel = cm_u_setp();
+      f_d_rel = cm_u_setp();
    
-   f_u_rel = fmin(f_u_rel, cm_u_acc_limit());
-   float f_u = f_u_rel * platform.max_thrust_n;
+   f_d_rel = fmin(f_d_rel, cm_u_acc_limit());
+   float f_d = f_d_rel * platform.max_thrust_n;
 
    vec2_t speed_sp = {{0.0f, 0.0f}};
    if (cm_att_is_gps_pos())
@@ -311,7 +310,7 @@ void main_step(float dt,
    /* RUN ATT NORTH/EAST SPEED CONTROLLER: */
    vec2_t f_ne;
    ne_speed_ctrl_run(&f_ne, &speed_sp, dt, &pos_estimate.ne_speed, euler.yaw);
-   vec3_t f_ned = {{f_ne.vec[0], f_ne.vec[1], f_u}};
+   vec3_t f_ned = {{f_ne.vec[0], f_ne.vec[1], f_d}};
 
    vec2_t pitch_roll_sp;
    float thrust;
@@ -360,7 +359,7 @@ void main_step(float dt,
    inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
 
    /* update motors state: */
-   motors_state_update(flight_state, dt, (sensor_status & RC_VALID) && channels[CH_SWITCH_L] < 0.5);
+   motors_state_update(flight_state, dt, f_d_rel > 0.11);
 
    if (!motors_controllable())
    {

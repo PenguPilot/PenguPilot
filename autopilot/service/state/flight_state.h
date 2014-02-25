@@ -42,7 +42,7 @@ flight_state_t;
 void flight_state_init(size_t window, size_t hysteresis, float fly_tresh, float crash_tresh, float min_ground_z);
 
 
-flight_state_t flight_state_update(float acc[3], float ground_z);
+flight_state_t flight_state_update(float acc[3]);
 
 
 #endif /* __FLIGHT_STATE_H__ */
