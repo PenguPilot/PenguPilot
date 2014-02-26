@@ -43,6 +43,12 @@ void sliding_avg_init(sliding_avg_t *sliding_avg, size_t wnd_size, float init)
 }
 
 
+float sliding_avg_val(sliding_avg_t *sliding_avg)
+{
+   return sliding_avg->sum / (sliding_avg->wnd_size - 1);   
+}
+
+
 float sliding_avg_calc(sliding_avg_t *sliding_avg, float val)
 {
    int next_pos = (sliding_avg->pos + 1) % sliding_avg->wnd_size;
@@ -50,6 +56,6 @@ float sliding_avg_calc(sliding_avg_t *sliding_avg, float val)
    sliding_avg->sum = sliding_avg->sum - last + val;
    sliding_avg->hist[sliding_avg->pos] = val;
    sliding_avg->pos = next_pos;
-   return sliding_avg->sum / (sliding_avg->wnd_size - 1);
+   return sliding_avg_val(sliding_avg);
 }
 

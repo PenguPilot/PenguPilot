@@ -43,6 +43,8 @@ sliding_avg_t;
 
 void sliding_avg_init(sliding_avg_t *sliding_avg, size_t wnd_size, float init);
 
+float sliding_avg_val(sliding_avg_t *sliding_avg);
+
 float sliding_avg_calc(sliding_avg_t *sliding_avg, float val);
 
 
