@@ -152,9 +152,9 @@ pilot:
          direct_speed_ctrl: 1
 
    kalman_pos:
-      ultra_noise: 10.0
-      baro_noise: 100.0
-      gps_noise: 10.0
+      ultra_noise: 0.1
+      baro_noise: 1.0
+      gps_noise: 1.0
       process_noise: 1.0e-6
 
    sensors:

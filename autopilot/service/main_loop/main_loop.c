@@ -62,7 +62,6 @@
 #include "../force_opt/att_thrust.h"
 #include "../flight_logic/flight_logic.h"
 #include "../blackbox/blackbox.h"
-#include "../filters/sliding_avg.h"
 
 
 static bool calibrate = false;
@@ -77,7 +76,7 @@ static interval_t gyro_move_interval;
 static int init = 0;
 static body_to_world_t *btw;
 static flight_state_t flight_state;
-static sliding_avg_t acc_avgs[3];
+static float acc_prev[3] = {0.0f, 0.0f, -9.81f};
 
 
 typedef union
@@ -180,11 +179,6 @@ void main_init(int argc, char *argv[])
    interval_init(&gyro_move_interval);
    gps_data_init(&gps_data);
    
-   /* intitialize averages: */
-   const int ACC_AVG_SIZE = 50;
-   sliding_avg_init(&acc_avgs[0], ACC_AVG_SIZE, 0.0f);
-   sliding_avg_init(&acc_avgs[1], ACC_AVG_SIZE, 0.0f);
-   sliding_avg_init(&acc_avgs[2], ACC_AVG_SIZE, -9.81f);
    LOG(LL_INFO, "entering main loop");
 }
 
@@ -258,14 +252,13 @@ void main_step(float dt,
    vec3_t world_acc;
    body_to_world_transform(btw, &world_acc, &euler, &marg_data->acc);
    
-   /* center global ACC readings by sliding average: */
+   /* center global ACC readings using previous value: */
    FOR_N(i, 3)
    {
-      float avg = sliding_avg_calc(&acc_avgs[i], world_acc.vec[i]);
-      pos_in.acc.vec[i] = world_acc.vec[i] - avg;
+      pos_in.acc.vec[i] = world_acc.vec[i] - acc_prev[i];
+      acc_prev[i] = world_acc.vec[i];
    }
    pos_in.acc.u *= -1.0f; /* convert NED frame to NEU */
-
 
    /* compute next 3d position estimate: */
    pos_t pos_estimate;

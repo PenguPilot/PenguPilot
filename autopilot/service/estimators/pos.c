@@ -28,6 +28,7 @@
  GNU General Public License for more details. */
 
 
+#include <stdbool.h>
 #include <meschach/matrix2.h>
 
 #include <util.h>
@@ -69,20 +70,22 @@ typedef struct
    VEC *t1;
    MAT *T0;
    MAT *T1;
+
+   bool use_speed;
 }
 kalman_t;
 
 
 /* static function prototypes: */
-static void kalman_init(kalman_t *kf, float q, float r, float pos, float speed);
-static void kalman_run(kalman_t *kf, float *est_pos, float *est_speed, float pos, float acc, float dt);
+static void kalman_init(kalman_t *kf, float q, float r, float pos, float speed, bool use_speed);
+static void kalman_run(kalman_t *kf, float *est_pos, float *est_speed, float pos, float speed, float acc, float dt);
 
 
 /* kalman filters: */
-static kalman_t ultra_u_kalman;
-static kalman_t baro_u_kalman;
 static kalman_t n_kalman;
 static kalman_t e_kalman;
+static kalman_t baro_u_kalman;
+static kalman_t ultra_u_kalman;
 
 
 void pos_init(void)
@@ -106,11 +109,10 @@ void pos_init(void)
        tsfloat_get(&gps_noise));
 
    /* set-up kalman filters: */
-   kalman_init(&n_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0);
-   kalman_init(&e_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0);
-   kalman_init(&ultra_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&ultra_noise), 0, 0);
-   kalman_init(&baro_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&baro_noise), 0, 0);
-   
+   kalman_init(&n_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, false);
+   kalman_init(&e_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, false);
+   kalman_init(&baro_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&baro_noise), 0, 0, false);
+   kalman_init(&ultra_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&ultra_noise), 0, 0, true);
 }
 
 
@@ -120,15 +122,16 @@ void pos_update(pos_t *out, pos_in_t *in)
    ASSERT_NOT_NULL(in);
 
    /* run kalman filters: */
-   kalman_run(&n_kalman,       &out->ne_pos.n,    &out->ne_speed.n,    in->pos_n,   in->acc.n, in->dt);
-   kalman_run(&e_kalman,       &out->ne_pos.e,    &out->ne_speed.e,    in->pos_e,   in->acc.e, in->dt);
-   kalman_run(&ultra_u_kalman, &out->ultra_u.pos, &out->ultra_u.speed, in->ultra_u, in->acc.u, in->dt);
-   kalman_run(&baro_u_kalman,  &out->baro_u.pos,  &out->baro_u.speed,  in->baro_u,  in->acc.u, in->dt);
+   kalman_run(&n_kalman,       &out->ne_pos.n,    &out->ne_speed.n,    in->pos_n,   0.0f, in->acc.n, in->dt);
+   kalman_run(&e_kalman,       &out->ne_pos.e,    &out->ne_speed.e,    in->pos_e,   0.0f, in->acc.e, in->dt);
+   kalman_run(&baro_u_kalman,  &out->baro_u.pos,  &out->baro_u.speed,  in->baro_u,  0.0f, in->acc.u, in->dt);
+   kalman_run(&ultra_u_kalman, &out->ultra_u.pos, &out->ultra_u.speed, in->ultra_u, out->baro_u.speed, in->acc.u, in->dt);
 }
 
 
-static void kalman_init(kalman_t *kf, float q, float r, float pos, float speed)
+static void kalman_init(kalman_t *kf, float q, float r, float pos, float speed, bool use_speed)
 {
+   kf->use_speed = use_speed;
    kf->t0 = v_get(2);
    ASSERT_NOT_NULL(kf->t0);
    kf->t1 = v_get(2);
@@ -171,7 +174,11 @@ static void kalman_init(kalman_t *kf, float q, float r, float pos, float speed)
    kf->H = m_get(2, 2);
    ASSERT_NOT_NULL(kf->H);
    m_set_val(kf->H, 0, 0, 1.0);
-    
+   if (use_speed)
+      m_set_val(kf->H, 0, 1, 1.0);
+   else
+      m_set_val(kf->H, 0, 1, 0.0);
+
    /* A = | 1.0   dt  |
           | 0.0   1.0 |
       note: dt value is set in kalman_run */
@@ -205,7 +212,7 @@ static void kalman_predict(kalman_t *kf, float a)
 
 
 
-static void kalman_correct(kalman_t *kf, float p)
+static void kalman_correct(kalman_t *kf, float pos, float speed)
 {
    /* K = P * HT * inv(H * P * HT + R) */
    m_mlt(kf->H, kf->P, kf->T0);
@@ -217,8 +224,15 @@ static void kalman_correct(kalman_t *kf, float p)
 
    /* x = x + K * (z - H * x) */
    mv_mlt(kf->H, kf->x, kf->t0);
-   v_set_val(kf->z, 0, p);
-   v_set_val(kf->z, 1, 0.0f);
+   v_set_val(kf->z, 0, pos);
+   if (kf->use_speed)
+   {
+      v_set_val(kf->z, 1, speed);
+   }
+   else
+   {
+      v_set_val(kf->z, 1, 0.0f);   
+   }
    v_sub(kf->z, kf->t0, kf->t1);
    mv_mlt(kf->K, kf->t1, kf->t0);
    v_add(kf->x, kf->t0, kf->t1);
@@ -235,7 +249,7 @@ static void kalman_correct(kalman_t *kf, float p)
 /*
  * executes kalman predict and correct step
  */
-static void kalman_run(kalman_t *kf, float *est_pos, float *est_speed, float pos, float acc, float dt)
+static void kalman_run(kalman_t *kf, float *est_pos, float *est_speed, float pos, float speed, float acc, float dt)
 {
    /* A = | init   dt  |
           | init  init | */
@@ -247,7 +261,7 @@ static void kalman_run(kalman_t *kf, float *est_pos, float *est_speed, float pos
    m_set_val(kf->B, 1, 0, dt);
 
    kalman_predict(kf, acc);
-   kalman_correct(kf, pos);
+   kalman_correct(kf, pos, speed);
    *est_pos = v_entry(kf->x, 0);
    *est_speed = v_entry(kf->x, 1);
 }
