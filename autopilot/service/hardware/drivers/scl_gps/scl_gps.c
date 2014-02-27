@@ -99,7 +99,10 @@ int scl_gps_read(gps_data_t *data_out)
    {
       ret_code = -1;
    }
-   *data_out = gps_data;
+   else
+   {
+      *data_out = gps_data;
+   }
    pthread_mutex_unlock(&mutex);
    return ret_code;
 }

@@ -112,7 +112,7 @@ void pos_init(void)
    kalman_init(&n_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, false);
    kalman_init(&e_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, false);
    kalman_init(&baro_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&baro_noise), 0, 0, false);
-   kalman_init(&ultra_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&ultra_noise), 0, 0, true);
+   kalman_init(&ultra_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&ultra_noise), 0, 0, false);
 }
 
 
@@ -125,7 +125,7 @@ void pos_update(pos_t *out, pos_in_t *in)
    kalman_run(&n_kalman,       &out->ne_pos.n,    &out->ne_speed.n,    in->pos_n,   0.0f, in->acc.n, in->dt);
    kalman_run(&e_kalman,       &out->ne_pos.e,    &out->ne_speed.e,    in->pos_e,   0.0f, in->acc.e, in->dt);
    kalman_run(&baro_u_kalman,  &out->baro_u.pos,  &out->baro_u.speed,  in->baro_u,  0.0f, in->acc.u, in->dt);
-   kalman_run(&ultra_u_kalman, &out->ultra_u.pos, &out->ultra_u.speed, in->ultra_u, out->baro_u.speed, in->acc.u, in->dt);
+   kalman_run(&ultra_u_kalman, &out->ultra_u.pos, &out->ultra_u.speed, in->ultra_u, 0.0f, in->acc.u, in->dt);
 }
 
 

@@ -62,6 +62,7 @@
 #include "../force_opt/att_thrust.h"
 #include "../flight_logic/flight_logic.h"
 #include "../blackbox/blackbox.h"
+#include "../filters/average.h"
 
 
 static bool calibrate = false;
@@ -69,13 +70,17 @@ static float *rpm_square = NULL;
 static float *setpoints = NULL;
 static float mag_decl = 0.0f;
 static gps_data_t gps_data;
-static gps_rel_data_t gps_rel_data = {0.0, 0.0, 0.0};
+static gps_rel_data_t gps_rel_data = {0.0, 0.0};
 static calibration_t gyro_cal;
 static interval_t gyro_move_interval;
 static int init = 0;
 static body_to_world_t *btw;
 static flight_state_t flight_state;
 static float acc_prev[3] = {0.0f, 0.0f, -9.81f};
+static float prev_ultra_u = 0.0f;
+
+
+static avg_data_t avgs[3];
 
 
 typedef union
@@ -176,7 +181,11 @@ void main_init(int argc, char *argv[])
 
    interval_init(&gyro_move_interval);
    gps_data_init(&gps_data);
-   
+
+   avg_init(&avgs[0], 0.0);
+   avg_init(&avgs[1], 0.0);
+   avg_init(&avgs[2], -9.81);
+
    LOG(LL_INFO, "entering main loop");
 }
 
@@ -237,6 +246,16 @@ void main_step(float dt,
 
    /* acc/mag calibration: */
    acc_mag_cal_apply(&marg_data->acc, &marg_data->mag);
+   flight_state = flight_state_update(&marg_data->acc.vec[0]);
+   if (flight_state == FS_FLYING && pos_in.ultra_u == 7.0)
+   {
+      pos_in.ultra_u = 0.0;
+   }
+   if (fabs(pos_in.ultra_u - prev_ultra_u) > 0.7)
+   {
+      pos_in.ultra_u = prev_ultra_u;   
+   }
+   prev_ultra_u = pos_in.ultra_u;
 
    /* perform sensor data fusion: */
    euler_t euler;
@@ -253,15 +272,13 @@ void main_step(float dt,
    /* center global ACC readings using previous value: */
    FOR_N(i, 3)
    {
-      pos_in.acc.vec[i] = world_acc.vec[i] - acc_prev[i];
-      acc_prev[i] = world_acc.vec[i];
+      pos_in.acc.vec[i] = world_acc.vec[i] - avg_calc(&avgs[i], world_acc.vec[i]);
    }
    pos_in.acc.u *= -1.0f; /* convert NED frame to NEU */
 
    /* compute next 3d position estimate: */
    pos_t pos_estimate;
    pos_update(&pos_estimate, &pos_in);
-   flight_state = flight_state_update(&marg_data->acc.vec[0]);
    
    /* execute flight logic (sets cm_x parameters used below): */
    flight_logic_run(sensor_status, 1, channels, euler.yaw, &pos_estimate.ne_pos, pos_estimate.baro_u.pos, pos_estimate.ultra_u.pos);
@@ -287,7 +304,6 @@ void main_step(float dt,
    
    f_d_rel = fmin(f_d_rel, cm_u_acc_limit());
    float f_d = f_d_rel * platform.max_thrust_n;
-   //printf("%f %f %f %f\n", gps_rel_data.de, gps_rel_data.dn, pos_estimate.ne_pos.y, pos_estimate.ne_pos.x);
 
    vec2_t speed_sp = {{0.0f, 0.0f}};
    if (cm_att_is_gps_pos())
