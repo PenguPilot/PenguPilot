@@ -71,7 +71,6 @@ static float mag_decl = 0.0f;
 static gps_data_t gps_data;
 static gps_rel_data_t gps_rel_data = {0.0, 0.0, 0.0};
 static calibration_t gyro_cal;
-static gps_util_t gps_util;
 static interval_t gyro_move_interval;
 static int init = 0;
 static body_to_world_t *btw;
@@ -171,7 +170,6 @@ void main_init(int argc, char *argv[])
    btw = body_to_world_create();
 
    cal_ahrs_init(10.0f, 5.0f * REALTIME_PERIOD);
-   gps_util_init(&gps_util);
    flight_state_init(50, 150, 4.0, 150.0, 0.3);
    
    piid_init(REALTIME_PERIOD);
@@ -229,7 +227,7 @@ void main_step(float dt,
 
    if (sensor_status & GPS_VALID)
    {
-      gps_util_update(&gps_rel_data, &gps_util, gps_data);
+      gps_util_update(&gps_rel_data, gps_data);
       pos_in.pos_e = gps_rel_data.de;
       pos_in.pos_n = gps_rel_data.dn;
       ONCE(mag_decl = mag_decl_lookup(gps_data->lat, gps_data->lon);
@@ -289,6 +287,7 @@ void main_step(float dt,
    
    f_d_rel = fmin(f_d_rel, cm_u_acc_limit());
    float f_d = f_d_rel * platform.max_thrust_n;
+   //printf("%f %f %f %f\n", gps_rel_data.de, gps_rel_data.dn, pos_estimate.ne_pos.y, pos_estimate.ne_pos.x);
 
    vec2_t speed_sp = {{0.0f, 0.0f}};
    if (cm_att_is_gps_pos())

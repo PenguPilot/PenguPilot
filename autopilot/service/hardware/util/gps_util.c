@@ -30,34 +30,27 @@
 static void meter_offset(double *dn, double *de, double lat1, double lon1, double lat2, double lon2);
 
 
-void gps_util_init(gps_util_t *gps_util)
-{
-   gps_util->initialized = 0;   
-}
+static int initialized;
+static double start_lon; /* start longitude in meters */
+static double start_lat; /* start latitude in meters */
 
 
-void gps_util_update(gps_rel_data_t *out, gps_util_t *gps_util, gps_data_t *in)
+void gps_util_update(gps_rel_data_t *out, gps_data_t *in)
 {
-   if (in->fix == FIX_3D)
+   if (in->fix >= FIX_2D && !initialized)
    {
-      if (!gps_util->initialized)
-      {
-         /* set-up start positions */
-         gps_util->initialized = 1;
-         gps_util->start_lon = in->lon;
-         gps_util->start_lat = in->lat;
-         gps_util->start_alt = in->alt;
-      }
+      /* set-up start positions */
+      initialized = 1;
+      start_lon = in->lon;
+      start_lat = in->lat;
    }
 
    /* calculate deltas: */
-   if (in->fix >= FIX_2D && gps_util->initialized)
+   if (in->fix >= FIX_2D && initialized)
    {
-      meter_offset(&out->dn, &out->de, in->lat, in->lon, gps_util->start_lat, gps_util->start_lon);
-      if (in->fix == FIX_3D)
-      {
-         out->du = in->alt - gps_util->start_alt;
-      }
+      meter_offset(&out->dn, &out->de,
+                    in->lat, in->lon,
+                    start_lat, start_lon);
    }
 }
 
