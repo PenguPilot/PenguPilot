@@ -47,7 +47,6 @@ static char *names[] = {
 };
 
 
-
 #define INPUT_VARIABLES (sizeof(names) / sizeof(char *))
 
 
@@ -65,7 +64,7 @@ static int get_index(char *name)
 
 
 static int index_table[1024];
-static float float_data[INPUT_VARIABLES];
+static float double_data[INPUT_VARIABLES];
 static int int_data[INPUT_VARIABLES];
 
 
@@ -93,7 +92,7 @@ void handle_array(msgpack_object array, int header)
             switch (p->type)
             {
                case MSGPACK_OBJECT_DOUBLE:
-                  float_data[idx] = p->via.dec;
+                  double_data[idx] = p->via.dec;
                   break;
             
                case MSGPACK_OBJECT_POSITIVE_INTEGER:
@@ -147,14 +146,28 @@ void main_replay(int argc, char *argv[])
    while (msgpack_unpack_next(&msg, buffer, size, &off))
    {
       handle_array(msg.data, 0);
-      dt = float_data[0];
-      memcpy(&marg_data.gyro.vec[0], &float_data[1], sizeof(float) * 3);
-      memcpy(&marg_data.acc.vec[0],  &float_data[4], sizeof(float) * 3);
-      memcpy(&marg_data.mag.vec[0],  &float_data[7], sizeof(float) * 3);
-      gps_data.lat = float_data[10]; gps_data.lon = float_data[11];
-      ultra_z = float_data[12]; baro_z = float_data[13];
-      voltage = float_data[14];
-      memcpy(channels, &float_data[15], sizeof(channels));
+      dt = double_data[0];
+      FOR_N(i, 3)
+      {
+         marg_data.gyro.vec[i] = double_data[1 + i];
+      }
+      FOR_N(i, 3)
+      {
+         marg_data.acc.vec[i] = double_data[4 + i];
+      }
+      FOR_N(i, 3)
+      {
+         marg_data.mag.vec[i] = double_data[7 + i];
+      }
+      gps_data.lat = double_data[10];
+      gps_data.lon = double_data[11];
+      ultra_z = double_data[12];
+      baro_z = double_data[13];
+      voltage = double_data[14];
+      FOR_N(i, MAX_CHANNELS)
+      {
+         channels[i] = double_data[15 + i];
+      }
       uint16_t sensor_status = int_data[21];
       main_step(dt, &marg_data, &gps_data, ultra_z, baro_z, voltage, channels, sensor_status, 1);
    }

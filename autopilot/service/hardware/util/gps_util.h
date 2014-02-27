@@ -31,28 +31,17 @@
 #include "gps_data.h"
 
 
-typedef struct
-{
-   int initialized;
-   double start_lon; /* start longitude in meters */
-   double start_lat; /* start latitude in meters */
-   double start_alt; /* start altitude in meters from MSL */
-}
-gps_util_t;
 
 
 typedef struct
 {
    double de; /* delta east in meters */
    double dn; /* delta north in meters */
-   double du; /* delty up in meters */
 }
 gps_rel_data_t;
 
 
-void gps_util_init(gps_util_t *gps_util);
-
-void gps_util_update(gps_rel_data_t *out, gps_util_t *gps_util, gps_data_t *in);
+void gps_util_update(gps_rel_data_t *out, gps_data_t *in);
 
 
 #endif /* __GPS_UTIL_H__ */
