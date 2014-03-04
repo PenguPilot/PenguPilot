@@ -9,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Thread Config Interface
- 
- Copyright (C) 2010 Tobias Simon, Ilmenau University of Technology
+ Auto Flight Logic Implementation
+
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,11 +24,25 @@
  GNU General Public License for more details. */
 
 
-#ifndef __THREAD_CONFIG_H__
-#define __THREAD_CONFIG_H__
+#include <threadsafe_types.h>
+#include <opcd_interface.h>
+#include <util.h>
+
+#include "auto_logic.h"
+#include "../main_loop/control_mode.h"
 
 
-#define THREAD_STACK_SIZE 100 * 1024
+void auto_logic_init(void)
+{
+}
 
 
-#endif /* __THREAD_CONFIG_H__ */
+void auto_logic_run(bool is_full_auto, uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos)
+{
+   if (!is_full_auto)
+   {
+      //set_pitch_roll_rates(pitch, roll);
+      //cm_u_set_acc(gas_stick);
+   }
+}
+

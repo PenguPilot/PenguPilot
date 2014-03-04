@@ -9,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- GPS Util Interface
+ Auto Flight Logic Interface
 
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,25 +24,28 @@
  GNU General Public License for more details. */
 
 
-#ifndef __GPS_UTIL_H__
-#define __GPS_UTIL_H__
+#ifndef __AUTO_LOGIC_H__
+#define __AUTO_LOGIC_H__
 
 
-#include "gps_data.h"
+#include <stdbool.h>
+#include <stdint.h>
+#include "../hardware/util/rc_channels.h"
+#include "../util/math/vec2.h"
+
+/* initialize autoflight logic */
+void auto_logic_init(void);
 
 
+/* run auto flight logic */
+void auto_logic_run(bool is_full_auto,
+                    uint16_t sensor_status,
+                    bool flying,
+                    float channels[MAX_CHANNELS],
+                    float yaw, vec2_t *ne_gps_pos,
+                    float u_baro_pos,
+                    float u_ultra_pos);
 
 
-typedef struct
-{
-   double de; /* delta east in meters */
-   double dn; /* delta north in meters */
-}
-gps_rel_data_t;
-
-
-void gps_util_update(gps_rel_data_t *out, gps_data_t *in);
-
-
-#endif /* __GPS_UTIL_H__ */
+#endif /* __AUTO_LOGIC_H__ */
 

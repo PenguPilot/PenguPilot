@@ -40,7 +40,7 @@
 
 
 #define THREAD_NAME       "rc_dsl_reader"
-#define THREAD_PRIORITY   0
+#define THREAD_PRIORITY   98
 
 
 #define RSSI_MIN RSSI_SCALE(7)

@@ -26,6 +26,7 @@
 
 #include "flight_logic.h"
 #include "man_logic.h"
+#include "auto_logic.h"
 #include "../main_loop/control_mode.h"
 
 
@@ -47,9 +48,11 @@ void flight_logic_init(void)
          break;
 
       case MODE_SAFE_AUTO:
+         auto_logic_init();
          break;
 
       case MODE_FULL_AUTO:
+         auto_logic_init();
          break;
    }
 }
@@ -64,9 +67,11 @@ void flight_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CH
          break;
 
       case MODE_SAFE_AUTO:
+         auto_logic_run(0, sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos);
          break;
 
       case MODE_FULL_AUTO:
+         auto_logic_run(1, sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos);
          break;
    }
 }
