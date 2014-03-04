@@ -33,6 +33,10 @@
 #include "scl_gps.h"
 
 
+#define THREAD_PRIORITY 98
+
+
+
 /* if we receive no valid GPS fix for more than this amount of time,
    indicate an error;
    this condition applies if:
@@ -83,7 +87,7 @@ int scl_gps_init(void)
    ASSERT_ONCE();
    scl_socket = scl_get_socket("gps");
    ASSERT_NOT_NULL(scl_socket);
-   simple_thread_start(&thread, thread_func, "gps_reader", 0, NULL);
+   simple_thread_start(&thread, thread_func, "gps_reader", THREAD_PRIORITY, NULL);
    interval_init(&interval);
    return 0;
 }
@@ -99,7 +103,10 @@ int scl_gps_read(gps_data_t *data_out)
    {
       ret_code = -1;
    }
-   *data_out = gps_data;
+   else
+   {
+      *data_out = gps_data;
+   }
    pthread_mutex_unlock(&mutex);
    return ret_code;
 }

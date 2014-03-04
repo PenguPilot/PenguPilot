@@ -37,6 +37,9 @@
 #include "../../../util/logger/logger.h"
 
 
+#define THREAD_PRIORITY 98
+
+
 static simple_thread_t thread;
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static void *socket;
@@ -102,7 +105,7 @@ int scl_voltage_init(void)
    {
       return -1;
    }
-   simple_thread_start(&thread, thread_func, "voltage_reader", 0, NULL);
+   simple_thread_start(&thread, thread_func, "voltage_reader", THREAD_PRIORITY, NULL);
    return 0;
 }
 

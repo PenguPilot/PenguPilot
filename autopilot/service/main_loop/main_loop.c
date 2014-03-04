@@ -62,6 +62,7 @@
 #include "../force_opt/att_thrust.h"
 #include "../flight_logic/flight_logic.h"
 #include "../blackbox/blackbox.h"
+#include "../filters/average.h"
 
 
 static bool calibrate = false;
@@ -69,14 +70,17 @@ static float *rpm_square = NULL;
 static float *setpoints = NULL;
 static float mag_decl = 0.0f;
 static gps_data_t gps_data;
-static gps_rel_data_t gps_rel_data = {0.0, 0.0, 0.0};
+static gps_rel_data_t gps_rel_data = {0.0, 0.0};
 static calibration_t gyro_cal;
-static gps_util_t gps_util;
 static interval_t gyro_move_interval;
 static int init = 0;
 static body_to_world_t *btw;
 static flight_state_t flight_state;
 static float acc_prev[3] = {0.0f, 0.0f, -9.81f};
+static float prev_ultra_u = 0.0f;
+
+
+static avg_data_t avgs[3];
 
 
 typedef union
@@ -171,14 +175,17 @@ void main_init(int argc, char *argv[])
    btw = body_to_world_create();
 
    cal_ahrs_init(10.0f, 5.0f * REALTIME_PERIOD);
-   gps_util_init(&gps_util);
    flight_state_init(50, 150, 4.0, 150.0, 0.3);
    
    piid_init(REALTIME_PERIOD);
 
    interval_init(&gyro_move_interval);
    gps_data_init(&gps_data);
-   
+
+   avg_init(&avgs[0], 0.0);
+   avg_init(&avgs[1], 0.0);
+   avg_init(&avgs[2], -9.81);
+
    LOG(LL_INFO, "entering main loop");
 }
 
@@ -230,7 +237,7 @@ void main_step(float dt,
 
    if (sensor_status & GPS_VALID)
    {
-      gps_util_update(&gps_rel_data, &gps_util, gps_data);
+      gps_util_update(&gps_rel_data, gps_data);
       pos_in.pos_e = gps_rel_data.de;
       pos_in.pos_n = gps_rel_data.dn;
       ONCE(mag_decl = mag_decl_lookup(gps_data->lat, gps_data->lon);
@@ -240,13 +247,22 @@ void main_step(float dt,
 
    /* acc/mag calibration: */
    acc_mag_cal_apply(&marg_data->acc, &marg_data->mag);
+   flight_state = flight_state_update(&marg_data->acc.vec[0]);
+   if (flight_state == FS_FLYING && pos_in.ultra_u == 7.0)
+   {
+      pos_in.ultra_u = 0.0;
+   }
+   if (fabs(pos_in.ultra_u - prev_ultra_u) > 0.7)
+   {
+      pos_in.ultra_u = prev_ultra_u;   
+   }
+   prev_ultra_u = pos_in.ultra_u;
 
    /* perform sensor data fusion: */
    euler_t euler;
    int ahrs_state = cal_ahrs_update(&euler, marg_data, mag_decl, dt);
    if (ahrs_state < 0 || !cal_complete(&gyro_cal))
       return;
-
    ONCE(init = 1; LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
 
    /* local ACC to global ACC rotation: */
@@ -256,15 +272,13 @@ void main_step(float dt,
    /* center global ACC readings using previous value: */
    FOR_N(i, 3)
    {
-      pos_in.acc.vec[i] = world_acc.vec[i] - acc_prev[i];
-      acc_prev[i] = world_acc.vec[i];
+      pos_in.acc.vec[i] = world_acc.vec[i] - avg_calc(&avgs[i], world_acc.vec[i]);
    }
    pos_in.acc.u *= -1.0f; /* convert NED frame to NEU */
 
    /* compute next 3d position estimate: */
    pos_t pos_est;
    pos_update(&pos_est, &pos_in);
-   flight_state = flight_state_update(&marg_data->acc.vec[0]);
    
    /* execute flight logic (sets cm_x parameters used below): */
    flight_logic_run(sensor_status, 1, channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos);
@@ -284,8 +298,7 @@ void main_step(float dt,
    if (cm_u_is_spd())
       u_speed_sp = cm_u_setp();
 
-
-   float f_d_rel = u_speed_step(0.4, pos_est.ultra_u.pos, pos_est.baro_u.speed, dt);
+   float f_d_rel = u_speed_step(0.4, pos_est.ultra_u.pos, pos_est.ultra_u.speed, dt);
    if (cm_u_is_acc())
       f_d_rel = cm_u_setp();
    
@@ -354,7 +367,7 @@ void main_step(float dt,
    inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
 
    /* update motors state: */
-   motors_state_update(flight_state, dt, channels[CH_SWITCH_L] < 0.5 && channels[CH_GAS] > 0.1);
+   motors_state_update(flight_state, dt, (sensor_status & RC_VALID) && channels[CH_SWITCH_L] < 0.5 && channels[CH_GAS] > 0.1);
 
    if (!motors_controllable())
    {
@@ -368,7 +381,7 @@ void main_step(float dt,
    /* write motors: */
    if (!override_hw)
    {
-      platform_write_motors(setpoints);
+      //platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */

@@ -43,7 +43,7 @@
 #include "../main_loop/main_loop.h"
 
 #define THREAD_NAME     "interface"
-#define THREAD_PRIORITY 1
+#define THREAD_PRIORITY 97
 
 
 static gps_data_t gps_start;

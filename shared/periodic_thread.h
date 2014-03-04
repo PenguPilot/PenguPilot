@@ -28,13 +28,10 @@
 #ifndef __PERIODIC_THREAD_H__
 #define __PERIODIC_THREAD_H__
 
-
 #include <time.h>
 #include <pthread.h>
 
-
-#include "periodic_thread.h"
-#include "thread_realtime.h"
+#include "thread_util.h"
 
 
 typedef struct
@@ -62,10 +59,10 @@ periodic_thread_t;
 #define PERIODIC_THREAD_BEGIN(name) \
    static void *name(void *__arg) \
    { \
-      periodic_thread_t *thread = (periodic_thread_t *)__arg; \
-       
+      periodic_thread_t *thread = (periodic_thread_t *)__arg;
+
+
 #define PERIODIC_THREAD_LOOP_BEGIN \
-   thread_stack_prefault(); \
    periodic_thread_init_period(thread); \
    while (thread->running) \
    { \

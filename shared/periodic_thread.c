@@ -30,7 +30,6 @@
 
 #include "util.h"
 #include "periodic_thread.h"
-#include "thread_config.h"
 
 
 void periodic_thread_start(periodic_thread_t *thread, void *(*func)(void *),
@@ -45,12 +44,9 @@ void periodic_thread_start(periodic_thread_t *thread, void *(*func)(void *),
    thread->name = name;
    thread->private = private;
    thread->periodic_data.period = period;
-   (void)pthread_attr_init(&thread->attr);
-   (void)pthread_attr_setschedpolicy(&thread->attr, SCHED_FIFO);
+   pthread_create(&thread->handle, NULL, func, thread);
    thread->sched_param.sched_priority = priority;
-   (void)pthread_attr_setschedparam(&thread->attr, &thread->sched_param);
-   (void)pthread_attr_setstacksize(&thread->attr, PTHREAD_STACK_MIN + THREAD_STACK_SIZE);
-   (void)pthread_create(&thread->handle, &thread->attr, func, thread);
+   pthread_setschedparam(thread->handle, SCHED_FIFO, &thread->sched_param);
 }
 
 

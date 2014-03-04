@@ -33,6 +33,7 @@
 
 #define PACKI(val) msgpack_pack_int(pk, val) /* pack integer */
 #define PACKF(val) msgpack_pack_float(pk, val) /* pack float */
+#define PACKD(val) msgpack_pack_double(pk, val) /* pack double */
 #define PACKFV(ptr, n) FOR_N(i, n) PACKF(ptr[i]) /* pack float vector */
 
 
@@ -96,7 +97,7 @@ void blackbox_record(float dt,
    PACKFV(marg_data->gyro.vec, 3);
    PACKFV(marg_data->acc.vec, 3);
    PACKFV(marg_data->mag.vec, 3);
-   PACKF(gps_data->lat); PACKF(gps_data->lon);
+   PACKD(gps_data->lat); PACKD(gps_data->lon);
    PACKF(ultra); PACKF(baro);
    PACKF(voltage);
    PACKFV(channels, 6);

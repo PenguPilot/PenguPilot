@@ -34,7 +34,7 @@
 
 
 #define THREAD_NAME       "ms5611_reader"
-#define THREAD_PRIORITY   0
+#define THREAD_PRIORITY   98
 
 
 static simple_thread_t thread;
