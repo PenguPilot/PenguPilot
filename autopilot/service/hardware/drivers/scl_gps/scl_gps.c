@@ -50,7 +50,8 @@
 static gps_data_t gps_data = {FIX_NOT_SEEN, 0, 0, 0, 0};
 static simple_thread_t thread;
 static void *scl_socket;
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutexattr_t mutexattr;
+static pthread_mutex_t mutex;
 static interval_t interval;
 static float timer = 0.0f;
 
@@ -87,8 +88,11 @@ int scl_gps_init(void)
    ASSERT_ONCE();
    scl_socket = scl_get_socket("gps");
    ASSERT_NOT_NULL(scl_socket);
-   simple_thread_start(&thread, thread_func, "gps_reader", THREAD_PRIORITY, NULL);
+   pthread_mutexattr_init(&mutexattr);
+   pthread_mutexattr_setprotocol(&mutexattr, PTHREAD_PRIO_INHERIT);
+   pthread_mutex_init(&mutex, &mutexattr);
    interval_init(&interval);
+   simple_thread_start(&thread, thread_func, "gps_reader", THREAD_PRIORITY, NULL);
    return 0;
 }
 

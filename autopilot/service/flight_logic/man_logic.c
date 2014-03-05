@@ -203,7 +203,7 @@ void man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANN
       sw_r = 0.0f;
    }
 
-   cm_yaw_set_spd(yaw_stick); /* the only applied mode in manual operation */
+   cm_yaw_set_spd(yaw_stick * tsfloat_get(&stick_yaw_p)); /* the only applied mode in manual operation */
    man_mode_t man_mode = channel_to_man_mode(sw_r);
    #if 0
    if (man_mode == MAN_NOVICE && (!(sensor_status & GPS_VALID)))

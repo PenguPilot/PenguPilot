@@ -51,13 +51,16 @@
    typedef struct \
    { \
       type value; \
+      pthread_mutexattr_t mutexattr; \
       pthread_mutex_t mutex; \
    } \
    ts##type##_t; \
    \
    static inline void ts##type##_init(ts##type##_t *ts_var, type val) \
    { \
-      pthread_mutex_init(&ts_var->mutex, NULL); \
+      pthread_mutexattr_init(&ts_var->mutexattr); \
+      pthread_mutexattr_setprotocol(&ts_var->mutexattr, PTHREAD_PRIO_INHERIT); \
+      pthread_mutex_init(&ts_var->mutex, &ts_var->mutexattr); \
       ts_var->value = val; \
    } \
    \

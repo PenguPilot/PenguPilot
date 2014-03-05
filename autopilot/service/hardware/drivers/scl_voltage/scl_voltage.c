@@ -41,7 +41,8 @@
 
 
 static simple_thread_t thread;
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutexattr_t mutexattr;
+static pthread_mutex_t mutex;
 static void *socket;
 static float voltage = 16.0;
 static int status = -EAGAIN;
@@ -105,6 +106,9 @@ int scl_voltage_init(void)
    {
       return -1;
    }
+   pthread_mutexattr_init(&mutexattr);
+   pthread_mutexattr_setprotocol(&mutexattr, PTHREAD_PRIO_INHERIT);
+   pthread_mutex_init(&mutex, &mutexattr);
    simple_thread_start(&thread, thread_func, "voltage_reader", THREAD_PRIORITY, NULL);
    return 0;
 }

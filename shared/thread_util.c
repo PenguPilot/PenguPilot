@@ -31,7 +31,7 @@
 
 static void display_sched_attr(int policy, struct sched_param *param)
 {
-    printf("    policy=%s, priority=%d\n",
+    fprintf(stderr, "    policy=%s, priority=%d\n",
             (policy == SCHED_FIFO)  ? "SCHED_FIFO" :
             (policy == SCHED_RR)    ? "SCHED_RR" :
             (policy == SCHED_OTHER) ? "SCHED_OTHER" :
@@ -45,7 +45,7 @@ void display_thread_sched_attr(const char *msg)
     int policy;
     struct sched_param param;
     pthread_getschedparam(pthread_self(), &policy, &param);
-    printf("%s\t", msg);
+    fprintf(stderr, "%s\t", msg);
     display_sched_attr(policy, &param);
 }
 
