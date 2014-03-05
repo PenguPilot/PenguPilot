@@ -186,6 +186,7 @@ void main_init(int argc, char *argv[])
    avg_init(&avgs[1], 0.0);
    avg_init(&avgs[2], -9.81);
 
+   mon_init();
    LOG(LL_INFO, "entering main loop");
 }
 
@@ -388,6 +389,5 @@ void main_step(float dt,
    mon_data_set(pos_est.ne_pos.n - navi_get_dest_n(),
                 pos_est.ne_pos.e - navi_get_dest_e(),
                 u_err, yaw_err);
- 
 }
 

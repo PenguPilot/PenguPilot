@@ -51,14 +51,15 @@ static void main_realtime_init(void)
    LOG(LL_INFO, "setting up real-time scheduling");
    sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
    sched_setscheduler(getpid(), SCHED_FIFO, &sp);
-   thread->sched_param.sched_priority = 97;
-   pthread_setschedparam(pthread_self(), SCHED_FIFO, &thread->sched_param);
-
+   
    if (nice(-20) == -1)
    {
       LOG(LL_ERROR, "could not renice process");
       die();
    }
+   
+   thread->sched_param.sched_priority = 97;
+   pthread_setschedparam(pthread_self(), SCHED_FIFO, &thread->sched_param);
 
    if (mlockall(MCL_CURRENT | MCL_FUTURE) != 0)
    {

@@ -24,6 +24,7 @@
  GNU General Public License for more details. */
 
 
+#include <string.h>
 #include <util.h>
 #include <scl.h>
 #include <pilot.pb-c.h>
@@ -31,8 +32,10 @@
 
 #include "mon.h"
 
+#define THREAD_PRIORITY 96
 
-static pthread_mutex_t mon_data_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutexattr_t mutexattr;
+static pthread_mutex_t mutex;
 static void *mon_socket = NULL;
 static MonData mon_data = MON_DATA__INIT;
 static periodic_thread_t emitter_thread;
@@ -42,9 +45,12 @@ PERIODIC_THREAD_BEGIN(mon_emitter)
 {
    PERIODIC_THREAD_LOOP_BEGIN
    {
-      pthread_mutex_lock(&mon_data_mutex);
-      SCL_PACK_AND_SEND_DYNAMIC(mon_socket, mon_data, mon_data);
-      pthread_mutex_unlock(&mon_data_mutex);
+      MonData _mon_data;
+      pthread_mutex_lock(&mutex);
+      memcpy(&_mon_data, &mon_data, sizeof(MonData));
+      pthread_mutex_unlock(&mutex);
+
+      SCL_PACK_AND_SEND_DYNAMIC(mon_socket, mon_data, _mon_data);
    }
    PERIODIC_THREAD_LOOP_END
 }
@@ -61,19 +67,20 @@ void mon_init(void)
 
    /* create monitoring connection: */
    const struct timespec period = {0, 100 * NSEC_PER_MSEC};
-   periodic_thread_start(&emitter_thread, mon_emitter, "mon_thread", 0, period, NULL);
+   pthread_mutexattr_init(&mutexattr);
+   pthread_mutexattr_setprotocol(&mutexattr, PTHREAD_PRIO_INHERIT);
+   pthread_mutex_init(&mutex, &mutexattr);
+   periodic_thread_start(&emitter_thread, mon_emitter, "mon_thread", THREAD_PRIORITY, period, NULL);
 }
 
 
 void mon_data_set(float x_err, float y_err, float z_err, float yaw_err)
 {
-   if (pthread_mutex_trylock(&mon_data_mutex) == 0)
-   {
-      mon_data.x_err = x_err;
-      mon_data.y_err = y_err;
-      mon_data.z_err = z_err;
-      mon_data.yaw_err = yaw_err;
-      pthread_mutex_unlock(&mon_data_mutex);
-   }
+   pthread_mutex_lock(&mutex);
+   mon_data.x_err = x_err;
+   mon_data.y_err = y_err;
+   mon_data.z_err = z_err;
+   mon_data.yaw_err = yaw_err;
+   pthread_mutex_unlock(&mutex);
 }
 
