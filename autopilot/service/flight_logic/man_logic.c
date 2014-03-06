@@ -153,7 +153,7 @@ static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t
 void set_att_angles(float pitch, float roll)
 {
    float a = deg2rad(tsfloat_get(&stick_pitch_roll_angle_max));
-   vec2_t pitch_roll = {{a * pitch, -a * roll}};
+   vec2_t pitch_roll = {{-a * pitch, a * roll}};
    cm_att_set_angles(pitch_roll);
 }
 

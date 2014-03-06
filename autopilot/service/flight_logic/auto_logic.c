@@ -39,7 +39,7 @@ static tsfloat_t setp_e;
 
 /* up direction in meters: */
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-static float setp_u;
+static float setp_u = 1.0;
 static bool mode_is_ground = true;
 
 /* yaw setpoint in rad: */
@@ -48,7 +48,7 @@ static tsfloat_t setp_yaw;
 
 void auto_logic_init(void)
 {
-   tsfloat_init(&setp_n, 5.0f);
+   tsfloat_init(&setp_n, 0.0f);
    tsfloat_init(&setp_e, 0.0f);
    tsfloat_init(&setp_yaw, 0.0f);
 }
@@ -56,7 +56,7 @@ void auto_logic_init(void)
 
 void auto_logic_run(bool is_full_auto, uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos)
 {
-   int test_pitch_roll = 1;
+   int test_pitch_roll = 0;
    if (test_pitch_roll)
    {
       vec2_t angles = {{0.0f, 0.0f}};
@@ -66,13 +66,23 @@ void auto_logic_run(bool is_full_auto, uint16_t sensor_status, bool flying, floa
    }
    else
    {
+      int u_is_manual = 1;
       pthread_mutex_lock(&mutex);
-      if (mode_is_ground)
-         cm_u_set_ultra_pos(setp_u);
+      if (!u_is_manual)
+      {
+         if (mode_is_ground)
+            cm_u_set_ultra_pos(setp_u);
+         else
+            cm_u_set_baro_pos(setp_u);
+      }
       else
-         cm_u_set_baro_pos(setp_u);
+         cm_u_set_acc(channels[CH_GAS]);
       pthread_mutex_unlock(&mutex);
-      cm_yaw_set_spd(channels[CH_YAW] * 2.0f);
+      
+      int yaw_is_manual = 1;
+      if (yaw_is_manual)
+         cm_yaw_set_spd(channels[CH_YAW] * 2.0f);
+
       vec2_t ne_gps_setpoint = {tsfloat_get(&setp_n), tsfloat_get(&setp_e)};
       cm_att_set_gps_pos(ne_gps_setpoint);
    }
