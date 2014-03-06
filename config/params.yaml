@@ -114,12 +114,12 @@ pilot:
          p: 0.5
          i: 0.0
          i_max: 0.3
-
+      
       attitude:
-         p: 5.8
-         i: 0.2
-         i_max: 1.5
-         d: 0.5
+         p: 3.8
+         i: 0.05
+         i_max: 0.5
+         d: 0.4
 
       u_speed:
          p: 0.2
