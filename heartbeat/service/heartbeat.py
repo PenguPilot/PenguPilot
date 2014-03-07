@@ -118,9 +118,10 @@ def main(name):
             if gps_data.fix >= 2:
                data += [gps_data.lon, gps_data.lat]
          socket.send(packer.pack(data))
-         sleep(5)
       except Exception, e:
-         sleep(0.1)
+         pass
+      sleep(1.0)
+         
 
 daemonize('heartbeat', main)
 
