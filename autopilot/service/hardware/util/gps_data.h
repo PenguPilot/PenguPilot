@@ -42,7 +42,9 @@ typedef struct
    int sats; /* number of satellites */
    double lon; /* longitude, east direction */
    double lat; /* latitude, north direction  */
-   double alt; /* above sea level, in m */
+   float alt; /* above sea level, in m */
+   float course; /* movement direction */
+   float speed; /* speed in knots */
 }
 gps_data_t;
 

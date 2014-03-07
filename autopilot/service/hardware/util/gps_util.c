@@ -24,6 +24,9 @@
  GNU General Public License for more details. */
 
 
+#include <math.h>
+
+#include "../../util/math/conv.h"
 #include "gps_util.h"
 
 
@@ -52,6 +55,10 @@ void gps_util_update(gps_rel_data_t *out, gps_data_t *in)
                     in->lat, in->lon,
                     start_lat, start_lon);
    }
+
+   float speed_m = in->speed * 0.51444444444; /* knots to meter/s */
+   out->speed_n = speed_m * cosf(deg2rad(in->course));
+   out->speed_e = speed_m * sinf(deg2rad(in->course));
 }
 
 
