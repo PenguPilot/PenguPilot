@@ -35,8 +35,10 @@
 
 typedef struct
 {
-   double de; /* delta east in meters */
    double dn; /* delta north in meters */
+   double de; /* delta east in meters */
+   float speed_n;
+   float speed_e;
 }
 gps_rel_data_t;
 
