@@ -63,6 +63,8 @@ typedef struct
    float baro_u;
    float pos_n;
    float pos_e;
+   float speed_n;
+   float speed_e;
 
    /* control acc input in NEU ground reference frame: */
    vec3_t acc;

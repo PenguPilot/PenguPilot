@@ -243,6 +243,8 @@ void main_step(float dt,
       gps_util_update(&gps_rel_data, gps_data);
       pos_in.pos_e = gps_rel_data.de;
       pos_in.pos_n = gps_rel_data.dn;
+      pos_in.speed_e = gps_rel_data.speed_e;
+      pos_in.speed_n = gps_rel_data.speed_n;
       ONCE(mag_decl = mag_decl_lookup(gps_data->lat, gps_data->lon);
            gps_start_set(gps_data);
            LOG(LL_ERROR, "declination lookup yields: %f", mag_decl));
@@ -255,7 +257,7 @@ void main_step(float dt,
    {
       pos_in.ultra_u = 0.0;
    }
-   if (fabs(pos_in.ultra_u - prev_ultra_u) > 0.7)
+   if (fabs(pos_in.ultra_u - prev_ultra_u) > 0.5)
    {
       pos_in.ultra_u = prev_ultra_u;   
    }
@@ -283,6 +285,7 @@ void main_step(float dt,
    pos_t pos_est;
    pos_update(&pos_est, &pos_in);
    
+   printf("%f %f\n", pos_in.ultra_u, pos_est.ultra_u.pos);
    /* execute flight logic (sets cm_x parameters used below): */
    flight_logic_run(sensor_status, 1, channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos);
    
