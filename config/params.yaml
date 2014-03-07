@@ -152,7 +152,7 @@ pilot:
          ortho_p: 0.0
 
    kalman_pos:
-      ultra_noise: 0.02
+      ultra_noise: 0.1
       baro_noise: 0.1
       gps_noise: 0.1
       process_noise: 1.0e-6
