@@ -30,7 +30,7 @@
 #include "gps_util.h"
 
 
-static void meter_offset(double *dn, double *de, double lat1, double lon1, double lat2, double lon2);
+static void meter_offset(float *dn, float *de, double lat1, double lon1, double lat2, double lon2);
 
 
 static int initialized;
@@ -56,7 +56,7 @@ void gps_util_update(gps_rel_data_t *out, gps_data_t *in)
                     start_lat, start_lon);
    }
 
-   float speed_m = in->speed * 0.51444444444; /* knots to meter/s */
+   float speed_m = in->speed * 0.51444444444f; /* knots to meter/s */
    out->speed_n = speed_m * cosf(deg2rad(in->course));
    out->speed_e = speed_m * sinf(deg2rad(in->course));
 }
@@ -161,7 +161,7 @@ static double earth_distance(double lat1, double lon1, double lat2, double lon2)
 
 
 /* return offset in meters */
-static void meter_offset(double *dn, double *de, double lat1, double lon1, double lat2, double lon2)
+static void meter_offset(float *dn, float *de, double lat1, double lon1, double lat2, double lon2)
 {
    double _dx = (double)earth_distance(lat1, lon1, lat1, lon2);
    double _dy = (double)earth_distance(lat1, lon1, lat2, lon1);

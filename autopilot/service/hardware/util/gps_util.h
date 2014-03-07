@@ -35,8 +35,8 @@
 
 typedef struct
 {
-   double dn; /* delta north in meters */
-   double de; /* delta east in meters */
+   float dn; /* delta north in meters */
+   float de; /* delta east in meters */
    float speed_n;
    float speed_e;
 }

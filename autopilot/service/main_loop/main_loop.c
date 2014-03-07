@@ -70,14 +70,14 @@ static float *rpm_square = NULL;
 static float *setpoints = NULL;
 static float mag_decl = 0.0f;
 static gps_data_t gps_data;
-static gps_rel_data_t gps_rel_data = {0.0, 0.0};
+static gps_rel_data_t gps_rel_data = {0.0, 0.0, 0.0f, 0.0f};
 static calibration_t gyro_cal;
 static interval_t gyro_move_interval;
 static int init = 0;
 static body_to_world_t *btw;
 static flight_state_t flight_state;
 static float acc_prev[3] = {0.0f, 0.0f, -9.81f};
-static float prev_ultra_u = 0.0f;
+static float ultra_u_prev = 0.0f;
 
 
 static avg_data_t avgs[3];
@@ -193,6 +193,7 @@ void main_init(int argc, char *argv[])
 
 
 
+
 void main_step(float dt,
                marg_data_t *marg_data,
                gps_data_t *gps_data,
@@ -253,15 +254,18 @@ void main_step(float dt,
    /* acc/mag calibration: */
    acc_mag_cal_apply(&marg_data->acc, &marg_data->mag);
    flight_state = flight_state_update(&marg_data->acc.vec[0]);
-   if (flight_state == FS_FLYING && pos_in.ultra_u == 7.0)
+   if (flight_state == FS_STANDING && pos_in.ultra_u == 7.0)
    {
       pos_in.ultra_u = 0.0;
    }
-   if (fabs(pos_in.ultra_u - prev_ultra_u) > 0.5)
+   if (fabs(ultra_u_prev - pos_in.ultra_u) > 1.0)
    {
-      pos_in.ultra_u = prev_ultra_u;   
+      pos_in.ultra_u = ultra_u_prev;   
    }
-   prev_ultra_u = pos_in.ultra_u;
+   else
+   {
+      ultra_u_prev = pos_in.ultra_u;
+   }
 
    /* perform sensor data fusion: */
    euler_t euler;
@@ -285,7 +289,8 @@ void main_step(float dt,
    pos_t pos_est;
    pos_update(&pos_est, &pos_in);
    
-   printf("%f %f\n", pos_in.ultra_u, pos_est.ultra_u.pos);
+   printf("%f %f %f %f\n", pos_in.speed_n, pos_in.speed_e, pos_est.ne_speed.x, pos_est.ne_speed.y);
+   //printf("%f %f %d\n", pos_in.ultra_u, pos_est.ultra_u.pos, flight_state);
    /* execute flight logic (sets cm_x parameters used below): */
    flight_logic_run(sensor_status, 1, channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos);
    
