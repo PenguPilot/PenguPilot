@@ -47,7 +47,7 @@
 
 
 
-static gps_data_t gps_data = {FIX_NOT_SEEN, 0, 0, 0, 0};
+static gps_data_t gps_data = {FIX_NOT_SEEN, 0, 0, 0, 0, 0, 0};
 static simple_thread_t thread;
 static void *scl_socket;
 static pthread_mutexattr_t mutexattr;
@@ -73,6 +73,8 @@ SIMPLE_THREAD_BEGIN(thread_func)
             gps_data.lat = _gps_data->lat;
             gps_data.lon = _gps_data->lon;
             gps_data.alt = _gps_data->alt;
+            gps_data.course = _gps_data->course;
+            gps_data.speed = _gps_data->speed;
             pthread_mutex_unlock(&mutex);
          }
          SCL_FREE(gps_data, _gps_data);
