@@ -289,8 +289,6 @@ void main_step(float dt,
    pos_t pos_est;
    pos_update(&pos_est, &pos_in);
    
-   printf("%f %f %f %f\n", pos_in.speed_n, pos_in.speed_e, pos_est.ne_speed.x, pos_est.ne_speed.y);
-   //printf("%f %f %d\n", pos_in.ultra_u, pos_est.ultra_u.pos, flight_state);
    /* execute flight logic (sets cm_x parameters used below): */
    flight_logic_run(sensor_status, 1, channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos);
    
