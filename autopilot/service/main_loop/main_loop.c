@@ -172,7 +172,7 @@ void main_init(int argc, char *argv[])
    flight_logic_init();
 
    /* init calibration data: */
-   cal_init(&gyro_cal, 3, 100);
+   cal_init(&gyro_cal, 3, 1000);
    btw = body_to_world_create();
 
    cal_ahrs_init(10.0f, 5.0f * REALTIME_PERIOD);

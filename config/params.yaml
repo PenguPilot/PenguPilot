@@ -67,7 +67,7 @@ pilot:
       details: 2
 
    ahrs:
-      beta: 0.1
+      beta: 0.05
       yaw_bias: -0.1999999999999993
       pitch_bias: 0.019999999999999962
       roll_bias: -0.02
