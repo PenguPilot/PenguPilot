@@ -33,6 +33,8 @@
 
 void inv_coupling_init(inv_coupling_t *inv_coupling, const size_t n_motors, const float *init)
 {
+   ASSERT_ONCE();
+
    /* allocate inverse coupling matrix :*/
    inv_coupling->matrix = m_get(n_motors, 4);
    ASSERT_NOT_NULL(inv_coupling->matrix);

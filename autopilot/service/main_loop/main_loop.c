@@ -383,6 +383,7 @@ void main_step(float dt,
 
    /* RUN STABLIZING PIID CONTROLLER: */
    f_local_t f_local = {{thrust, 0.0f, 0.0f, 0.0f}};
+   marg_data->gyro.vec[1] *= -1;
    piid_run(&f_local.vec[1], marg_data->gyro.vec, piid_sp);
 
    /* computation of rpm ^ 2 out of the desired forces */
