@@ -134,19 +134,19 @@ static void set_pitch_roll_rates(float pitch, float roll)
 static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t *ne_gps_pos)
 {
    float vmax_sqrt = sqrt(tsfloat_get(&stick_pitch_roll_p));
-   if (sqrt(pitch * pitch + roll * roll) > 0.1f)
-   {
+   //if (sqrt(pitch * pitch + roll * roll) > 0.1f)
+   //{
       vec2_t local_spd_sp = {{vmax_sqrt * pitch, vmax_sqrt * roll}};
       vec2_t global_spd_sp;
       vec2_rotate(&global_spd_sp, &local_spd_sp, yaw);
       cm_att_set_gps_spd(global_spd_sp);
-      horiz_pos_locked = false;
-   }
-   else if (!horiz_pos_locked)
-   {
-      horiz_pos_locked = true;
-      cm_att_set_gps_pos(*ne_gps_pos);   
-   }
+   //   horiz_pos_locked = false;
+   //}
+   //else if (!horiz_pos_locked)
+   //{
+   //   horiz_pos_locked = true;
+   //   cm_att_set_gps_pos(*ne_gps_pos);   
+   //}
 }
 
 
@@ -235,7 +235,8 @@ void man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANN
       case MAN_NOVICE:
       {
          set_horizontal_spd_or_pos(pitch, roll, yaw, ne_gps_pos);
-         set_vertical_spd_or_pos(gas_stick - 0.5, u_baro_pos);
+         cm_u_set_ultra_pos(1.0);
+         //set_vertical_spd_or_pos(gas_stick - 0.5, u_baro_pos);
          break;
       }
    }
