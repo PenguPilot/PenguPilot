@@ -67,7 +67,7 @@ pilot:
       details: 2
 
    ahrs:
-      beta: 0.1
+      beta: 0.05
       yaw_bias: -0.1999999999999993
       pitch_bias: 0.019999999999999962
       roll_bias: -0.02
@@ -157,7 +157,7 @@ pilot:
          ortho_p: 0.0
 
    kalman_pos:
-      ultra_noise: 0.03
+      ultra_noise: 0.1
       baro_noise: 0.1
       gps_noise: 0.1
       process_noise: 1.0e-6

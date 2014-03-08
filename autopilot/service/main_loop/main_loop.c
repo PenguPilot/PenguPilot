@@ -77,6 +77,7 @@ static int init = 0;
 static body_to_world_t *btw;
 static flight_state_t flight_state;
 static float acc_prev[3] = {0.0f, 0.0f, -9.81f};
+static float ultra_u_prev = 0.0f;
 
 
 static avg_data_t avgs[3];
@@ -171,7 +172,7 @@ void main_init(int argc, char *argv[])
    flight_logic_init();
 
    /* init calibration data: */
-   cal_init(&gyro_cal, 3, 500);
+   cal_init(&gyro_cal, 3, 1000);
    btw = body_to_world_create();
 
    cal_ahrs_init(10.0f, 5.0f * REALTIME_PERIOD);
@@ -189,6 +190,7 @@ void main_init(int argc, char *argv[])
    mon_init();
    LOG(LL_INFO, "entering main loop");
 }
+
 
 
 
@@ -256,6 +258,14 @@ void main_step(float dt,
    if (flight_state == FS_STANDING && pos_in.ultra_u == 7.0)
    {
       pos_in.ultra_u = 0.0;
+   }
+   if (fabs(ultra_u_prev - pos_in.ultra_u) > 1.0)
+   {
+      pos_in.ultra_u = ultra_u_prev;   
+   }
+   else
+   {
+      ultra_u_prev = pos_in.ultra_u;
    }
 
    /* perform sensor data fusion: */
