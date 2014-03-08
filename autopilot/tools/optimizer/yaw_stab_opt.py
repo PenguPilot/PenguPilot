@@ -6,7 +6,7 @@ from msgpack import loads
 import sys
 
 
-MUTATION_RATE = 0.1
+MUTATION_RATE = 0.2
 NUM_SAMPLES = 1000
 
 gates = generate_map('optimizer')
@@ -33,9 +33,8 @@ while True:
    fit = 0.0
    for _ in range(NUM_SAMPLES):
       array = loads(debug.recv())
-      gyro = array[3]
-      setp = array[6]
-      fit += (gyro - setp) ** 2
+      gyro = float(array[3])
+      fit += (0.0 - gyro) ** 2
    fit /= NUM_SAMPLES
    print 'computed fitness:', fit
    

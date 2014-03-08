@@ -39,7 +39,7 @@ static tsfloat_t setp_e;
 
 /* up direction in meters: */
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-static float setp_u = 1.0;
+static float setp_u = 0.7;
 static bool mode_is_ground = true;
 
 /* yaw setpoint in rad: */
@@ -83,8 +83,8 @@ void auto_logic_run(bool is_full_auto, uint16_t sensor_status, bool flying, floa
       if (yaw_is_manual)
          cm_yaw_set_spd(channels[CH_YAW] * 2.0f);
 
-      vec2_t ne_gps_setpoint = {tsfloat_get(&setp_n), tsfloat_get(&setp_e)};
-      cm_att_set_gps_pos(ne_gps_setpoint);
+      vec2_t ne_gps_setpoint = {0.0f, 0.0f}; //tsfloat_get(&setp_n), tsfloat_get(&setp_e)};
+      cm_att_set_gps_spd(ne_gps_setpoint);
    }
 }
 
