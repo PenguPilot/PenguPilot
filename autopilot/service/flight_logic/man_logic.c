@@ -126,7 +126,7 @@ static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos)
 static void set_pitch_roll_rates(float pitch, float roll)
 {
    float p = tsfloat_get(&stick_pitch_roll_p);
-   vec2_t pitch_roll = {{-p * pitch, p * roll}};
+   vec2_t pitch_roll = {{p * pitch, p * roll}};
    cm_att_set_rates(pitch_roll);
 }
 
@@ -136,7 +136,7 @@ static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t
    float vmax_sqrt = sqrt(tsfloat_get(&stick_pitch_roll_p));
    //if (sqrt(pitch * pitch + roll * roll) > 0.1f)
    //{
-      vec2_t local_spd_sp = {{-vmax_sqrt * pitch, -vmax_sqrt * roll}};
+      vec2_t local_spd_sp = {{vmax_sqrt * pitch, vmax_sqrt * roll}};
       vec2_t global_spd_sp;
       vec2_rotate(&global_spd_sp, &local_spd_sp, -yaw);
       cm_att_set_gps_spd(global_spd_sp);
@@ -153,7 +153,7 @@ static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t
 void set_att_angles(float pitch, float roll)
 {
    float a = deg2rad(tsfloat_get(&stick_pitch_roll_angle_max));
-   vec2_t pitch_roll = {{-a * pitch, a * roll}};
+   vec2_t pitch_roll = {{a * pitch, a * roll}};
    cm_att_set_angles(pitch_roll);
 }
 
