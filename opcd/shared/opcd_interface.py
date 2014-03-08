@@ -70,7 +70,7 @@ class OPCD_Interface:
       if len(pairs) == 0:
          return
       elif len(pairs) == 1:
-         return pairs[0][1]
+         return pairs[0]
       else:
          return pairs
 
