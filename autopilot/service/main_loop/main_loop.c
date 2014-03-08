@@ -74,7 +74,7 @@ static gps_rel_data_t gps_rel_data = {0.0, 0.0, 0.0f, 0.0f};
 static calibration_t gyro_cal;
 static interval_t gyro_move_interval;
 static int init = 0;
-static body_to_world_t *btw;
+static body_to_neu_t *btn;
 static flight_state_t flight_state;
 static float acc_prev[3] = {0.0f, 0.0f, -9.81f};
 static float ultra_u_prev = 0.0f;
@@ -173,7 +173,7 @@ void main_init(int argc, char *argv[])
 
    /* init calibration data: */
    cal_init(&gyro_cal, 3, 1000);
-   btw = body_to_world_create();
+   btn = body_to_neu_create();
 
    cal_ahrs_init(10.0f, 5.0f * REALTIME_PERIOD);
    flight_state_init(50, 150, 4.0, 150.0, 0.3);
@@ -275,16 +275,13 @@ void main_step(float dt,
       return;
    ONCE(init = 1; LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
 
-   /* local ACC to global ACC rotation: */
+   /* local ACC to NEU ACC rotation: */
    vec3_t world_acc;
-   body_to_world_transform(btw, &world_acc, &euler, &marg_data->acc);
+   body_to_neu(btn, &world_acc, &euler, &marg_data->acc);
    
    /* center global ACC readings using previous value: */
    FOR_N(i, 3)
-   {
       pos_in.acc.vec[i] = world_acc.vec[i] - avg_calc(&avgs[i], world_acc.vec[i]);
-   }
-   pos_in.acc.u *= -1.0f; /* convert NED frame to NEU */
 
    /* compute next 3d position estimate: */
    pos_t pos_est;
@@ -295,30 +292,30 @@ void main_step(float dt,
    
    /* RUN U POSITION AND SPEED CONTROLLER: */
    float u_err = 0.0f;
-   float f_d_rel = 0.0f;
+   float f_u_rel = 0.0f;
    if (cm_u_is_pos())
    {
       if (cm_u_is_baro_pos())
       {
-         f_d_rel = u_ctrl_step(cm_u_setp(), pos_est.baro_u.pos, pos_est.baro_u.speed, dt);
+         f_u_rel = u_ctrl_step(cm_u_setp(), pos_est.baro_u.pos, pos_est.baro_u.speed, dt);
          u_err = cm_u_setp() - pos_est.baro_u.pos;
       }
       else
       {
-         f_d_rel = u_ctrl_step(cm_u_setp(), pos_est.ultra_u.pos, pos_est.ultra_u.speed, dt);
+         f_u_rel = u_ctrl_step(cm_u_setp(), pos_est.ultra_u.pos, pos_est.ultra_u.speed, dt);
          u_err = cm_u_setp() - pos_est.ultra_u.pos;
       }
    }
    else if (cm_u_is_spd())
    {
-      f_d_rel = u_speed_step(cm_u_setp(), pos_est.baro_u.speed, 0.0f, dt);
+      f_u_rel = u_speed_step(cm_u_setp(), pos_est.baro_u.speed, 0.0f, dt);
    }
    else
    {
-      f_d_rel = cm_u_setp();
+      f_u_rel = cm_u_setp();
    }
-   f_d_rel = fmin(f_d_rel, channels[CH_GAS] /*cm_u_acc_limit()*/);
-   float f_d = f_d_rel * platform.max_thrust_n;
+   f_u_rel = fmin(f_u_rel, channels[CH_GAS] /*cm_u_acc_limit()*/);
+   float f_u = f_u_rel * platform.max_thrust_n;
 
    vec2_t ne_speed_sp = {{0.0f, 0.0f}};
    if (cm_att_is_gps_pos())
@@ -331,18 +328,18 @@ void main_step(float dt,
       ne_speed_sp = cm_att_setp(); /* direct attitude speed control */
    }
 
+   ne_speed_sp.x = 1;
+   ne_speed_sp.y = 0;
    /* RUN ATT NORTH/EAST SPEED CONTROLLER: */
-   vec2_t f_sw;
-   ne_speed_ctrl_run(&f_sw, &ne_speed_sp, dt, &pos_est.ne_speed);
+   vec2_t f_ne;
+   pos_est.ne_speed.x = 0;
+   pos_est.ne_speed.y = 0;
+   ne_speed_ctrl_run(&f_ne, &ne_speed_sp, dt, &pos_est.ne_speed);
    
-   /* rotate global forces into local forces: */
-   vec2_t f_pr;
-   vec2_rotate(&f_pr, &f_sw, euler.yaw);
-   vec3_t f_prd = {{-f_pr.x, f_pr.y, f_d}};
-
+   vec3_t f_neu = {{f_ne.x, f_ne.y, f_u}};
    vec2_t pitch_roll_sp;
    float thrust;
-   att_thrust_calc(&pitch_roll_sp, &thrust, &f_prd, platform.max_thrust_n, 0);
+   att_thrust_calc(&pitch_roll_sp, &thrust, &f_neu, euler.yaw, platform.max_thrust_n, 0);
 
    if (cm_att_is_angles())
    {
@@ -355,6 +352,7 @@ void main_step(float dt,
    vec2_t pitch_roll_ctrl;
    vec2_t pitch_roll = {{euler.pitch, euler.roll}};
    att_ctrl_step(&pitch_roll_ctrl, &att_err, dt, &pitch_roll, &pitch_roll_speed, &pitch_roll_sp);
+   EVERY_N_TIMES(10, printf("%f %f\n", pitch_roll_ctrl.x, pitch_roll_ctrl.y));
  
    float piid_sp[3] = {0.0f, 0.0f, 0.0f};
    piid_sp[PIID_PITCH] = pitch_roll_ctrl.x;
@@ -405,7 +403,7 @@ void main_step(float dt,
    /* write motors: */
    if (!override_hw)
    {
-      platform_write_motors(setpoints);
+      //platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */

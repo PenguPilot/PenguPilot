@@ -76,7 +76,7 @@ void euler_normalize(euler_t *euler)
 }
 
 
-struct body_to_world
+struct body_to_neu
 {
    VEC *body_acc_vec;
    VEC *world_acc_vec;
@@ -84,12 +84,10 @@ struct body_to_world
 };
 
 
-void body_to_world_transform(body_to_world_t *btw, vec3_t *world, const euler_t *euler, const vec3_t *body)
+void body_to_neu(body_to_neu_t *btn, vec3_t *world, const euler_t *euler, const vec3_t *body)
 {
    FOR_N(i, 3)
-   {
-      btw->body_acc_vec->ve[i] = body->vec[i];
-   }
+      btn->body_acc_vec->ve[i] = body->vec[i];
 
    float theta = euler->pitch;
    float phi = euler->roll;
@@ -111,7 +109,7 @@ void body_to_world_transform(body_to_world_t *btw, vec3_t *world, const euler_t 
     * the transpose of this is used as the inverse DCM below:
     */
 
-   MAT *d = btw->dcm;
+   MAT *d = btn->dcm;
    d->me[0][0] = cos_psi * cos_theta;
    d->me[0][1] = cos_psi * sin_phi * sin_theta - cos_phi * sin_psi;
    d->me[0][2] = sin_phi * sin_psi + cos_phi * cos_psi * sin_theta;
@@ -127,24 +125,23 @@ void body_to_world_transform(body_to_world_t *btw, vec3_t *world, const euler_t 
    /*
     * multiply resulting matrix with input vector:
     */
-   mv_mlt(d, btw->body_acc_vec, btw->world_acc_vec);
+   mv_mlt(d, btn->body_acc_vec, btn->world_acc_vec);
 
    /*
     * convert meschach vector to output:
     */
-   FOR_N(i, 3)
-   {
-      world->vec[i] = btw->world_acc_vec->ve[i];
-   }
+   world->vec[0] = btn->world_acc_vec->ve[0];
+   world->vec[1] = btn->world_acc_vec->ve[1];
+   world->vec[2] = -btn->world_acc_vec->ve[2];
 }
 
 
-body_to_world_t *body_to_world_create(void)
+body_to_neu_t *body_to_neu_create(void)
 {
-   body_to_world_t *btw = (body_to_world_t *)malloc(sizeof(body_to_world_t));
-   btw->body_acc_vec = v_get(3);
-   btw->world_acc_vec = v_get(3);
-   btw->dcm = m_get(3, 3);
-   return btw;
+   body_to_neu_t *btn = (body_to_neu_t *)malloc(sizeof(body_to_neu_t));
+   btn->body_acc_vec = v_get(3);
+   btn->world_acc_vec = v_get(3);
+   btn->dcm = m_get(3, 3);
+   return btn;
 }
 
