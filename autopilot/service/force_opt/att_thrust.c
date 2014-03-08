@@ -33,59 +33,75 @@
 #include "att_thrust.h"
 
 
-int att_thrust_calc(vec2_t *ne_out, float *thrust, /* output: angle north, angle east, thrust */
-                    vec3_t *f_ned,   /* input of n,e,d forces */
+int att_thrust_calc(vec2_t *pr_angles, float *thrust, /* output: pitch/roll angles + thrust */
+                    vec3_t *f_neu,   /* input of p,r,d forces */
+                    float yaw, /* yaw orientation */
                     float thrust_max, /* maximum thrust force */
-                    int update_f_ned  /* if true, f_ned is updated if thrust_max has been exceeded */)
+                    int update_f_neu  /* if true, f_neu is updated if thrust_max has been exceeded */)
 {
    int constrained = 0;
-   float n = f_ned->vec[0];
-   float e = f_ned->vec[1];
-   float d = f_ned->vec[2];
+   float n = f_neu->vec[0];
+   float e = f_neu->vec[1];
+   float u = f_neu->vec[2];
    assert(thrust_max >= 0);
-   if (d < 0.0)
-      d = 0.0;
-   
+
+   if (u < 0.0f)
+   {
+      u = 0.0f;
+      constrained = 1;
+   }
+
    /* compute unconstrained thrust: */
-   *thrust = sqrtf(n * n + e * e + d * d);
+   *thrust = sqrtf(n * n + e * e + u * u);
    
    /* check if computed thrust exceeds maximal thrust: */
    if (*thrust > thrust_max)
    {
       /* compute constrained forces: */
-      if (d >= thrust_max)
+      if (u > thrust_max)
       {
          /* thrust_max is exceeded by d: */
          n = 0.0;
          e = 0.0;
-         d = thrust_max;
+         u = thrust_max;
       }
-      else /* d < thrust_max: */
+      else /* u <= thrust_max: */
       {
          /* scale down n and e to meet thrust limit: */
-         float d_remain = sqrtf((thrust_max * thrust_max) - d * d);
+         float u_remain = sqrtf((thrust_max * thrust_max) - u * u);
          float ne_len = sqrtf(n * n + e * e);
-         float factor = d_remain / ne_len;
+         float factor = u_remain / ne_len;
          n = n * factor;
          e = e * factor;
       }
       /* compute constrained thrust: */
-      *thrust = sqrtf(n * n + e * e + d * d);
+      *thrust = sqrtf(n * n + e * e + u * u);
       constrained = 1;
    }
-
-   /* update f_ned, if requested: */
-   if (update_f_ned)
+   
+   /* update f_neu, if requested: */
+   if (update_f_neu)
    {
-      f_ned->vec[0] = n;
-      f_ned->vec[1] = e;
-      f_ned->vec[2] = d;
+      f_neu->vec[0] = n;
+      f_neu->vec[1] = e;
+      f_neu->vec[2] = u;
    }
 
-   /* set output angles and thrust: */
-   ne_out->vec[0] = atan(n / d);
-   ne_out->vec[1] = atan(e / d);
+   /* compute resulting angles: */
+   vec2_t ne_angles;
+   if (u > 0.0f)
+   {
+      ne_angles.x = atan(n / u);
+      ne_angles.y = atan(e / u);
+   }
+   else
+   {
+      ne_angles.x = n;
+      ne_angles.y = e;
+   }
 
+   /* rotate global horizonzal thrust to device-local: */
+   vec2_rotate(pr_angles, &ne_angles, -yaw);
    return constrained;
 }
 
