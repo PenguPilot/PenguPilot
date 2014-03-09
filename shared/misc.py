@@ -13,7 +13,7 @@
   
  Miscellaneous Code
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
  Partially taken from PsychoPy library Copyright (C) 2009 Jonathan Peirce
 
  This program is free software; you can redistribute it and/or modify
