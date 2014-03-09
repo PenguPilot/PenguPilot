@@ -12,7 +12,7 @@
  Process Daemonizer with Pidfile Support
  
  Copyright (c) 1995  Martin Schulze <Martin.Schulze@Linux.DE>
- Copyright (C) 2011 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by

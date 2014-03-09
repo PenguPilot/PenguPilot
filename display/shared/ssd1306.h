@@ -11,7 +11,7 @@
   
  Adafruit 128x64 SSD1307 Linux I2C Driver Interface
 
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
  Based on code written by Limor Fried/Ladyada.  
 
  This program is free software; you can redistribute it and/or modify

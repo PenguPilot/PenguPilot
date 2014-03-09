@@ -312,7 +312,7 @@ class quat:
         >>> q=quat(0.9, 0.5, 0.2, 0.3)
         >>> angle, axis = q.toAngleAxis()
         >>> print round(angle,4)
-        1.2011
+        1.2014
         >>> print axis
         (0.8111, 0.3244, 0.4867)
         """

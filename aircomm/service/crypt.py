@@ -12,7 +12,7 @@
   
  Crypto Functionality for Aircomm
 
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
  Original Code Copyright (C) 2009 joonis new media
  Author: Thimo Kraemer <thimo.kraemer@joonis.de>
 
