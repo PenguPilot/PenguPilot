@@ -324,15 +324,15 @@ void main_step(float dt,
    vec3_mul_scalar(&f_neu, &a_neu, platform.mass_kg); /* f[i] = a[i] * m, makes ctrl device-independent */
    
    /* run NEU forces optimizer: */
-   vec2_t pitch_roll_sp;
    float thrust;
+   vec2_t pitch_roll_sp;
    att_thrust_calc(&pitch_roll_sp, &thrust, &f_neu, euler.yaw, platform.max_thrust_n, 0);
-   //EVERY_N_TIMES(10, printf("%f %f %f %f %f\n", euler.yaw, f_neu.x, f_neu.y, pitch_roll_sp.x, pitch_roll_sp.y));
 
    if (cm_att_is_angles())
    {
       pitch_roll_sp = cm_att_setp(); /* direct attitude angle control */
    }
+   //EVERY_N_TIMES(10, printf("%f %f\n", pitch_roll_sp.x, pitch_roll_sp.y));
 
    /* RUN ATT ANGLE CONTROLLER: */
    vec2_t att_err;

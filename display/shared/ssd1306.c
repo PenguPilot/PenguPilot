@@ -36,6 +36,7 @@
 /* internal declarations: */
 
 #define SSD_COMMAND_MODE      0x00
+#define SSD_RESET             0x03
 #define SSD_DATA_MODE         0x40
 #define SSD_INVERSE_DISPLAY   0xA7
 #define SSD_DISPLAY_OFF       0xAE
@@ -93,7 +94,7 @@ void ssd1306_init(ssd1306_t *ssd, i2c_dev_t *i2c_dev)
    ssd1306_cmd1(ssd, SSD1306_SEGREMAP | 0x1);
    ssd1306_cmd1(ssd, SSD1306_COMSCANDEC);
    ssd1306_cmd2(ssd, SSD1306_SETCOMPINS, 0x12);
-   ssd1306_cmd2(ssd, SSD_SET_CONTRAST, 0xFF);
+   ssd1306_cmd2(ssd, SSD_SET_CONTRAST, 0xCF);
    ssd1306_cmd2(ssd, SSD1306_SETPRECHARGE, 0xF1);
    ssd1306_cmd2(ssd, SSD1306_SETVCOMDETECT, 0x40);
    ssd1306_cmd1(ssd, SSD1306_DISPLAYALLON_RESUME);

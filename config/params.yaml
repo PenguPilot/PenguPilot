@@ -111,21 +111,16 @@ pilot:
          tmc: 0.06
 
       ne_speed:
-         p: 0.5
+         p: 2.0
          i: 0.0
-         i_max: 0.3
+         i_max: 0.0
       
       attitude:
          p: 1.0
          i: 0.01
-         i_max: 0.5
+         i_max: 0.2
          d: 0.1
 
-      u_speed:
-         p: 0.2
-         i: 0.0
-         imax: 0.0
-         d: 0.0
       u_speed:
          d: 0.02
          i: 0.002
@@ -159,7 +154,7 @@ pilot:
    kalman_pos:
       ultra_noise: 0.1
       baro_noise: 0.1
-      gps_noise: 0.1
+      gps_noise: 0.03
       process_noise: 1.0e-6
 
    sensors:
