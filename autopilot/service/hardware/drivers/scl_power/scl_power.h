@@ -28,7 +28,7 @@
 #define __SCL_POWER_H__
 
 
-int scl_voltage_init(void);
+int scl_power_init(void);
 
 int scl_power_read(float *voltage, float *current);
 

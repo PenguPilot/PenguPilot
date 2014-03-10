@@ -52,7 +52,6 @@
 
 
 static i2c_bus_t i2c_3;
-static deadzone_t deadzone;
 static rc_channels_t rc_channels;
 static uint8_t channel_mapping[MAX_CHANNELS] =  {0, 1, 3, 2, 4, 5}; /* pitch: 0, roll: 1, yaw: 3, gas: 2, switch left: 4, switch right: 5 */
 static float channel_scale[MAX_CHANNELS] =  {1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
@@ -135,9 +134,8 @@ int arcade_quad_init(platform_t *plat, int override_hw)
 
    LOG(LL_INFO, "initializing inverse coupling matrix");
    inv_coupling_init(&plat->inv_coupling, N_MOTORS, icmatrix);
-      
-   deadzone_init(&deadzone, 0.01f, 1.0f, 1.0f);
-   rc_channels_init(&rc_channels, channel_mapping, channel_scale, &deadzone);
+
+   rc_channels_init(&rc_channels, channel_mapping, channel_scale, NULL);
 
    if (!override_hw)
    {
