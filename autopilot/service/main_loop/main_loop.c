@@ -318,18 +318,15 @@ void main_step(float dt,
       ne_speed_sp = cm_att_setp(); /* direct attitude speed control */
    }
 
-   ne_speed_sp.x = 1;
-   ne_speed_sp.y = 0;
    /* RUN ATT NORTH/EAST SPEED CONTROLLER: */
    vec2_t f_ne;
-   pos_est.ne_speed.x = 0;
-   pos_est.ne_speed.y = 0;
    ne_speed_ctrl_run(&f_ne, &ne_speed_sp, dt, &pos_est.ne_speed);
    
    vec3_t f_neu = {{f_ne.x, f_ne.y, f_u}};
-   vec2_t pitch_roll_sp = {{0.0f, 0.0f}};
+   vec2_t pitch_roll_sp;
    float thrust;
    att_thrust_calc(&pitch_roll_sp, &thrust, &f_neu, euler.yaw, platform.max_thrust_n, 0);
+   EVERY_N_TIMES(10, printf("%f %f %f %f %f\n", euler.yaw, f_ne.x, f_ne.y, pitch_roll_sp.x, pitch_roll_sp.y));
 
    if (cm_att_is_angles())
    {
@@ -379,7 +376,7 @@ void main_step(float dt,
    inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
 
    /* update motors state: */
-   motors_state_update(flight_state, dt, (sensor_status & RC_VALID) && channels[CH_SWITCH_L] < 0.5 && channels[CH_GAS] > 0.12);
+   motors_state_update(flight_state, dt, channels[CH_GAS] > 0.12);
 
    if (!motors_controllable())
    {
@@ -398,7 +395,7 @@ void main_step(float dt,
    /* write motors: */
    if (!override_hw)
    {
-      platform_write_motors(setpoints);
+      //platform_write_motors(setpoints);
    }
 
 

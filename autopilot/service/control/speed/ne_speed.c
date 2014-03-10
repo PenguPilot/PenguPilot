@@ -78,7 +78,7 @@ void ne_speed_ctrl_run(vec2_t *forces, const vec2_t *setp, const float dt, const
    FOR_EACH(i, controllers)
    {
       float error = setp->vec[i] - speed->vec[i];
-      forces->vec[i] = pid_control(&controllers[i], error, 0.0, dt);
+      forces->vec[i] = sym_limit(pid_control(&controllers[i], error, 0.0, dt), 1.0);
    }
 }
 
