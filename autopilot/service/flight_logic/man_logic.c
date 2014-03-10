@@ -62,7 +62,7 @@ void man_logic_init(void)
 {
    opcd_param_t params[] =
    {
-      {"pitch_roll_p", &pitch_roll_speed_max},
+      {"pitch_roll_speed_max", &pitch_roll_speed_max},
       {"pitch_roll_angle_max", &pitch_roll_angle_max},
       {"vert_speed_max", &vert_speed_max},
       {"horiz_speed_max", &horiz_speed_max},
@@ -129,17 +129,17 @@ static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t
 {
    if (sqrt(pitch * pitch + roll * roll) > tsfloat_get(&gps_deadzone))
    {
+      /* set GPS speed based on sticks input: */
       float vmax_sqrt = sqrt(tsfloat_get(&horiz_speed_max));
       vec2_t pitch_roll_spd_sp = {{vmax_sqrt * pitch, vmax_sqrt * roll}};
       vec2_t ne_spd_sp;
       vec2_rotate(&ne_spd_sp, &pitch_roll_spd_sp, yaw);
       cm_att_set_gps_spd(ne_spd_sp);
       horiz_pos_locked = false;
-      printf("update\n");
    }
    else if (!horiz_pos_locked)
    {
-      printf("locked\n");
+      /* lock GPS position until next sticks activity: */
       horiz_pos_locked = true;
       cm_att_set_gps_pos(*ne_gps_pos);   
    }
