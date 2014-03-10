@@ -51,6 +51,8 @@ vec3_t;
 /* copy vector vi to vo */
 void vec3_copy(vec3_t *vo, vec3_t *vi);
 
+/* scalar product */
+void vec3_mul_scalar(vec3_t *out, vec3_t *in, float scalar);
 
 
 #endif /* __VEC3_H__ */
