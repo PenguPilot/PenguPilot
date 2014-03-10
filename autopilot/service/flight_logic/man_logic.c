@@ -138,8 +138,10 @@ static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t
    //{
       vec2_t local_spd_sp = {{vmax_sqrt * pitch, vmax_sqrt * roll}};
       vec2_t global_spd_sp;
-      vec2_rotate(&global_spd_sp, &local_spd_sp, -yaw);
-      cm_att_set_gps_spd(global_spd_sp);
+      vec2_rotate(&global_spd_sp, &local_spd_sp, yaw);
+      global_spd_sp.x = 0;
+      global_spd_sp.y = 0;
+      cm_att_set_gps_pos(global_spd_sp);
    //   horiz_pos_locked = false;
    //}
    //else if (!horiz_pos_locked)
