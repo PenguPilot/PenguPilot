@@ -244,7 +244,6 @@ void main_step(float dt,
       pos_in.pos_e = gps_rel_data.de;
       pos_in.speed_n = gps_rel_data.speed_n;
       pos_in.speed_e = gps_rel_data.speed_e;
-      //EVERY_N_TIMES(10, printf("%f %f\n", pos_in.speed_n, pos_in.speed_e));
       ONCE(mag_decl = mag_decl_lookup(gps_data->lat, gps_data->lon);
            gps_start_set(gps_data);
            LOG(LL_ERROR, "declination lookup yields: %f", mag_decl));
@@ -255,7 +254,7 @@ void main_step(float dt,
    flight_state = flight_state_update(&marg_data->acc.vec[0]);
    if (flight_state == FS_STANDING && pos_in.ultra_u == 7.0)
    {
-      pos_in.ultra_u = 0.0;
+      pos_in.ultra_u = 0.2;
    }
 
    /* perform sensor data fusion: */
@@ -320,8 +319,6 @@ void main_step(float dt,
 
    /* RUN ATT NORTH/EAST SPEED CONTROLLER: */
    vec2_t a_ne;
-   pos_est.ne_speed.x = 0;
-   pos_est.ne_speed.y = 0;
    ne_speed_ctrl_run(&a_ne, &ne_speed_sp, dt, &pos_est.ne_speed);
    vec3_t a_neu = {{a_ne.x, a_ne.y, a_u}}, f_neu;
    vec3_mul_scalar(&f_neu, &a_neu, platform.mass_kg); /* f[i] = a[i] * m, makes ctrl device-independent */
@@ -330,7 +327,7 @@ void main_step(float dt,
    vec2_t pitch_roll_sp;
    float thrust;
    att_thrust_calc(&pitch_roll_sp, &thrust, &f_neu, euler.yaw, platform.max_thrust_n, 0);
-   EVERY_N_TIMES(10, printf("%f %f %f %f %f\n", euler.yaw, f_ne.x, f_ne.y, pitch_roll_sp.x, pitch_roll_sp.y));
+   //EVERY_N_TIMES(10, printf("%f %f %f %f %f\n", euler.yaw, f_neu.x, f_neu.y, pitch_roll_sp.x, pitch_roll_sp.y));
 
    if (cm_att_is_angles())
    {
@@ -399,9 +396,8 @@ void main_step(float dt,
    /* write motors: */
    if (!override_hw)
    {
-      //platform_write_motors(setpoints);
+      platform_write_motors(setpoints);
    }
-
 
    /* set monitoring data: */
    mon_data_set(pos_est.ne_pos.n - navi_get_dest_n(),

@@ -32,7 +32,7 @@
 int drotek_marg2_init(drotek_marg2_t *marg2, i2c_bus_t *bus)
 {
    THROW_BEGIN();
-   THROW_ON_ERR(mpu6050_init(&marg2->mpu, bus, /*MPU6050_DLPF_CFG_94_98Hz*/MPU6050_DLPF_CFG_44_42Hz, MPU6050_FS_SEL_2000, MPU6050_AFS_SEL_8G));
+   THROW_ON_ERR(mpu6050_init(&marg2->mpu, bus, MPU6050_DLPF_CFG_94_98Hz, MPU6050_FS_SEL_2000, MPU6050_AFS_SEL_8G));
    THROW_ON_ERR(hmc5883_init(&marg2->hmc, bus));
    THROW_END();
 }
