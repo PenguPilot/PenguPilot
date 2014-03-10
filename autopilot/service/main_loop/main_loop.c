@@ -286,9 +286,7 @@ void main_step(float dt,
    acc_mag_cal_apply(&marg_data->acc, &marg_data->mag);
    flight_state = flight_state_update(&marg_data->acc.vec[0]);
    if (flight_state == FS_STANDING && pos_in.ultra_u == 7.0)
-   {
       pos_in.ultra_u = 0.2;
-   }
 
    /* compute orientation estimate: */
    euler_t euler;
@@ -329,13 +327,9 @@ void main_step(float dt,
       }
    }
    else if (cm_u_is_spd())
-   {
       a_u_rel = u_speed_step(cm_u_setp(), pos_est.baro_u.speed, 0.0f, dt);
-   }
    else
-   {
       a_u_rel = cm_u_setp();
-   }
    a_u_rel = fmin(a_u_rel, channels[CH_GAS] /*cm_u_acc_limit()*/);
    float a_u = a_u_rel * platform.max_thrust_n;
 
@@ -347,9 +341,7 @@ void main_step(float dt,
       navi_run(&ne_speed_sp, &pos_est.ne_pos, dt);
    }
    else if (cm_att_is_gps_spd())
-   {
       ne_speed_sp = cm_att_setp();
-   }
 
    /* execute north/east speed controller: */
    vec2_t a_ne; /* acceleration vector in north/east direction */
@@ -363,9 +355,7 @@ void main_step(float dt,
    att_thrust_calc(&pitch_roll_sp, &thrust, &f_neu, euler.yaw, platform.max_thrust_n, 0);
 
    if (cm_att_is_angles())
-   {
       pitch_roll_sp = cm_att_setp(); /* direct attitude angle control */
-   }
 
    /* execute attitude angles controller: */
    vec2_t att_err;
@@ -389,14 +379,9 @@ void main_step(float dt,
    /* execute yaw position controller: */
    float yaw_speed_sp, yaw_err;
    if (cm_yaw_is_pos())
-   {
-      float sp = cm_yaw_setp();
-      yaw_speed_sp = yaw_ctrl_step(&yaw_err, sp, euler.yaw, marg_data->gyro.z, dt);
-   }
+      yaw_speed_sp = yaw_ctrl_step(&yaw_err, cm_yaw_setp(), euler.yaw, marg_data->gyro.z, dt);
    else
-   {
       yaw_speed_sp = cm_yaw_setp(); /* direct yaw speed control */
-   }
    piid_sp[PIID_YAW] = yaw_speed_sp;
 
    /* execut stabilizing PIID controller: */
@@ -420,9 +405,7 @@ void main_step(float dt,
    piid_int_enable(platform_ac_calc(setpoints, motors_spinning(), voltage, rpm_square));
    
    if (!((sensor_status & RC_VALID) && channels[CH_SWITCH_L] < 0.5))
-   {
       memset(setpoints, 0, sizeof(float) * platform.n_motors);
-   }
 
    /* write motors: */
    if (!override_hw)

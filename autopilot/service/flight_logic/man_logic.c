@@ -52,6 +52,7 @@ static tsfloat_t pitch_roll_angle_max;
 static tsfloat_t vert_speed_max;
 static tsfloat_t horiz_speed_max;
 static tsfloat_t gps_deadzone;
+static tsfloat_t gas_deadzone;
 static tsfloat_t yaw_speed_max;
 
 static bool vert_pos_locked = true;
@@ -67,6 +68,7 @@ void man_logic_init(void)
       {"vert_speed_max", &vert_speed_max},
       {"horiz_speed_max", &horiz_speed_max},
       {"gps_deadzone", &gps_deadzone},
+      {"gas_deadzone", &gas_deadzone},
       {"yaw_speed_max", &yaw_speed_max},
       OPCD_PARAMS_END
    };
@@ -103,17 +105,17 @@ static void handle_mode_update(man_mode_t mode)
 
 static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos)
 {
-   /*if (fabs(gas_stick) > 0.2f)
-   {*/
+   if (fabs(gas_stick) > tsfloat_get(&gas_deadzone))
+   {
       float vmax = tsfloat_get(&vert_speed_max);
       cm_u_set_spd(gas_stick * vmax);
       vert_pos_locked = false;
-   /*}
+   }
    else if (!vert_pos_locked)
    {
       vert_pos_locked = true;
       cm_u_set_baro_pos(u_baro_pos);
-   }*/
+   }
 }
 
 
@@ -209,9 +211,7 @@ void man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANN
       case MAN_RELAXED:
       {
          set_att_angles(pitch, roll);
-         cm_u_set_ultra_pos(1.0);
-         //cm_u_set_acc(gas_stick);
-         //set_vertical_spd_or_pos(gas_stick - 0.5, u_baro_pos);
+         set_vertical_spd_or_pos(gas_stick - 0.5, u_baro_pos);
          break;
       }
 

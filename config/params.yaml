@@ -93,6 +93,7 @@ pilot:
       vert_speed_max: 0.3
       horiz_speed_max: 1.3 # maximal horizontal speed
       gps_deadzone: 0.1 # if magnitude of gps speed sticks are lower than this value, gps position is locked
+      gas_deadzone: 0.1 # if magnitude of centered gas stick is lower than this value, altitude is locked
 
    controllers:
 
@@ -154,7 +155,7 @@ pilot:
 
    kalman_pos:
       ultra_noise: 0.1
-      baro_noise: 0.1
+      baro_noise: 1.0
       gps_noise: 0.03
       process_noise: 1.0e-6
 
