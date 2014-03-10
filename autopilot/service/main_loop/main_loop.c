@@ -292,30 +292,30 @@ void main_step(float dt,
    
    /* RUN U POSITION AND SPEED CONTROLLER: */
    float u_err = 0.0f;
-   float f_u_rel = 0.0f;
+   float a_u_rel = 0.0f;
    if (cm_u_is_pos())
    {
       if (cm_u_is_baro_pos())
       {
-         f_u_rel = u_ctrl_step(cm_u_setp(), pos_est.baro_u.pos, pos_est.baro_u.speed, dt);
+         a_u_rel = u_ctrl_step(cm_u_setp(), pos_est.baro_u.pos, pos_est.baro_u.speed, dt);
          u_err = cm_u_setp() - pos_est.baro_u.pos;
       }
       else
       {
-         f_u_rel = u_ctrl_step(cm_u_setp(), pos_est.ultra_u.pos, pos_est.ultra_u.speed, dt);
+         a_u_rel = u_ctrl_step(cm_u_setp(), pos_est.ultra_u.pos, pos_est.ultra_u.speed, dt);
          u_err = cm_u_setp() - pos_est.ultra_u.pos;
       }
    }
    else if (cm_u_is_spd())
    {
-      f_u_rel = u_speed_step(cm_u_setp(), pos_est.baro_u.speed, 0.0f, dt);
+      a_u_rel = u_speed_step(cm_u_setp(), pos_est.baro_u.speed, 0.0f, dt);
    }
    else
    {
-      f_u_rel = cm_u_setp();
+      a_u_rel = cm_u_setp();
    }
-   f_u_rel = fmin(f_u_rel, channels[CH_GAS] /*cm_u_acc_limit()*/);
-   float f_u = f_u_rel * platform.max_thrust_n;
+   a_u_rel = fmin(a_u_rel, channels[CH_GAS] /*cm_u_acc_limit()*/);
+   float a_u = a_u_rel * platform.max_thrust_n;
 
    vec2_t ne_speed_sp = {{0.0f, 0.0f}};
    if (cm_att_is_gps_pos())
@@ -328,15 +328,15 @@ void main_step(float dt,
       ne_speed_sp = cm_att_setp(); /* direct attitude speed control */
    }
 
-   ne_speed_sp.x = 1;
-   ne_speed_sp.y = 0;
    /* RUN ATT NORTH/EAST SPEED CONTROLLER: */
-   vec2_t f_ne;
+   vec2_t a_ne;
    pos_est.ne_speed.x = 0;
    pos_est.ne_speed.y = 0;
-   ne_speed_ctrl_run(&f_ne, &ne_speed_sp, dt, &pos_est.ne_speed);
+   ne_speed_ctrl_run(&a_ne, &ne_speed_sp, dt, &pos_est.ne_speed);
+   vec3_t a_neu = {{a_ne.x, a_ne.y, a_u}}, f_neu;
+   vec3_mul_scalar(&f_neu, &a_neu, platform.mass_kg); /* f[i] = a[i] * m, makes ctrl device-independent */
    
-   vec3_t f_neu = {{f_ne.x, f_ne.y, f_u}};
+   /* run NEU forces optimizer: */
    vec2_t pitch_roll_sp;
    float thrust;
    att_thrust_calc(&pitch_roll_sp, &thrust, &f_neu, euler.yaw, platform.max_thrust_n, 0);
