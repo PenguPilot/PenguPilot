@@ -63,6 +63,7 @@
 #include "../flight_logic/flight_logic.h"
 #include "../blackbox/blackbox.h"
 #include "../filters/average.h"
+#include "../filters/filter.h"
 
 
 static bool calibrate = false;
@@ -97,6 +98,10 @@ f_local_t;
 
 static int marg_err = 0;
 static pos_in_t pos_in;
+static calibration_t rc_cal;
+static Filter1 rc_valid_filter;
+static float rc_lost_timer  = 0.0f;
+
 
 
 void main_init(int argc, char *argv[])
@@ -185,9 +190,14 @@ void main_init(int argc, char *argv[])
    avg_init(&avgs[1], 0.0);
    avg_init(&avgs[2], -9.81);
 
+   cal_init(&rc_cal, 3, 500);
+   filter1_lp_init(&rc_valid_filter, 0.5f, REALTIME_PERIOD, 1);
+
    mon_init();
    LOG(LL_INFO, "entering main loop");
 }
+
+
 
 
 
@@ -228,6 +238,22 @@ void main_step(float dt,
    }
    marg_err = 0;
    
+   float rc_valid_f = (sensor_status & RC_VALID) ? 1.0f : 0.0f;
+   filter1_run(&rc_valid_filter, &rc_valid_f, &rc_valid_f);
+   if (rc_valid_f < 0.5f)
+      rc_lost_timer += dt;
+   else
+      rc_lost_timer = 0.0f;
+   if (rc_lost_timer > 1.0)
+      sensor_status |= RC_VALID;
+   else
+      sensor_status &= ~RC_VALID;
+   
+   float cal_channels[3] = {channels[CH_PITCH], channels[CH_ROLL], channels[CH_YAW]};
+   cal_sample_apply(&rc_cal, cal_channels);
+   channels[CH_PITCH] = cal_channels[0];
+   channels[CH_ROLL] = cal_channels[1];
+   channels[CH_YAW] = cal_channels[2];
 
    /* perform gyro calibration: */
    if (cal_sample_apply(&gyro_cal, &marg_data->gyro.vec[0]) == 0 && gyro_moved(&marg_data->gyro))
@@ -396,7 +422,7 @@ void main_step(float dt,
    /* write motors: */
    if (!override_hw)
    {
-      platform_write_motors(setpoints);
+      //platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */
