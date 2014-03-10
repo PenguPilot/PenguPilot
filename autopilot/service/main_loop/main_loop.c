@@ -100,7 +100,7 @@ static int marg_err = 0;
 static pos_in_t pos_in;
 static calibration_t rc_cal;
 static Filter1 rc_valid_filter;
-static float rc_lost_timer  = 0.0f;
+static float rc_lost_timer = 1.0f;
 
 
 
@@ -238,6 +238,7 @@ void main_step(float dt,
    }
    marg_err = 0;
    
+   /* run rc signal low-pass filter: */
    float rc_valid_f = (sensor_status & RC_VALID) ? 1.0f : 0.0f;
    filter1_run(&rc_valid_filter, &rc_valid_f, &rc_valid_f);
    if (rc_valid_f < 0.5f)
@@ -245,15 +246,19 @@ void main_step(float dt,
    else
       rc_lost_timer = 0.0f;
    if (rc_lost_timer > 1.0)
-      sensor_status |= RC_VALID;
-   else
       sensor_status &= ~RC_VALID;
+   else
+      sensor_status |= RC_VALID;
    
-   float cal_channels[3] = {channels[CH_PITCH], channels[CH_ROLL], channels[CH_YAW]};
-   cal_sample_apply(&rc_cal, cal_channels);
-   channels[CH_PITCH] = cal_channels[0];
-   channels[CH_ROLL] = cal_channels[1];
-   channels[CH_YAW] = cal_channels[2];
+   /* apply calibration if remote control input is valid: */
+   if (sensor_status & RC_VALID)
+   {
+      float cal_channels[3] = {channels[CH_PITCH], channels[CH_ROLL], channels[CH_YAW]};
+      cal_sample_apply(&rc_cal, cal_channels);
+      channels[CH_PITCH] = cal_channels[0];
+      channels[CH_ROLL] = cal_channels[1];
+      channels[CH_YAW] = cal_channels[2];
+   }
 
    /* perform gyro calibration: */
    if (cal_sample_apply(&gyro_cal, &marg_data->gyro.vec[0]) == 0 && gyro_moved(&marg_data->gyro))
@@ -263,6 +268,7 @@ void main_step(float dt,
       cal_reset(&gyro_cal);
    }
 
+   /* update relative gps position, if we have a fix: */
    if (sensor_status & GPS_VALID)
    {
       gps_util_update(&gps_rel_data, gps_data);
@@ -270,9 +276,10 @@ void main_step(float dt,
       pos_in.pos_e = gps_rel_data.de;
       pos_in.speed_n = gps_rel_data.speed_n;
       pos_in.speed_e = gps_rel_data.speed_e;
+      /* compute declination and start gps position once: */
       ONCE(mag_decl = mag_decl_lookup(gps_data->lat, gps_data->lon);
            gps_start_set(gps_data);
-           LOG(LL_ERROR, "declination lookup yields: %f", mag_decl));
+           LOG(LL_ERROR, "declination lookup yields: %f deg", rad2deg(mag_decl)));
    }
 
    /* acc/mag calibration: */
@@ -283,29 +290,29 @@ void main_step(float dt,
       pos_in.ultra_u = 0.2;
    }
 
-   /* perform sensor data fusion: */
+   /* compute orientation estimate: */
    euler_t euler;
    int ahrs_state = cal_ahrs_update(&euler, marg_data, mag_decl, dt);
    if (ahrs_state < 0 || !cal_complete(&gyro_cal))
       return;
    ONCE(init = 1; LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
 
-   /* local ACC to NEU ACC rotation: */
+   /* rotate local ACC measurements into global NEU reference frame: */
    vec3_t world_acc;
    body_to_neu(btn, &world_acc, &euler, &marg_data->acc);
    
-   /* center global ACC readings using previous value: */
+   /* center global ACC readings: */
    FOR_N(i, 3)
       pos_in.acc.vec[i] = world_acc.vec[i] - avg_calc(&avgs[i], world_acc.vec[i]);
 
-   /* compute next 3d position estimate: */
+   /* compute next 3d position estimate using Kalman filters: */
    pos_t pos_est;
    pos_update(&pos_est, &pos_in);
    
    /* execute flight logic (sets cm_x parameters used below): */
    flight_logic_run(sensor_status, 1, channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos);
    
-   /* RUN U POSITION AND SPEED CONTROLLER: */
+   /* execute up position/speed controller(s): */
    float u_err = 0.0f;
    float a_u_rel = 0.0f;
    if (cm_u_is_pos())
@@ -332,24 +339,25 @@ void main_step(float dt,
    a_u_rel = fmin(a_u_rel, channels[CH_GAS] /*cm_u_acc_limit()*/);
    float a_u = a_u_rel * platform.max_thrust_n;
 
+   /* execute north/east navigation and/or read speed vector input: */
    vec2_t ne_speed_sp = {{0.0f, 0.0f}};
    if (cm_att_is_gps_pos())
    {
       navi_set_dest(cm_att_setp());
-      navi_run(&ne_speed_sp, &pos_est.ne_pos, dt); /* attitude navigation control */
+      navi_run(&ne_speed_sp, &pos_est.ne_pos, dt);
    }
    else if (cm_att_is_gps_spd())
    {
-      ne_speed_sp = cm_att_setp(); /* direct attitude speed control */
+      ne_speed_sp = cm_att_setp();
    }
 
-   /* RUN ATT NORTH/EAST SPEED CONTROLLER: */
-   vec2_t a_ne;
+   /* execute north/east speed controller: */
+   vec2_t a_ne; /* acceleration vector in north/east direction */
    ne_speed_ctrl_run(&a_ne, &ne_speed_sp, dt, &pos_est.ne_speed);
    vec3_t a_neu = {{a_ne.x, a_ne.y, a_u}}, f_neu;
    vec3_mul_scalar(&f_neu, &a_neu, platform.mass_kg); /* f[i] = a[i] * m, makes ctrl device-independent */
    
-   /* run NEU forces optimizer: */
+   /* execute NEU forces optimizer: */
    float thrust;
    vec2_t pitch_roll_sp;
    att_thrust_calc(&pitch_roll_sp, &thrust, &f_neu, euler.yaw, platform.max_thrust_n, 0);
@@ -358,9 +366,8 @@ void main_step(float dt,
    {
       pitch_roll_sp = cm_att_setp(); /* direct attitude angle control */
    }
-   //EVERY_N_TIMES(10, printf("%f %f\n", pitch_roll_sp.x, pitch_roll_sp.y));
 
-   /* RUN ATT ANGLE CONTROLLER: */
+   /* execute attitude angles controller: */
    vec2_t att_err;
    vec2_t pitch_roll_speed = {{marg_data->gyro.y, marg_data->gyro.x}};
    vec2_t pitch_roll_ctrl;
@@ -379,11 +386,10 @@ void main_step(float dt,
       piid_sp[PIID_ROLL] = setp.y;
    }
 
-   /* RUN YAW CONTROLLER: */
+   /* execute yaw position controller: */
    float yaw_speed_sp, yaw_err;
    if (cm_yaw_is_pos())
    {
-      /* yaw position control */
       float sp = cm_yaw_setp();
       yaw_speed_sp = yaw_ctrl_step(&yaw_err, sp, euler.yaw, marg_data->gyro.z, dt);
    }
@@ -391,15 +397,14 @@ void main_step(float dt,
    {
       yaw_speed_sp = cm_yaw_setp(); /* direct yaw speed control */
    }
-
    piid_sp[PIID_YAW] = yaw_speed_sp;
 
-   /* RUN STABLIZING PIID CONTROLLER: */
+   /* execut stabilizing PIID controller: */
    f_local_t f_local = {{thrust, 0.0f, 0.0f, 0.0f}};
    float piid_gyros[3] = {marg_data->gyro.x, -marg_data->gyro.y, marg_data->gyro.z};
    piid_run(&f_local.vec[1], piid_gyros, piid_sp);
 
-   /* computation of rpm ^ 2 out of the desired forces */
+   /* computate rpm ^ 2 out of the desired forces: */
    inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
 
    /* update motors state: */
