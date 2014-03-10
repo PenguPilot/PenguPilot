@@ -76,8 +76,6 @@ static interval_t gyro_move_interval;
 static int init = 0;
 static body_to_neu_t *btn;
 static flight_state_t flight_state;
-static float acc_prev[3] = {0.0f, 0.0f, -9.81f};
-static float ultra_u_prev = 0.0f;
 
 
 static avg_data_t avgs[3];
@@ -259,14 +257,6 @@ void main_step(float dt,
    {
       pos_in.ultra_u = 0.0;
    }
-   if (fabs(ultra_u_prev - pos_in.ultra_u) > 1.0)
-   {
-      pos_in.ultra_u = ultra_u_prev;   
-   }
-   else
-   {
-      ultra_u_prev = pos_in.ultra_u;
-   }
 
    /* perform sensor data fusion: */
    euler_t euler;
@@ -337,7 +327,7 @@ void main_step(float dt,
    ne_speed_ctrl_run(&f_ne, &ne_speed_sp, dt, &pos_est.ne_speed);
    
    vec3_t f_neu = {{f_ne.x, f_ne.y, f_u}};
-   vec2_t pitch_roll_sp;
+   vec2_t pitch_roll_sp = {{0.0f, 0.0f}};
    float thrust;
    att_thrust_calc(&pitch_roll_sp, &thrust, &f_neu, euler.yaw, platform.max_thrust_n, 0);
 
@@ -350,9 +340,8 @@ void main_step(float dt,
    vec2_t att_err;
    vec2_t pitch_roll_speed = {{marg_data->gyro.y, marg_data->gyro.x}};
    vec2_t pitch_roll_ctrl;
-   vec2_t pitch_roll = {{euler.pitch, euler.roll}};
+   vec2_t pitch_roll = {{-euler.pitch, euler.roll}};
    att_ctrl_step(&pitch_roll_ctrl, &att_err, dt, &pitch_roll, &pitch_roll_speed, &pitch_roll_sp);
-   EVERY_N_TIMES(10, printf("%f %f\n", pitch_roll_ctrl.x, pitch_roll_ctrl.y));
  
    float piid_sp[3] = {0.0f, 0.0f, 0.0f};
    piid_sp[PIID_PITCH] = pitch_roll_ctrl.x;
@@ -383,8 +372,8 @@ void main_step(float dt,
 
    /* RUN STABLIZING PIID CONTROLLER: */
    f_local_t f_local = {{thrust, 0.0f, 0.0f, 0.0f}};
-   marg_data->gyro.vec[1] *= -1;
-   piid_run(&f_local.vec[1], marg_data->gyro.vec, piid_sp);
+   float piid_gyros[3] = {marg_data->gyro.x, -marg_data->gyro.y, marg_data->gyro.z};
+   piid_run(&f_local.vec[1], piid_gyros, piid_sp);
 
    /* computation of rpm ^ 2 out of the desired forces */
    inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
@@ -401,11 +390,17 @@ void main_step(float dt,
    /* compute motor set points out of rpm ^ 2: */
    piid_int_enable(platform_ac_calc(setpoints, motors_spinning(), voltage, rpm_square));
    
+   if (!((sensor_status & RC_VALID) && channels[CH_SWITCH_L] < 0.5))
+   {
+      memset(setpoints, 0, sizeof(float) * platform.n_motors);
+   }
+
    /* write motors: */
    if (!override_hw)
    {
-      //platform_write_motors(setpoints);
+      platform_write_motors(setpoints);
    }
+
 
    /* set monitoring data: */
    mon_data_set(pos_est.ne_pos.n - navi_get_dest_n(),
