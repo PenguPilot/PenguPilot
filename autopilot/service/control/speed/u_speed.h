@@ -28,9 +28,9 @@
 #define __U_SPEED_H__
 
 
-float u_speed_step(float setpoint, float pos, float speed, float dt);
+float u_speed_step(float setpoint, float pos, float dt);
 
-void u_speed_init(float neutral_gas);
+void u_speed_init(void);
 
 void u_speed_reset(void);
 

@@ -124,10 +124,9 @@ pilot:
          d: 0.1
 
       u_speed:
-         d: 0.02
-         i: 0.002
-         imax: 0.03
-         p: 0.1
+         p: 5.0
+         i: 0.05
+         imax: 0.25
 
       u_pos:
          p: 0.2 
@@ -154,8 +153,8 @@ pilot:
          ortho_p: 0.0
 
    kalman_pos:
-      ultra_noise: 0.1
-      baro_noise: 1.0
+      ultra_noise: 0.05
+      baro_noise: 0.05
       gps_noise: 0.03
       process_noise: 1.0e-6
 

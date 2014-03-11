@@ -58,12 +58,13 @@ void flight_logic_init(void)
 }
 
 
-void flight_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos)
+void flight_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos, float f_max, float mass)
+
 {
    switch (flight_mode)
    {
       case MODE_MANUAL:
-         man_logic_run(sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos);
+         man_logic_run(sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos, f_max, mass);
          break;
 
       case MODE_SAFE_AUTO:

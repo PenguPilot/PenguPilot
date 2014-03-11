@@ -115,6 +115,7 @@ static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos)
    {
       vert_pos_locked = true;
       cm_u_set_baro_pos(u_baro_pos);
+      u_ctrl_reset(); /* reset u ctrl integrator, if present */
    }
 }
 
@@ -169,7 +170,7 @@ static void emergency_landing(bool gps_valid, vec2_t *ne_gps_pos, float u_ultra_
 }
 
 
-void man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos)
+void man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos, float f_max, float mass)
 {
    float pitch = channels[CH_PITCH];
    float roll = channels[CH_ROLL];
@@ -204,7 +205,7 @@ void man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANN
       case MAN_SPORT:
       {
          set_pitch_roll_rates(pitch, roll);
-         cm_u_set_acc(gas_stick);
+         cm_u_set_acc(f_max / mass * (gas_stick - 0.5));
          break;
       }
 
