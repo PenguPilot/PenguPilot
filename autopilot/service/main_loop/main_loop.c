@@ -314,9 +314,12 @@ void main_step(float dt,
    {
       if (cm_u_is_baro_pos())
       {
+         /*u_err = cm_u_setp() - pos_est.baro_u.pos;
+         EVERY_N_TIMES(10, printf("%f\n", u_err));
+         float v_u_setp = u_err * 0.3;
+         a_u = u_speed_step(v_u_setp, pos_est.baro_u.speed, dt);*/
+         a_u = u_ctrl_step(cm_u_setp(), pos_est.baro_u.pos, pos_est.baro_u.speed, dt);
          u_err = cm_u_setp() - pos_est.baro_u.pos;
-         float v_u_setp = copysign(1.0, u_err) * sqrtf(fabs(u_err)) * 0.2;
-         a_u = u_speed_step(v_u_setp, pos_est.baro_u.speed, dt);
       }
       else
       {
@@ -381,7 +384,7 @@ void main_step(float dt,
       yaw_speed_sp = cm_yaw_setp(); /* direct yaw speed control */
    piid_sp[PIID_YAW] = yaw_speed_sp;
 
-   /* execut stabilizing PIID controller: */
+   /* execute stabilizing PIID controller: */
    f_local_t f_local = {{thrust, 0.0f, 0.0f, 0.0f}};
    float piid_gyros[3] = {marg_data->gyro.x, -marg_data->gyro.y, marg_data->gyro.z};
    piid_run(&f_local.vec[1], piid_gyros, piid_sp);
