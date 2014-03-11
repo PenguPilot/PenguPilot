@@ -32,6 +32,7 @@
 #include "../hardware/util/calibration.h"
 #include "../util/logger/logger.h"
 #include "../util/math/conv.h"
+#include "../util/math/linfunc.h"
 #include "../util/time/interval.h"
 #include "../main_loop/main_loop.h"
 #include "../control/position/navi.h"
@@ -105,12 +106,40 @@ static void handle_mode_update(man_mode_t mode)
 }
 
 
+static float gas_func(float g, float d)
+{
+   float dz_l = -d / 2.0;
+   float dz_r = d / 2.0;
+   linfunc_t left, right;
+   vec2_t pr1 = {{0.5f, 0.5f}};
+   vec2_t pr2 = {{dz_r, 0.0f}};
+   linfunc_init_points(&right, &pr1, &pr2);
+   vec2_t pl1 = {{-0.5f, -0.5f}};
+   vec2_t pl2 = {{dz_l, 0.0f}};
+   linfunc_init_points(&left, &pl1, &pl2);
+   if (g < dz_l)
+   {
+      return linfunc_calc(&left, g);
+   }
+   else if (g > dz_r)
+   {
+      return linfunc_calc(&right, g);
+   }
+   else
+   {
+     return 0.0f;
+   }
+}
+
+
+
 static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos)
 {
-   if (fabs(gas_stick) > tsfloat_get(&gas_deadzone))
+   float dz = tsfloat_get(&gas_deadzone);
+   if (fabs(gas_stick) > dz)
    {
       float vmax = tsfloat_get(&vert_speed_max);
-      cm_u_set_spd(gas_stick * vmax);
+      cm_u_set_spd(gas_func(gas_stick, dz) * vmax);
       vert_pos_locked = false;
    }
    else if (!vert_pos_locked)
@@ -132,7 +161,7 @@ static void set_pitch_roll_rates(float pitch, float roll)
 
 static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t *ne_gps_pos, float u_ultra_pos)
 {
-   if (sqrt(pitch * pitch + roll * roll) > tsfloat_get(&gps_deadzone) || u_ultra_pos < 0.5)
+   if (1) //sqrt(pitch * pitch + roll * roll) > tsfloat_get(&gps_deadzone) || u_ultra_pos < 0.5)
    {
       /* set GPS speed based on sticks input: */
       float vmax_sqrt = sqrt(tsfloat_get(&horiz_speed_max));
@@ -223,7 +252,7 @@ void man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANN
       {
          set_horizontal_spd_or_pos(pitch, roll, yaw, ne_gps_pos, u_ultra_pos);
          //cm_u_set_ultra_pos(1.0);
-         cm_u_set_acc(gas_stick);
+         cm_u_set_acc(f_max / mass * (gas_stick - 0.5));
          //set_vertical_spd_or_pos(gas_stick - 0.5, u_baro_pos);
          break;
       }
