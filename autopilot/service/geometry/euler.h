@@ -11,7 +11,7 @@
   
  Euler Angles Interface
 
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -51,13 +51,13 @@ float normalize_euler_0_2pi(float a);
 void euler_normalize(euler_t *euler);
 
 
-struct body_to_world;
-typedef struct body_to_world body_to_world_t;
+struct body_to_neu;
+typedef struct body_to_neu body_to_neu_t;
 
 
-body_to_world_t *body_to_world_create(void);
+body_to_neu_t *body_to_neu_create(void);
 
-void body_to_world_transform(body_to_world_t *btw, vec3_t *world, const euler_t *euler, const vec3_t *body);
+void body_to_neu(body_to_neu_t *btw, vec3_t *world, const euler_t *euler, const vec3_t *body);
 
 
 #endif /* __EULER_H__ */

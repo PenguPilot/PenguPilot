@@ -11,7 +11,7 @@
   
  North-East Speed Controller Implementation
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -35,7 +35,6 @@
 #include "../util/pid.h"
 
 
-static tsfloat_t angle_max;
 static tsfloat_t speed_p;
 static tsfloat_t speed_i;
 static tsfloat_t speed_i_max;
@@ -50,7 +49,6 @@ void ne_speed_ctrl_init(void)
    /* load parameters: */
    opcd_param_t params[] =
    {
-      {"angle_max", &angle_max.value},
       {"p", &speed_p.value},
       {"i", &speed_i.value},
       {"i_max", &speed_i_max.value},
@@ -75,24 +73,12 @@ void ne_speed_ctrl_reset(void)
 }
 
 
-void ne_speed_ctrl_run(vec2_t *pitch_roll_ctrl, const vec2_t *setp, const float dt, const vec2_t *speed, float yaw)
+void ne_speed_ctrl_run(vec2_t *forces, const vec2_t *setp, const float dt, const vec2_t *speed)
 {
-   vec2_t ne_ctrl;
-   /* run global speed controllers: */
    FOR_EACH(i, controllers)
    {
       float error = setp->vec[i] - speed->vec[i];
-      ne_ctrl.vec[i] = -pid_control(&controllers[i], error, 0.0, dt);
+      forces->vec[i] = sym_limit(pid_control(&controllers[i], error, 0.0, dt), 1.0);
    }
-   
-   /* rotate global speed feedback into local coordinates: */
-   vec2_t _pitch_roll_ctrl;
-   vec2_rotate(&_pitch_roll_ctrl, &ne_ctrl, yaw);
-   
-   /* limit speed controller output: */
-   FOR_EACH(i, controllers)
-   {
-      pitch_roll_ctrl->vec[i] = sym_limit(_pitch_roll_ctrl.vec[i], deg2rad(tsfloat_get(&angle_max)));
-   } 
 }
 

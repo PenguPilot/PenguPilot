@@ -11,7 +11,7 @@
   
  3D Vector Interface
 
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -51,6 +51,8 @@ vec3_t;
 /* copy vector vi to vo */
 void vec3_copy(vec3_t *vo, vec3_t *vi);
 
+/* scalar product */
+void vec3_mul_scalar(vec3_t *out, vec3_t *in, float scalar);
 
 
 #endif /* __VEC3_H__ */

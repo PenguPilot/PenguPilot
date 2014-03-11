@@ -11,9 +11,9 @@
   
  ARCADE Quadrotor Platform
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
- Copyright (C) 2012 Alexander Barth, Ilmenau University of Technology
- Copyright (C) 2012 Benjamin Jahn, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2013 Alexander Barth, Ilmenau University of Technology
+ Copyright (C) 2013 Benjamin Jahn, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@
 #include "../hardware/drivers/i2cxl/i2cxl_reader.h"
 #include "../hardware/drivers/ms5611/ms5611_reader.h"
 #include "../hardware/drivers/rc_dsl/rc_dsl_reader.h"
-#include "../hardware/drivers/scl_voltage/scl_voltage.h"
+#include "../hardware/drivers/scl_power/scl_power.h"
 #include "../hardware/util/rc_channels.h"
 #include "drotek_marg2.h"
 #include "holger_quad.h"
@@ -52,7 +52,6 @@
 
 
 static i2c_bus_t i2c_3;
-static deadzone_t deadzone;
 static rc_channels_t rc_channels;
 static uint8_t channel_mapping[MAX_CHANNELS] =  {0, 1, 3, 2, 4, 5}; /* pitch: 0, roll: 1, yaw: 3, gas: 2, switch left: 4, switch right: 5 */
 static float channel_scale[MAX_CHANNELS] =  {1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
@@ -113,8 +112,8 @@ int arcade_quad_init(platform_t *plat, int override_hw)
    /* inverse coupling matrix for ARCADE quadrotor: */
    const float icmatrix[4 * N_MOTORS] =
    {         /* gas     roll    pitch    yaw */
-      /* m1 */ imtx1,   0.0f,  imtx2, -imtx3,
-      /* m2 */ imtx1,   0.0f, -imtx2, -imtx3,
+      /* m1 */ imtx1,   0.0f, -imtx2, -imtx3,
+      /* m2 */ imtx1,   0.0f,  imtx2, -imtx3,
       /* m3 */ imtx1, -imtx2,   0.0f,  imtx3,
       /* m4 */ imtx1,  imtx2,   0.0f,  imtx3
    };
@@ -130,14 +129,13 @@ int arcade_quad_init(platform_t *plat, int override_hw)
    
   
    plat->max_thrust_n = 40.0f;
-   plat->mass_kg = 0.95f;
+   plat->mass_kg = 1.1f;
    plat->n_motors = N_MOTORS;
 
    LOG(LL_INFO, "initializing inverse coupling matrix");
    inv_coupling_init(&plat->inv_coupling, N_MOTORS, icmatrix);
-      
-   deadzone_init(&deadzone, 0.01f, 1.0f, 1.0f);
-   rc_channels_init(&rc_channels, channel_mapping, channel_scale, &deadzone);
+
+   rc_channels_init(&rc_channels, channel_mapping, channel_scale, NULL);
 
    if (!override_hw)
    {
@@ -183,12 +181,12 @@ int arcade_quad_init(platform_t *plat, int override_hw)
       }
       plat->read_rc = read_rc;
 
-      if (scl_voltage_init() < 0)
+      if (scl_power_init() < 0)
       {
-         LOG(LL_ERROR, "could not initialize voltage reader");
+         LOG(LL_ERROR, "could not initialize power reader");
          exit(1);
       }
-      plat->read_voltage = scl_voltage_read;
+      plat->read_power = scl_power_read;
    }
 
    LOG(LL_INFO, "arcade_quadro platform initialized");

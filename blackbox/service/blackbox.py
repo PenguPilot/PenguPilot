@@ -13,7 +13,7 @@
   
  Blackbox Service
 
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
  GNU General Public License for more details. """
 
 
-from os import sep, symlink, unlink
+from os import sep, symlink, unlink, fsync
 from scl import generate_map
 from misc import daemonize, user_data_dir
 from datetime import datetime
@@ -50,6 +50,8 @@ def main(name):
       f = open(new_file, "wb")
       while True:
          f.write(socket.recv())
+         #f.flush()
+         #fsync(f.fileno())
    finally:
       try:
          f.close()

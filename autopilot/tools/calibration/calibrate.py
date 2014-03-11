@@ -14,7 +14,7 @@
  reads mag/acc log text file from stdin and writes
  calibration to stdout
 
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  Development of this code has been supported by the Department of Computer Science,
  Universita' degli Studi di Torino, Italy within the Piemonte Project

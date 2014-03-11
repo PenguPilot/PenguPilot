@@ -13,7 +13,7 @@
   
  OPCD Python Binding
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ class OPCD_Interface:
       return rep
 
 
-   def get(self, id):
+   def get(self, id, return_list = False):
       req = CtrlReq()
       req.type = CtrlReq.GET
       if self.prefix:
@@ -70,7 +70,10 @@ class OPCD_Interface:
       if len(pairs) == 0:
          return
       elif len(pairs) == 1:
-         return pairs[0][1]
+         if return_list:
+            return pairs[0]
+         else:
+            return pairs[0][1]
       else:
          return pairs
 

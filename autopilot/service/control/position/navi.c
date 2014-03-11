@@ -11,8 +11,8 @@
   
  Navigation Implementation
 
- Copyright (C) 2011 Tobias Simon, Ilmenau University of Technology
- Copyright (C) 2011 Jan Roemisch, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2013 Jan Roemisch, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -48,7 +48,6 @@ static tsfloat_t square_shift;
 static tsfloat_t pos_i;
 static tsfloat_t pos_i_max;
 static tsfloat_t ortho_p;
-static tsint_t direct_speed_ctrl;
 
 
 /* vectors for use in navigation algorithm: */
@@ -107,7 +106,6 @@ void navi_init(void)
       {"pos_i", &pos_i},
       {"pos_i_max", &pos_i_max},
       {"ortho_p", &ortho_p},
-      {"direct_speed_ctrl", &direct_speed_ctrl},
       OPCD_PARAMS_END
    };
    opcd_params_apply("controllers.navigation.", params);
@@ -144,8 +142,8 @@ void navi_set_dest_n(float n)
 
 void navi_set_dest(vec2_t vec)
 {
-   navi_set_dest_n(vec.x);  
-   navi_set_dest_e(vec.y);  
+   navi_set_dest_n(vec.y);  
+   navi_set_dest_e(vec.x);  
 }
 
 

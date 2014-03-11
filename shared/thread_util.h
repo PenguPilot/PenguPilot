@@ -8,10 +8,10 @@
  |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
-  
- SCL Voltage Reader Interface
 
- Copyright (C) 2011 Tobias Simon, Ilmenau University of Technology
+ Thread Utils Interface
+
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,15 +24,12 @@
  GNU General Public License for more details. */
 
 
-
-#ifndef __SCL_VOLTAGE_H__
-#define __SCL_VOLTAGE_H__
-
-
-int scl_voltage_init(void);
-
-int scl_voltage_read(float *voltage);
+#ifndef __THREAD_UTILS_H__
+#define __THREAD_UTILS_H__
 
 
-#endif /* __SCL_VOLTAGE_H__ */
+void display_thread_sched_attr(const char *msg);
+
+
+#endif /* __THREAD_UTILS_H__ */
 

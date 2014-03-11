@@ -11,7 +11,7 @@
   
  RC DSL Reader Implementation
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,8 +24,6 @@
  GNU General Public License for more details. */
 
 
-
-#include <pthread.h>
 #include <string.h>
 
 
@@ -33,6 +31,7 @@
 #include <serial.h>
 #include <simple_thread.h>
 #include <opcd_interface.h>
+#include <pthread.h>
 
 
 #include "rc_dsl_reader.h"
@@ -40,7 +39,7 @@
 
 
 #define THREAD_NAME       "rc_dsl_reader"
-#define THREAD_PRIORITY   0
+#define THREAD_PRIORITY   98
 
 
 #define RSSI_MIN RSSI_SCALE(7)
@@ -50,7 +49,8 @@ static simple_thread_t thread;
 static serialport_t port;
 static rc_dsl_t rc_dsl;
 static char *dev_path = NULL;
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutexattr_t mutexattr;   
+static pthread_mutex_t mutex;
 static float channels[RC_DSL_CHANNELS];
 static int sig_valid = 0;
 
@@ -96,6 +96,9 @@ int rc_dsl_reader_init(void)
    opcd_params_apply("sensors.rc_dsl.", params);
    THROW_ON_ERR(serial_open(&port, dev_path, 38400, 0, 0, 0));
    rc_dsl_init(&rc_dsl);
+   pthread_mutexattr_init(&mutexattr); 
+   pthread_mutexattr_setprotocol(&mutexattr, PTHREAD_PRIO_INHERIT); 
+   pthread_mutex_init(&mutex, &mutexattr);
    simple_thread_start(&thread, thread_func, THREAD_NAME, THREAD_PRIORITY, NULL);
 
    THROW_END();

@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 #
 # iwlistparse.py
-# Hugo Chargois - 17 jan. 2010 - v.0.1
+# Hugo Chargois - 17 jan. 2014 - v.0.1
 # Parses the output of iwlist scan into a table
 
 # Above is the original copyright notice from the author
 # Below is mine!
 
 # iwlistparse2.py
-# Modified by Vuong Do Thanh Huy - 21 April 2012 - v.1.0
+# Modified by Vuong Do Thanh Huy - 21 April 2014 - v.1.0
 # This is the version for Netbook with small screen,
 #  since it only outputs the max bit rates, not the full list of bit rates.
 

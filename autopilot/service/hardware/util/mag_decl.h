@@ -12,7 +12,7 @@
  
  Magnetic Declination Lookup Table Interface
  
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
  Copyright (C) Adam M Rivera
  With direction from: Andrew Tridgell, Jason Short, Justin Beech
  Adapted from: http://www.societyofrobots.com/robotforum/index.php?topic=11855.0

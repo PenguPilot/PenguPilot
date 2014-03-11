@@ -1,5 +1,5 @@
 # ----------------------------------------
-# Copyright (C) 2008-2011  Frank Paehlke
+# Copyright (C) 2008-2014  Frank Paehlke
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License

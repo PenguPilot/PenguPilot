@@ -11,7 +11,7 @@
   
  Platform Abstraction Interface
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@ typedef struct
    int (*read_gps)(gps_data_t *gps_data);
    int (*read_ultra)(float *ultra);
    int (*read_baro)(float *baro);
-   int (*read_voltage)(float *voltage);
+   int (*read_power)(float *voltage, float *current);
    
    /* actuators: */
    int (*write_motors)(float *setpoints);
@@ -84,7 +84,7 @@ int platform_read_ultra(float *ultra);
 int platform_read_baro(float *baro);
 
 
-int platform_read_voltage(float *voltage);
+int platform_read_power(float *voltage, float *current);
 
 
 int platform_ac_calc(float *setpoints, const int enabled, const float voltage, const float *forces);
@@ -96,13 +96,19 @@ int platform_ac_calc(float *setpoints, const int enabled, const float voltage, c
 #define GPS_VALID     0x08
 #define ULTRA_VALID   0x10
 #define BARO_VALID    0x20
-#define VOLTAGE_VALID 0x40
+#define POWER_VALID   0x40
 #define RC_VALID      0x80
 #define MARG_VALID    (GYRO_VALID | ACC_VALID | MAG_VALID)
-#define SENSORS_VALID (MARG_VALID | GPS_VALID | ULTRA_VALID | BARO_VALID | VOLTAGE_VALID | RC_VALID)
+#define SENSORS_VALID (MARG_VALID | GPS_VALID | ULTRA_VALID | BARO_VALID | POWER_VALID | RC_VALID)
 
 
-uint16_t platform_read_sensors(marg_data_t *marg_data, gps_data_t *gps_data, float *ultra, float *baro, float *voltage, float channels[MAX_CHANNELS]);
+uint16_t platform_read_sensors(marg_data_t *marg_data,
+                               gps_data_t *gps_data,
+                               float *ultra,
+                               float *baro,
+                               float *voltage,
+                               float *current,
+                               float channels[MAX_CHANNELS]);
 
 
 int platform_write_motors(float *setpoints);

@@ -32,7 +32,7 @@
 #include "../platform/platform.h"
 
 
-extern char *blackbox_spec[22];
+extern char *blackbox_spec[25];
 
 
 /* initialize blackbox */
@@ -46,6 +46,7 @@ void blackbox_record(float dt,
                float ultra,
                float baro,
                float voltage,
+               float current,
                float channels[MAX_CHANNELS],
                uint16_t sensor_status);
 

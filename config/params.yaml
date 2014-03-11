@@ -11,7 +11,7 @@
 #
 # System Parameters Configuration File
 #
-# Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+# Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ powerman:
    gpio_i2c_address: 0x11
    gpio_power_pin: 0
    battery_cells: 4
-   battery_low_cell_voltage: 3.3
+   battery_low_cell_voltage: 3.5
    low_voltage_hysteresis: 10.0 # battery needs to go below battery_low_cell_voltage for this time period in order to trigger a low power event
    battery_capacity: 6.6
    power_save_timeout: 60.0
@@ -67,7 +67,7 @@ pilot:
       details: 2
 
    ahrs:
-      beta: 0.1
+      beta: 0.05
       yaw_bias: -0.1999999999999993
       pitch_bias: 0.019999999999999962
       roll_bias: -0.02
@@ -86,12 +86,14 @@ pilot:
       mag_scale_y: 1.0
       mag_scale_z: 1.0
 
-   sticks:
-      pitch_roll_p: 3.0
-      pitch_roll_angle_max: 45.0
-      yaw_p: 2.0
+   manual_control:
+      pitch_roll_speed_max: 45.0 # [deg/s]
+      pitch_roll_angle_max: 45.0 # [deg]
+      yaw_speed_max: 45.0 # maximum yaw rotation speed [deg/s]
       vert_speed_max: 0.3
-      horiz_speed_max: 1.3
+      horiz_speed_max: 1.3 # maximal horizontal speed
+      gps_deadzone: 0.1 # if magnitude of gps speed sticks are lower than this value, gps position is locked
+      gas_deadzone: 0.1 # if magnitude of centered gas stick is lower than this value, altitude is locked
 
    controllers:
 
@@ -100,10 +102,10 @@ pilot:
          att_ki: 3.13780298778e+00
          att_kii: 3.45789342669e+00
          att_kd: 2.94830266817e-02
-         yaw_kp: 0.08384553006960001 
-         yaw_ki: 0.6275605975560001
-         yaw_kii: 0.691578685338
-         yaw_kd: 0.00589660533634
+         yaw_kp: 0.0417780282447742
+         yaw_ki: 0.3259955464790617
+         yaw_kii: 0.3710534021821698
+         yaw_kd: 0.002657035449808173                                                                                                                                   
          filt_fg: 10.0
          filt_d: 0.95
          jxx_jyy: 0.0097
@@ -111,26 +113,26 @@ pilot:
          tmc: 0.06
 
       ne_speed:
-         p: 0.4
-         i: 0.01
-         i_max: 0.3
-         angle_max: 12.0
-     
-      attitude:
          p: 2.0
+         i: 0.0
+         i_max: 0.0
+      
+      attitude:
+         p: 1.0
          i: 0.01
-         i_max: 0.7
+         i_max: 0.2
          d: 0.1
- 
-      altitude:
-         init_setpoint: 2.0
-         init_mode_is_ground: True
 
       u_speed:
-         p: 0.2
-         i: 0.0
+         p: 5.0
+         i: 0.05
+         imax: 0.25
+
+      u_pos:
+         p: 2.0 
+         i: 0.01                                                                                                                                                       
          imax: 0.2
-         d: 0.1
+         d: 0.2                                                                                                                                                        
 
       yaw:
          p: 0.24
@@ -149,12 +151,11 @@ pilot:
          pos_i: 0.015
          pos_i_max: 5.0
          ortho_p: 0.0
-         direct_speed_ctrl: 1
 
    kalman_pos:
-      ultra_noise: 0.1
-      baro_noise: 1.0
-      gps_noise: 1.0
+      ultra_noise: 0.05
+      baro_noise: 0.05
+      gps_noise: 0.03
       process_noise: 1.0e-6
 
    sensors:

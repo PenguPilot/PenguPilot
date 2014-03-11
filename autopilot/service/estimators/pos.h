@@ -14,8 +14,8 @@
  | 1 dt | * | p | + | 0.5 * dt ^ 2 | * | a | = | p |
  | 0  1 | * | v |   |     dt       |   | v |
  
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
- Copyright (C) 2012 Jan Roemisch, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2013 Jan Roemisch, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -63,6 +63,8 @@ typedef struct
    float baro_u;
    float pos_n;
    float pos_e;
+   float speed_n;
+   float speed_e;
 
    /* control acc input in NEU ground reference frame: */
    vec3_t acc;

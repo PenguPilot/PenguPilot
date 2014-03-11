@@ -11,7 +11,7 @@
   
  RC DSL Reader Implementation
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@
 
 
 #define THREAD_NAME       "rc_dsl_reader"
-#define THREAD_PRIORITY   0
+#define THREAD_PRIORITY   98
 
 
 static simple_thread_t thread;
