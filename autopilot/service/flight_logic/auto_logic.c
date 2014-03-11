@@ -30,6 +30,7 @@
 #include <util.h>
 
 #include "auto_logic.h"
+#include "../platform/platform.h"
 #include "../main_loop/control_mode.h"
 
 
@@ -39,7 +40,7 @@ static tsfloat_t setp_e;
 
 /* up direction in meters: */
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-static float setp_u = 0.7;
+static float setp_u = -10.0;
 static bool mode_is_ground = true;
 
 /* yaw setpoint in rad: */
@@ -57,39 +58,50 @@ void auto_logic_init(void)
 
 
 void auto_logic_run(bool is_full_auto, uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos)
-{
-   pthread_mutex_lock(&mutex);
-   if (mode_is_ground)
-      cm_u_set_ultra_pos(setp_u);
+{ 
+   int rc_valid = sensor_status & RC_VALID;
+   if (is_full_auto || rc_valid)
+   {
+      float gas_stick = channels[CH_GAS];
+      if (is_full_auto || gas_stick > 0.5)
+      {
+         pthread_mutex_lock(&mutex);
+         if (mode_is_ground)
+            cm_u_set_ultra_pos(setp_u);
+         else
+            cm_u_set_baro_pos(setp_u);
+         pthread_mutex_unlock(&mutex);
+      }
+      else
+         cm_u_set_spd((gas_stick - 0.5) * 5.0);
+   }
    else
-      cm_u_set_baro_pos(setp_u);
-   pthread_mutex_unlock(&mutex);
-      
-   float yaw_stick = channels[CH_YAW];
-   cm_yaw_set_spd(yaw_stick * 2.0f);
-   
+      cm_u_set_spd(-0.5);
+
+   if (u_ultra_pos > 1.0)
+   {
+      float yaw_stick = channels[CH_YAW];
+      if (is_full_auto || (rc_valid && fabs(yaw_stick) < 0.05))
+         cm_yaw_set_pos(tsfloat_get(&setp_yaw));
+      else
+         cm_yaw_set_spd(yaw_stick * 2.0f);
+   }
+   else
+      cm_yaw_set_spd(0.0f);   
+
    float pitch = channels[CH_PITCH];
    float roll = channels[CH_ROLL];
-   
-   if (sqrt(pitch * pitch + roll * roll) > 0.1)
-   {
+   if (!is_full_auto && rc_valid && !is_full_auto && sqrt(pitch * pitch + roll * roll) > 0.1)
       hyst_gps_override = 1.0;
-   }
-   else
-   {
-      hyst_gps_override -= 0.006;   
-   }
+   hyst_gps_override -= 0.006;   
 
-   if (!is_full_auto && hyst_gps_override < 0.0)
+   if (hyst_gps_override > 0.0)
    {
-      printf("MANUAL\n");
       vec2_t angles = {{pitch, roll}};
       cm_att_set_angles(angles);
-      hyst_gps_override = 0.0;
    }
    else
    {
-      printf("AUTO\n");
       vec2_t ne_gps_setpoint = {{tsfloat_get(&setp_n), tsfloat_get(&setp_e)}};
       cm_att_set_gps_pos(ne_gps_setpoint);
    }

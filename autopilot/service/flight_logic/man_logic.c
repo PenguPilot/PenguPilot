@@ -34,7 +34,7 @@
 #include "../util/math/conv.h"
 #include "../util/math/linfunc.h"
 #include "../util/time/interval.h"
-#include "../main_loop/main_loop.h"
+#include "../platform/platform.h"
 #include "../control/position/navi.h"
 #include "../control/position/u_ctrl.h"
 #include "../main_loop/control_mode.h"
