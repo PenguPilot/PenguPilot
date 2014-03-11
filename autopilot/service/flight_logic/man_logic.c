@@ -34,6 +34,8 @@
 #include "../util/math/conv.h"
 #include "../util/time/interval.h"
 #include "../main_loop/main_loop.h"
+#include "../control/position/navi.h"
+#include "../control/position/u_ctrl.h"
 #include "../main_loop/control_mode.h"
 
 
@@ -128,9 +130,9 @@ static void set_pitch_roll_rates(float pitch, float roll)
 }
 
 
-static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t *ne_gps_pos)
+static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t *ne_gps_pos, float u_ultra_pos)
 {
-   if (sqrt(pitch * pitch + roll * roll) > tsfloat_get(&gps_deadzone))
+   if (sqrt(pitch * pitch + roll * roll) > tsfloat_get(&gps_deadzone) || u_ultra_pos < 0.5)
    {
       /* set GPS speed based on sticks input: */
       float vmax_sqrt = sqrt(tsfloat_get(&horiz_speed_max));
@@ -143,6 +145,7 @@ static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t
    else if (!horiz_pos_locked)
    {
       /* lock GPS position until next sticks activity: */
+      navi_reset();
       horiz_pos_locked = true;
       cm_att_set_gps_pos(*ne_gps_pos);   
    }
@@ -161,7 +164,7 @@ static void emergency_landing(bool gps_valid, vec2_t *ne_gps_pos, float u_ultra_
 {
    cm_u_set_spd(-0.5f);
    if (gps_valid)
-      set_horizontal_spd_or_pos(0.0f, 0.0f, 0.0f, ne_gps_pos);
+      set_horizontal_spd_or_pos(0.0f, 0.0f, 0.0f, ne_gps_pos, u_ultra_pos);
    else
       set_att_angles(0.0f, 0.0f);
    
@@ -218,7 +221,7 @@ void man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANN
 
       case MAN_NOVICE:
       {
-         set_horizontal_spd_or_pos(pitch, roll, yaw, ne_gps_pos);
+         set_horizontal_spd_or_pos(pitch, roll, yaw, ne_gps_pos, u_ultra_pos);
          //cm_u_set_ultra_pos(1.0);
          cm_u_set_acc(gas_stick);
          //set_vertical_spd_or_pos(gas_stick - 0.5, u_baro_pos);
