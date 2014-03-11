@@ -161,8 +161,8 @@ void main_init(int argc, char *argv[])
    ne_speed_ctrl_init();
    att_ctrl_init();
    yaw_ctrl_init();
-   u_ctrl_init(platform.mass_kg * 10.0f / platform.max_thrust_n);
-   u_speed_init(platform.mass_kg * 10.0f / platform.max_thrust_n);
+   u_ctrl_init();
+   u_speed_init();
    navi_init();
 
    LOG(LL_INFO, "initializing command interface");
@@ -196,9 +196,6 @@ void main_init(int argc, char *argv[])
    mon_init();
    LOG(LL_INFO, "entering main loop");
 }
-
-
-
 
 
 
@@ -308,30 +305,29 @@ void main_step(float dt,
    pos_update(&pos_est, &pos_in);
    
    /* execute flight logic (sets cm_x parameters used below): */
-   flight_logic_run(sensor_status, 1, channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos);
+   flight_logic_run(sensor_status, 1, channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg);
    
    /* execute up position/speed controller(s): */
    float u_err = 0.0f;
-   float a_u_rel = 0.0f;
+   float a_u = 0.0f;
    if (cm_u_is_pos())
    {
       if (cm_u_is_baro_pos())
       {
-         a_u_rel = u_ctrl_step(cm_u_setp(), pos_est.baro_u.pos, pos_est.baro_u.speed, dt);
          u_err = cm_u_setp() - pos_est.baro_u.pos;
+         float v_u_setp = copysign(1.0, u_err) * sqrtf(fabs(u_err)) * 0.2;
+         a_u = u_speed_step(v_u_setp, pos_est.baro_u.speed, dt);
       }
       else
       {
-         a_u_rel = u_ctrl_step(cm_u_setp(), pos_est.ultra_u.pos, pos_est.ultra_u.speed, dt);
+         a_u = u_ctrl_step(cm_u_setp(), pos_est.ultra_u.pos, pos_est.ultra_u.speed, dt);
          u_err = cm_u_setp() - pos_est.ultra_u.pos;
       }
    }
    else if (cm_u_is_spd())
-      a_u_rel = u_speed_step(cm_u_setp(), pos_est.baro_u.speed, 0.0f, dt);
+      a_u = u_speed_step(cm_u_setp(), pos_est.baro_u.speed, dt);
    else
-      a_u_rel = cm_u_setp();
-   a_u_rel = fmin(a_u_rel, channels[CH_GAS] /*cm_u_acc_limit()*/);
-   float a_u = a_u_rel * platform.max_thrust_n;
+      a_u = cm_u_setp();
 
    /* execute north/east navigation and/or read speed vector input: */
    vec2_t ne_speed_sp = {{0.0f, 0.0f}};
@@ -348,7 +344,8 @@ void main_step(float dt,
    ne_speed_ctrl_run(&a_ne, &ne_speed_sp, dt, &pos_est.ne_speed);
    vec3_t a_neu = {{a_ne.x, a_ne.y, a_u}}, f_neu;
    vec3_mul_scalar(&f_neu, &a_neu, platform.mass_kg); /* f[i] = a[i] * m, makes ctrl device-independent */
-   
+   f_neu.z += platform.mass_kg * 10.0f;
+
    /* execute NEU forces optimizer: */
    float thrust;
    vec2_t pitch_roll_sp;
@@ -410,7 +407,7 @@ void main_step(float dt,
    /* write motors: */
    if (!override_hw)
    {
-      //platform_write_motors(setpoints);
+      platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */
