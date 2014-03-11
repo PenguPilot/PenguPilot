@@ -12,8 +12,8 @@
   
  Protoc Builder
 
- Copyright (C) 2011 Tobias Simon, Ilmenau University of Technology
- Copyright (C) 2011 Scott Stafford
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Scott Stafford
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by

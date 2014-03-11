@@ -11,7 +11,7 @@
   
  up speed controller implementation
  
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -35,21 +35,19 @@
 static pid_controller_t ctrl;
 
 
-static float u_neutral_gas;
 static tsfloat_t speed_p;
 static tsfloat_t speed_i;
 static tsfloat_t speed_imax;
-static tsfloat_t speed_d;
 
 
-float u_speed_step(float setpoint, float speed, float acc, float dt)
+float u_speed_step(float setpoint, float pos, float dt)
 {   
-   float err = setpoint - speed;
-   return u_neutral_gas + pid_control(&ctrl, err, acc, dt);
+   float err = setpoint - pos;
+   return pid_control(&ctrl, err, 0.0f, dt);
 }
 
 
-void u_speed_init(float neutral_gas)
+void u_speed_init(void)
 {
    ASSERT_ONCE();
    
@@ -57,14 +55,12 @@ void u_speed_init(float neutral_gas)
    {
       {"p", &speed_p},
       {"i", &speed_i},
-      {"d", &speed_d},
       {"imax", &speed_imax},
       OPCD_PARAMS_END
    };
    opcd_params_apply("controllers.u_speed.", params);
 
-   pid_init(&ctrl, &speed_p, &speed_i, &speed_d, &speed_imax);
-   u_neutral_gas = neutral_gas;
+   pid_init(&ctrl, &speed_p, &speed_i, NULL, &speed_imax);
 }
 
 

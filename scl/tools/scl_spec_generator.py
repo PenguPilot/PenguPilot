@@ -16,7 +16,7 @@
  REQ <-> REP: 1 shared link
  PUB --> SUB: 1 publisher, multiple subscribers
 
- Copyright (C) 2010 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by

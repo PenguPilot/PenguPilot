@@ -11,8 +11,8 @@
   
  Modified OMAP3-PWM ESC Implementation
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
- Copyright (C) 2012 Jan Roemisch, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Jan Roemisch, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by

@@ -410,7 +410,7 @@ class vec3:
 
         >>> a=vec3(1.0, 0.5, -1.8)
         >>> print abs(a)
-        2.11896201004
+        2.11896201404
         """
         return math.sqrt(self*self)
 
@@ -483,7 +483,7 @@ class vec3:
 
         >>> a=vec3(1.0, 0.5, -1.8)
         >>> print a.length()
-        2.11896201004
+        2.11896201404
         """
 
         return math.sqrt(self*self)

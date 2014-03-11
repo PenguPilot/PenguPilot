@@ -29,8 +29,9 @@
 
 
 #include <pthread.h>
+#include <unistd.h>
 
-#include "thread_realtime.h"
+#include "thread_util.h"
 
 
 typedef struct
@@ -38,7 +39,6 @@ typedef struct
    char *name;
    pthread_t handle;
    volatile int running;
-   pthread_attr_t attr;
    struct sched_param sched_param;
    void *private;
 }
@@ -48,10 +48,11 @@ simple_thread_t;
 #define SIMPLE_THREAD_BEGIN(name) \
    static void *name(void *__arg) \
    { \
-      simple_thread_t *thread = (simple_thread_t *)__arg;
+      simple_thread_t *thread = (simple_thread_t *)__arg; \
+      sched_setscheduler(getpid(), SCHED_FIFO, &thread->sched_param);
 
 #define SIMPLE_THREAD_LOOP_BEGIN \
-   thread_stack_prefault(); \
+   display_thread_sched_attr(thread->name); \
    while (thread->running) \
    {
 

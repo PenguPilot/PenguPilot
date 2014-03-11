@@ -8,10 +8,11 @@
  |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
-  
- Thread Realtime Interface
- 
- Copyright (C) 2010 Tobias Simon, Ilmenau University of Technology
+
+ Thread Utils Implementation
+
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Most of the code is taken from: http://linux.die.net/man/3/pthread_getschedparam
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,5 +25,27 @@
  GNU General Public License for more details. */
 
 
-void thread_stack_prefault(void);
+#include <pthread.h>
+#include <stdio.h>
+
+
+static void display_sched_attr(int policy, struct sched_param *param)
+{
+    fprintf(stderr, "    policy=%s, priority=%d\n",
+            (policy == SCHED_FIFO)  ? "SCHED_FIFO" :
+            (policy == SCHED_RR)    ? "SCHED_RR" :
+            (policy == SCHED_OTHER) ? "SCHED_OTHER" :
+            "???",
+            param->sched_priority);
+}
+
+
+void display_thread_sched_attr(const char *msg)
+{
+    int policy;
+    struct sched_param param;
+    pthread_getschedparam(pthread_self(), &policy, &param);
+    fprintf(stderr, "%s\t", msg);
+    display_sched_attr(policy, &param);
+}
 

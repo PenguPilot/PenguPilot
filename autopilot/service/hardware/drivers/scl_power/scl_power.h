@@ -9,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Thread Realtime Interface
- 
- Copyright (C) 2010 Tobias Simon, Ilmenau University of Technology
+ SCL Power Reader Interface
+
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,13 +24,14 @@
  GNU General Public License for more details. */
 
 
-#include <string.h>
+#ifndef __SCL_POWER_H__
+#define __SCL_POWER_H__
 
-#include "thread_config.h"
+
+int scl_power_init(void);
+
+int scl_power_read(float *voltage, float *current);
 
 
-void thread_stack_prefault(void)
-{
-   char dummy[THREAD_STACK_SIZE];
-   memset(&dummy, 0, THREAD_STACK_SIZE);
-}
+#endif /* __SCL_POWER_H__ */
+

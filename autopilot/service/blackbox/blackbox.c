@@ -42,14 +42,16 @@ static msgpack_sbuffer *msgpack_buf = NULL;
 static msgpack_packer *pk = NULL;
 
 
-char *blackbox_spec[22] = {
+char *blackbox_spec[25] = {
    "dt", /* time delta */
    "gyro_x", "gyro_y", "gyro_z", /* gyro */
    "acc_x", "acc_y", "acc_z", /* acc */
    "mag_x", "mag_y", "mag_z", /* mag */
    "lat", "lon", /* gps */
+   "gps_course", "gps_speed", /* gps */
    "ultra", "baro", /* ultra / baro */
    "voltage", /* voltage */
+   "current", /* current */
    "rc_pitch", "rc_roll", "rc_yaw", "rc_gas", "rc_sw_l", "rc_sw_r", /* rc */
    "sensor_status" /* sensors */
 };
@@ -88,6 +90,7 @@ void blackbox_record(float dt,
                float ultra,
                float baro,
                float voltage,
+               float current,
                float channels[MAX_CHANNELS],
                uint16_t sensor_status)
 {
@@ -98,8 +101,10 @@ void blackbox_record(float dt,
    PACKFV(marg_data->acc.vec, 3);
    PACKFV(marg_data->mag.vec, 3);
    PACKD(gps_data->lat); PACKD(gps_data->lon);
+   PACKF(gps_data->course); PACKF(gps_data->speed);
    PACKF(ultra); PACKF(baro);
    PACKF(voltage);
+   PACKF(current);
    PACKFV(channels, 6);
    PACKI(sensor_status);
    scl_copy_send_dynamic(blackbox_socket, msgpack_buf->data, msgpack_buf->size);

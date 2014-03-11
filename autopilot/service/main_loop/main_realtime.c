@@ -11,7 +11,7 @@
   
  Real-Time Main Implementation
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -51,12 +51,15 @@ static void main_realtime_init(void)
    LOG(LL_INFO, "setting up real-time scheduling");
    sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
    sched_setscheduler(getpid(), SCHED_FIFO, &sp);
-
+   
    if (nice(-20) == -1)
    {
       LOG(LL_ERROR, "could not renice process");
       die();
    }
+   
+   thread->sched_param.sched_priority = 97;
+   pthread_setschedparam(pthread_self(), SCHED_FIFO, &thread->sched_param);
 
    if (mlockall(MCL_CURRENT | MCL_FUTURE) != 0)
    {
@@ -82,8 +85,8 @@ void main_realtime(int argc, char *argv[])
    PERIODIC_THREAD_LOOP_BEGIN
    {
       dt = interval_measure(&interval);
-      uint16_t sensor_status = platform_read_sensors(&marg_data, &gps_data, &ultra_z, &baro_z, &voltage, channels);
-      main_step(dt, &marg_data, &gps_data, ultra_z, baro_z, voltage, channels, sensor_status, 0);
+      sensor_status = platform_read_sensors(&marg_data, &gps_data, &ultra_z, &baro_z, &voltage, &current, channels);
+      main_step(dt, &marg_data, &gps_data, ultra_z, baro_z, voltage, current, channels, sensor_status, 0);
    }
    PERIODIC_THREAD_LOOP_END
 }

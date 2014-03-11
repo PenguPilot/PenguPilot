@@ -11,7 +11,7 @@
   
  Inverse Coupling Matrix Implementation
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -33,6 +33,8 @@
 
 void inv_coupling_init(inv_coupling_t *inv_coupling, const size_t n_motors, const float *init)
 {
+   ASSERT_ONCE();
+
    /* allocate inverse coupling matrix :*/
    inv_coupling->matrix = m_get(n_motors, 4);
    ASSERT_NOT_NULL(inv_coupling->matrix);

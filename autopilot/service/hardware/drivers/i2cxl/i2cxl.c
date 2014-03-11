@@ -11,7 +11,7 @@
   
  MaxSonar I2CXL Driver Implementation
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -51,8 +51,7 @@ int i2cxl_read(i2cxl_t *i2cxl, float *dist)
    /* start measurement: */
    THROW_ON_ERR(i2c_write(&i2cxl->i2c_dev, I2CXL_RANGE_COMMAND));
 
-   /* sleep at least 60ms - we do 70 for safety: */
-   msleep(70);
+   msleep(80);
    
    /* read back the result: */
    uint8_t raw[2];

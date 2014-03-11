@@ -11,7 +11,7 @@
   
  GPS Util Interface
 
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -35,8 +35,10 @@
 
 typedef struct
 {
-   double de; /* delta east in meters */
-   double dn; /* delta north in meters */
+   float dn; /* delta north in meters */
+   float de; /* delta east in meters */
+   float speed_n;
+   float speed_e;
 }
 gps_rel_data_t;
 

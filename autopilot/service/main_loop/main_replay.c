@@ -11,7 +11,7 @@
   
  Replay Main Implementation
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -34,20 +34,7 @@
 #include "../blackbox/blackbox.h"
 
 
-static char *names[] = {
-   "dt", /* 0 time delta */
-   "gyro_x", "gyro_y", "gyro_z", /* 1, 2, 3 gyro */
-   "acc_x", "acc_y", "acc_z", /* 4, 5, 6 acc */
-   "mag_x", "mag_y", "mag_z", /* 7, 8, 9 mag */
-   "lat", "lon", /* 10, 11 gps */
-   "ultra", "baro", /* 12, 13 ultra / baro */
-   "voltage", /* 14, voltage */
-   "rc_pitch", "rc_roll", "rc_yaw", "rc_gas", "rc_sw_l", "rc_sw_r", /* 15, 16, 17, 18, 19, 20 rc */
-   "sensor_status" /* 21 sensors */
-};
-
-
-#define INPUT_VARIABLES (sizeof(names) / sizeof(char *))
+#define INPUT_VARIABLES (sizeof(blackbox_spec) / sizeof(char *))
 
 
 static int get_index(char *name)
@@ -161,15 +148,18 @@ void main_replay(int argc, char *argv[])
       }
       gps_data.lat = double_data[10];
       gps_data.lon = double_data[11];
-      ultra_z = double_data[12];
-      baro_z = double_data[13];
-      voltage = double_data[14];
+      gps_data.course = double_data[12];
+      gps_data.speed = double_data[13];
+      ultra_z = double_data[14];
+      baro_z = double_data[15];
+      voltage = double_data[16];
+      current = double_data[17];
       FOR_N(i, MAX_CHANNELS)
       {
-         channels[i] = double_data[15 + i];
+         channels[i] = double_data[18 + i];
       }
-      uint16_t sensor_status = int_data[21];
-      main_step(dt, &marg_data, &gps_data, ultra_z, baro_z, voltage, channels, sensor_status, 1);
+      sensor_status = int_data[24];
+      main_step(dt, &marg_data, &gps_data, ultra_z, baro_z, voltage, current, channels, sensor_status, 1);
    }
    free(buffer);
    msgpack_unpacked_destroy(&msg);

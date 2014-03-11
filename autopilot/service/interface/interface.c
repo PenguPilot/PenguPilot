@@ -11,7 +11,7 @@
   
  Autopilot Command Interface
 
- Copyright (C) 2011 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -37,13 +37,12 @@
 #include "interface.h"
 #include "../platform/platform.h"
 #include "../util/logger/logger.h"
-#include "../control/position/u_ctrl.h"
+#include "../flight_logic/auto_logic.h"
 #include "../control/position/navi.h"
-#include "../control/position/yaw_ctrl.h"
 #include "../main_loop/main_loop.h"
 
 #define THREAD_NAME     "interface"
-#define THREAD_PRIORITY 1
+#define THREAD_PRIORITY 96
 
 
 static gps_data_t gps_start;
@@ -58,72 +57,70 @@ void gps_start_set(gps_data_t *gps_data)
 }
 
 
-void interface_lock(bool value)
+void interface_lock(bool val)
 {
-   locked = value;
+   locked = val;
 }
 
 
 
 
-int set_ctrl_param(CtrlParam param, float value)
+int set_ctrl_param(CtrlParam param, float val)
 {
    int status = 0;
    switch (param)
    {
-      case CTRL_PARAM__POS_E:
+      case CTRL_PARAM__POS_N:
       {
-         LOG(LL_DEBUG, "e pos update: %f", value);
-         navi_set_dest_e(value); // can't fail
+         LOG(LL_DEBUG, "n pos update: %f", val);
+         auto_logic_set_n(val);
          break;
       }
 
-      case CTRL_PARAM__POS_N:
+      case CTRL_PARAM__POS_E:
       {
-         LOG(LL_DEBUG, "n pos update: %f", value);
-         navi_set_dest_n(value); // can't fail
+         LOG(LL_DEBUG, "e pos update: %f", val);
+         auto_logic_set_e(val);
          break;
       }
 
       case CTRL_PARAM__POS_U_GROUND:
       {
-         LOG(LL_DEBUG, "u ground pos update: %f", value);
-         //u_setpoint_t setpoint = {value, 1};
-         //u_ctrl_set_setpoint(setpoint); // can't fail
+         LOG(LL_DEBUG, "u ground pos update: %f", val);
+         auto_logic_set_u_ground(val);
          break;
       }
 
       case CTRL_PARAM__POS_U:
       {
-         LOG(LL_DEBUG, "u pos update: %f", value);
-         //u_setpoint_t setpoint = {value, 0};
-         //u_ctrl_set_setpoint(setpoint);
+         LOG(LL_DEBUG, "u msl pos update: %f", val);
+         auto_logic_set_u_msl(val);
          break;
       }
 
       case CTRL_PARAM__POS_YAW:
       {
-         LOG(LL_DEBUG, "yaw pos update: %f", value);
-         //status = yaw_ctrl_set_pos(value);
+         LOG(LL_DEBUG, "yaw pos update: %f", val);
+         auto_logic_set_yaw(val);
          break;
       }
       
       case CTRL_PARAM__SPEED_NE:
       {
-         LOG(LL_DEBUG, "ne speed update: %f", value);
-         status = navi_set_travel_speed(value);
+         LOG(LL_DEBUG, "ne speed update: %f", val);
+         status = navi_set_travel_speed(val);
          break;
       }
 
       case CTRL_PARAM__SPEED_U:
       {
-         LOG(LL_ERROR, "[not implemented] z speed update: %f", value);
+         LOG(LL_ERROR, "[not implemented] z speed update: %f", val);
          break;
       }
 
       case CTRL_PARAM__SPEED_YAW:
       {
-         LOG(LL_DEBUG, "[not implemented] yaw speed update: %f", value);
+         LOG(LL_DEBUG, "[not implemented] yaw speed update: %f", val);
          break;
       }
    }
@@ -148,7 +145,7 @@ static void check_and_set_ctrl_param(PilotRep *reply, PilotReq *request)
    }
    else if (set_ctrl_param(request->ctrl_data->param, request->ctrl_data->val) != 0)
    {
-      reply->err_msg = "parameter value out of range";
+      reply->err_msg = "parameter val out of range";
       LOG(LL_ERROR, reply->err_msg);
       reply->status = STATUS__E_SEMANTIC;
    }

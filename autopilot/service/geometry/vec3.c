@@ -11,7 +11,7 @@
   
  3D Vector Implementation
 
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -23,15 +23,22 @@
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details. */
 
-
 #include <string.h>
 #include <math.h>
 
+#include <util.h>
 #include "vec3.h"
 
 
 void vec3_copy(vec3_t *vo, vec3_t *vi)
 {
    memcpy(vo, vi, sizeof(vec3_t));   
+}
+
+
+void vec3_mul_scalar(vec3_t *out, vec3_t *in, float scalar)
+{
+   FOR_N(i, 3)
+      out->vec[i] = in->vec[i] * scalar;
 }
 

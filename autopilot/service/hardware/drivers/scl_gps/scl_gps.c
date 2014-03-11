@@ -11,7 +11,7 @@
   
  SCL GPS Data Reader Implementation
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -33,6 +33,10 @@
 #include "scl_gps.h"
 
 
+#define THREAD_PRIORITY 98
+
+
+
 /* if we receive no valid GPS fix for more than this amount of time,
    indicate an error;
    this condition applies if:
@@ -43,10 +47,11 @@
 
 
 
-static gps_data_t gps_data = {FIX_NOT_SEEN, 0, 0, 0, 0};
+static gps_data_t gps_data = {FIX_NOT_SEEN, 0, 0, 0, 0, 0, 0};
 static simple_thread_t thread;
 static void *scl_socket;
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutexattr_t mutexattr;
+static pthread_mutex_t mutex;
 static interval_t interval;
 static float timer = 0.0f;
 
@@ -68,6 +73,8 @@ SIMPLE_THREAD_BEGIN(thread_func)
             gps_data.lat = _gps_data->lat;
             gps_data.lon = _gps_data->lon;
             gps_data.alt = _gps_data->alt;
+            gps_data.course = _gps_data->course;
+            gps_data.speed = _gps_data->speed;
             pthread_mutex_unlock(&mutex);
          }
          SCL_FREE(gps_data, _gps_data);
@@ -83,8 +90,11 @@ int scl_gps_init(void)
    ASSERT_ONCE();
    scl_socket = scl_get_socket("gps");
    ASSERT_NOT_NULL(scl_socket);
-   simple_thread_start(&thread, thread_func, "gps_reader", 0, NULL);
+   pthread_mutexattr_init(&mutexattr);
+   pthread_mutexattr_setprotocol(&mutexattr, PTHREAD_PRIO_INHERIT);
+   pthread_mutex_init(&mutex, &mutexattr);
    interval_init(&interval);
+   simple_thread_start(&thread, thread_func, "gps_reader", THREAD_PRIORITY, NULL);
    return 0;
 }
 

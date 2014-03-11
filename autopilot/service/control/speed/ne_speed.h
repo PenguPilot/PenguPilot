@@ -11,7 +11,7 @@
   
  East-North Speed Controller Interface
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@
 
 void ne_speed_ctrl_init(void);
 
-void ne_speed_ctrl_run(vec2_t *ctrl_body, const vec2_t *setp, const float dt, const vec2_t *speed, float yaw);
+void ne_speed_ctrl_run(vec2_t *ctrl_body, const vec2_t *setp, const float dt, const vec2_t *speed);
 
 
 #endif /* __NE_SPEED_H__ */

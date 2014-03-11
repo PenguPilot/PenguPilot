@@ -11,7 +11,7 @@
   
  Attitude Controller Implementation
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -77,11 +77,9 @@ void att_ctrl_step(vec2_t *ctrl, vec2_t *err, const float dt, const vec2_t *pos,
 {
    FOR_EACH(i, controllers)
    {
-      float error = setp->vec[i] +  pos->vec[i];
+      float error = setp->vec[i] - pos->vec[i];
       err->vec[i] = error;
-      ctrl->vec[i] = -pid_control(&controllers[i], error, speed->vec[i], dt);
+      ctrl->vec[i] = pid_control(&controllers[i], error, speed->vec[i], dt);
    }
-   //printf("pitch %f %f %f\n", pos->x, speed->x, ctrl->x);
-   //printf("roll %f %f %f\n", pos->y, speed->y, ctrl->y);
 }
 
