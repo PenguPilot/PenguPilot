@@ -36,7 +36,15 @@
 
 void flight_logic_init(void);
 
-void flight_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos, float f_max, float mass);
+bool flight_logic_run(uint16_t sensor_status,
+                      bool flying,
+                      float channels[MAX_CHANNELS],
+                      float yaw,
+                      vec2_t *ne_gps_pos,
+                      float u_baro_pos,
+                      float u_ultra_pos,
+                      float f_max,
+                      float mass);
 
 
 #endif /* __FLIGHT_LOGIC_H__ */

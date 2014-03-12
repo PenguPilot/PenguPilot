@@ -38,7 +38,7 @@ void auto_logic_init(void);
 
 
 /* run auto flight logic */
-void auto_logic_run(bool is_full_auto,
+bool auto_logic_run(bool is_full_auto,
                     uint16_t sensor_status,
                     bool flying,
                     float channels[MAX_CHANNELS],

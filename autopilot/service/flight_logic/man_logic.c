@@ -153,8 +153,9 @@ static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos, float u_u
 
 static void set_pitch_roll_rates(float pitch, float roll)
 {
+   float dz = tsfloat_get(&gps_deadzone);
    float rate_max = deg2rad(tsfloat_get(&pitch_roll_speed_max));
-   vec2_t pitch_roll = {{rate_max * stick_dz(pitch, 0.075), rate_max * stick_dz(roll, 0.075)}};
+   vec2_t pitch_roll = {{rate_max * stick_dz(pitch, dz), rate_max * stick_dz(roll, dz)}};
    cm_att_set_rates(pitch_roll);
 }
 
@@ -165,7 +166,8 @@ static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t
    {
       /* set GPS speed based on sticks input: */
       float vmax_sqrt = sqrt(tsfloat_get(&horiz_speed_max));
-      vec2_t pitch_roll_spd_sp = {{vmax_sqrt * stick_dz(pitch, 0.075), vmax_sqrt * stick_dz(roll, 0.075)}};
+      float dz = tsfloat_get(&gps_deadzone);
+      vec2_t pitch_roll_spd_sp = {{vmax_sqrt * stick_dz(pitch, dz), vmax_sqrt * stick_dz(roll, dz)}};
       vec2_t ne_spd_sp;
       vec2_rotate(&ne_spd_sp, &pitch_roll_spd_sp, yaw);
       cm_att_set_gps_spd(ne_spd_sp);
@@ -183,8 +185,9 @@ static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t
 
 void set_att_angles(float pitch, float roll)
 {
+   float dz = tsfloat_get(&gps_deadzone);
    float angle_max = deg2rad(tsfloat_get(&pitch_roll_angle_max));
-   vec2_t pitch_roll = {{angle_max * pitch, angle_max * roll}};
+   vec2_t pitch_roll = {{angle_max * stick_dz(pitch, dz), angle_max * stick_dz(roll, dz)}};
    cm_att_set_angles(pitch_roll);
 }
 
@@ -202,7 +205,7 @@ static void emergency_landing(bool gps_valid, vec2_t *ne_gps_pos, float u_ultra_
 }
 
 
-void man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos, float f_max, float mass)
+bool man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos, float f_max, float mass)
 {
    float pitch = channels[CH_PITCH];
    float roll = channels[CH_ROLL];
@@ -255,5 +258,7 @@ void man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANN
          break;
       }
    }
+
+   return (sensor_status & RC_VALID) && sw_l < 0.5;
 }
 
