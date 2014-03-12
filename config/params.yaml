@@ -87,7 +87,7 @@ pilot:
       mag_scale_z: 1.0
    
    manual_control:
-      pitch_roll_speed_max: 180.0 # [deg/s]
+      pitch_roll_speed_max: 90.0 # [deg/s]
       pitch_roll_angle_max: 45.0 # [deg]
       yaw_speed_max: 360.0 # maximum yaw rotation speed [deg/s]
       vert_speed_max: 3.0

@@ -6,8 +6,8 @@ from msgpack import loads
 import sys
 
 
-MUTATION_RATE = 0.2
-NUM_SAMPLES = 1000
+MUTATION_RATE = 0.1
+NUM_SAMPLES = 200
 
 gates = generate_map('optimizer')
 opcd = OPCD_Interface(gates['opcd_ctrl'])

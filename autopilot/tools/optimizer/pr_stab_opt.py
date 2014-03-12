@@ -6,8 +6,8 @@ from msgpack import loads
 import sys
 
 
-MUTATION_RATE = 0.3
-NUM_SAMPLES = 500
+MUTATION_RATE = 0.1
+NUM_SAMPLES = 300
 
 gates = generate_map('optimizer')
 opcd = OPCD_Interface(gates['opcd_ctrl'])
@@ -33,7 +33,7 @@ while True:
       array = loads(debug.recv())
       gyro = array[1:3]
       setp = array[4:6]
-      fit += (gyro[0] - setp[0]) ** 2 + (gyro[1] - setp[1]) ** 2
+      fit += (gyro[0] - 0.0) ** 2 + (gyro[1] - 0.0) ** 2
    fit /= NUM_SAMPLES
    print 'computed fitness:', fit
    
