@@ -58,7 +58,8 @@ static tsfloat_t gps_deadzone;
 static tsfloat_t gas_deadzone;
 static tsfloat_t yaw_speed_max;
 
-static bool vert_pos_locked = true;
+static bool vert_pos_locked = false;
+
 static bool horiz_pos_locked = true;
 
 
@@ -133,10 +134,10 @@ static float gas_func(float g, float d)
 
 
 
-static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos)
+static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos, float u_ultra_pos)
 {
    float dz = tsfloat_get(&gas_deadzone);
-   if (fabs(gas_stick) > dz)
+   if (fabs(gas_stick) > dz || u_ultra_pos < 1.0)
    {
       float vmax = tsfloat_get(&vert_speed_max);
       cm_u_set_spd(gas_func(gas_stick, dz) * vmax);
@@ -146,7 +147,6 @@ static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos)
    {
       vert_pos_locked = true;
       cm_u_set_baro_pos(u_baro_pos);
-      u_ctrl_reset(); /* reset u ctrl integrator, if present */
    }
 }
 
@@ -161,7 +161,7 @@ static void set_pitch_roll_rates(float pitch, float roll)
 
 static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t *ne_gps_pos, float u_ultra_pos)
 {
-   if (1) //sqrt(pitch * pitch + roll * roll) > tsfloat_get(&gps_deadzone) || u_ultra_pos < 0.5)
+   if (sqrt(pitch * pitch + roll * roll) > tsfloat_get(&gps_deadzone) || u_ultra_pos < 1.0)
    {
       /* set GPS speed based on sticks input: */
       float vmax_sqrt = sqrt(tsfloat_get(&horiz_speed_max));
@@ -244,16 +244,14 @@ void man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANN
       case MAN_RELAXED:
       {
          set_att_angles(pitch, roll);
-         set_vertical_spd_or_pos(gas_stick - 0.5, u_baro_pos);
+         set_vertical_spd_or_pos(gas_stick - 0.5, u_baro_pos, u_ultra_pos);
          break;
       }
 
       case MAN_NOVICE:
       {
          set_horizontal_spd_or_pos(pitch, roll, yaw, ne_gps_pos, u_ultra_pos);
-         //cm_u_set_ultra_pos(1.0);
-         cm_u_set_acc(f_max / mass * (gas_stick - 0.5));
-         //set_vertical_spd_or_pos(gas_stick - 0.5, u_baro_pos);
+         set_vertical_spd_or_pos(gas_stick - 0.5, u_baro_pos, u_ultra_pos);
          break;
       }
    }

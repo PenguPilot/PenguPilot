@@ -67,7 +67,7 @@ pilot:
       details: 2
 
    ahrs:
-      beta: 0.05
+      beta: 0.025
       yaw_bias: -0.1999999999999993
       pitch_bias: 0.019999999999999962
       roll_bias: -0.02
@@ -85,15 +85,15 @@ pilot:
       mag_scale_x: 1.0
       mag_scale_y: 1.0
       mag_scale_z: 1.0
-
+   
    manual_control:
       pitch_roll_speed_max: 45.0 # [deg/s]
       pitch_roll_angle_max: 45.0 # [deg]
       yaw_speed_max: 45.0 # maximum yaw rotation speed [deg/s]
-      vert_speed_max: 0.3
-      horiz_speed_max: 1.3 # maximal horizontal speed
-      gps_deadzone: 0.1 # if magnitude of gps speed sticks are lower than this value, gps position is locked
-      gas_deadzone: 0.1 # if magnitude of centered gas stick is lower than this value, altitude is locked
+      vert_speed_max: 3.0
+      horiz_speed_max: 5.0 # maximal horizontal speed
+      gps_deadzone: 0.05 # if magnitude of gps speed sticks are lower than this value, gps position is locked
+      gas_deadzone: 0.07 # if magnitude of centered gas stick is lower than this value, altitude is locked
 
    controllers:
 
@@ -129,10 +129,10 @@ pilot:
          imax: 0.25
 
       u_pos:
-         p: 2.0 
-         i: 0.01                                                                                                                                                       
-         imax: 0.2
-         d: 0.2                                                                                                                                                        
+         d: 4.0
+         i: 0.0
+         imax: 0.0
+         p: 8.0
 
       yaw:
          p: 0.24
@@ -153,8 +153,8 @@ pilot:
          ortho_p: 0.0
 
    kalman_pos:
-      ultra_noise: 0.05
-      baro_noise: 0.05
+      baro_noise: 0.01
+      ultra_noise: 0.03
       gps_noise: 0.03
       process_noise: 1.0e-6
 

@@ -80,7 +80,7 @@ static flight_state_t flight_state;
 
 
 static avg_data_t avgs[3];
-
+static float avg_acc[3] = {0, 0, 9.81};
 
 typedef union
 {
@@ -298,7 +298,11 @@ void main_step(float dt,
    
    /* center global ACC readings: */
    FOR_N(i, 3)
-      pos_in.acc.vec[i] = world_acc.vec[i] - avg_calc(&avgs[i], world_acc.vec[i]);
+   {
+      pos_in.acc.vec[i] = world_acc.vec[i] - avg_acc[i];
+      float a = 0.001;
+      avg_acc[i] = avg_acc[i] * (1.0 - a) + world_acc.vec[i] * a;
+   }
 
    /* compute next 3d position estimate using Kalman filters: */
    pos_t pos_est;
@@ -314,10 +318,6 @@ void main_step(float dt,
    {
       if (cm_u_is_baro_pos())
       {
-         /*u_err = cm_u_setp() - pos_est.baro_u.pos;
-         EVERY_N_TIMES(10, printf("%f\n", u_err));
-         float v_u_setp = u_err * 0.3;
-         a_u = u_speed_step(v_u_setp, pos_est.baro_u.speed, dt);*/
          a_u = u_ctrl_step(cm_u_setp(), pos_est.baro_u.pos, pos_est.baro_u.speed, dt);
          u_err = cm_u_setp() - pos_est.baro_u.pos;
       }
@@ -331,7 +331,7 @@ void main_step(float dt,
       a_u = u_speed_step(cm_u_setp(), pos_est.baro_u.speed, dt);
    else
       a_u = cm_u_setp();
-
+   
    /* execute north/east navigation and/or read speed vector input: */
    vec2_t ne_speed_sp = {{0.0f, 0.0f}};
    if (cm_att_is_gps_pos())
@@ -398,7 +398,10 @@ void main_step(float dt,
    if (!motors_controllable())
    {
       piid_reset(); /* reset piid integrators so that we can move the device manually */
+      navi_reset();
+      u_ctrl_reset();
       att_ctrl_reset();
+      ne_speed_ctrl_reset();
    }
    
    /* compute motor set points out of rpm ^ 2: */
