@@ -154,7 +154,7 @@ static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos, float u_u
 static void set_pitch_roll_rates(float pitch, float roll)
 {
    float rate_max = deg2rad(tsfloat_get(&pitch_roll_speed_max));
-   vec2_t pitch_roll = {{rate_max * pitch, rate_max * roll}};
+   vec2_t pitch_roll = {{rate_max * stick_dz(pitch, 0.075), rate_max * stick_dz(roll, 0.075)}};
    cm_att_set_rates(pitch_roll);
 }
 
@@ -165,7 +165,7 @@ static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t
    {
       /* set GPS speed based on sticks input: */
       float vmax_sqrt = sqrt(tsfloat_get(&horiz_speed_max));
-      vec2_t pitch_roll_spd_sp = {{vmax_sqrt * stick_dz(pitch, 0.05), vmax_sqrt * stick_dz(roll, 0.05)}};
+      vec2_t pitch_roll_spd_sp = {{vmax_sqrt * stick_dz(pitch, 0.075), vmax_sqrt * stick_dz(roll, 0.075)}};
       vec2_t ne_spd_sp;
       vec2_rotate(&ne_spd_sp, &pitch_roll_spd_sp, yaw);
       cm_att_set_gps_spd(ne_spd_sp);
@@ -221,7 +221,7 @@ void man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANN
       sw_r = 0.0f;
    }
 
-   cm_yaw_set_spd(yaw_stick * deg2rad(tsfloat_get(&yaw_speed_max))); /* the only applied mode in manual operation */
+   cm_yaw_set_spd(stick_dz(yaw_stick, 0.075) * deg2rad(tsfloat_get(&yaw_speed_max))); /* the only applied mode in manual operation */
    man_mode_t man_mode = channel_to_man_mode(sw_r);
    #if 0
    if (man_mode == MAN_NOVICE && (!(sensor_status & GPS_VALID)))
