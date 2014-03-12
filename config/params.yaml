@@ -87,9 +87,9 @@ pilot:
       mag_scale_z: 1.0
    
    manual_control:
-      pitch_roll_speed_max: 45.0 # [deg/s]
+      pitch_roll_speed_max: 180.0 # [deg/s]
       pitch_roll_angle_max: 45.0 # [deg]
-      yaw_speed_max: 45.0 # maximum yaw rotation speed [deg/s]
+      yaw_speed_max: 360.0 # maximum yaw rotation speed [deg/s]
       vert_speed_max: 3.0
       horiz_speed_max: 5.0 # maximal horizontal speed
       gps_deadzone: 0.05 # if magnitude of gps speed sticks are lower than this value, gps position is locked
@@ -102,10 +102,10 @@ pilot:
          att_ki: 3.13780298778e+00
          att_kii: 3.45789342669e+00
          att_kd: 2.94830266817e-02
-         yaw_kp: 0.0417780282447742
-         yaw_ki: 0.3259955464790617
+         yaw_kd: 0.0031519022132793966
+         yaw_ki: 0.2712063385194746
          yaw_kii: 0.3710534021821698
-         yaw_kd: 0.002657035449808173                                                                                                                                   
+         yaw_kp: 0.03362122266398693
          filt_fg: 10.0
          filt_d: 0.95
          jxx_jyy: 0.0097
@@ -113,15 +113,15 @@ pilot:
          tmc: 0.06
 
       ne_speed:
-         p: 2.0
+         p: 5.0
          i: 0.0
          i_max: 0.0
       
       attitude:
          p: 1.0
-         i: 0.01
-         i_max: 0.2
-         d: 0.1
+         i: 0.0
+         i_max: 0.0
+         d: 0.0
 
       u_speed:
          p: 5.0
