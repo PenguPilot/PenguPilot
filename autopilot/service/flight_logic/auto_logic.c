@@ -57,7 +57,7 @@ void auto_logic_init(void)
 }
 
 
-void auto_logic_run(bool is_full_auto, uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos)
+bool auto_logic_run(bool is_full_auto, uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos)
 { 
    int rc_valid = sensor_status & RC_VALID;
    if (is_full_auto || rc_valid)
@@ -91,6 +91,7 @@ void auto_logic_run(bool is_full_auto, uint16_t sensor_status, bool flying, floa
 
    float pitch = channels[CH_PITCH];
    float roll = channels[CH_ROLL];
+   float sw_l = channels[CH_SWITCH_L];
    if (!is_full_auto && rc_valid && !is_full_auto && sqrt(pitch * pitch + roll * roll) > 0.1)
       hyst_gps_override = 1.0;
    hyst_gps_override -= 0.006;   
@@ -105,6 +106,8 @@ void auto_logic_run(bool is_full_auto, uint16_t sensor_status, bool flying, floa
       vec2_t ne_gps_setpoint = {{tsfloat_get(&setp_n), tsfloat_get(&setp_e)}};
       cm_att_set_gps_pos(ne_gps_setpoint);
    }
+
+   return is_full_auto || ((sensor_status & RC_VALID) && sw_l < 0.5);
 }
 
 

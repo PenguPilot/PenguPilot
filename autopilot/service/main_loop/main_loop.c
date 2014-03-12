@@ -309,7 +309,7 @@ void main_step(float dt,
    pos_update(&pos_est, &pos_in);
    
    /* execute flight logic (sets cm_x parameters used below): */
-   flight_logic_run(sensor_status, 1, channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg);
+   bool motors_enabled = flight_logic_run(sensor_status, 1, channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg);
    
    /* execute up position/speed controller(s): */
    float u_err = 0.0f;
@@ -393,7 +393,7 @@ void main_step(float dt,
    inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
 
    /* update motors state: */
-   motors_state_update(flight_state, dt, channels[CH_GAS] > 0.12);
+   motors_state_update(flight_state, dt, thrust > 0.1 * platform.mass_kg * 10.0f);
 
    if (!motors_controllable())
    {
@@ -407,12 +407,12 @@ void main_step(float dt,
    /* compute motor set points out of rpm ^ 2: */
    piid_int_enable(platform_ac_calc(setpoints, motors_spinning(), voltage, rpm_square));
    
-   if (!((sensor_status & RC_VALID) && channels[CH_SWITCH_L] < 0.5))
-      memset(setpoints, 0, sizeof(float) * platform.n_motors);
 
    /* write motors: */
    if (!override_hw)
    {
+      if (!motors_enabled)
+         memset(setpoints, 0, sizeof(float) * platform.n_motors);
       platform_write_motors(setpoints);
    }
 
