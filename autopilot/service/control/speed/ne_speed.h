@@ -34,6 +34,8 @@
 
 void ne_speed_ctrl_init(void);
 
+void ne_speed_ctrl_reset(void);
+
 void ne_speed_ctrl_run(vec2_t *ctrl_body, const vec2_t *setp, const float dt, const vec2_t *speed);
 
 
