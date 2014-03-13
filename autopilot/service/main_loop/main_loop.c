@@ -24,11 +24,12 @@
  GNU General Public License for more details. */
 
 
+#include <math.h>
 #include <syslog.h>
 #include <unistd.h>
 
-#include <opcd_interface.h>
 #include <util.h>
+#include <opcd_interface.h>
 #include <scl.h>
 #include <msgpack.h>
 #include <periodic_thread.h>
@@ -59,7 +60,7 @@
 #include "../control/speed/piid.h"
 #include "../control/speed/ne_speed.h"
 #include "../state/motors_state.h"
-#include "../force_opt/force_opt.h"
+#include "../state/flight_state.h"
 #include "../force_opt/att_thrust.h"
 #include "../flight_logic/flight_logic.h"
 #include "../blackbox/blackbox.h"
@@ -100,8 +101,6 @@ static int marg_err = 0;
 static pos_in_t pos_in;
 static calibration_t rc_cal;
 static Filter1 rc_valid_filter;
-static float rc_lost_timer = 1.0f;
-
 
 
 void main_init(int argc, char *argv[])
@@ -147,7 +146,7 @@ void main_init(int argc, char *argv[])
    }
    acc_mag_cal_init();
  
-   force_opt_init(platform.imtx1, platform.imtx2, platform.imtx3, platform.rpm_square_min, platform.rpm_square_max);
+   //force_opt_init(platform.imtx1, platform.imtx2, platform.imtx3, platform.rpm_square_min, platform.rpm_square_max);
    const size_t array_len = sizeof(float) * platform.n_motors;
    setpoints = malloc(array_len);
    ASSERT_NOT_NULL(setpoints);
@@ -235,17 +234,24 @@ void main_step(float dt,
    }
    marg_err = 0;
    
+   /* pre-filter rc signal: */
+   if (!(sensor_status & RC_VALID))
+   {
+      channels[CH_PITCH] = 0.0f;
+      channels[CH_ROLL] = 0.0f;
+      channels[CH_YAW] = 0.0f;
+      channels[CH_SWITCH_L] = 1.0f;
+      channels[CH_SWITCH_R] = 1.0f;
+      channels[CH_GAS] = 0.0f;
+   }
+   
    /* run rc signal low-pass filter: */
-   float rc_valid_f = (sensor_status & RC_VALID) ? 1.0f : 0.0f;
+   /*float rc_valid_f = (sensor_status & RC_VALID) ? 1.0f : 0.0f;
    filter1_run(&rc_valid_filter, &rc_valid_f, &rc_valid_f);
    if (rc_valid_f < 0.5f)
-      rc_lost_timer += dt;
-   else
-      rc_lost_timer = 0.0f;
-   if (rc_lost_timer > 1.0)
       sensor_status &= ~RC_VALID;
    else
-      sensor_status |= RC_VALID;
+      sensor_status |= RC_VALID;*/
    
    /* apply calibration if remote control input is valid: */
    if (sensor_status & RC_VALID)
@@ -308,9 +314,6 @@ void main_step(float dt,
    pos_t pos_est;
    pos_update(&pos_est, &pos_in);
    
-   /* execute flight logic (sets cm_x parameters used below): */
-   bool motors_enabled = flight_logic_run(sensor_status, 1, channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg);
-   
    /* execute up position/speed controller(s): */
    float u_err = 0.0f;
    float a_u = 0.0f;
@@ -349,17 +352,6 @@ void main_step(float dt,
    vec3_mul_scalar(&f_neu, &a_neu, platform.mass_kg); /* f[i] = a[i] * m, makes ctrl device-independent */
    float hover_force = platform.mass_kg * 10.0f;
    f_neu.z += hover_force;
-
-   /* enables motors, if flight logic requests at a force lifting at least 10% of our mass: */
-   float motors_start_force = 0.05 * hover_force;
-   motors_state_update(flying, dt, motors_enabled && f_neu.z > motors_start_force);
-   if (motors_starting())
-   {
-      /* start motors: */
-      f_neu.n = 0.0f;
-      f_neu.e = 0.0f;
-      f_neu.z = motors_start_force;
-   }
 
    /* execute NEU forces optimizer: */
    float thrust;
@@ -407,7 +399,8 @@ void main_step(float dt,
 
    if (!motors_controllable())
    {
-      piid_reset(); /* reset piid integrators so that we can move the device manually */
+      /* reset controllers so that we can move the device manually: */
+      piid_reset(); 
       navi_reset();
       u_ctrl_reset();
       att_ctrl_reset();
@@ -417,14 +410,23 @@ void main_step(float dt,
    /* compute motor setpoints out of rpm ^ 2: */
    piid_int_enable(platform_ac_calc(setpoints, motors_spinning(), voltage, rpm_square));
 
+   /* execute flight logic (sets cm_x parameters used below): */
+   bool motors_enabled = flight_logic_run(sensor_status, flying, channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg);
+   
+   /* enables motors, if flight logic requests at a force lifting at least 10% of our mass: */
+   float motors_start_force = 0.1 * hover_force;
+   motors_state_update(flying, dt, motors_enabled && f_neu.z > motors_start_force);
+
+   /* handle special cases for motor setpoints (0.0f ... 1.0f): */
+   if (motors_starting())
+      FOR_N(i, platform.n_motors) setpoints[i] = 0.1f;
+   if (!motors_enabled || motors_stopping())
+      FOR_N(i, platform.n_motors) setpoints[i] = 0.0f;
+
    /* write motors: */
    if (!override_hw)
-   {
-      if (!motors_enabled)
-         memset(setpoints, 0, sizeof(float) * platform.n_motors);
       EVERY_N_TIMES(10, printf("%f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]));
       //platform_write_motors(setpoints);
-   }
 
    /* set monitoring data: */
    mon_data_set(pos_est.ne_pos.n - navi_get_dest_n(),

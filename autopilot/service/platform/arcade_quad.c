@@ -135,7 +135,7 @@ int arcade_quad_init(platform_t *plat, int override_hw)
    LOG(LL_INFO, "initializing inverse coupling matrix");
    inv_coupling_init(N_MOTORS, icmatrix);
 
-   rc_channels_init(&rc_channels, channel_mapping, channel_scale, NULL);
+   rc_channels_init(&rc_channels, channel_mapping, channel_scale);
 
    if (!override_hw)
    {

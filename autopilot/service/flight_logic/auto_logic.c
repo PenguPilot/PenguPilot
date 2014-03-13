@@ -24,10 +24,12 @@
  GNU General Public License for more details. */
 
 
+#include <math.h>
 #include <pthread.h>
+
+#include <util.h>
 #include <threadsafe_types.h>
 #include <opcd_interface.h>
-#include <util.h>
 
 #include "auto_logic.h"
 #include "../platform/platform.h"

@@ -35,16 +35,20 @@
 void motors_state_init(void);
 
 
-/* indicates if the motors are spinning */
-int motors_starting(void);
+/* indicates if the motors are starting */
+bool motors_starting(void);
+
+
+/* indicates if the motors are stopping */
+bool motors_stopping(void);
 
 
 /* indicates if the motors are spinning */
-int motors_spinning(void);
+bool motors_spinning(void);
 
 
 /* indicates if the controller inputs are used  */
-int motors_controllable(void);
+bool motors_controllable(void);
 
 
 /* updates the motor state machine */

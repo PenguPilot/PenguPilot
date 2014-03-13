@@ -24,6 +24,8 @@
  GNU General Public License for more details. */
 
 
+#include <math.h>
+
 #include <threadsafe_types.h>
 #include <opcd_interface.h>
 #include <util.h>
@@ -59,7 +61,6 @@ static tsfloat_t gas_deadzone;
 static tsfloat_t yaw_speed_max;
 
 static bool vert_pos_locked = false;
-
 static bool horiz_pos_locked = true;
 
 
@@ -162,7 +163,7 @@ static void set_pitch_roll_rates(float pitch, float roll)
 
 static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t *ne_gps_pos, float u_ultra_pos)
 {
-   if (1) //sqrt(pitch * pitch + roll * roll) > tsfloat_get(&gps_deadzone) || u_ultra_pos < 1.0)
+   if (sqrt(pitch * pitch + roll * roll) > tsfloat_get(&gps_deadzone) || u_ultra_pos < 1.0)
    {
       /* set GPS speed based on sticks input: */
       float vmax_sqrt = sqrt(tsfloat_get(&horiz_speed_max));
