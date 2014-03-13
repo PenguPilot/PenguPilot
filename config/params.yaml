@@ -85,7 +85,12 @@ pilot:
       mag_scale_x: 1.0
       mag_scale_y: 1.0
       mag_scale_z: 1.0
-   
+
+   inv_coupling:
+      pitch_enabled: 1
+      roll_enabled: 1
+      yaw_enabled: 1
+
    manual_control:
       pitch_roll_speed_max: 90.0 # [deg/s]
       pitch_roll_angle_max: 45.0 # [deg]

@@ -118,7 +118,7 @@ int arcade_quad_init(platform_t *plat, int override_hw)
       /* m4 */ imtx1,  imtx2,   0.0f,  imtx3
    };
 
-   LOG(LL_INFO, "ic matrix [gas pitch roll yaw]");
+   LOG(LL_INFO, "ic matrix [gas roll pitch yaw]");
    FOR_N(i, 4)
    {
       LOG(LL_INFO, "[m%d]: %.0f, %.0f, %.0f, %.0f", i,
@@ -133,7 +133,7 @@ int arcade_quad_init(platform_t *plat, int override_hw)
    plat->n_motors = N_MOTORS;
 
    LOG(LL_INFO, "initializing inverse coupling matrix");
-   inv_coupling_init(&plat->inv_coupling, N_MOTORS, icmatrix);
+   inv_coupling_init(N_MOTORS, icmatrix);
 
    rc_channels_init(&rc_channels, channel_mapping, channel_scale, NULL);
 

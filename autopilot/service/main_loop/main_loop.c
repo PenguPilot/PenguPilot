@@ -390,7 +390,7 @@ void main_step(float dt,
    piid_run(&f_local.vec[1], piid_gyros, piid_sp);
 
    /* computate rpm ^ 2 out of the desired forces: */
-   inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
+   inv_coupling_calc(rpm_square, f_local.vec);
 
    /* update motors state: */
    motors_state_update(flight_state, dt, thrust > 0.1 * platform.mass_kg * 10.0f);
