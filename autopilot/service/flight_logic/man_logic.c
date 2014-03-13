@@ -215,24 +215,15 @@ bool man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANN
    float sw_r = channels[CH_SWITCH_R];
 
    if (!(sensor_status & RC_VALID))
-   {
-      pitch = 0.0f;
-      roll = 0.0f;
-      yaw_stick = 0.0f;
-      gas_stick = 0.0f;
-      sw_l = 0.0f;
-      sw_r = 0.0f;
-   }
+      emergency_landing();
 
    cm_yaw_set_spd(stick_dz(yaw_stick, 0.075) * deg2rad(tsfloat_get(&yaw_speed_max))); /* the only applied mode in manual operation */
    man_mode_t man_mode = channel_to_man_mode(sw_r);
-   #if 0
    if (man_mode == MAN_NOVICE && (!(sensor_status & GPS_VALID)))
    {
       /* lost gps fix: switch to attitude control */
       man_mode = MAN_RELAXED;
    }
-   #endif
    handle_mode_update(man_mode);
    
    switch (man_mode)
