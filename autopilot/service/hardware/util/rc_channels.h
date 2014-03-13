@@ -30,7 +30,6 @@
 
 #include <stdint.h>
 
-#include "deadzone.h"
 
 
 #define MAX_CHANNELS 6
@@ -52,12 +51,11 @@ typedef struct
 {
    uint8_t *map;
    float *scale;
-   deadzone_t *deadzone;
 }
 rc_channels_t;
 
 
-void rc_channels_init(rc_channels_t *channels, uint8_t map[MAX_CHANNELS], float scale[MAX_CHANNELS], deadzone_t *deadzone);
+void rc_channels_init(rc_channels_t *channels, uint8_t map[MAX_CHANNELS], float scale[MAX_CHANNELS]);
 
 float rc_channels_get(rc_channels_t *channels, float *raw_channels, channel_t channel);
 
