@@ -213,13 +213,14 @@ bool man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANN
    float gas_stick = channels[CH_GAS];
    float sw_l = channels[CH_SWITCH_L];
    float sw_r = channels[CH_SWITCH_R];
+   bool gps_valid = (sensor_status & GPS_VALID) ? true : false;
 
    if (!(sensor_status & RC_VALID))
-      emergency_landing();
+      emergency_landing(gps_valid, ne_gps_pos, u_ultra_pos);
 
    cm_yaw_set_spd(stick_dz(yaw_stick, 0.075) * deg2rad(tsfloat_get(&yaw_speed_max))); /* the only applied mode in manual operation */
    man_mode_t man_mode = channel_to_man_mode(sw_r);
-   if (man_mode == MAN_NOVICE && (!(sensor_status & GPS_VALID)))
+   if (man_mode == MAN_NOVICE && !gps_valid)
    {
       /* lost gps fix: switch to attitude control */
       man_mode = MAN_RELAXED;
