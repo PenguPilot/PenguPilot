@@ -347,7 +347,19 @@ void main_step(float dt,
    ne_speed_ctrl_run(&a_ne, &ne_speed_sp, dt, &pos_est.ne_speed);
    vec3_t a_neu = {{a_ne.x, a_ne.y, a_u}}, f_neu;
    vec3_mul_scalar(&f_neu, &a_neu, platform.mass_kg); /* f[i] = a[i] * m, makes ctrl device-independent */
-   f_neu.z += platform.mass_kg * 10.0f;
+   float hover_force = platform.mass_kg * 10.0f;
+   f_neu.z += hover_force;
+
+   /* enables motors, if flight logic requests at a force lifting at least 10% of our mass: */
+   float motors_start_force = 0.1 * hover_force;
+   motors_state_update(flight_state, dt, f_neu.z > motors_start_force);
+   if (motors_starting())
+   {
+      /* start motors: */
+      f_neu.n = 0.0f;
+      f_neu.e = 0.0f;
+      f_neu.z = motors_start_force;
+   }
 
    /* execute NEU forces optimizer: */
    float thrust;
@@ -359,7 +371,7 @@ void main_step(float dt,
 
    /* execute attitude angles controller: */
    vec2_t att_err;
-   vec2_t pitch_roll_speed = {{marg_data->gyro.y, marg_data->gyro.x}};
+   vec2_t pitch_roll_speed = {{-marg_data->gyro.y, marg_data->gyro.x}};
    vec2_t pitch_roll_ctrl;
    vec2_t pitch_roll = {{-euler.pitch, euler.roll}};
    att_ctrl_step(&pitch_roll_ctrl, &att_err, dt, &pitch_roll, &pitch_roll_speed, &pitch_roll_sp);
@@ -392,21 +404,21 @@ void main_step(float dt,
    /* computate rpm ^ 2 out of the desired forces: */
    inv_coupling_calc(rpm_square, f_local.vec);
 
-   /* update motors state: */
-   motors_state_update(flight_state, dt, thrust > 0.1 * platform.mass_kg * 10.0f);
 
    if (!motors_controllable())
    {
+      {
+         
+      }
       piid_reset(); /* reset piid integrators so that we can move the device manually */
       navi_reset();
       u_ctrl_reset();
       att_ctrl_reset();
       ne_speed_ctrl_reset();
    }
-   
-   /* compute motor set points out of rpm ^ 2: */
+ 
+   /* compute motor setpoints out of rpm ^ 2: */
    piid_int_enable(platform_ac_calc(setpoints, motors_spinning(), voltage, rpm_square));
-   
 
    /* write motors: */
    if (!override_hw)
