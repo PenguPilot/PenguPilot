@@ -35,9 +35,6 @@ from threading import Thread, Timer
 from signal import pause
 from smbus import SMBus
 from os import system, sep
-from logging import basicConfig as log_config, debug as log_debug
-from logging import info as log_info, warning as log_warn, error as log_err
-from logging import DEBUG
 
 from misc import *
 from power_pb2 import *
@@ -50,12 +47,6 @@ from hardware import ADC, GPIO_Bank
 class PowerMan:
 
    def __init__(self, name):
-      # set-up logger:
-      logfile = user_data_dir + sep + 'PowerMan.log'
-      log_config(filename = logfile, filemode = 'w', level = DEBUG,
-                 format = '%(asctime)s - %(levelname)s: %(message)s')
-      # initialized and load config:
-      log_info('powerman starting up')
       map = generate_map(name)
       self.ctrl_socket = map['ctrl']
       self.monitor_socket = map['mon']
@@ -76,13 +67,11 @@ class PowerMan:
       self.adc_thread = start_daemon_thread(self.adc_reader)
       self.emitter_thread = start_daemon_thread(self.power_state_emitter)
       self.request_thread = start_daemon_thread(self.request_handler)
-      log_info('powerman running')
 
 
    def battery_warning(self):
       # do something in order to indicate a low battery:
       msg = 'CRITICAL WARNING: SYSTEM BATTERY VOLTAGE IS LOW; IMMEDIATE SHUTDOWN REQUIRED OR SYSTEM WILL BE DAMAGED'
-      log_warn(msg)
       system('echo "%s" | wall' % msg)
       beeper_enabled = self.opcd.get('beeper_enabled')
       while True:
@@ -117,7 +106,7 @@ class PowerMan:
                   self.warning_started = True
                   start_daemon_thread(self.battery_warning)
          except Exception, e:
-            log_err(str(e))
+            pass
 
    def power_state_emitter(self):
       while True:
@@ -133,8 +122,7 @@ class PowerMan:
                remaining = 0
             state.remaining = remaining
             state.critical = self.critical
-            state.estimate = state.remaining / self.current * 3600
-            log_info(str(state).replace('\n', ' '))
+            state.estimate = state.remaining / self.current
          except AttributeError:
             continue
          except: # division by zero in last try block line
