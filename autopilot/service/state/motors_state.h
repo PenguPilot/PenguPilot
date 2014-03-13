@@ -28,7 +28,7 @@
 #define __MOTORS_STATE_H__
 
 
-#include "flight_state.h"
+#include <stdbool.h>
 
 
 /* initializes motor state */
@@ -48,7 +48,7 @@ int motors_controllable(void);
 
 
 /* updates the motor state machine */
-void motors_state_update(flight_state_t flight_state, float dt, int start);
+void motors_state_update(bool flying, float dt, bool start);
 
 
 #endif /* __MOTORS_STATE_H__ */

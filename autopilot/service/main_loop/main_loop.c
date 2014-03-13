@@ -77,7 +77,6 @@ static calibration_t gyro_cal;
 static interval_t gyro_move_interval;
 static int init = 0;
 static body_to_neu_t *btn;
-static flight_state_t flight_state;
 
 
 static avg_data_t avgs[3];
@@ -180,7 +179,7 @@ void main_init(int argc, char *argv[])
    btn = body_to_neu_create();
 
    cal_ahrs_init(10.0f, 5.0f * REALTIME_PERIOD);
-   flight_state_init(50, 150, 4.0, 150.0, 0.3);
+   flight_state_init(50, 150, 4.0);
    
    piid_init(REALTIME_PERIOD);
 
@@ -282,8 +281,8 @@ void main_step(float dt,
 
    /* acc/mag calibration: */
    acc_mag_cal_apply(&marg_data->acc, &marg_data->mag);
-   flight_state = flight_state_update(&marg_data->acc.vec[0]);
-   if (flight_state == FS_STANDING && pos_in.ultra_u == 7.0)
+   bool flying = flight_state_update(&marg_data->acc.vec[0]);
+   if (!flying && pos_in.ultra_u == 7.0)
       pos_in.ultra_u = 0.2;
 
    /* compute orientation estimate: */
@@ -352,8 +351,8 @@ void main_step(float dt,
    f_neu.z += hover_force;
 
    /* enables motors, if flight logic requests at a force lifting at least 10% of our mass: */
-   float motors_start_force = 0.1 * hover_force;
-   motors_state_update(flight_state, dt, f_neu.z > motors_start_force);
+   float motors_start_force = 0.05 * hover_force;
+   motors_state_update(flying, dt, motors_enabled && f_neu.z > motors_start_force);
    if (motors_starting())
    {
       /* start motors: */
@@ -408,9 +407,6 @@ void main_step(float dt,
 
    if (!motors_controllable())
    {
-      {
-         
-      }
       piid_reset(); /* reset piid integrators so that we can move the device manually */
       navi_reset();
       u_ctrl_reset();
@@ -426,7 +422,8 @@ void main_step(float dt,
    {
       if (!motors_enabled)
          memset(setpoints, 0, sizeof(float) * platform.n_motors);
-      platform_write_motors(setpoints);
+      EVERY_N_TIMES(10, printf("%f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]));
+      //platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */

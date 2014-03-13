@@ -81,7 +81,7 @@ int motors_controllable(void)
 }
 
 
-void motors_state_update(flight_state_t flight_state, float dt, int start)
+void motors_state_update(bool flying, float dt, bool start)
 {
    switch (state)
    {
@@ -107,7 +107,7 @@ void motors_state_update(flight_state_t flight_state, float dt, int start)
          break;
       
       case MOTORS_SPINNING:
-         if (!start && flight_state != FS_FLYING)
+         if (!start && !flying)
          {
             state = MOTORS_STOPPING;
             etimer_reset(&timer);
