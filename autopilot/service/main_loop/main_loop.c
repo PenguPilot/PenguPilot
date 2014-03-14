@@ -99,8 +99,7 @@ f_local_t;
 static int marg_err = 0;
 static pos_in_t pos_in;
 static calibration_t rc_cal;
-static Filter1 rc_valid_filter;
-static float rc_lost_timer = 1.0f;
+static float baro_ultra_sp = 0.0f;
 
 
 
@@ -316,15 +315,17 @@ void main_step(float dt,
    float a_u = 0.0f;
    if (cm_u_is_pos())
    {
-      if (cm_u_is_baro_pos())
+      if (0)//cm_u_is_baro_pos())
       {
          a_u = u_ctrl_step(cm_u_setp(), pos_est.baro_u.pos, pos_est.baro_u.speed, dt);
          u_err = cm_u_setp() - pos_est.baro_u.pos;
       }
-      else
+      else /* ultra pos */
       {
-         a_u = u_ctrl_step(cm_u_setp(), pos_est.ultra_u.pos, pos_est.ultra_u.speed, dt);
-         u_err = cm_u_setp() - pos_est.ultra_u.pos;
+         u_err = 1.0 /*cm_u_setp()*/ - pos_est.ultra_u.pos;
+         baro_ultra_sp = baro_ultra_sp - 0.02 * u_err;
+         EVERY_N_TIMES(10, printf("%f\n", baro_ultra_sp));
+         a_u = u_ctrl_step(cm_u_setp(), baro_ultra_sp, pos_est.baro_u.speed, dt);
       }
    }
    else if (cm_u_is_spd())
