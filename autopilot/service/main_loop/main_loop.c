@@ -292,13 +292,16 @@ void main_step(float dt,
    /* compute next 3d position estimate using Kalman filters: */
    pos_t pos_est;
    pos_update(&pos_est, &pos_in);
+
+   /* execute flight logic (sets cm_x parameters used below): */
+   bool motors_enabled = flight_logic_run(sensor_status, flying, channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg);
    
    /* execute up position/speed controller(s): */
    float u_err = 0.0f;
    float a_u = 0.0f;
-   if (1) //cm_u_is_pos())
+   if (cm_u_is_pos())
    {
-      if (0)//cm_u_is_baro_pos())
+      if (cm_u_is_baro_pos())
       {
          a_u = u_ctrl_step(cm_u_setp(), pos_est.baro_u.pos, pos_est.baro_u.speed, dt);
          u_err = cm_u_setp() - pos_est.baro_u.pos;
@@ -307,7 +310,6 @@ void main_step(float dt,
       {
          u_err = 1.0 /*cm_u_setp()*/ - pos_est.ultra_u.pos;
          baro_ultra_sp += 0.001 * u_err;
-         EVERY_N_TIMES(10, printf("%f %f\n", u_err, baro_ultra_sp));
          a_u = u_ctrl_step(baro_ultra_sp, pos_est.baro_u.pos, pos_est.baro_u.speed, dt);
       }
    }
@@ -364,7 +366,7 @@ void main_step(float dt,
 
    /* execute yaw position controller: */
    float yaw_speed_sp, yaw_err;
-   if (cm_yaw_is_pos())
+   if (cm_yaw_is_pos() && pos_est.ultra_u.pos > 1.0f)
       yaw_speed_sp = yaw_ctrl_step(&yaw_err, cm_yaw_setp(), euler.yaw, marg_data->gyro.z, dt);
    else
       yaw_speed_sp = cm_yaw_setp(); /* direct yaw speed control */
@@ -378,40 +380,33 @@ void main_step(float dt,
    /* computate rpm ^ 2 out of the desired forces: */
    inv_coupling_calc(rpm_square, f_local.vec);
 
-   /* update motors state: */
-   motors_state_update(flight_state, dt, channels[CH_GAS] > 0.12);
-
-   if (!motors_controllable())
-   {
-      /* reset controllers so that we can move the device manually: */
-      piid_reset(); 
-      navi_reset();
-      u_ctrl_reset();
-      att_ctrl_reset();
-      ne_speed_ctrl_reset();
-   }
- 
    /* compute motor setpoints out of rpm ^ 2: */
    piid_int_enable(platform_ac_calc(setpoints, motors_spinning(), voltage, rpm_square));
 
-   /* execute flight logic (sets cm_x parameters used below): */
-   bool motors_enabled = flight_logic_run(sensor_status, flying, channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg);
-   
    /* enables motors, if flight logic requests at a force lifting at least 10% of our mass: */
    float motors_start_force = 0.1 * hover_force;
    motors_state_update(flying, dt, motors_enabled && f_neu.z > motors_start_force);
-
+   
+   /* reset controllers, if motors are not controllable: */
+   if (!motors_controllable())
+   {
+      navi_reset();
+      u_ctrl_reset();
+      ne_speed_ctrl_reset();
+      att_ctrl_reset();
+      piid_reset(); 
+   }
+ 
    /* handle special cases for motor setpoints (0.0f ... 1.0f): */
    if (motors_starting())
       FOR_N(i, platform.n_motors) setpoints[i] = 0.1f;
    if (!motors_enabled || motors_stopping())
       FOR_N(i, platform.n_motors) setpoints[i] = 0.0f;
 
-   //EVERY_N_TIMES(10, printf("%f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]));
    /* write motors: */
    if (!override_hw)
    {
-      //platform_write_motors(setpoints);
+      platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */
