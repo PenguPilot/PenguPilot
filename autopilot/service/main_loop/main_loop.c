@@ -117,7 +117,14 @@ void main_init(int argc, char *argv[])
 
    /* init data structures: */
    memset(&pos_in, 0, sizeof(pos_in_t));
-
+   
+   /* read configuration: */
+   opcd_param_t params[] =
+   {
+      OPCD_PARAMS_END
+   };
+   opcd_params_apply("main.", params);
+ 
    /* init SCL subsystem: */
    syslog(LOG_INFO, "initializing signaling and communication link (SCL)");
    if (scl_init("pilot") != 0)
@@ -354,8 +361,9 @@ void main_step(float dt,
    vec2_t pitch_roll_sp;
    att_thrust_calc(&pitch_roll_sp, &thrust, &f_neu, euler.yaw, platform.max_thrust_n, 0);
 
+   /* execute direct attitude angle control, if requested: */
    if (cm_att_is_angles())
-      pitch_roll_sp = cm_att_setp(); /* direct attitude angle control */
+      pitch_roll_sp = cm_att_setp();
 
    /* execute attitude angles controller: */
    vec2_t att_err;
@@ -365,15 +373,15 @@ void main_step(float dt,
    att_ctrl_step(&pitch_roll_ctrl, &att_err, dt, &pitch_roll, &pitch_roll_speed, &pitch_roll_sp);
  
    float piid_sp[3] = {0.0f, 0.0f, 0.0f};
-   piid_sp[PIID_PITCH] = pitch_roll_ctrl.x;
-   piid_sp[PIID_ROLL] = pitch_roll_ctrl.y;
+   piid_sp[PIID_PITCH] = pitch_roll_ctrl.vec[0];
+   piid_sp[PIID_ROLL] = pitch_roll_ctrl.vec[1];
  
+   /* execute direct attitude rate control, if requested:*/
    if (cm_att_is_rates())
    {
-      /* direct attitude rate control */
-      vec2_t setp = cm_att_setp();
-      piid_sp[PIID_PITCH] = setp.x;
-      piid_sp[PIID_ROLL] = setp.y;
+      vec2_t pitch_roll_rates_sp = cm_att_setp();
+      piid_sp[PIID_PITCH] = pitch_roll_rates_sp.vec[0];
+      piid_sp[PIID_ROLL] = pitch_roll_rates_sp.vec[1];
    }
 
    /* execute yaw position controller: */
