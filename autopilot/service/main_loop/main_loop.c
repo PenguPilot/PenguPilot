@@ -310,7 +310,7 @@ void main_step(float dt,
    
    /* execute flight logic (sets cm_x parameters used below): */
    flight_logic_run(sensor_status, 1, channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg);
-   
+
    /* execute up position/speed controller(s): */
    float u_err = 0.0f;
    float a_u = 0.0f;
@@ -393,6 +393,7 @@ void main_step(float dt,
    inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
 
    /* update motors state: */
+
    motors_state_update(flight_state, dt, channels[CH_GAS] > 0.12);
 
    if (!motors_controllable())
