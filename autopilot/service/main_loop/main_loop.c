@@ -99,8 +99,7 @@ f_local_t;
 static int marg_err = 0;
 static pos_in_t pos_in;
 static calibration_t rc_cal;
-static Filter1 rc_valid_filter;
-static float rc_lost_timer = 1.0f;
+static float baro_ultra_sp = 0.0f;
 
 
 
@@ -198,7 +197,6 @@ void main_init(int argc, char *argv[])
    avg_init(&avgs[2], -9.81);
 
    cal_init(&rc_cal, 3, 500);
-   filter1_lp_init(&rc_valid_filter, 0.5f, REALTIME_PERIOD, 1);
 
    mon_init();
    LOG(LL_INFO, "entering main loop");
@@ -241,18 +239,6 @@ void main_step(float dt,
       return;
    }
    marg_err = 0;
-   
-   /* run rc signal low-pass filter: */
-   float rc_valid_f = (sensor_status & RC_VALID) ? 1.0f : 0.0f;
-   filter1_run(&rc_valid_filter, &rc_valid_f, &rc_valid_f);
-   if (rc_valid_f < 0.5f)
-      rc_lost_timer += dt;
-   else
-      rc_lost_timer = 0.0f;
-   if (rc_lost_timer > 1.0)
-      sensor_status &= ~RC_VALID;
-   else
-      sensor_status |= RC_VALID;
    
    /* apply calibration if remote control input is valid: */
    if (sensor_status & RC_VALID)
@@ -323,15 +309,17 @@ void main_step(float dt,
    float a_u = 0.0f;
    if (cm_u_is_pos())
    {
-      if (cm_u_is_baro_pos())
+      if (0)//cm_u_is_baro_pos())
       {
          a_u = u_ctrl_step(cm_u_setp(), pos_est.baro_u.pos, pos_est.baro_u.speed, dt);
          u_err = cm_u_setp() - pos_est.baro_u.pos;
       }
-      else
+      else /* ultra pos */
       {
-         a_u = u_ctrl_step(cm_u_setp(), pos_est.ultra_u.pos, pos_est.ultra_u.speed, dt);
-         u_err = cm_u_setp() - pos_est.ultra_u.pos;
+         u_err = 1.0 /*cm_u_setp()*/ - pos_est.ultra_u.pos;
+         baro_ultra_sp = baro_ultra_sp - 0.02 * u_err;
+         EVERY_N_TIMES(10, printf("%f\n", baro_ultra_sp));
+         a_u = u_ctrl_step(cm_u_setp(), baro_ultra_sp, pos_est.baro_u.speed, dt);
       }
    }
    else if (cm_u_is_spd())
@@ -354,7 +342,19 @@ void main_step(float dt,
    ne_speed_ctrl_run(&a_ne, &ne_speed_sp, dt, &pos_est.ne_speed);
    vec3_t a_neu = {{a_ne.x, a_ne.y, a_u}}, f_neu;
    vec3_mul_scalar(&f_neu, &a_neu, platform.mass_kg); /* f[i] = a[i] * m, makes ctrl device-independent */
-   f_neu.z += platform.mass_kg * 10.0f;
+   float hover_force = platform.mass_kg * 10.0f;
+   f_neu.z += hover_force;
+
+   /* enables motors, if flight logic requests at a force lifting at least 10% of our mass: */
+   float motors_start_force = 0.1 * hover_force;
+   motors_state_update(flight_state, dt, f_neu.z > motors_start_force);
+   if (motors_starting())
+   {
+      /* start motors: */
+      f_neu.n = 0.0f;
+      f_neu.e = 0.0f;
+      f_neu.z = motors_start_force;
+   }
 
    /* execute NEU forces optimizer: */
    float thrust;
@@ -367,7 +367,7 @@ void main_step(float dt,
 
    /* execute attitude angles controller: */
    vec2_t att_err;
-   vec2_t pitch_roll_speed = {{marg_data->gyro.y, marg_data->gyro.x}};
+   vec2_t pitch_roll_speed = {{-marg_data->gyro.y, marg_data->gyro.x}};
    vec2_t pitch_roll_ctrl;
    vec2_t pitch_roll = {{-euler.pitch, euler.roll}};
    att_ctrl_step(&pitch_roll_ctrl, &att_err, dt, &pitch_roll, &pitch_roll_speed, &pitch_roll_sp);
@@ -398,30 +398,31 @@ void main_step(float dt,
    piid_run(&f_local.vec[1], piid_gyros, piid_sp);
 
    /* computate rpm ^ 2 out of the desired forces: */
-   inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
+   inv_coupling_calc(rpm_square, f_local.vec);
 
    /* update motors state: */
-
    motors_state_update(flight_state, dt, channels[CH_GAS] > 0.12);
 
    if (!motors_controllable())
    {
+      {
+         
+      }
       piid_reset(); /* reset piid integrators so that we can move the device manually */
       navi_reset();
       u_ctrl_reset();
       att_ctrl_reset();
       ne_speed_ctrl_reset();
    }
-   
-   /* compute motor set points out of rpm ^ 2: */
+ 
+   /* compute motor setpoints out of rpm ^ 2: */
    piid_int_enable(platform_ac_calc(setpoints, motors_spinning(), voltage, rpm_square));
-   
-   if (!((sensor_status & RC_VALID) && channels[CH_SWITCH_L] < 0.5))
-      memset(setpoints, 0, sizeof(float) * platform.n_motors);
 
    /* write motors: */
    if (!override_hw)
    {
+      if (!motors_enabled)
+         memset(setpoints, 0, sizeof(float) * platform.n_motors);
       platform_write_motors(setpoints);
    }
 
