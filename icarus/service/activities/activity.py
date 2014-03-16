@@ -27,7 +27,7 @@
 
 from time import sleep
 from threading import Thread, current_thread
-from core_pb2 import *
+from pilot_pb2 import *
 from math import sqrt, hypot
 
 
@@ -56,7 +56,7 @@ class StabMixIn:
    STAB_COUNT = 20
 
    def stabilize(self):
-      core = self.icarus.core
+      pilot = self.icarus.pilot
       mon_data = self.icarus.mon_data
       count = 0
       while True:
@@ -66,7 +66,7 @@ class StabMixIn:
             break
          if self.canceled:
             return
-         # read error values from core:
+         # read error values from pilot:
          x_err, y_err = mon_data.x_err, mon_data.y_err
          alt_err = mon_data.z_err
          yaw_err = mon_data.yaw_err

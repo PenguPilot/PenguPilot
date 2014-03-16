@@ -70,7 +70,7 @@ int motors_starting(void)
 /* indicates if the motors are spinning */
 int motors_spinning(void)
 {
-   return (state & (MOTORS_STARTING | MOTORS_SPINNING)) ? 1 : 0;
+   return (state & (MOTORS_STARTING | MOTORS_SPINNING | MOTORS_STOPPING)) ? 1 : 0;
 }
 
 

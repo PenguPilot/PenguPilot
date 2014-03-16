@@ -28,19 +28,6 @@
 #define __INV_COUPLING_H__
 
 
-#include <meschach/matrix.h>
-
-
-typedef struct coupling
-{
-   size_t n_motors;
-   MAT *matrix;
-   VEC *in;
-   VEC *out;
-}
-inv_coupling_t;
-
-
 /*
  * "init" array layout:
  *
@@ -50,7 +37,7 @@ inv_coupling_t;
  *
  * g = gas, p = pitch, r = roll, y = yaw, n = #motors
  */
-void inv_coupling_init(inv_coupling_t *inv_coupling, const size_t motors, const float *init);
+void inv_coupling_init(const size_t motors, const float *init);
 
 
 /*
@@ -60,7 +47,7 @@ void inv_coupling_init(inv_coupling_t *inv_coupling, const size_t motors, const 
  * v_x = motor setpoint [0..1]
  * n = #motors
  */
-void inv_coupling_calc(const inv_coupling_t *inv_coupling, float *out, const float *in);
+void inv_coupling_calc(float *out, const float *in);
 
 
 #endif /* __INV_COUPLING__ */
