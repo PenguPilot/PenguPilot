@@ -91,7 +91,6 @@ void handle_array(msgpack_object array, int header)
                   break;
 
                default:
-                  assert(0);
                   break;
             }
          }
