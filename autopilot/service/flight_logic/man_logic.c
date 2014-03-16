@@ -24,6 +24,8 @@
  GNU General Public License for more details. */
 
 
+#include <math.h>
+
 #include <threadsafe_types.h>
 #include <opcd_interface.h>
 #include <util.h>
@@ -59,7 +61,6 @@ static tsfloat_t gas_deadzone;
 static tsfloat_t yaw_speed_max;
 
 static bool vert_pos_locked = false;
-
 static bool horiz_pos_locked = true;
 
 
@@ -162,7 +163,7 @@ static void set_pitch_roll_rates(float pitch, float roll)
 
 static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t *ne_gps_pos, float u_ultra_pos)
 {
-   if (1) //sqrt(pitch * pitch + roll * roll) > tsfloat_get(&gps_deadzone) || u_ultra_pos < 1.0)
+   if (sqrt(pitch * pitch + roll * roll) > tsfloat_get(&gps_deadzone) || u_ultra_pos < 1.0)
    {
       /* set GPS speed based on sticks input: */
       float vmax_sqrt = sqrt(tsfloat_get(&horiz_speed_max));
@@ -213,13 +214,14 @@ bool man_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANN
    float gas_stick = channels[CH_GAS];
    float sw_l = channels[CH_SWITCH_L];
    float sw_r = channels[CH_SWITCH_R];
+   bool gps_valid = (sensor_status & GPS_VALID) ? true : false;
 
    if (!(sensor_status & RC_VALID))
-      emergency_landing();
+      emergency_landing(gps_valid, ne_gps_pos, u_ultra_pos);
 
    cm_yaw_set_spd(stick_dz(yaw_stick, 0.075) * deg2rad(tsfloat_get(&yaw_speed_max))); /* the only applied mode in manual operation */
    man_mode_t man_mode = channel_to_man_mode(sw_r);
-   if (man_mode == MAN_NOVICE && (!(sensor_status & GPS_VALID)))
+   if (man_mode == MAN_NOVICE && !gps_valid)
    {
       /* lost gps fix: switch to attitude control */
       man_mode = MAN_RELAXED;
