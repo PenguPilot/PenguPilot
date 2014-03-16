@@ -24,11 +24,12 @@
  GNU General Public License for more details. */
 
 
+#include <math.h>
 #include <syslog.h>
 #include <unistd.h>
 
-#include <opcd_interface.h>
 #include <util.h>
+#include <opcd_interface.h>
 #include <scl.h>
 #include <msgpack.h>
 #include <periodic_thread.h>
@@ -46,6 +47,7 @@
 #include "../platform/ac.h"
 #include "../platform/platform.h"
 #include "../platform/arcade_quad.h"
+#include "../platform/inv_coupling.h"
 #include "../hardware/util/acc_mag_cal.h"
 #include "../hardware/util/calibration.h"
 #include "../hardware/util/gps_util.h"
@@ -58,12 +60,10 @@
 #include "../control/speed/piid.h"
 #include "../control/speed/ne_speed.h"
 #include "../state/motors_state.h"
-#include "../force_opt/force_opt.h"
+#include "../state/flight_state.h"
 #include "../force_opt/att_thrust.h"
 #include "../flight_logic/flight_logic.h"
 #include "../blackbox/blackbox.h"
-#include "../filters/average.h"
-#include "../filters/filter.h"
 
 
 static bool calibrate = false;
@@ -76,11 +76,8 @@ static calibration_t gyro_cal;
 static interval_t gyro_move_interval;
 static int init = 0;
 static body_to_neu_t *btn;
-static flight_state_t flight_state;
-
-
-static avg_data_t avgs[3];
 static float avg_acc[3] = {0, 0, 9.81};
+
 
 typedef union
 {
@@ -100,7 +97,6 @@ static int marg_err = 0;
 static pos_in_t pos_in;
 static calibration_t rc_cal;
 static float baro_ultra_sp = 0.0f;
-
 
 
 void main_init(int argc, char *argv[])
@@ -153,7 +149,7 @@ void main_init(int argc, char *argv[])
    }
    acc_mag_cal_init();
  
-   force_opt_init(platform.imtx1, platform.imtx2, platform.imtx3, platform.rpm_square_min, platform.rpm_square_max);
+   //force_opt_init(platform.imtx1, platform.imtx2, platform.imtx3, platform.rpm_square_min, platform.rpm_square_max);
    const size_t array_len = sizeof(float) * platform.n_motors;
    setpoints = malloc(array_len);
    ASSERT_NOT_NULL(setpoints);
@@ -185,16 +181,12 @@ void main_init(int argc, char *argv[])
    btn = body_to_neu_create();
 
    cal_ahrs_init(10.0f, 5.0f * REALTIME_PERIOD);
-   flight_state_init(50, 150, 4.0, 150.0, 0.3);
+   flight_state_init(50, 150, 4.0);
    
    piid_init(REALTIME_PERIOD);
 
    interval_init(&gyro_move_interval);
    gps_data_init(&gps_data);
-
-   avg_init(&avgs[0], 0.0);
-   avg_init(&avgs[1], 0.0);
-   avg_init(&avgs[2], -9.81);
 
    cal_init(&rc_cal, 3, 500);
 
@@ -274,8 +266,8 @@ void main_step(float dt,
 
    /* acc/mag calibration: */
    acc_mag_cal_apply(&marg_data->acc, &marg_data->mag);
-   flight_state = flight_state_update(&marg_data->acc.vec[0]);
-   if (flight_state == FS_STANDING && pos_in.ultra_u == 7.0)
+   bool flying = flight_state_update(&marg_data->acc.vec[0]);
+   if (!flying && pos_in.ultra_u == 7.0)
       pos_in.ultra_u = 0.2;
 
    /* compute orientation estimate: */
@@ -301,13 +293,10 @@ void main_step(float dt,
    pos_t pos_est;
    pos_update(&pos_est, &pos_in);
    
-   /* execute flight logic (sets cm_x parameters used below): */
-   flight_logic_run(sensor_status, 1, channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg);
-
    /* execute up position/speed controller(s): */
    float u_err = 0.0f;
    float a_u = 0.0f;
-   if (cm_u_is_pos())
+   if (1) //cm_u_is_pos())
    {
       if (0)//cm_u_is_baro_pos())
       {
@@ -317,9 +306,9 @@ void main_step(float dt,
       else /* ultra pos */
       {
          u_err = 1.0 /*cm_u_setp()*/ - pos_est.ultra_u.pos;
-         baro_ultra_sp = baro_ultra_sp - 0.02 * u_err;
-         EVERY_N_TIMES(10, printf("%f\n", baro_ultra_sp));
-         a_u = u_ctrl_step(cm_u_setp(), baro_ultra_sp, pos_est.baro_u.speed, dt);
+         baro_ultra_sp += 0.001 * u_err;
+         EVERY_N_TIMES(10, printf("%f %f\n", u_err, baro_ultra_sp));
+         a_u = u_ctrl_step(baro_ultra_sp, pos_est.baro_u.pos, pos_est.baro_u.speed, dt);
       }
    }
    else if (cm_u_is_spd())
@@ -344,17 +333,6 @@ void main_step(float dt,
    vec3_mul_scalar(&f_neu, &a_neu, platform.mass_kg); /* f[i] = a[i] * m, makes ctrl device-independent */
    float hover_force = platform.mass_kg * 10.0f;
    f_neu.z += hover_force;
-
-   /* enables motors, if flight logic requests at a force lifting at least 10% of our mass: */
-   float motors_start_force = 0.1 * hover_force;
-   motors_state_update(flight_state, dt, f_neu.z > motors_start_force);
-   if (motors_starting())
-   {
-      /* start motors: */
-      f_neu.n = 0.0f;
-      f_neu.e = 0.0f;
-      f_neu.z = motors_start_force;
-   }
 
    /* execute NEU forces optimizer: */
    float thrust;
@@ -405,10 +383,8 @@ void main_step(float dt,
 
    if (!motors_controllable())
    {
-      {
-         
-      }
-      piid_reset(); /* reset piid integrators so that we can move the device manually */
+      /* reset controllers so that we can move the device manually: */
+      piid_reset(); 
       navi_reset();
       u_ctrl_reset();
       att_ctrl_reset();
@@ -418,12 +394,24 @@ void main_step(float dt,
    /* compute motor setpoints out of rpm ^ 2: */
    piid_int_enable(platform_ac_calc(setpoints, motors_spinning(), voltage, rpm_square));
 
+   /* execute flight logic (sets cm_x parameters used below): */
+   bool motors_enabled = flight_logic_run(sensor_status, flying, channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg);
+   
+   /* enables motors, if flight logic requests at a force lifting at least 10% of our mass: */
+   float motors_start_force = 0.1 * hover_force;
+   motors_state_update(flying, dt, motors_enabled && f_neu.z > motors_start_force);
+
+   /* handle special cases for motor setpoints (0.0f ... 1.0f): */
+   if (motors_starting())
+      FOR_N(i, platform.n_motors) setpoints[i] = 0.1f;
+   if (!motors_enabled || motors_stopping())
+      FOR_N(i, platform.n_motors) setpoints[i] = 0.0f;
+
+   //EVERY_N_TIMES(10, printf("%f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]));
    /* write motors: */
    if (!override_hw)
    {
-      if (!motors_enabled)
-         memset(setpoints, 0, sizeof(float) * platform.n_motors);
-      platform_write_motors(setpoints);
+      //platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */

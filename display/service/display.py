@@ -91,15 +91,17 @@ def cpuavg():
 def pmreader():
    s = socket_map['power']
    p = PowerState()
-   global spinning, voltage, critical
+   global spinning, voltage, estimate, critical
    critical = False
    voltage = None
+   estimate = None
    while True:
       if spinning:
          sleep(1)
       else:
          p.ParseFromString(s.recv())
          critical = p.critical
+         estimate = p.estimate
          if voltage is None:
             voltage = p.voltage
          else:
@@ -222,8 +224,10 @@ def draw_health(draw):
    vmin = 13.2
    vmax = 16.4
    batt = min(1.0, max(0.0, (voltage - vmin) / (vmax - vmin)))
+   if not estimate:
+      etimate = ''
 
-   draw.text((0, 24), 'Battery: %.1f%%' % (100.0 * batt), WHITE, font = font)
+   draw.text((0, 24), 'BAT: %.1f%%, T: %.1fh' % (100.0 * batt, estimate), WHITE, font = font)
    bar(draw, 0, 38, 127, 6, batt)
    
 def circle(draw, x, y, rad, i, o):
