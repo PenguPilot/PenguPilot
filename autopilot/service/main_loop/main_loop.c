@@ -385,7 +385,7 @@ void main_step(float dt,
 
    /* enables motors, if flight logic requests at a force lifting at least 10% of our mass: */
    float motors_start_force = 0.1 * hover_force;
-   motors_state_update(flying, dt, motors_enabled && f_neu.z > motors_start_force);
+   motors_state_update(flying, dt, motors_enabled && thrust > motors_start_force);
    
    /* reset controllers, if motors are not controllable: */
    if (!motors_controllable())
@@ -406,7 +406,8 @@ void main_step(float dt,
    /* write motors: */
    if (!override_hw)
    {
-      platform_write_motors(setpoints);
+      printf("%f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]);
+      //platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */

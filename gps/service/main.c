@@ -39,7 +39,8 @@
 #include <daemon.h>
 
 #include "linux_sys.h"
-#include "nmealib/nmea/nmea.h"
+#include "nmealib/nmea/info.h"
+#include "nmealib/nmea/parser.h"
 
 
 #define TIME_STR_LEN 128
