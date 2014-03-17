@@ -1,0 +1,6 @@
+style=allman
+indent=spaces=3
+convert-tabs
+indent-preprocessor
+indent-switches
+pad-oper
