@@ -13,7 +13,7 @@
   
  A simple GPS Monitor
 
- Copyright (C) 2011 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ try:
    while True:
       str = socket.recv()
       gps_data.ParseFromString(str)
-      print gps_data
+      print gps_data.fix, gps_data.lat, gps_data.lon
 except:
    print 'terminated by user'
 

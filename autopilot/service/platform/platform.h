@@ -11,7 +11,7 @@
   
  Platform Abstraction Interface
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -31,7 +31,6 @@
 #include "../hardware/util/rc_channels.h"
 #include "../hardware/util/marg_data.h"
 #include "../geometry/quat.h"
-#include "inv_coupling.h"
 #include "ac.h"
 
 
@@ -46,7 +45,6 @@ typedef struct
    ac_t ac;
    float max_thrust_n;
    float mass_kg;
-   inv_coupling_t inv_coupling;
    size_t n_motors;
    
    /* sensors: */

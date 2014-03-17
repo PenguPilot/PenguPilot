@@ -11,9 +11,9 @@
   
  ARCADE Quadrotor Platform
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
- Copyright (C) 2012 Alexander Barth, Ilmenau University of Technology
- Copyright (C) 2012 Benjamin Jahn, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2013 Alexander Barth, Ilmenau University of Technology
+ Copyright (C) 2013 Benjamin Jahn, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -52,7 +52,6 @@
 
 
 static i2c_bus_t i2c_3;
-static deadzone_t deadzone;
 static rc_channels_t rc_channels;
 static uint8_t channel_mapping[MAX_CHANNELS] =  {0, 1, 3, 2, 4, 5}; /* pitch: 0, roll: 1, yaw: 3, gas: 2, switch left: 4, switch right: 5 */
 static float channel_scale[MAX_CHANNELS] =  {1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
@@ -113,13 +112,13 @@ int arcade_quad_init(platform_t *plat, int override_hw)
    /* inverse coupling matrix for ARCADE quadrotor: */
    const float icmatrix[4 * N_MOTORS] =
    {         /* gas     roll    pitch    yaw */
-      /* m1 */ imtx1,   0.0f,  imtx2, -imtx3,
-      /* m2 */ imtx1,   0.0f, -imtx2, -imtx3,
+      /* m1 */ imtx1,   0.0f, -imtx2, -imtx3,
+      /* m2 */ imtx1,   0.0f,  imtx2, -imtx3,
       /* m3 */ imtx1, -imtx2,   0.0f,  imtx3,
       /* m4 */ imtx1,  imtx2,   0.0f,  imtx3
    };
 
-   LOG(LL_INFO, "ic matrix [gas pitch roll yaw]");
+   LOG(LL_INFO, "ic matrix [gas roll pitch yaw]");
    FOR_N(i, 4)
    {
       LOG(LL_INFO, "[m%d]: %.0f, %.0f, %.0f, %.0f", i,
@@ -130,14 +129,13 @@ int arcade_quad_init(platform_t *plat, int override_hw)
    
   
    plat->max_thrust_n = 40.0f;
-   plat->mass_kg = 1.125f;
+   plat->mass_kg = 1.1f;
    plat->n_motors = N_MOTORS;
 
    LOG(LL_INFO, "initializing inverse coupling matrix");
-   inv_coupling_init(&plat->inv_coupling, N_MOTORS, icmatrix);
-      
-   deadzone_init(&deadzone, 0.01f, 1.0f, 1.0f);
-   rc_channels_init(&rc_channels, channel_mapping, channel_scale, &deadzone);
+   inv_coupling_init(N_MOTORS, icmatrix);
+
+   rc_channels_init(&rc_channels, channel_mapping, channel_scale);
 
    if (!override_hw)
    {

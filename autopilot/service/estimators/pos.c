@@ -14,8 +14,8 @@
  | 1 dt | * | p | + | 0.5 * dt ^ 2 | * | a | = | p |
  | 0  1 | * | v |   |     dt       |   | v |
  
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
- Copyright (C) 2012 Jan Roemisch, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2013 Jan Roemisch, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -109,8 +109,8 @@ void pos_init(void)
        tsfloat_get(&gps_noise));
 
    /* set-up kalman filters: */
-   kalman_init(&n_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, true);
-   kalman_init(&e_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, true);
+   kalman_init(&n_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, false);
+   kalman_init(&e_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, false);
    kalman_init(&baro_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&baro_noise), 0, 0, false);
    kalman_init(&ultra_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&ultra_noise), 0, 0, false);
 }
@@ -122,8 +122,8 @@ void pos_update(pos_t *out, pos_in_t *in)
    ASSERT_NOT_NULL(in);
 
    /* run kalman filters: */
-   kalman_run(&n_kalman,       &out->ne_pos.n,    &out->ne_speed.n,    in->pos_n,   in->speed_n, in->acc.n, in->dt);
-   kalman_run(&e_kalman,       &out->ne_pos.e,    &out->ne_speed.e,    in->pos_e,   in->speed_e, in->acc.e, in->dt);
+   kalman_run(&n_kalman,       &out->ne_pos.n,    &out->ne_speed.n,    in->pos_n,   0.0f, in->acc.n, in->dt);
+   kalman_run(&e_kalman,       &out->ne_pos.e,    &out->ne_speed.e,    in->pos_e,   0.0f, in->acc.e, in->dt);
    kalman_run(&baro_u_kalman,  &out->baro_u.pos,  &out->baro_u.speed,  in->baro_u,  0.0f, in->acc.u, in->dt);
    kalman_run(&ultra_u_kalman, &out->ultra_u.pos, &out->ultra_u.speed, in->ultra_u, 0.0f, in->acc.u, in->dt);
 }
@@ -171,13 +171,18 @@ static void kalman_init(kalman_t *kf, float q, float r, float pos, float speed, 
    
    kf->K = m_get(2, 1);
    ASSERT_NOT_NULL(kf->K);
+
+   /* H = | 1.0   0.0       |
+          | 0.0   use_speed | */
    kf->H = m_get(2, 2);
    ASSERT_NOT_NULL(kf->H);
    m_set_val(kf->H, 0, 0, 1.0);
+   m_set_val(kf->H, 1, 0, 0.0);
+   m_set_val(kf->H, 0, 1, 0.0);
    if (use_speed)
-      m_set_val(kf->H, 0, 1, 1.0);
+      m_set_val(kf->H, 1, 1, 1.0);
    else
-      m_set_val(kf->H, 0, 1, 0.0);
+      m_set_val(kf->H, 1, 1, 0.0);
 
    /* A = | 1.0   dt  |
           | 0.0   1.0 |

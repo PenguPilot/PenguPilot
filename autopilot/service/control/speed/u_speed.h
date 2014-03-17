@@ -11,7 +11,7 @@
   
  up speed controller interface
  
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -28,9 +28,9 @@
 #define __U_SPEED_H__
 
 
-float u_speed_step(float setpoint, float pos, float speed, float dt);
+float u_speed_step(float setpoint, float pos, float dt);
 
-void u_speed_init(float neutral_gas);
+void u_speed_init(void);
 
 void u_speed_reset(void);
 

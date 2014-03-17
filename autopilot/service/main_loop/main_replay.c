@@ -11,7 +11,7 @@
   
  Replay Main Implementation
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -91,7 +91,6 @@ void handle_array(msgpack_object array, int header)
                   break;
 
                default:
-                  assert(0);
                   break;
             }
          }

@@ -11,7 +11,7 @@
   
  Motors State Tracking
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -28,27 +28,31 @@
 #define __MOTORS_STATE_H__
 
 
-#include "flight_state.h"
+#include <stdbool.h>
 
 
 /* initializes motor state */
 void motors_state_init(void);
 
 
-/* indicates if the motors are spinning */
-int motors_starting(void);
+/* indicates if the motors are starting */
+bool motors_starting(void);
+
+
+/* indicates if the motors are stopping */
+bool motors_stopping(void);
 
 
 /* indicates if the motors are spinning */
-int motors_spinning(void);
+bool motors_spinning(void);
 
 
 /* indicates if the controller inputs are used  */
-int motors_controllable(void);
+bool motors_controllable(void);
 
 
 /* updates the motor state machine */
-void motors_state_update(flight_state_t flight_state, float dt, int start);
+void motors_state_update(bool flying, float dt, bool start);
 
 
 #endif /* __MOTORS_STATE_H__ */
