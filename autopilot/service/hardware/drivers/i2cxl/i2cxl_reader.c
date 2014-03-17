@@ -11,7 +11,7 @@
   
  I2CXL Reader Implementation
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -53,7 +53,7 @@ SIMPLE_THREAD_BEGIN(thread_func)
       {
          tsfloat_set(&altitude, alt);
       }
-      msleep(20);
+      msleep(50);
    }
    SIMPLE_THREAD_LOOP_END
 }

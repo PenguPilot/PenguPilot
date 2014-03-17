@@ -15,7 +15,7 @@
  - accelerometer variance
  - ultrasonic sensor
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -38,37 +38,31 @@
 
 static sliding_var_t *vars;
 static size_t dim;
-static size_t init_cnt;
 static size_t wnd;
-static float fly_tresh;
-static float crash_tresh;
-static float min_ground_z;
+static float tresh;
 static float hyst;
 static int fly_hyst_cnt = 0;
 static int stand_hyst_cnt = 0;
 
-static flight_state_t state = FS_STANDING;
+static bool flying = false;
 
 
-void flight_state_init(size_t window, size_t hysteresis, float fly_treshold, float crash_treshold, float _min_ground_z)
+void flight_state_init(size_t window, size_t hysteresis, float treshold)
 {
    ASSERT_ONCE();
-   min_ground_z = _min_ground_z;
    hyst = hysteresis;
-   fly_tresh = fly_treshold;
-   crash_tresh = crash_treshold;
+   tresh = treshold;
    wnd = window;
    dim = 3;
    vars = malloc(dim * sizeof(sliding_var_t));
    ASSERT_NOT_NULL(vars);
+
    FOR_N(i, dim)
-   {
       sliding_var_init(&vars[i], window, 0.0f);   
-   }
 }
 
 
-flight_state_t flight_state_update(float acc[3])
+bool flight_state_update(float acc[3])
 {
    /* perfom signal processing: */
    float sum = 0;
@@ -80,24 +74,20 @@ flight_state_t flight_state_update(float acc[3])
    sum /= dim;
 
    /* signal/hysteresis-based state identification: */
-   if (sum > fly_tresh)
+   if (sum > tresh)
    {
       stand_hyst_cnt = 0;
       /* flying -> flying / standing -> flying */
       if (fly_hyst_cnt++ == hyst)
-      {
-         state = FS_FLYING;
-      }
+         flying = true;
    }
    else
    {
       fly_hyst_cnt = 0;
       /* flying -> standing */
       if (stand_hyst_cnt++ == hyst)
-      {
-         state = FS_STANDING;
-      }
+         flying = false;
    }
-   return state;
+   return flying;
 }
 

@@ -32,10 +32,10 @@
 #include "motors_state.h"
 
 
-/* motor states: */
+/* motors state: */
 typedef enum 
 {
-   MOTORS_STOPPED =   0x01,
+   MOTORS_STOPPED =  0x01,
    MOTORS_STOPPING = 0x02,
    MOTORS_STARTING = 0x04,
    MOTORS_SPINNING = 0x08
@@ -54,34 +54,41 @@ void motors_state_init(void)
    ASSERT_ONCE();
    ASSERT_NULL(spinning_socket);
    spinning_socket = scl_get_socket("motors_spinning");
-            scl_send_static(spinning_socket, "true", 4);
+   scl_send_static(spinning_socket, "false", 5);
    ASSERT_NOT_NULL(spinning_socket);
-   etimer_init(&timer, 2.0);
+   etimer_init(&timer, 1.5);
+}
+
+
+/* indicates if the motors are starting */
+bool motors_starting(void)
+{
+   return (state & MOTORS_STARTING) ? true : false;
+}
+
+
+/* indicates if the motors are stopping */
+bool motors_stopping(void)
+{
+   return (state & MOTORS_STOPPING) ? true : false;
 }
 
 
 /* indicates if the motors are spinning */
-int motors_starting(void)
+bool motors_spinning(void)
 {
-   return (state & MOTORS_STARTING) ? 1 : 0;
-}
-
-
-/* indicates if the motors are spinning */
-int motors_spinning(void)
-{
-   return (state & (MOTORS_STARTING | MOTORS_SPINNING)) ? 1 : 0;
+   return (state & (MOTORS_STARTING | MOTORS_SPINNING | MOTORS_STOPPING)) ? true : false;
 }
 
 
 /* indicates if the controller inputs are used  */
-int motors_controllable(void)
+bool motors_controllable(void)
 {
-   return (state & MOTORS_SPINNING) ? 1 : 0;
+   return (state & MOTORS_SPINNING) ? true : false;
 }
 
 
-void motors_state_update(flight_state_t flight_state, float dt, int start)
+void motors_state_update(bool flying, float dt, bool start)
 {
    switch (state)
    {
@@ -95,19 +102,14 @@ void motors_state_update(flight_state_t flight_state, float dt, int start)
          break;
       
       case MOTORS_STARTING:
-         if (!start)
-         {
-            state = MOTORS_STOPPING;
-            etimer_reset(&timer);
-         }
-         else if (etimer_check(&timer, dt))
+         if (etimer_check(&timer, dt))
          {
             state = MOTORS_SPINNING;
          }
          break;
       
       case MOTORS_SPINNING:
-         if (!start && flight_state != FS_FLYING)
+         if (!start && !flying)
          {
             state = MOTORS_STOPPING;
             etimer_reset(&timer);
@@ -115,12 +117,7 @@ void motors_state_update(flight_state_t flight_state, float dt, int start)
          break;
       
       case MOTORS_STOPPING:
-         if (start)
-         {
-            state = MOTORS_STARTING;
-            etimer_reset(&timer);
-         }
-         else if (etimer_check(&timer, dt))
+         if (etimer_check(&timer, dt))
          {
             state = MOTORS_STOPPED;
             etimer_reset(&timer);

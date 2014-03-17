@@ -230,66 +230,6 @@ static bool validateMode(char * c) {
 }
 
 /**
- * Determine whether the given string contains characters that are not allowed
- * for fields in an NMEA string.
- *
- * @param str
- * The string to check
- * @param str_len
- * The length of the string to check
- * @param strName
- * The name of the string to report when invalid characters are encountered
- * @param report
- * A pointer to a buffer in which to place the report string when an invalid
- * nmea character is detected
- * @param reportSize
- * The size of the report buffer
- *
- * @return
- * - true when the string has invalid characters
- * - false otherwise
- */
-bool nmea_parse_sentence_has_invalid_chars(const char * str, const size_t str_len, const char * strName, char * report,
-		const size_t reportSize) {
-	static const char invalidChars[] = { '$', '*', ',', '!', '\\', '^', '~' };
-	static const char * invalidCharsNames[] = { "sentence delimiter ($)", "checksum field delimiter (*)", "comma (,)",
-			"exclamation mark (!)", "backslash (\\)", "power (^)", "tilde (~)" };
-
-	size_t i;
-	size_t j;
-
-	if (!str || !str_len) {
-		return false;
-	}
-
-	for (i = 0; i < str_len; i++) {
-		char c = str[i];
-
-		if (!((c >= 32) && (c <= 126))) {
-			if (report && reportSize) {
-				snprintf(report, reportSize, "Configured %s (%s),"
-						" character %lu, can not contain non-printable"
-						" characters (codes outside the range [32, 126])", strName, str, (unsigned long) i + 1);
-			}
-			return true;
-		}
-
-		for (j = 0; j < sizeof(invalidChars); j++) {
-			if (c == invalidChars[j]) {
-				if (report && reportSize) {
-					snprintf(report, reportSize, "Configured %s (%s),"
-							" character %lu, can not contain %s characters", strName, str, (unsigned long) i + 1,
-							invalidCharsNames[j]);
-				}
-				return true;
-			}
-		}
-	}
-
-	return false;
-}
-
-/**
  * Determine sentence type (see nmeaPACKTYPE) by the header of a string.
  * The header is the start of an NMEA sentence, right after the $.
  *
@@ -297,75 +237,20 @@ bool nmea_parse_sentence_has_invalid_chars(const char * str, const size_t str_le
  * @param len the length of the string
  * @return The packet type (or GPNON when it could not be determined)
  */
-int nmea_parse_get_sentence_type(const char *s, const int len) {
+int nmea_parse_get_sentence_type(const char *s) {
 	static const char *pheads[] = { "GPGGA", "GPGSA", "GPGSV", "GPRMC", "GPVTG" };
 	static const int types[] = { GPGGA, GPGSA, GPGSV, GPRMC, GPVTG };
 	unsigned int i;
 
 	assert(s);
 
-	if (len < 5)
-		return GPNON;
-
 	for (i = 0; i < (sizeof(types) / sizeof(int)); i++) {
-		if (!memcmp(s, pheads[i], 5)) {
+		if (!memcmp(s + 1, pheads[i], 5)) {
 			return types[i];
 		}
 	}
 
 	return GPNON;
-}
-
-/**
- * Find the tail ("\r\n") of a sentence in a string and check the checksum of the sentence.
- *
- * @param s the string
- * @param len the length of the string
- * @param checksum a pointer to the location where the checksum (as specified
- * in the sentence) should be stored (will be -1 if the checksum did not match
- * the calculated checksum or a new sentence was found in s after the start of s)
- * @return Number of bytes from the start of the string until the tail or 0
- * when no sentence was found
- */
-int nmea_parse_get_sentence_length(const char *s, const int len, int *checksum) {
-	static const int tail_sz = 1 + 2 + 2 /* *xx\r\n */;
-
-	const char * s_end = s + len;
-	int nread = 0;
-	int cksum = 0;
-
-	assert(s);
-	assert(checksum);
-
-	*checksum = -1;
-
-	for (; s < s_end; s++, nread++) {
-		if ((*s == '$') && nread) {
-			/* found a new sentence start marker _after_ the first character of s */
-			s = NULL; /* do not reset nread when exiting */
-			break;
-		}
-		if ('*' == *s) {
-			/* found a sentence checksum marker */
-			if (((s + tail_sz) <= s_end) && ('\r' == s[3]) && ('\n' == s[4])) {
-				*checksum = nmea_atoi(s + 1, 2, 16);
-				nread = len - (int) (s_end - (s + tail_sz));
-				if (*checksum != cksum) {
-					*checksum = -1;
-					s = NULL; /* do not reset nread when exiting */
-				}
-			}
-			break;
-		}
-		if (nread) {
-			cksum ^= (int) *s;
-		}
-	}
-
-	if (s && (*checksum < 0))
-		nread = 0;
-
-	return nread;
 }
 
 /**

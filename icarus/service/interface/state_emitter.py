@@ -14,7 +14,7 @@
  - translates flight_sm states to icarus StateUpdate messages
  - sends icarus StateUpdate messages using the given socket
 
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@
 
 
 from icarus_pb2 import StateUpdate
-from util.flight_state import to_protocol
 
 
 class StateEmitter:
@@ -38,6 +37,11 @@ class StateEmitter:
 
    def send(self, state):
       sm = StateUpdate()
-      sm.state = to_protocol(state)
+      sm.state = {'standing': STANDING,
+                  'taking_off': TAKING_OFF,
+                  'hovering': HOVERING,
+                  'landing': LANDING,
+                  'moving': MOVING,
+                  'stopping': STOPPING}[state]
       self._socket.send(sm.SerializeToString())
 

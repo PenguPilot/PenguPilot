@@ -11,7 +11,7 @@
   
  Attitude and Thrust Computation Interface
 
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -32,11 +32,11 @@
 #include "../util/math/vec2.h"
 
 
-/* n,e,d force to attitude and thrust conversion */
-int att_thrust_calc(vec2_t *ne_out, float *thrust, /* output: angle north, angle east, thrust */
-                    vec3_t *f_ned,   /* input of n,e,d forces */
+int att_thrust_calc(vec2_t *pr_angles, float *thrust, /* output: pitch/roll angles + thrust */
+                    vec3_t *f_neu,   /* input of p,r,d forces */
+                    float yaw, /* yaw orientation */
                     float thrust_max, /* maximum thrust force */
-                    int update_f_ned  /* if true, f_ned is updated if thrust_max has been exceeded */);
+                    int update_f_neu  /* if true, f_prd is updated if thrust_max has been exceeded */);
 
 
 #endif /* __ATT_THRUST_H__ */

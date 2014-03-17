@@ -12,7 +12,7 @@
  
  Stop Activity Class
 
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -25,25 +25,25 @@
  GNU General Public License for more details. """
 
 
-from core_pb2 import *
+from pilot_pb2 import *
 from activity import Activity, StabMixIn
 
 
 class StopActivity(Activity, StabMixIn):
 
-   def __init__(self, fsm, core, mon_data):
+   def __init__(self, fsm, pilot, mon_data):
       Activity.__init__(self)
       self.fsm = fsm
-      self.core = core
+      self.pilot = pilot
       self.mon_data = mon_data
       self.canceled = False
 
    def run(self):
-      core = self.core
+      pilot = self.pilot
       mon_data = self.mon_data
-      self.core.set_ctrl_param(POS_E, mon_data.e)
-      self.core.set_ctrl_param(POS_N, mon_data.n)
-      self.core.set_ctrl_param(POS_U, mon_data.u)
+      self.pilot.set_ctrl_param(POS_N, mon_data.n)
+      self.pilot.set_ctrl_param(POS_E, mon_data.e)
+      self.pilot.set_ctrl_param(POS_U, mon_data.u)
       self.stabilize()
-      self.fsm.done()
+      self.fsm.handle('done')
 

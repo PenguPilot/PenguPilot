@@ -11,7 +11,7 @@
  
  GPS Publisher and System Time Update Service
 
- Copyright (C) 2011 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -39,7 +39,8 @@
 #include <daemon.h>
 
 #include "linux_sys.h"
-#include "nmealib/nmea/nmea.h"
+#include "nmealib/nmea/info.h"
+#include "nmealib/nmea/parser.h"
 
 
 #define TIME_STR_LEN 128

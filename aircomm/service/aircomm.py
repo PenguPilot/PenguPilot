@@ -13,7 +13,7 @@
   
  Aircomm Service
 
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -95,7 +95,7 @@ def main(name):
    key = opcd.get('psk')
    crypt.init(key)
 
-   out_socket = None#sm['out']
+   out_socket = None #sm['out']
    in_socket = sm['in']
 
    aci = Interface('/dev/ttyACM0')

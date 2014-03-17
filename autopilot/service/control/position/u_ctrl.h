@@ -30,7 +30,7 @@
 
 float u_ctrl_step(float setpoint, float pos, float speed, float dt);
 
-void u_ctrl_init(float neutral_gas);
+void u_ctrl_init(void);
 
 void u_ctrl_reset(void);
 

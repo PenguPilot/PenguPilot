@@ -1,6 +1,6 @@
-/* Produced by CVXGEN, 2012-08-28 01:29:22 -0700.  */
-/* CVXGEN is Copyright (C) 2006-2011 Jacob Mattingley, jem@cvxgen.com. */
-/* The code in this file is Copyright (C) 2006-2011 Jacob Mattingley. */
+/* Produced by CVXGEN, 2014-08-28 01:29:22 -0700.  */
+/* CVXGEN is Copyright (C) 2006-2014 Jacob Mattingley, jem@cvxgen.com. */
+/* The code in this file is Copyright (C) 2006-2014 Jacob Mattingley. */
 /* CVXGEN, or solvers produced by CVXGEN, cannot be used for commercial */
 /* applications without prior written permission from Jacob Mattingley. */
 
@@ -108,7 +108,7 @@ extern Params params;
 extern Workspace work;
 extern Settings settings;
 
-/* Function definitions in /home/jem/olsr/releases/20110330074202/lib/olsr.extra/qp_solver/solver.c: */
+/* Function definitions in /home/jem/olsr/releases/20140330074202/lib/olsr.extra/qp_solver/solver.c: */
 float eval_gap(void);
 void set_defaults(void);
 void setup_pointers(void);
@@ -123,7 +123,7 @@ void better_start(void);
 void fillrhs_start(void);
 long solve(void);
 
-/* Function definitions in /home/jem/olsr/releases/20110330074202/lib/olsr.extra/qp_solver/matrix_support.c: */
+/* Function definitions in /home/jem/olsr/releases/20140330074202/lib/olsr.extra/qp_solver/matrix_support.c: */
 void multbymA(float *lhs, float *rhs);
 void multbymAT(float *lhs, float *rhs);
 void multbymG(float *lhs, float *rhs);
@@ -134,7 +134,7 @@ void fillh(void);
 void fillb(void);
 void pre_ops(void);
 
-/* Function definitions in /home/jem/olsr/releases/20110330074202/lib/olsr.extra/qp_solver/ldl.c: */
+/* Function definitions in /home/jem/olsr/releases/20140330074202/lib/olsr.extra/qp_solver/ldl.c: */
 void ldl_solve(float *target, float *var);
 void ldl_factor(void);
 float check_factorization(void);
@@ -142,7 +142,7 @@ void matrix_multiply(float *result, float *source);
 float check_residual(float *target, float *multiplicand);
 void fill_KKT(void);
 
-/* Function definitions in /home/jem/olsr/releases/20110330074202/lib/olsr.extra/qp_solver/util.c: */
+/* Function definitions in /home/jem/olsr/releases/20140330074202/lib/olsr.extra/qp_solver/util.c: */
 void tic(void);
 float toc(void);
 float tocq(void);
@@ -153,7 +153,7 @@ float randn_internal(long *idum, int reset);
 float randn(void);
 void reset_rand(void);
 
-/* Function definitions in /home/jem/olsr/releases/20110330074202/lib/olsr.extra/qp_solver/testsolver.c: */
+/* Function definitions in /home/jem/olsr/releases/20140330074202/lib/olsr.extra/qp_solver/testsolver.c: */
 /*int main(int argc, char **argv);
 void load_default_data(void);*/
 

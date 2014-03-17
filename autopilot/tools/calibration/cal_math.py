@@ -13,8 +13,8 @@
 
  calibration math
 
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
- Copyright (C) 2012 Fabio Varesano <fabio at varesano dot net>
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Fabio Varesano <fabio at varesano dot net>
 
  Development of this code has been supported by the Department of Computer Science,
  Universita' degli Studi di Torino, Italy within the Piemonte Project

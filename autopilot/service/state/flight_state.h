@@ -11,7 +11,7 @@
   
  Flight State Tracking
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -28,21 +28,14 @@
 #define __FLIGHT_STATE_H__
 
 
+#include <stdbool.h>
 #include <stddef.h>
 
 
-typedef enum
-{
-   FS_STANDING,
-   FS_FLYING
-}
-flight_state_t;
+void flight_state_init(size_t window, size_t hysteresis, float treshold);
 
 
-void flight_state_init(size_t window, size_t hysteresis, float fly_tresh, float crash_tresh, float min_ground_z);
-
-
-flight_state_t flight_state_update(float acc[3]);
+bool flight_state_update(float acc[3]);
 
 
 #endif /* __FLIGHT_STATE_H__ */

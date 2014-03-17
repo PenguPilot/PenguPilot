@@ -11,7 +11,7 @@
   
  up pos controller implementation
  
- Copyright (C) 2013 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -35,7 +35,6 @@
 static pid_controller_t ctrl;
 
 
-static float u_neutral_gas;
 static tsfloat_t pos_p;
 static tsfloat_t pos_d;
 static tsfloat_t pos_i;
@@ -45,11 +44,11 @@ static tsfloat_t pos_imax;
 float u_ctrl_step(float setpoint, float pos, float speed, float dt)
 {   
    float err = setpoint - pos;
-   return u_neutral_gas + pid_control(&ctrl, err, speed, dt);
+   return pid_control(&ctrl, err, speed, dt);
 }
 
 
-void u_ctrl_init(float neutral_gas)
+void u_ctrl_init(void)
 {
    ASSERT_ONCE();
    
@@ -64,7 +63,6 @@ void u_ctrl_init(float neutral_gas)
    opcd_params_apply("controllers.u_pos.", params);
 
    pid_init(&ctrl, &pos_p, &pos_i, &pos_d, &pos_imax);
-   u_neutral_gas = neutral_gas;
 }
 
 

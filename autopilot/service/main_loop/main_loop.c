@@ -11,7 +11,7 @@
   
  Main Loop Implementation
 
- Copyright (C) 2012 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,11 +24,12 @@
  GNU General Public License for more details. */
 
 
+#include <math.h>
 #include <syslog.h>
 #include <unistd.h>
 
-#include <opcd_interface.h>
 #include <util.h>
+#include <opcd_interface.h>
 #include <scl.h>
 #include <msgpack.h>
 #include <periodic_thread.h>
@@ -46,6 +47,7 @@
 #include "../platform/ac.h"
 #include "../platform/platform.h"
 #include "../platform/arcade_quad.h"
+#include "../platform/inv_coupling.h"
 #include "../hardware/util/acc_mag_cal.h"
 #include "../hardware/util/calibration.h"
 #include "../hardware/util/gps_util.h"
@@ -58,11 +60,10 @@
 #include "../control/speed/piid.h"
 #include "../control/speed/ne_speed.h"
 #include "../state/motors_state.h"
-#include "../force_opt/force_opt.h"
+#include "../state/flight_state.h"
 #include "../force_opt/att_thrust.h"
 #include "../flight_logic/flight_logic.h"
 #include "../blackbox/blackbox.h"
-#include "../filters/average.h"
 
 
 static bool calibrate = false;
@@ -74,13 +75,8 @@ static gps_rel_data_t gps_rel_data = {0.0, 0.0, 0.0f, 0.0f};
 static calibration_t gyro_cal;
 static interval_t gyro_move_interval;
 static int init = 0;
-static body_to_world_t *btw;
-static flight_state_t flight_state;
-static float acc_prev[3] = {0.0f, 0.0f, -9.81f};
-static float ultra_u_prev = 0.0f;
-
-
-static avg_data_t avgs[3];
+static body_to_neu_t *btn;
+static float avg_acc[3] = {0, 0, 9.81};
 
 
 typedef union
@@ -99,6 +95,8 @@ f_local_t;
 
 static int marg_err = 0;
 static pos_in_t pos_in;
+static calibration_t rc_cal;
+static float baro_ultra_sp = 0.0f;
 
 
 void main_init(int argc, char *argv[])
@@ -114,7 +112,14 @@ void main_init(int argc, char *argv[])
 
    /* init data structures: */
    memset(&pos_in, 0, sizeof(pos_in_t));
-
+   
+   /* read configuration: */
+   opcd_param_t params[] =
+   {
+      OPCD_PARAMS_END
+   };
+   opcd_params_apply("main.", params);
+ 
    /* init SCL subsystem: */
    syslog(LOG_INFO, "initializing signaling and communication link (SCL)");
    if (scl_init("pilot") != 0)
@@ -144,7 +149,7 @@ void main_init(int argc, char *argv[])
    }
    acc_mag_cal_init();
  
-   force_opt_init(platform.imtx1, platform.imtx2, platform.imtx3, platform.rpm_square_min, platform.rpm_square_max);
+   //force_opt_init(platform.imtx1, platform.imtx2, platform.imtx3, platform.rpm_square_min, platform.rpm_square_max);
    const size_t array_len = sizeof(float) * platform.n_motors;
    setpoints = malloc(array_len);
    ASSERT_NOT_NULL(setpoints);
@@ -158,8 +163,8 @@ void main_init(int argc, char *argv[])
    ne_speed_ctrl_init();
    att_ctrl_init();
    yaw_ctrl_init();
-   u_ctrl_init(platform.mass_kg * 10.0f / platform.max_thrust_n);
-   u_speed_init(platform.mass_kg * 10.0f / platform.max_thrust_n);
+   u_ctrl_init();
+   u_speed_init();
    navi_init();
 
    LOG(LL_INFO, "initializing command interface");
@@ -172,25 +177,22 @@ void main_init(int argc, char *argv[])
    flight_logic_init();
 
    /* init calibration data: */
-   cal_init(&gyro_cal, 3, 100);
-   btw = body_to_world_create();
+   cal_init(&gyro_cal, 3, 1000);
+   btn = body_to_neu_create();
 
    cal_ahrs_init(10.0f, 5.0f * REALTIME_PERIOD);
-   flight_state_init(50, 150, 4.0, 150.0, 0.3);
+   flight_state_init(50, 150, 4.0);
    
    piid_init(REALTIME_PERIOD);
 
    interval_init(&gyro_move_interval);
    gps_data_init(&gps_data);
 
-   avg_init(&avgs[0], 0.0);
-   avg_init(&avgs[1], 0.0);
-   avg_init(&avgs[2], -9.81);
+   cal_init(&rc_cal, 3, 500);
 
    mon_init();
    LOG(LL_INFO, "entering main loop");
 }
-
 
 
 
@@ -230,6 +232,15 @@ void main_step(float dt,
    }
    marg_err = 0;
    
+   /* apply calibration if remote control input is valid: */
+   if (sensor_status & RC_VALID)
+   {
+      float cal_channels[3] = {channels[CH_PITCH], channels[CH_ROLL], channels[CH_YAW]};
+      cal_sample_apply(&rc_cal, cal_channels);
+      channels[CH_PITCH] = cal_channels[0];
+      channels[CH_ROLL] = cal_channels[1];
+      channels[CH_YAW] = cal_channels[2];
+   }
 
    /* perform gyro calibration: */
    if (cal_sample_apply(&gyro_cal, &marg_data->gyro.vec[0]) == 0 && gyro_moved(&marg_data->gyro))
@@ -239,174 +250,164 @@ void main_step(float dt,
       cal_reset(&gyro_cal);
    }
 
+   /* update relative gps position, if we have a fix: */
    if (sensor_status & GPS_VALID)
    {
       gps_util_update(&gps_rel_data, gps_data);
-      pos_in.pos_e = gps_rel_data.de;
       pos_in.pos_n = gps_rel_data.dn;
-      pos_in.speed_e = gps_rel_data.speed_e;
+      pos_in.pos_e = gps_rel_data.de;
       pos_in.speed_n = gps_rel_data.speed_n;
+      pos_in.speed_e = gps_rel_data.speed_e;
+      /* compute declination and start gps position once: */
       ONCE(mag_decl = mag_decl_lookup(gps_data->lat, gps_data->lon);
            gps_start_set(gps_data);
-           LOG(LL_ERROR, "declination lookup yields: %f", mag_decl));
+           LOG(LL_ERROR, "declination lookup yields: %f deg", rad2deg(mag_decl)));
    }
 
    /* acc/mag calibration: */
    acc_mag_cal_apply(&marg_data->acc, &marg_data->mag);
-   flight_state = flight_state_update(&marg_data->acc.vec[0]);
-   if (flight_state == FS_STANDING && pos_in.ultra_u == 7.0)
-   {
-      pos_in.ultra_u = 0.0;
-   }
-   if (fabs(ultra_u_prev - pos_in.ultra_u) > 1.0)
-   {
-      pos_in.ultra_u = ultra_u_prev;   
-   }
-   else
-   {
-      ultra_u_prev = pos_in.ultra_u;
-   }
+   bool flying = flight_state_update(&marg_data->acc.vec[0]);
+   if (!flying && pos_in.ultra_u == 7.0)
+      pos_in.ultra_u = 0.2;
 
-   /* perform sensor data fusion: */
+   /* compute orientation estimate: */
    euler_t euler;
    int ahrs_state = cal_ahrs_update(&euler, marg_data, mag_decl, dt);
    if (ahrs_state < 0 || !cal_complete(&gyro_cal))
       return;
    ONCE(init = 1; LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
 
-   /* local ACC to global ACC rotation: */
+   /* rotate local ACC measurements into global NEU reference frame: */
    vec3_t world_acc;
-   body_to_world_transform(btw, &world_acc, &euler, &marg_data->acc);
+   body_to_neu(btn, &world_acc, &euler, &marg_data->acc);
    
-   /* center global ACC readings using previous value: */
+   /* center global ACC readings: */
    FOR_N(i, 3)
    {
-      pos_in.acc.vec[i] = world_acc.vec[i] - avg_calc(&avgs[i], world_acc.vec[i]);
+      pos_in.acc.vec[i] = world_acc.vec[i] - avg_acc[i];
+      float a = 0.001;
+      avg_acc[i] = avg_acc[i] * (1.0 - a) + world_acc.vec[i] * a;
    }
-   pos_in.acc.u *= -1.0f; /* convert NED frame to NEU */
 
-   /* compute next 3d position estimate: */
+   /* compute next 3d position estimate using Kalman filters: */
    pos_t pos_est;
    pos_update(&pos_est, &pos_in);
-   
-   printf("%f %f %f %f\n", pos_in.speed_n, pos_in.speed_e, pos_est.ne_speed.x, pos_est.ne_speed.y);
-   //printf("%f %f %d\n", pos_in.ultra_u, pos_est.ultra_u.pos, flight_state);
+
    /* execute flight logic (sets cm_x parameters used below): */
-   flight_logic_run(sensor_status, 1, channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos);
+   bool motors_enabled = flight_logic_run(sensor_status, flying, channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg);
    
-   /* RUN U POSITION AND SPEED CONTROLLER: */
+   /* execute up position/speed controller(s): */
    float u_err = 0.0f;
-   float f_d_rel = 0.0f;
+   float a_u = 0.0f;
    if (cm_u_is_pos())
    {
       if (cm_u_is_baro_pos())
       {
-         f_d_rel = u_ctrl_step(cm_u_setp(), pos_est.baro_u.pos, pos_est.baro_u.speed, dt);
+         a_u = u_ctrl_step(cm_u_setp(), pos_est.baro_u.pos, pos_est.baro_u.speed, dt);
          u_err = cm_u_setp() - pos_est.baro_u.pos;
       }
-      else
+      else /* ultra pos */
       {
-         f_d_rel = u_ctrl_step(cm_u_setp(), pos_est.ultra_u.pos, pos_est.ultra_u.speed, dt);
-         u_err = cm_u_setp() - pos_est.ultra_u.pos;
+         u_err = 1.0 /*cm_u_setp()*/ - pos_est.ultra_u.pos;
+         baro_ultra_sp += 0.001 * u_err;
+         a_u = u_ctrl_step(baro_ultra_sp, pos_est.baro_u.pos, pos_est.baro_u.speed, dt);
       }
    }
    else if (cm_u_is_spd())
-   {
-      f_d_rel = u_speed_step(cm_u_setp(), pos_est.baro_u.speed, 0.0f, dt);
-   }
+      a_u = u_speed_step(cm_u_setp(), pos_est.baro_u.speed, dt);
    else
-   {
-      f_d_rel = cm_u_setp();
-   }
-   f_d_rel = fmin(f_d_rel, channels[CH_GAS] /*cm_u_acc_limit()*/);
-   float f_d = f_d_rel * platform.max_thrust_n;
-
+      a_u = cm_u_setp();
+   
+   /* execute north/east navigation and/or read speed vector input: */
    vec2_t ne_speed_sp = {{0.0f, 0.0f}};
    if (cm_att_is_gps_pos())
    {
       navi_set_dest(cm_att_setp());
-      navi_run(&ne_speed_sp, &pos_est.ne_pos, dt); /* attitude navigation control */
+      navi_run(&ne_speed_sp, &pos_est.ne_pos, dt);
    }
    else if (cm_att_is_gps_spd())
-   {
-      ne_speed_sp = cm_att_setp(); /* direct attitude speed control */
-   }
+      ne_speed_sp = cm_att_setp();
 
-   /* RUN ATT NORTH/EAST SPEED CONTROLLER: */
-   vec2_t f_sw;
-   ne_speed_ctrl_run(&f_sw, &ne_speed_sp, dt, &pos_est.ne_speed);
-   
-   /* rotate global forces into local forces: */
-   vec2_t f_pr;
-   vec2_rotate(&f_pr, &f_sw, euler.yaw);
-   vec3_t f_prd = {{f_pr.x, f_pr.y, f_d}};
+   /* execute north/east speed controller: */
+   vec2_t a_ne; /* acceleration vector in north/east direction */
+   ne_speed_ctrl_run(&a_ne, &ne_speed_sp, dt, &pos_est.ne_speed);
+   vec3_t a_neu = {{a_ne.x, a_ne.y, a_u}}, f_neu;
+   vec3_mul_scalar(&f_neu, &a_neu, platform.mass_kg); /* f[i] = a[i] * m, makes ctrl device-independent */
+   float hover_force = platform.mass_kg * 10.0f;
+   f_neu.z += hover_force;
 
-   vec2_t pitch_roll_sp;
+   /* execute NEU forces optimizer: */
    float thrust;
-   att_thrust_calc(&pitch_roll_sp, &thrust, &f_prd, platform.max_thrust_n, 0);
+   vec2_t pitch_roll_sp;
+   att_thrust_calc(&pitch_roll_sp, &thrust, &f_neu, euler.yaw, platform.max_thrust_n, 0);
 
+   /* execute direct attitude angle control, if requested: */
    if (cm_att_is_angles())
-   {
-      pitch_roll_sp = cm_att_setp(); /* direct attitude angle control */
-   }
+      pitch_roll_sp = cm_att_setp();
 
-   /* RUN ATT ANGLE CONTROLLER: */
+   /* execute attitude angles controller: */
    vec2_t att_err;
-   vec2_t pitch_roll_speed = {{marg_data->gyro.y, marg_data->gyro.x}};
+   vec2_t pitch_roll_speed = {{-marg_data->gyro.y, marg_data->gyro.x}};
    vec2_t pitch_roll_ctrl;
-   vec2_t pitch_roll = {{euler.pitch, euler.roll}};
+   vec2_t pitch_roll = {{-euler.pitch, euler.roll}};
    att_ctrl_step(&pitch_roll_ctrl, &att_err, dt, &pitch_roll, &pitch_roll_speed, &pitch_roll_sp);
  
    float piid_sp[3] = {0.0f, 0.0f, 0.0f};
-   piid_sp[PIID_PITCH] = pitch_roll_ctrl.x;
-   piid_sp[PIID_ROLL] = pitch_roll_ctrl.y;
+   piid_sp[PIID_PITCH] = pitch_roll_ctrl.vec[0];
+   piid_sp[PIID_ROLL] = pitch_roll_ctrl.vec[1];
  
+   /* execute direct attitude rate control, if requested:*/
    if (cm_att_is_rates())
    {
-      /* direct attitude rate control */
-      vec2_t setp = cm_att_setp();
-      piid_sp[PIID_PITCH] = setp.x;
-      piid_sp[PIID_ROLL] = setp.y;
+      vec2_t pitch_roll_rates_sp = cm_att_setp();
+      piid_sp[PIID_PITCH] = pitch_roll_rates_sp.vec[0];
+      piid_sp[PIID_ROLL] = pitch_roll_rates_sp.vec[1];
    }
 
-   /* RUN YAW CONTROLLER: */
+   /* execute yaw position controller: */
    float yaw_speed_sp, yaw_err;
-   if (cm_yaw_is_pos())
-   {
-      /* yaw position control */
-      float sp = cm_yaw_setp();
-      yaw_speed_sp = yaw_ctrl_step(&yaw_err, sp, euler.yaw, marg_data->gyro.z, dt);
-   }
+   if (cm_yaw_is_pos() && pos_est.ultra_u.pos > 1.0f)
+      yaw_speed_sp = yaw_ctrl_step(&yaw_err, cm_yaw_setp(), euler.yaw, marg_data->gyro.z, dt);
    else
-   {
       yaw_speed_sp = cm_yaw_setp(); /* direct yaw speed control */
-   }
-
    piid_sp[PIID_YAW] = yaw_speed_sp;
 
-   /* RUN STABLIZING PIID CONTROLLER: */
+   /* execute stabilizing PIID controller: */
    f_local_t f_local = {{thrust, 0.0f, 0.0f, 0.0f}};
-   piid_run(&f_local.vec[1], marg_data->gyro.vec, piid_sp);
+   float piid_gyros[3] = {marg_data->gyro.x, -marg_data->gyro.y, marg_data->gyro.z};
+   piid_run(&f_local.vec[1], piid_gyros, piid_sp);
 
-   /* computation of rpm ^ 2 out of the desired forces */
-   inv_coupling_calc(&platform.inv_coupling, rpm_square, f_local.vec);
+   /* computate rpm ^ 2 out of the desired forces: */
+   inv_coupling_calc(rpm_square, f_local.vec);
 
-   /* update motors state: */
-   motors_state_update(flight_state, dt, (sensor_status & RC_VALID) && channels[CH_SWITCH_L] < 0.5 && channels[CH_GAS] > 0.12);
+   /* compute motor setpoints out of rpm ^ 2: */
+   piid_int_enable(platform_ac_calc(setpoints, motors_spinning(), voltage, rpm_square));
 
+   /* enables motors, if flight logic requests at a force lifting at least 10% of our mass: */
+   float motors_start_force = 0.1 * hover_force;
+   motors_state_update(flying, dt, motors_enabled && thrust > motors_start_force);
+   
+   /* reset controllers, if motors are not controllable: */
    if (!motors_controllable())
    {
-      piid_reset(); /* reset piid integrators so that we can move the device manually */
+      navi_reset();
+      u_ctrl_reset();
+      ne_speed_ctrl_reset();
       att_ctrl_reset();
+      piid_reset(); 
    }
-   
-   /* compute motor set points out of rpm ^ 2: */
-   piid_int_enable(platform_ac_calc(setpoints, motors_spinning(), voltage, rpm_square));
-   
+ 
+   /* handle special cases for motor setpoints (0.0f ... 1.0f): */
+   if (motors_starting())
+      FOR_N(i, platform.n_motors) setpoints[i] = 0.1f;
+   if (!motors_enabled || motors_stopping())
+      FOR_N(i, platform.n_motors) setpoints[i] = 0.0f;
+
    /* write motors: */
    if (!override_hw)
    {
-      platform_write_motors(setpoints);
+      printf("%f %f %f %f\n", setpoints[0], setpoints[1], setpoints[2], setpoints[3]);
+      //platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */
