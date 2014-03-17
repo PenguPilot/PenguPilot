@@ -66,14 +66,14 @@ class PilotInterface:
       req.type = MODE_CAL
       self._exec(req)
 
-   def spin_up(self):
+   def start_motors(self):
       req = PilotReq()
-      req.type = SPIN_UP
+      req.type = START_MOTORS
       self._exec(req)
 
-   def spin_down(self):
+   def stop_motors(self):
       req = PilotReq()
-      req.type = SPIN_DOWN
+      req.type = STOP_MOTORS
       self._exec(req)
 
    def reset_ctrl(self):
