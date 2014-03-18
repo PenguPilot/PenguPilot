@@ -245,7 +245,7 @@ int nmea_parse_get_sentence_type(const char *s) {
 	assert(s);
 
 	for (i = 0; i < (sizeof(types) / sizeof(int)); i++) {
-		if (!memcmp(s + 1, pheads[i], 5)) {
+		if (!memcmp(s, pheads[i], 5)) {
 			return types[i];
 		}
 	}
@@ -295,7 +295,7 @@ int nmea_parse_GPGGA(const char *s, const int len, nmeaGPGGA *pack) {
 	pack->dgps_sid = 0;		/* ignored */
 
 	/* parse */
-	token_count = nmea_scanf(s, len, "$GPGGA,%s,%f,%c,%f,%c,%d,%d,%f,%f,%c,%f,%c,%f,%d*", &time_buff[0], &pack->lat,
+	token_count = nmea_scanf(s, len, "GPGGA,%s,%f,%c,%f,%c,%d,%d,%f,%f,%c,%f,%c,%f,%d", &time_buff[0], &pack->lat,
 			&pack->ns, &pack->lon, &pack->ew, &pack->sig, &pack->satinuse, &pack->HDOP, &pack->elv, &pack->elv_units,
 			&pack->diff, &pack->diff_units, &pack->dgps_age, &pack->dgps_sid);
 
@@ -394,7 +394,7 @@ int nmea_parse_GPGSA(const char *s, const int len, nmeaGPGSA *pack) {
 	pack->VDOP = NAN;
 
 	/* parse */
-	token_count = nmea_scanf(s, len, "$GPGSA,%c,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f*", &pack->fix_mode,
+	token_count = nmea_scanf(s, len, "GPGSA,%c,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%f,%f,%f", &pack->fix_mode,
 			&pack->fix_type, &pack->sat_prn[0], &pack->sat_prn[1], &pack->sat_prn[2], &pack->sat_prn[3],
 			&pack->sat_prn[4], &pack->sat_prn[5], &pack->sat_prn[6], &pack->sat_prn[7], &pack->sat_prn[8],
 			&pack->sat_prn[9], &pack->sat_prn[10], &pack->sat_prn[11], &pack->PDOP, &pack->HDOP, &pack->VDOP);
@@ -464,11 +464,11 @@ int nmea_parse_GPGSV(const char *s, const int len, nmeaGPGSV *pack) {
 	memset(pack, 0, sizeof(nmeaGPGSV));
 
 	/* parse */
-	token_count = nmea_scanf(s, len, "$GPGSV,%d,%d,%d,"
+	token_count = nmea_scanf(s, len, "GPGSV,%d,%d,%d,"
 			"%d,%d,%d,%d,"
 			"%d,%d,%d,%d,"
 			"%d,%d,%d,%d,"
-			"%d,%d,%d,%d*", &pack->pack_count, &pack->pack_index, &pack->sat_count, &pack->sat_data[0].id,
+			"%d,%d,%d,%d", &pack->pack_count, &pack->pack_index, &pack->sat_count, &pack->sat_data[0].id,
 			&pack->sat_data[0].elv, &pack->sat_data[0].azimuth, &pack->sat_data[0].sig, &pack->sat_data[1].id,
 			&pack->sat_data[1].elv, &pack->sat_data[1].azimuth, &pack->sat_data[1].sig, &pack->sat_data[2].id,
 			&pack->sat_data[2].elv, &pack->sat_data[2].azimuth, &pack->sat_data[2].sig, &pack->sat_data[3].id,
@@ -565,7 +565,7 @@ int nmea_parse_GPRMC(const char *s, const int len, nmeaGPRMC *pack) {
 	pack->mode = 0;
 
 	/* parse */
-	token_count = nmea_scanf(s, len, "$GPRMC,%s,%c,%f,%c,%f,%c,%f,%f,%d,%f,%c,%c*", &time_buff[0], &pack->status,
+	token_count = nmea_scanf(s, len, "GPRMC,%s,%c,%f,%c,%f,%c,%f,%f,%d,%f,%c,%c", &time_buff[0], &pack->status,
 			&pack->lat, &pack->ns, &pack->lon, &pack->ew, &pack->speed, &pack->track, &date,
 			&pack->magvar, &pack->magvar_ew, &pack->mode);
 
@@ -684,7 +684,7 @@ int nmea_parse_GPVTG(const char *s, const int len, nmeaGPVTG *pack) {
 	pack->spk_k = 0;
 
 	/* parse */
-	token_count = nmea_scanf(s, len, "$GPVTG,%f,%c,%f,%c,%f,%c,%f,%c*", &pack->track, &pack->track_t, &pack->mtrack,
+	token_count = nmea_scanf(s, len, "GPVTG,%f,%c,%f,%c,%f,%c,%f,%c", &pack->track, &pack->track_t, &pack->mtrack,
 			&pack->mtrack_m, &pack->spn, &pack->spn_n, &pack->spk, &pack->spk_k);
 
 	/* see that we have enough tokens */
