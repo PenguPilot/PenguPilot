@@ -96,7 +96,6 @@ f_local_t;
 static int marg_err = 0;
 static pos_in_t pos_in;
 static calibration_t rc_cal;
-static float baro_ultra_sp = 0.0f;
 
 
 void main_init(int argc, char *argv[])
@@ -309,9 +308,8 @@ void main_step(float dt,
       }
       else /* ultra pos */
       {
-         u_err = 1.0 /*cm_u_setp()*/ - pos_est.ultra_u.pos;
-         baro_ultra_sp += 0.001 * u_err;
-         a_u = u_ctrl_step(baro_ultra_sp, pos_est.baro_u.pos, pos_est.baro_u.speed, dt);
+         u_err = cm_u_setp() - pos_est.ultra_u.pos;
+         a_u = u_ctrl_step(cm_u_setp(), pos_est.ultra_u.pos, pos_est.ultra_u.speed, dt);
       }
    }
    else if (cm_u_is_spd())
@@ -394,7 +392,7 @@ void main_step(float dt,
       u_ctrl_reset();
       ne_speed_ctrl_reset();
       att_ctrl_reset();
-      piid_reset(); 
+      piid_reset();
    }
  
    /* handle special cases for motor setpoints (0.0f ... 1.0f): */
@@ -406,8 +404,8 @@ void main_step(float dt,
    /* write motors: */
    if (!override_hw)
    {
-      EVERY_N_TIMES(10, printf("%d %f %f %f %f\n", hard_off, setpoints[0], setpoints[1], setpoints[2], setpoints[3]));
-      //platform_write_motors(setpoints);
+      //EVERY_N_TIMES(10, printf("%d %f %f %f %f\n", hard_off, setpoints[0], setpoints[1], setpoints[2], setpoints[3]));
+      platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */
