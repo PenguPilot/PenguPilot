@@ -31,15 +31,15 @@ extern "C" {
 
 
 /**
- * NMEA frame parser state machine
+ * NMEA frame parser structure
  */
-typedef struct  {
-	int cksum;
-	int use_cs;
+typedef struct 
+{
+   int cksum;
 	char cs1;
 	int checksum;
-	char frame[1024];
-	int frame_len;
+   char frame[1024];
+   int frame_len;
 
 	enum {
 		READ_START,
@@ -48,23 +48,25 @@ typedef struct  {
 		READ_CS1,
 		READ_CS2,
 		READ_LF,
-	} state;
+	}
+	state;
 }
 frame_parser_t;
 
 
 /**
- * The parser high-level data and state machine
+ * The parser data.
  */
 typedef struct _nmeaPARSER {
-	union {
-		nmeaGPGGA gpgga;
-		nmeaGPGSA gpgsa;
-		nmeaGPGSV gpgsv;
-		nmeaGPRMC gprmc;
-		nmeaGPVTG gpvtg;
-	};
-	frame_parser_t frame_parser;
+   union
+   {
+      nmeaGPGGA gpgga;
+      nmeaGPGSA gpgsa;
+      nmeaGPGSV gpgsv;
+      nmeaGPRMC gprmc;
+      nmeaGPVTG gpvtg;
+   };
+   frame_parser_t frame_parser;
 } nmeaPARSER;
 
 
