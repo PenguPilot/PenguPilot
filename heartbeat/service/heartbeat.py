@@ -38,7 +38,8 @@ from msgpack import Packer
 from aircomm_shared import BCAST, HEARTBEAT
 
 socket_map = None
-
+voltage = 0.0
+current = 0.0
 
 def gps():
    global gps_data, socket_map
@@ -68,8 +69,6 @@ def pmreader():
    s = socket_map['power']
    p = PowerState()
    global voltage, current
-   voltage = None
-   current = None
    while True:
       p.ParseFromString(s.recv())
       if voltage is None:
