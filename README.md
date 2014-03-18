@@ -43,5 +43,5 @@ Build System and Environment:
 
 Library dependencies:
 - C: msgpack, meschach, protobuf-c, yaml, zmq, glib2
-- Python: psutil, yaml, msgpack, zmq
+- Python: psutil, yaml, protobuf, msgpack, zmq
 
