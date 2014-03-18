@@ -404,8 +404,8 @@ void main_step(float dt,
    /* write motors: */
    if (!override_hw)
    {
-      EVERY_N_TIMES(10, printf("%d %f %f %f %f\n", hard_off, setpoints[0], setpoints[1], setpoints[2], setpoints[3]));
-      //platform_write_motors(setpoints);
+      //EVERY_N_TIMES(10, printf("%d %f %f %f %f\n", hard_off, setpoints[0], setpoints[1], setpoints[2], setpoints[3]));
+      platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */

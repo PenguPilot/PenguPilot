@@ -138,7 +138,7 @@ static float stick_dz(float g, float d)
 static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos, float u_ultra_pos)
 {
    float dz = tsfloat_get(&gas_deadzone);
-   if (1) //fabs(gas_stick) > dz || u_ultra_pos < 1.0)
+   if (fabs(gas_stick) > dz || u_ultra_pos < 0.5)
    {
       float vmax = tsfloat_get(&vert_speed_max);
       cm_u_set_spd(stick_dz(gas_stick, dz) * vmax);
@@ -147,7 +147,10 @@ static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos, float u_u
    else if (!vert_pos_locked)
    {
       vert_pos_locked = true;
-      cm_u_set_baro_pos(u_baro_pos);
+      if (u_ultra_pos < 5.0)
+         cm_u_set_ultra_pos(u_ultra_pos);
+      else
+         cm_u_set_baro_pos(u_baro_pos);
    }
 }
 
