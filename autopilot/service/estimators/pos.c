@@ -177,12 +177,12 @@ static void kalman_init(kalman_t *kf, float q, float r, float pos, float speed, 
    kf->H = m_get(2, 2);
    ASSERT_NOT_NULL(kf->H);
    m_set_val(kf->H, 0, 0, 1.0);
-   m_set_val(kf->H, 1, 0, 0.0);
    m_set_val(kf->H, 0, 1, 0.0);
+   m_set_val(kf->H, 1, 1, 0.0);
    if (use_speed)
-      m_set_val(kf->H, 1, 1, 1.0);
+      m_set_val(kf->H, 1, 0, 1.0);
    else
-      m_set_val(kf->H, 1, 1, 0.0);
+      m_set_val(kf->H, 1, 0, 0.0);
 
    /* A = | 1.0   dt  |
           | 0.0   1.0 |

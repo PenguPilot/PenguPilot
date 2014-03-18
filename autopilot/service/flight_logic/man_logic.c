@@ -59,6 +59,7 @@ static tsfloat_t horiz_speed_max;
 static tsfloat_t gps_deadzone;
 static tsfloat_t gas_deadzone;
 static tsfloat_t yaw_speed_max;
+static tsfloat_t sticks_rotation;
 
 static bool vert_pos_locked = false;
 static bool horiz_pos_locked = true;
@@ -75,6 +76,7 @@ void man_logic_init(void)
       {"gps_deadzone", &gps_deadzone},
       {"gas_deadzone", &gas_deadzone},
       {"yaw_speed_max", &yaw_speed_max},
+      {"sticks_rotation", &sticks_rotation},
       OPCD_PARAMS_END
    };
    opcd_params_apply("manual_control.", params);
@@ -211,8 +213,11 @@ static void emergency_landing(bool gps_valid, vec2_t *ne_gps_pos, float u_ultra_
 
 bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos, float f_max, float mass)
 {
-   float pitch = channels[CH_PITCH];
-   float roll = channels[CH_ROLL];
+   vec2_t pr = {{channels[CH_PITCH], channels[CH_ROLL]}};
+   vec2_rotate(&pr, &pr, deg2rad(tsfloat_get(&sticks_rotation)));
+   float pitch = pr.vec[0];
+   float roll = pr.vec[1];
+
    float yaw_stick = channels[CH_YAW];
    float gas_stick = channels[CH_GAS];
    float sw_l = channels[CH_SWITCH_L];
