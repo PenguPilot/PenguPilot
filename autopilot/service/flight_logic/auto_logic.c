@@ -61,7 +61,7 @@ void auto_logic_init(void)
 }
 
 
-bool auto_logic_run(bool is_full_auto, uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos)
+bool auto_logic_run(bool *hard_off, bool is_full_auto, uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos)
 { 
    int rc_valid = sensor_status & RC_VALID;
    if (is_full_auto || rc_valid)
@@ -111,7 +111,10 @@ bool auto_logic_run(bool is_full_auto, uint16_t sensor_status, bool flying, floa
       cm_att_set_gps_pos(ne_gps_setpoint);
    }
 
-   return tsint_get(&motors_enabled) && (is_full_auto || ((sensor_status & RC_VALID) && sw_l < 0.5));
+   if (!is_full_auto && (sensor_status & RC_VALID) && sw_l > 0.5)
+      *hard_off = true;
+
+   return tsint_get(&motors_enabled);
 }
 
 

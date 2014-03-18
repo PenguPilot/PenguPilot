@@ -52,7 +52,7 @@ simple_thread_t;
       sched_setscheduler(getpid(), SCHED_FIFO, &thread->sched_param);
 
 #define SIMPLE_THREAD_LOOP_BEGIN \
-   display_thread_sched_attr(thread->name); \
+   /* display_thread_sched_attr(thread->name); */ \
    while (thread->running) \
    {
 

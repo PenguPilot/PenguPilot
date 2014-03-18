@@ -78,12 +78,11 @@ bool flight_logic_run(bool *hard_off,
          break;
 
       case MODE_SAFE_AUTO:
-         motors_enabled = auto_logic_run(0, sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos);
+         motors_enabled = auto_logic_run(hard_off, false, sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos);
          break;
 
-
       case MODE_FULL_AUTO:
-         motors_enabled = auto_logic_run(1, sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos);
+         motors_enabled = auto_logic_run(hard_off, true, sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos);
          break;
 
    }
