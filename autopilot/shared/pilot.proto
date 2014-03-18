@@ -32,10 +32,11 @@
 enum RequestType
 {
    // requests without parameters:
-   RESET_CTRL =  1; // reset controllers (I-parts)
-   GET_PARAMS =  2; // get parameters
+   START_MOTORS =   1;
+   STOP_MOTORS =    2;
+   GET_PARAMS =     3;
    // request with parameters:
-   SET_CTRL_PARAM = 3; // requires CtrlData */
+   SET_CTRL_PARAM = 4; // requires CtrlData */
 }
 
 
