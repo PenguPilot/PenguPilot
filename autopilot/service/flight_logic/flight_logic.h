@@ -36,7 +36,8 @@
 
 void flight_logic_init(void);
 
-bool flight_logic_run(uint16_t sensor_status,
+bool flight_logic_run(bool *hard_off,
+                      uint16_t sensor_status,
                       bool flying,
                       float channels[MAX_CHANNELS],
                       float yaw,
