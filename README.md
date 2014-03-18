@@ -50,3 +50,9 @@ Library dependencies:
 - Python: psutil, pyyaml, protobuf, msgpack, pyzmq, swig, python-daemon, numpy
 - System recommended: sudo, git, i2c-tools, screen...
 
+Example UAV System
+------------------
+
+Here's an example of a Gumstix Overo Air based PenguCopter with GPS and display:
+
+![PenguCopter](https://raw.github.com/PenguPilot/PenguPilot/master/doc/GumstixCopter.jpg)
