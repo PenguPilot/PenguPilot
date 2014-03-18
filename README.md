@@ -36,6 +36,10 @@ Supporting Infrastructures:
 - config: configuration files
 - setup: config file creation scripts (EXPERIMENTAL)
 
+Additional Features:
+- aircomm: encrypted aerial communication daemon, using NRF24L01+
+- display: shows battery, mem, cpu, sattelite status via I2C SSD1307 128x64 display from Adafruit
+
 Build System and Environment:
 - site_scons: related to build system
 - SConstruct: scons build file
