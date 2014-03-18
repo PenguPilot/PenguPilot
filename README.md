@@ -12,33 +12,36 @@
 
 Overview
 --------
-PenguPilot is a Free and Open Source Multi-Rotor UAV autopilot
-for Linux-based computer modules.
-The whole state estimation and control system runs as a Linux
-user-space task, which is ideal for prototyping and experimentation.
-PenguPilot's architecture allows to distribute the control code
-among several processes (e.g. high-level control and low-level control).
+PenguPilot is a Free and Open Source Multi-Rotor UAV autopilot for Linux-capable computer modules like the Gumstix Overo, Raspberry Pi or the Odroid-X3.
+Sensor data acquisition, tate estimation and control runs as a high-priority Linux user-space task, which is ideal for prototyping and experimentation.
+PenguPilot's architecture allows to distribute the control code among several processes (e.g. high-level control in Python and low-level control in C).
+Currently, components are implemented in C and Python, communicating efficiently via ZeroMQ and Protobuf/MessagePack.
 
 Contents
 --------
 Flight Infrastructure:
-- autopilot: autopilot service and calibration tools
-- blackbox: black box service and tools
+- autopilot:
+  - service: the autopilot service
+  - tools: calibration and other useful utilities
+- blackbox: black box service for logging every sensor input of the autopilot to harddisk/sdcard
 - powerman: power management and monitoring service
-- gps: gps service, similar to gpsd but more efficient and much simpler
+- gps: gps service, similar to gpsd but more efficient and much simpler using nmeablib
 - icarus: high-level control service for complex commands
 
 Supporting Infrastructures:
-- scl: signaling and communication link (IPC framework)
-- opcd: online parameter configuration daemon
-- svctrl: service management and control utility
-- shared: shared Libraries
-- config: system architecture and parameter config files
+- scl: signaling and communication link (IPC framework), see config/system.yaml
+- opcd: online parameter configuration daemon, see config/params.yaml
+- svctrl: service management and control utility, see config/services.yaml
+- shared: shared Libraries for threading and other common tasks
+- config: configuration files
 - setup: config file creation scripts (EXPERIMENTAL)
-- remote: remote control reader service (EXPERIMENTAL)
 
 Build System and Environment:
 - site_scons: related to build system
 - SConstruct: scons build file
-- scripts: various scripts, e.g. bashrc for sourcing
+- scripts: various scripts, e.g. bashrc
+
+Library dependencies:
+- C: msgpack, meschach, protobuf-c, yaml, zmq, glib2
+- Python: psutil, yaml, msgpack, zmq
 
