@@ -9,10 +9,13 @@ class MessageHistory:
       self.timeout = timeout
       self.hist = {}
 
+   def append(self, msg):
+      self.hist[msg] = time()
+
    def check(self, msg):
       if msg in self.hist.keys():
          return False
-      self.hist[msg] = time()
+      self.append(msg)
       rl = []
       ct = time()
       for m, t in self.hist.iteritems():
