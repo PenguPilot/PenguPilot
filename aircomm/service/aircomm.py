@@ -41,12 +41,12 @@ from aircomm_shared import BCAST
 
 class ACIReader(Thread):
 
-   def __init__(self, aci, scl_socket):
+   def __init__(self, aci, scl_socket, mhist):
       Thread.__init__(self)
       self.daemon = True
       self.aci = aci
       self.scl_socket = scl_socket
-      self.mhist = MessageHistory(60)
+      self.mhist = mhist
 
    def run(self):
       s = 0
@@ -55,11 +55,9 @@ class ACIReader(Thread):
             # receive encrypted message:
             crypt_data = self.aci.receive()
             if crypt_data:
-               print 'received encrypted data:', b64encode(crypt_data), 'orig len: %d' % len(crypt_data)
                
                # check if we have seen this message before:
                if not self.mhist.check(crypt_data):
-                  print 'message already seen; skipping'
                   continue
                
                # decrypt message:
@@ -69,21 +67,17 @@ class ACIReader(Thread):
                try:
                   msg = loads(raw_msg)
                except:
-                  print 'could not unpack data'
                   continue
                
                # if message is meant for us, forward to application(s)
                if msg[0] in [THIS_SYS_ID, BCAST]:
                   msg_tail = msg[1:]
-                  print 'message for me:', msg_tail
                   #self.scl_socket.send(dumps(msg_tail))
 
-               if msg[0] != THIS_SYS_ID and msg[1] != THIS_SYS_ID:
-                  print 'broadcasting message'
+               if msg[0] != THIS_SYS_ID:
                   self.aci.send(crypt_data)
 
          except Exception, e:
-            print e
             sleep(1)
 
 
@@ -94,12 +88,13 @@ def main(name):
    THIS_SYS_ID = opcd.get('id')
    key = opcd.get('psk')
    crypt.init(key)
+   mhist = MessageHistory(60)
 
    out_socket = None #sm['out']
    in_socket = sm['in']
 
    aci = Interface('/dev/ttyACM0')
-   acr = ACIReader(aci, out_socket)
+   acr = ACIReader(aci, out_socket, mhist)
    acr.start()
 
    # read from SCL in socket and send data via NRF
@@ -111,8 +106,9 @@ def main(name):
          msg = [data[0], THIS_SYS_ID] + data[1:]
       else:
          continue
-      crypt_msg = crypt.encrypt(dumps(msg))
-      aci.send(crypt_msg)
+      crypt_data = crypt.encrypt(dumps(msg))
+      mhist.append(crypt_data)
+      aci.send(crypt_data)
 
 daemonize('aircomm', main)
 

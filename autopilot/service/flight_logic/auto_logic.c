@@ -44,6 +44,7 @@ static tsfloat_t setp_e;
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static float setp_u = -10.0;
 static bool mode_is_ground = true;
+static tsint_t motors_enabled;
 
 /* yaw setpoint in rad: */
 static tsfloat_t setp_yaw;
@@ -56,6 +57,7 @@ void auto_logic_init(void)
    tsfloat_init(&setp_n, 0.0f);
    tsfloat_init(&setp_e, 0.0f);
    tsfloat_init(&setp_yaw, 0.0f);
+   tsint_init(&motors_enabled, 0);
 }
 
 
@@ -109,7 +111,7 @@ bool auto_logic_run(bool is_full_auto, uint16_t sensor_status, bool flying, floa
       cm_att_set_gps_pos(ne_gps_setpoint);
    }
 
-   return is_full_auto || ((sensor_status & RC_VALID) && sw_l < 0.5);
+   return tsint_get(&motors_enabled) && (is_full_auto || ((sensor_status & RC_VALID) && sw_l < 0.5));
 }
 
 
@@ -153,6 +155,13 @@ int auto_logic_set_u_msl(float val)
 int auto_logic_set_yaw(float val)
 {
    tsfloat_set(&setp_yaw, val);
+   return 0;
+}
+
+
+int auto_logic_enable_motors(bool enable)
+{
+   tsint_set(&motors_enabled, enable); 
    return 0;
 }
 
