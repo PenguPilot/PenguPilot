@@ -54,15 +54,22 @@ static int nmea_parse_frame(frame_parser_t *parser, char c)
 		parser->state = READ_DATA_CRC_CR; 
 		parser->cksum = 0;
 		parser->frame_len = 0;
+		parser->use_cs = 0;
 	}
 	else {
 		switch (parser->state) {
 
 			case READ_DATA_CRC_CR:
-				if (c == '*')
+				if (c == '*') {
+					parser->use_cs = 1;
 					parser->state = READ_CS1;
-				else if (c != '\r')
+				}
+				else if (c != '\r') {
 					parser->cksum ^= (int)c;
+					/* put character in frame: */
+					parser->frame[parser->frame_len] = c;
+					parser->frame_len = (parser->frame_len + 1) % sizeof(parser->frame);
+				}
 
 			case READ_CR:
 				if (c == '\r')
@@ -70,8 +77,10 @@ static int nmea_parse_frame(frame_parser_t *parser, char c)
 				break;
 
 			case READ_LF:
-				if (c == '\n' && (parser->checksum == parser->cksum))
-					ret = 1;
+				if (c == '\n' && (!parser->use_cs || (parser->checksum == parser->cksum))) {
+						parser->frame[parser->frame_len] = '\0';
+						ret = 1;
+					}
 				break;
 
 			case READ_CS1:
@@ -92,12 +101,6 @@ static int nmea_parse_frame(frame_parser_t *parser, char c)
 				break;
 		}
 	}
-
-	/* put character in frame buffer: */
-	parser->frame[parser->frame_len] = c;
-	parser->frame_len = (parser->frame_len + 1) % sizeof(parser->frame);
-	if (ret)
-		parser->frame[parser->frame_len] = '\0';
 	return ret;
 }
 
@@ -151,9 +154,9 @@ int nmea_parse(nmeaPARSER *parser, const char *s, int len, nmeaINFO *info) {
 					break;
 
 				case GPVTG:
-					if (nmea_parse_GPVTG(fp->frame, fp->frame_len, &parser->gptvg)) {
+					if (nmea_parse_GPVTG(fp->frame, fp->frame_len, &parser->gpvtg)) {
 						parsed++;
-						nmea_GPVTG2info(&parser->gptvg, info);
+						nmea_GPVTG2info(&parser->gpvtg, info);
 					}
 					break;
 
