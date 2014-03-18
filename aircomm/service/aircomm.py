@@ -72,7 +72,7 @@ class ACIReader(Thread):
                # if message is meant for us, forward to application(s)
                if msg[0] in [THIS_SYS_ID, BCAST]:
                   msg_tail = msg[1:]
-                  #self.scl_socket.send(dumps(msg_tail))
+                  self.scl_socket.send(dumps(msg_tail))
 
                if msg[0] != THIS_SYS_ID:
                   self.aci.send(crypt_data)
@@ -90,7 +90,7 @@ def main(name):
    crypt.init(key)
    mhist = MessageHistory(60)
 
-   out_socket = None #sm['out']
+   out_socket = sm['out']
    in_socket = sm['in']
 
    aci = Interface('/dev/ttyACM0')

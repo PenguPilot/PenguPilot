@@ -128,6 +128,7 @@ components:
    - name: aircomm
      gates:
       - in: sub
+      - out: pub
       - opcd_ctrl: req
 
    - name: display
@@ -138,9 +139,13 @@ components:
 
    - name: heartbeat
      gates:
-      - out: pub
       - gps: sub
       - power: sub
+
+   - name: aircomm_app
+     gates:
+      - in: sub
+      - out: pub
 
    - name: wifi_loc
      gates:
@@ -154,7 +159,8 @@ components:
 connections:
    - [ wifi_loc.wifi,            wifi_sensor.networks]
    - [ wifi_loc.gps,             gps.data]
-   - [ heartbeat.out,            aircomm.in]
+   - [ aircomm_app.out,          aircomm.in]
+   - [ aircomm_app.in,           aircomm.out]
    - [ heartbeat.gps,            gps.data]
    - [ heartbeat.power,          powerman.mon]
    - [ display.motors_spinning,  pilot.motors_spinning]

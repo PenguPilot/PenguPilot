@@ -108,7 +108,7 @@ def main(name):
    t3.daemon = True
    t3.start()
 
-   socket = socket_map['out']
+   socket = generate_map('aircomm_app')['out']
    packer = Packer(use_single_float = True)
    while True:
       try:
