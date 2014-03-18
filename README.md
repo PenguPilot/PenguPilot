@@ -39,6 +39,8 @@ Supporting Infrastructures:
 Additional Features:
 - aircomm: encrypted aerial communication daemon, using NRF24L01+
 - display: shows battery, mem, cpu, sattelite status via I2C SSD1307 128x64 display from Adafruit
+- wifi_sensor: published wireless network data acquired via iwlist
+- wifi_loc: combines gps measurements and wifi scan results and publishes it
 
 Build System and Environment:
 - site_scons: related to build system
