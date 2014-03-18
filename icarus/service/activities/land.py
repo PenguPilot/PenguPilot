@@ -46,6 +46,6 @@ class LandActivity(Activity):
       pilot.set_ctrl_param(POS_Z_GROUND, self.MIN_HOVERING_ALT / 3.0)
       while mon_data.z_ground > self.MIN_HOVERING_ALT:
          sleep(self.POLLING_TIMEOUT)
-      pilot.spin_down()
+      pilot.stop_motors()
       fsm.handle('done')
 

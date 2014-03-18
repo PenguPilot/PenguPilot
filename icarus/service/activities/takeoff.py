@@ -71,10 +71,10 @@ class TakeoffActivity(Activity, StabMixIn):
       else:
          z_setpoint = self.STD_HOVERING_ALT
 
-      pilot.spin_up()
+      pilot.start_motors()
 
       if self.canceled:
-         pilot.spin_down()
+         pilot.stop_motors()
          log_error('take-off canceled');
          return
 
