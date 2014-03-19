@@ -12,7 +12,7 @@
 
 Overview
 --------
-PenguPilot is a Free and Open Source Multi-Rotor UAV autopilot for Linux-capable computer modules like the Gumstix Overo, Raspberry Pi or the Odroid-X3.
+PenguPilot is a Free and Open Source Multi-Rotor UAV autopilot for Linux-capable computer modules like the Gumstix Overo, Raspberry Pi or the Odroid-U3.
 Sensor data acquisition, tate estimation and control runs as a high-priority Linux user-space task, which is ideal for prototyping and experimentation.
 PenguPilot's architecture allows to distribute the control code among several processes (e.g. high-level control in Python and low-level control in C).
 Currently, components are implemented in C and Python, communicating efficiently via ZeroMQ and Protobuf/MessagePack.
