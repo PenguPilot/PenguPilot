@@ -12,8 +12,8 @@
 
 Overview
 --------
-PenguPilot is a Free and Open Source Multi-Rotor UAV autopilot for Linux-capable computer modules like the Gumstix Overo, Raspberry Pi or the Odroid-X3.
-Sensor data acquisition, tate estimation and control runs as a high-priority Linux user-space task, which is ideal for prototyping and experimentation.
+PenguPilot is a Free and Open Source Multi-Rotor UAV autopilot for Linux-capable computer modules like the Gumstix Overo, Raspberry Pi or the Odroid-U3.
+Sensor data acquisition, state estimation and feed-back control runs as a high-priority Linux user-space task, which is ideal for prototyping and experimentation.
 PenguPilot's architecture allows to distribute the control code among several processes (e.g. high-level control in Python and low-level control in C).
 Currently, components are implemented in C and Python, communicating efficiently via ZeroMQ and Protobuf/MessagePack.
 
@@ -39,6 +39,8 @@ Supporting Infrastructures:
 Additional Features:
 - aircomm: encrypted aerial communication daemon, using NRF24L01+
 - display: shows battery, mem, cpu, sattelite status via I2C SSD1307 128x64 display from Adafruit
+- wifi_sensor: published wireless network data acquired via iwlist
+- wifi_loc: combines gps measurements and wifi scan results and publishes it
 
 Build System and Environment:
 - site_scons: related to build system
@@ -56,3 +58,5 @@ Example UAV System
 Here's an example of a Gumstix Overo Air based PenguCopter with GPS and display:
 
 ![PenguCopter](https://raw.github.com/PenguPilot/PenguPilot/master/doc/GumstixCopter.jpg)
+
+[Flying Penguins from BBC :)](https://www.youtube.com/watch?v=9dfWzp7rYR4)
