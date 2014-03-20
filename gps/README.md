@@ -14,12 +14,11 @@ GPS Subsystem
 =============
 
 The gps service reads data from a gps device and publishes
-this data in order to make it available to other services or programs.
+this data in order to make it available to other services like the autopilot.
 
-The data format used for serialization is defined in the protobuf message
-format located in the "shared" folder. As an additional feature, the gps service sets the system's date and time based on GPS time and position information (timezone).
-The service uses a third-party library, which is shipped with this software:
+* The data format used for serialization is defined in the protobuf message
+format located in the "shared" folder.
+* as an additional feature, the gps service sets the system's date and time based on GPS time and position information (timezone).
+* the service uses a third-party library, which is shipped with PenguPilot:
 [NMEALib](https://github.com/AHR-Project/nmealib)
-
-
 
