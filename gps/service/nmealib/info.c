@@ -222,20 +222,21 @@ void nmea_INFO_sanitise(nmeaINFO *nmeaInfo) {
 	}
 
 	if (!nmea_INFO_is_present(nmeaInfo->present, UTCDATE) || !nmea_INFO_is_present(nmeaInfo->present, UTCTIME)) {
+
 		nmea_time_now(&utc, NULL);
-	}
 
-	if (!nmea_INFO_is_present(nmeaInfo->present, UTCDATE)) {
-		nmeaInfo->utc.year = utc.year;
-		nmeaInfo->utc.mon = utc.mon;
-		nmeaInfo->utc.day = utc.day;
-	}
+		if (!nmea_INFO_is_present(nmeaInfo->present, UTCDATE)) {
+			nmeaInfo->utc.year = utc.year;
+			nmeaInfo->utc.mon = utc.mon;
+			nmeaInfo->utc.day = utc.day;
+		}
 
-	if (!nmea_INFO_is_present(nmeaInfo->present, UTCTIME)) {
-		nmeaInfo->utc.hour = utc.hour;
-		nmeaInfo->utc.min = utc.min;
-		nmeaInfo->utc.sec = utc.sec;
-		nmeaInfo->utc.hsec = utc.hsec;
+		if (!nmea_INFO_is_present(nmeaInfo->present, UTCTIME)) {
+			nmeaInfo->utc.hour = utc.hour;
+			nmeaInfo->utc.min = utc.min;
+			nmeaInfo->utc.sec = utc.sec;
+			nmeaInfo->utc.hsec = utc.hsec;
+		}
 	}
 
 	if (!nmea_INFO_is_present(nmeaInfo->present, SIG)) {
