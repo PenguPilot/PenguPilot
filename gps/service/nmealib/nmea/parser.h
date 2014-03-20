@@ -1,9 +1,6 @@
 /*
  * This file is part of nmealib.
  *
- * Copyright (c) 2008 Timur Sinitsyn
- * Copyright (c) 2011 Ferry Huberts
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -24,54 +21,57 @@
 #include <nmea/info.h>
 #include <nmea/sentence.h>
 
-
 #ifdef  __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
+/* we need to be able to parse much longer sentences than specified in the (original) specification */
+#define SENTENCE_SIZE (4096 * 1)
+
+typedef enum _sentence_parser_state {
+  SKIP_UNTIL_START,
+  READ_SENTENCE,
+  READ_CHECKSUM,
+  READ_EOL
+} sentence_parser_state;
 
 /**
  * NMEA frame parser structure
  */
-typedef struct 
-{
-   int cksum;
-	char cs1;
-	int checksum;
-   char frame[1024];
-   int frame_len;
+typedef struct _sentencePARSER {
+    int sentence_checksum;
+    int calculated_checksum;
 
-	enum {
-		READ_START,
-		READ_DATA_CRC_CR,
-		READ_CR,
-		READ_CS1,
-		READ_CS2,
-		READ_LF,
-	}
-	state;
-}
-frame_parser_t;
+    char sentence_checksum_chars[2];
+    char sentence_checksum_chars_count;
 
+    char sentence_eol_chars_count;
+
+    sentence_parser_state state;
+} sentencePARSER;
 
 /**
- * The parser data.
+ * parsed NMEA data and frame parser state
  */
 typedef struct _nmeaPARSER {
-   union
-   {
-      nmeaGPGGA gpgga;
-      nmeaGPGSA gpgsa;
-      nmeaGPGSV gpgsv;
-      nmeaGPRMC gprmc;
-      nmeaGPVTG gpvtg;
-   };
-   frame_parser_t frame_parser;
+    struct {
+        unsigned int length;
+        char buffer[SENTENCE_SIZE];
+    } buffer;
+
+    union {
+        nmeaGPGGA gpgga;
+        nmeaGPGSA gpgsa;
+        nmeaGPGSV gpgsv;
+        nmeaGPRMC gprmc;
+        nmeaGPVTG gpvtg;
+    } sentence;
+
+    sentencePARSER sentence_parser;
 } nmeaPARSER;
 
-
 int nmea_parser_init(nmeaPARSER *parser);
-int nmea_parse(nmeaPARSER *parser, const char *buff, int buff_sz, nmeaINFO *info);
+int nmea_parse(nmeaPARSER * parser, const char * s, int len, nmeaINFO * info);
 
 #ifdef  __cplusplus
 }
