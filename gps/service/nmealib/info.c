@@ -1,9 +1,6 @@
 /*
  * This file is part of nmealib.
  *
- * Copyright (c) 2008 Timur Sinitsyn
- * Copyright (c) 2011 Ferry Huberts
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -54,7 +51,7 @@ void nmea_time_now(nmeaTIME *utc, uint32_t * present) {
 	utc->sec = tt.tm_sec;
 	utc->hsec = (tp.tv_usec / 10000);
 	if (present) {
-		*present |= (UTCDATE | UTCTIME);
+	  nmea_INFO_set_present(present, UTCDATE | UTCTIME);
 	}
 }
 
@@ -222,20 +219,21 @@ void nmea_INFO_sanitise(nmeaINFO *nmeaInfo) {
 	}
 
 	if (!nmea_INFO_is_present(nmeaInfo->present, UTCDATE) || !nmea_INFO_is_present(nmeaInfo->present, UTCTIME)) {
+
 		nmea_time_now(&utc, NULL);
-	}
 
-	if (!nmea_INFO_is_present(nmeaInfo->present, UTCDATE)) {
-		nmeaInfo->utc.year = utc.year;
-		nmeaInfo->utc.mon = utc.mon;
-		nmeaInfo->utc.day = utc.day;
-	}
+		if (!nmea_INFO_is_present(nmeaInfo->present, UTCDATE)) {
+			nmeaInfo->utc.year = utc.year;
+			nmeaInfo->utc.mon = utc.mon;
+			nmeaInfo->utc.day = utc.day;
+		}
 
-	if (!nmea_INFO_is_present(nmeaInfo->present, UTCTIME)) {
-		nmeaInfo->utc.hour = utc.hour;
-		nmeaInfo->utc.min = utc.min;
-		nmeaInfo->utc.sec = utc.sec;
-		nmeaInfo->utc.hsec = utc.hsec;
+		if (!nmea_INFO_is_present(nmeaInfo->present, UTCTIME)) {
+			nmeaInfo->utc.hour = utc.hour;
+			nmeaInfo->utc.min = utc.min;
+			nmeaInfo->utc.sec = utc.sec;
+			nmeaInfo->utc.hsec = utc.hsec;
+		}
 	}
 
 	if (!nmea_INFO_is_present(nmeaInfo->present, SIG)) {

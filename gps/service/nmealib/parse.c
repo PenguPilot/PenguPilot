@@ -1,9 +1,6 @@
 /*
  * This file is part of nmealib.
  *
- * Copyright (c) 2008 Timur Sinitsyn
- * Copyright (c) 2011 Ferry Huberts
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -230,6 +227,67 @@ static bool validateMode(char * c) {
 }
 
 /**
+ * Determine whether the given character is not allowed in an NMEA string.
+ *
+ * @param c
+ * The character to check
+ *
+ * @return
+ * - a pointer to the invalid character name/description when the string has invalid characters
+ * - NULL otherwise
+ */
+const char * isInvalidNMEACharacter(const char * c) {
+	static const char invalidChars[] = { '$', '*', '!', '\\', '^', '~' };
+	static const char * invalidNonAsciiCharsName = "non-ascii character";
+	static const char * invalidCharsNames[] = { "sentence delimiter ($)", "checksum field delimiter (*)", "comma (,)",
+			"exclamation mark (!)", "backslash (\\)", "power (^)", "tilde (~)" };
+
+	size_t charIndex;
+
+  if (!((*c >= 32) && (*c <= 126))) {
+    return invalidNonAsciiCharsName;
+  }
+
+  for (charIndex = 0; charIndex < sizeof(invalidChars); charIndex++) {
+    if (*c == invalidChars[charIndex]) {
+      return invalidCharsNames[charIndex];
+    }
+  }
+
+  return NULL;
+}
+
+/**
+ * Determine whether the given string contains characters that are not allowed
+ * in an NMEA string.
+ *
+ * @param s
+ * The string to check
+ * @param len
+ * The length of the string to check
+ *
+ * @return
+ * - a pointer to the invalid character name/description when the string has invalid characters
+ * - NULL otherwise
+ */
+const char * nmea_parse_sentence_has_invalid_chars(const char * s, const size_t len) {
+	size_t i;
+
+	if (!s || !len) {
+		return NULL;
+	}
+
+	for (i = 0; i < len; i++) {
+		const char * invalidCharName = isInvalidNMEACharacter(&s[i]);
+		if (invalidCharName) {
+		  return invalidCharName;
+		}
+	}
+
+	return NULL;
+}
+
+/**
  * Determine sentence type (see nmeaPACKTYPE) by the header of a string.
  * The header is the start of an NMEA sentence, right after the $.
  *
@@ -237,15 +295,19 @@ static bool validateMode(char * c) {
  * @param len the length of the string
  * @return The packet type (or GPNON when it could not be determined)
  */
-int nmea_parse_get_sentence_type(const char *s) {
+enum nmeaPACKTYPE nmea_parse_get_sentence_type(const char *s, const int len) {
 	static const char *pheads[] = { "GPGGA", "GPGSA", "GPGSV", "GPRMC", "GPVTG" };
-	static const int types[] = { GPGGA, GPGSA, GPGSV, GPRMC, GPVTG };
+	static const enum nmeaPACKTYPE types[] = { GPGGA, GPGSA, GPGSV, GPRMC, GPVTG };
 	unsigned int i;
 
 	assert(s);
 
-	for (i = 0; i < (sizeof(types) / sizeof(int)); i++) {
-		if (!memcmp(s + 1, pheads[i], 5)) {
+	if (len < 5) {
+		return GPNON;
+	}
+
+	for (i = 0; i < (sizeof(types) / sizeof(types[0])); i++) {
+		if (!memcmp(s, pheads[i], 5)) {
 			return types[i];
 		}
 	}

@@ -48,7 +48,7 @@ Build System and Environment:
 - scripts: various scripts, e.g. bashrc
 
 Library dependencies:
-- C: msgpack, meschach, protobuf-c, yaml, zeromq, glib
+- C: msgpack, protobuf-c, yaml, zeromq, glib
 - Python: psutil, pyyaml, protobuf, msgpack, pyzmq, swig, python-daemon, numpy
 - System recommended: sudo, git, i2c-tools, screen...
 
