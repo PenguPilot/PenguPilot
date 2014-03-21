@@ -140,7 +140,7 @@ static float stick_dz(float g, float d)
 static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos, float u_ultra_pos)
 {
    float dz = tsfloat_get(&gas_deadzone);
-   if (fabs(gas_stick) > dz || u_ultra_pos < 0.5)
+   if (fabs(gas_stick) > dz || u_ultra_pos < 0.4)
    {
       float vmax = tsfloat_get(&vert_speed_max);
       cm_u_set_spd(stick_dz(gas_stick, dz) * vmax);
@@ -149,9 +149,9 @@ static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos, float u_u
    else if (!vert_pos_locked)
    {
       vert_pos_locked = true;
-      if (u_ultra_pos < 5.0)
+      /*if (u_ultra_pos < 5.0)
          cm_u_set_ultra_pos(u_ultra_pos);
-      else
+      else*/
          cm_u_set_baro_pos(u_baro_pos);
    }
 }
@@ -168,7 +168,7 @@ static void set_pitch_roll_rates(float pitch, float roll)
 
 static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t *ne_gps_pos, float u_ultra_pos)
 {
-   if (1) //sqrt(pitch * pitch + roll * roll) > tsfloat_get(&gps_deadzone) || u_ultra_pos < 1.0)
+   if (sqrt(pitch * pitch + roll * roll) > tsfloat_get(&gps_deadzone) || u_ultra_pos < 0.4)
    {
       /* set GPS speed based on sticks input: */
       float vmax_sqrt = sqrt(tsfloat_get(&horiz_speed_max));
