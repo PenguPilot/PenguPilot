@@ -104,12 +104,12 @@ pm_pb_lib = make_proto_lib('powerman/shared/', 'powerman_pb')
 common_libs = scl_lib + opcd_lib + opcd_pb_lib + shared_lib
 
 # build gps publisher:
-append_inc_lib('gps/shared')
 append_inc_lib('gps/service/nmealib')
 gps_dir = 'gps/'
 gps_pb_dir = gps_dir + 'shared/'
 gps_pb_lib = make_proto_lib(gps_pb_dir, 'gps_pb')
-gps_bin = env.Program('gps/service/gps', collect_files(gps_dir + 'service', re_cc), LIBS = ['m', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', gps_pb_lib] + common_libs)
+append_inc_lib('gps/shared')
+gps_bin = env.Program('gps/service/gps', collect_files(gps_dir + 'service', re_cc), LIBS = common_libs + gps_pb_lib + ['m', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
 
 # build autopilot:
 ap_dir = 'autopilot/'
@@ -119,7 +119,7 @@ ap_pb_lib = make_proto_lib(ap_pb_dir, 'autopilot_pb')
 meschach_dir = ap_dir + 'shared/meschach'
 meschach_src = collect_files(meschach_dir, re_cc)
 meschach_lib = env.Library(meschach_dir + 'meschach', meschach_src)
-ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = ['m', meschach_lib, 'msgpack', 'pthread', 'opcd', 'opcd_pb', 'shared', 'scl', pm_pb_lib, gps_pb_lib, ap_pb_lib, 'protobuf-c', 'yaml', 'zmq', 'glib-2.0'] + common_libs)
+ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = common_libs + [pm_pb_lib, gps_pb_lib, ap_pb_lib] + ['m', meschach_lib, 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
 
 # build display:
 display_src = map(lambda x: 'display/shared/' + x, ['pyssd1306.c', 'pyssd1306.i', 'i2c/i2c.c', 'ssd1306.c'])
