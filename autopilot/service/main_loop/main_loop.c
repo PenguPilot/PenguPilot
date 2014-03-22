@@ -374,8 +374,7 @@ void main_step(float dt,
    /* execute stabilizing PIID controller: */
    f_local_t f_local = {{thrust, 0.0f, 0.0f, 0.0f}};
    float piid_gyros[3] = {marg_data->gyro.x, -marg_data->gyro.y, marg_data->gyro.z};
-   piid_run(&f_local.vec[1], piid_gyros, piid_sp);
-   f_local.yaw = 0.2 * (yaw_speed_sp - marg_data->gyro.z);
+   piid_run(&f_local.vec[1], piid_gyros, piid_sp, dt);
 
    /* computate rpm ^ 2 out of the desired forces: */
    inv_coupling_calc(rpm_square, f_local.vec);

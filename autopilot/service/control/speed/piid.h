@@ -37,7 +37,7 @@
 
 void piid_init(float Ts);
 
-void piid_run(float u_ctrl[3], float gyro[3], float rc[3]);
+void piid_run(float u_ctrl[3], float gyro[3], float rc[3], float dt);
 
 void piid_int_enable(int val);
 

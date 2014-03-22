@@ -36,7 +36,6 @@ void pid_init(pid_controller_t *controller, tsfloat_t *p, tsfloat_t *i, tsfloat_
    controller->i = i; /* might be NULL .. */
    if (i != NULL)
    {
-      ASSERT_NOT_NULL(max_sum_error);
       controller->max_sum_error = max_sum_error;
       tsfloat_init(&controller->sum_error, 0.0f);
    }
@@ -50,7 +49,11 @@ float pid_control(pid_controller_t *controller, float error, float speed, float 
    if (controller->i != NULL)
    {
       float sum_error = tsfloat_get(&controller->sum_error);
-      sum_error = sym_limit(sum_error + error * dt, tsfloat_get(controller->max_sum_error));
+      sum_error += error * dt;
+      if (controller->max_sum_error != NULL)
+      {
+         sum_error = sym_limit(sum_error, tsfloat_get(controller->max_sum_error));
+      }
       val += tsfloat_get(controller->i) * sum_error;
       tsfloat_set(&controller->sum_error, sum_error);
    }
