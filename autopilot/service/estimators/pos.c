@@ -86,7 +86,8 @@ static kalman_t n_kalman;
 static kalman_t e_kalman;
 static kalman_t baro_u_kalman;
 static kalman_t ultra_u_kalman;
-
+static float ultra_prev = 0.0f;
+static float baro_prev = 0.0f;
 
 void pos_init(void)
 {
@@ -115,7 +116,7 @@ void pos_init(void)
    kalman_init(&ultra_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&ultra_noise), 0, 0, false);
 }
 
-
+#include <math.h>
 void pos_update(pos_t *out, pos_in_t *in)
 {
    ASSERT_NOT_NULL(out);
@@ -125,7 +126,12 @@ void pos_update(pos_t *out, pos_in_t *in)
    kalman_run(&n_kalman,       &out->ne_pos.n,    &out->ne_speed.n,    in->pos_n,   in->speed_n, in->acc.n, in->dt);
    kalman_run(&e_kalman,       &out->ne_pos.e,    &out->ne_speed.e,    in->pos_e,   in->speed_e, in->acc.e, in->dt);
    kalman_run(&baro_u_kalman,  &out->baro_u.pos,  &out->baro_u.speed,  in->baro_u,  0.0f, in->acc.u, in->dt);
-   kalman_run(&ultra_u_kalman, &out->ultra_u.pos, &out->ultra_u.speed, in->ultra_u, 0.0f, in->acc.u, in->dt);
+   if (fabs(in->ultra_u - ultra_prev) > 10.0 * fabs(in->baro_u - baro_prev))
+      kalman_run(&ultra_u_kalman, &out->ultra_u.pos, &out->ultra_u.speed, ultra_prev + in->baro_u - baro_prev, 0.0f, in->acc.u, in->dt);
+   else
+      kalman_run(&ultra_u_kalman, &out->ultra_u.pos, &out->ultra_u.speed, in->ultra_u, 0.0f, in->acc.u, in->dt);
+   baro_prev = out->baro_u.pos;
+   ultra_prev = out->ultra_u.pos;
 }
 
 
