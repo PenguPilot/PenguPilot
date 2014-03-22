@@ -140,7 +140,7 @@ static float stick_dz(float g, float d)
 static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos, float u_ultra_pos)
 {
    float dz = tsfloat_get(&gas_deadzone);
-   if (fabs(gas_stick) > dz || u_ultra_pos < 0.4)
+   if (1) //fabs(gas_stick) > dz || u_ultra_pos < 0.4)
    {
       float vmax = tsfloat_get(&vert_speed_max);
       cm_u_set_spd(stick_dz(gas_stick, dz) * vmax);
@@ -256,7 +256,8 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       case MAN_NOVICE:
       {
          set_horizontal_spd_or_pos(pitch, roll, yaw, ne_gps_pos, u_ultra_pos);
-         set_vertical_spd_or_pos(gas_stick - 0.5, u_baro_pos, u_ultra_pos);
+         //set_vertical_spd_or_pos(gas_stick - 0.5, u_baro_pos, u_ultra_pos);
+         cm_u_set_acc(f_max / mass * (gas_stick - 0.5));
          break;
       }
    }

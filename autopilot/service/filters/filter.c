@@ -39,6 +39,23 @@ static float filter_constant(float fg)
 }
 
 
+void filter1_lp_update_coeff(Filter1 *filter, float fg, float dt)
+{
+   /* calculate filter time constant */
+   float T = filter_constant(fg);
+
+   /* filter coefficients for 1st order highpass filter */
+   float a[1];
+   a[0] = (2.0f * dt) / (2.0f * T + dt) - 1.0f;
+   float b[2];
+   b[0] = dt / (2.0f * T + dt);
+   b[1] = b[0];
+   filter->a1 = a[0];
+   filter->b0 = b[0];
+   filter->b1 = b[1];
+}
+
+
 void filter1_lp_init(Filter1 *filter, float fg, float Ts, int signal_dim)
 {
    /* calculate filter time constant */
@@ -52,6 +69,24 @@ void filter1_lp_init(Filter1 *filter, float fg, float Ts, int signal_dim)
    b[0] = Ts / (2.0f * T + Ts);
    b[1] = b[0];
    filter1_init(filter, a, b, Ts, signal_dim);
+}
+
+
+void filter1_hp_update_coeff(Filter1 *filter, float fg, float dt)
+{
+   /* calculate filter time constant */
+   float T = filter_constant(fg);
+
+   /* filter coefficients for 2nd order highpass filter */
+   float a[1];
+   a[0] = (2.0f * dt) / (2.0f * T + dt) - 1.0f;
+
+   float b[2];
+   b[0] = 2.0f / (2.0f * T + dt);
+   b[1] = -b[0];
+   filter->a1 = a[0];
+   filter->b0 = b[0];
+   filter->b1 = b[1];
 }
 
 
@@ -102,6 +137,24 @@ void filter1_run(Filter1 *filter, float *u_in, float *y)
 }
 
 
+void filter2_lp_update_coeff(Filter2 *filter, float fg, float d, float dt)
+{
+   /* calculate filter fime constant */
+   float T = filter_constant(fg);
+
+   /* filter coefficients for 2nd order highpass filter */
+   float a[2];
+   a[0] = (2.0f * dt * dt - 8.0f * T * T) / (4.0f * T * T + 4.0f * d * T * dt + dt * dt);
+   a[1] = (4.0f * T * T - 4.0f * d * T * dt + dt * dt) / (4.0f * T * T + 4.0f * d * T * dt + dt * dt);
+
+   float b[3];
+   b[0] = dt * dt / (4.0f * T * T + 4.0f * d * T * dt + dt * dt);
+   b[1] = 2.0f * b[0];
+   b[2] = b[0];
+   filter2_update_coeff(filter, a, b);
+}
+
+
 void filter2_lp_init(Filter2 *filter, float fg, float d, float Ts, int signal_dim)
 {
    /* calculate filter fime constant */
@@ -135,6 +188,17 @@ void filter2_hp_init(Filter2 *filter, float fg, float d, float Ts, int signal_di
    b[1] = 0.0f;
    b[2] = -b[0];
    filter2_init(filter, a, b, Ts, signal_dim);
+}
+
+
+void filter2_update_coeff(Filter2 *filter, float *a, float *b)
+{
+   filter->a1 = a[0];
+   filter->a2 = a[1];
+    
+   filter->b0 = b[0];
+   filter->b1 = b[1];
+   filter->b2 = b[2];
 }
 
 
