@@ -36,7 +36,7 @@ from msgpack import loads, dumps
 from misc import daemonize
 from message_history import MessageHistory
 import crypt
-from aircomm_shared import BCAST
+from aircomm_shared import BCAST, BCAST_NOFW
 
 
 class ACIReader(Thread):
@@ -69,12 +69,14 @@ class ACIReader(Thread):
                except:
                   continue
                
-               # if message is meant for us, forward to application(s)
-               if msg[0] in [THIS_SYS_ID, BCAST]:
-                  msg_tail = msg[1:]
-                  self.scl_socket.send(dumps(msg_tail))
+               addr = msg[0]
+               # if message is meant for us, forward to application(s):
+               if addr in [THIS_SYS_ID, BCAST, BCAST_NOFW]:
+                  msg_scl = dumps(msg[1:]) # strip the type and pack again
+                  self.scl_socket.send(msg_scl)
 
-               if msg[0] != THIS_SYS_ID:
+               # if the message (a) is not meant for us or (b) is NOFW, re-broadcast:
+               if addr not in [THIS_SYS_ID, BCAST_NOFW]:
                   self.aci.send(crypt_data)
 
          except Exception, e:
