@@ -64,8 +64,6 @@ static tsfloat_t dest_n; /* destination in lat direction, in m */
 
 float desired_speed(float dist)
 {
-   return 0.2 * dist;
-#if 0
    float _square_shift = tsfloat_get(&square_shift);
    
    if (dist < _square_shift)
@@ -88,7 +86,6 @@ float desired_speed(float dist)
    }
 
    return speed;
-#endif
 }
 
 

@@ -151,9 +151,15 @@ static void set_vertical_spd_or_pos(float gas_stick, float u_baro_pos, float u_u
       u_ctrl_reset();
       vert_pos_locked = true;
       if (u_ultra_pos < 6.5)
+      {
+         LOG(LL_INFO, "vertical position lock at ultra pos: %fm", u_ultra_pos);
          cm_u_set_ultra_pos(u_ultra_pos);
+      }
       else
+      {
+         LOG(LL_INFO, "vertical position lock at baro pos: %fm", u_baro_pos);
          cm_u_set_baro_pos(u_baro_pos);
+      }
    }
 }
 
@@ -182,6 +188,7 @@ static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t
    }
    else if (!horiz_pos_locked)
    {
+      LOG(LL_INFO, "horizontal position lock at relative N: %fm, E: %fm", ne_gps_pos->x, ne_gps_pos->y);
       /* lock GPS position until next sticks activity: */
       navi_reset();
       horiz_pos_locked = true;
@@ -257,8 +264,8 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       case MAN_NOVICE:
       {
          set_horizontal_spd_or_pos(pitch, roll, yaw, ne_gps_pos, u_ultra_pos);
-         //set_vertical_spd_or_pos(gas_stick - 0.5, u_baro_pos, u_ultra_pos);
-         cm_u_set_acc(f_max / mass * (gas_stick - 0.5));
+         set_vertical_spd_or_pos(gas_stick - 0.5, u_baro_pos, u_ultra_pos);
+         //cm_u_set_acc(f_max / mass * (gas_stick - 0.5));
          break;
       }
    }

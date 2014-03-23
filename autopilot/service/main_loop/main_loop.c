@@ -260,7 +260,7 @@ void main_step(float dt,
       /* compute declination and start gps position once: */
       ONCE(mag_decl = mag_decl_lookup(gps_data->lat, gps_data->lon);
            gps_start_set(gps_data);
-           LOG(LL_ERROR, "declination lookup yields: %f deg", rad2deg(mag_decl)));
+           LOG(LL_INFO, "declination lookup yields: %f deg", rad2deg(mag_decl)));
    }
 
    /* acc/mag calibration: */
