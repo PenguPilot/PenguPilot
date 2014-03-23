@@ -38,8 +38,8 @@ from msgpack import Packer
 from aircomm_shared import BCAST, HEARTBEAT
 
 socket_map = None
-voltage = 0.0
-current = 0.0
+voltage = 17.0
+current = 0.4
 
 def gps():
    global gps_data, socket_map
