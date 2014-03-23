@@ -45,9 +45,9 @@ int att_thrust_calc(vec2_t *pr_angles, float *thrust, /* output: pitch/roll angl
    float u = f_neu->vec[2];
    assert(thrust_max >= 0);
 
-   if (u < 0.0f)
+   if (u < 2.0)
    {
-      u = 0.0f;
+      u = 2.0f;
       constrained = 1;
    }
 
@@ -91,13 +91,13 @@ int att_thrust_calc(vec2_t *pr_angles, float *thrust, /* output: pitch/roll angl
    vec2_t ne_angles;
    if (u > 0.0f)
    {
-      ne_angles.x = atan(n / u);
-      ne_angles.y = atan(e / u);
+      ne_angles.x = atan2(n, u);
+      ne_angles.y = atan2(e, u);
    }
    else
    {
-      ne_angles.x = n;
-      ne_angles.y = e;
+      ne_angles.x = 0.0f;
+      ne_angles.y = 0.0f;
    }
 
    /* rotate global horizonzal thrust to device-local: */

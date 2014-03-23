@@ -110,8 +110,8 @@ void pos_init(void)
        tsfloat_get(&gps_noise));
 
    /* set-up kalman filters: */
-   kalman_init(&n_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, true);
-   kalman_init(&e_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, true);
+   kalman_init(&n_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, false);
+   kalman_init(&e_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, false);
    kalman_init(&baro_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&baro_noise), 0, 0, false);
    kalman_init(&ultra_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&ultra_noise), 0, 0, false);
 }
@@ -185,7 +185,7 @@ static void kalman_init(kalman_t *kf, float q, float r, float pos, float speed, 
    m_set_val(kf->H, 0, 0, 1.0);
    m_set_val(kf->H, 0, 1, 0.0);
    m_set_val(kf->H, 1, 0, 0.0);
-   if (use_speed)
+   if (kf->use_speed)
       m_set_val(kf->H, 1, 1, 1.0);
    else
       m_set_val(kf->H, 1, 1, 0.0);
@@ -236,12 +236,14 @@ static void kalman_correct(kalman_t *kf, float pos, float speed)
    /* x = x + K * (z - H * x) */
    mv_mlt(kf->H, kf->x, kf->t0);
    v_set_val(kf->z, 0, pos);
-   if (kf->use_speed)
+   if (kf->use_speed && speed > 0.1f)
    {
+      m_set_val(kf->H, 1, 1, 1.0);
       v_set_val(kf->z, 1, speed);
    }
    else
    {
+      m_set_val(kf->H, 1, 1, 0.0);
       v_set_val(kf->z, 1, 0.0f);   
    }
    v_sub(kf->z, kf->t0, kf->t1);
