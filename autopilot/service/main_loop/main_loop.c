@@ -389,8 +389,8 @@ void main_step(float dt,
    if (!motors_controllable())
    {
       navi_reset();
-      u_ctrl_reset();
       ne_speed_ctrl_reset();
+      u_ctrl_reset();
       att_ctrl_reset();
       piid_reset();
    }
@@ -400,11 +400,10 @@ void main_step(float dt,
       FOR_N(i, platform.n_motors) setpoints[i] = 0.1f;
    if (hard_off || motors_stopping())
       FOR_N(i, platform.n_motors) setpoints[i] = 0.0f;
-
+   
    /* write motors: */
    if (!override_hw)
    {
-      //EVERY_N_TIMES(10, printf("%d %f %f %f %f\n", hard_off, setpoints[0], setpoints[1], setpoints[2], setpoints[3]));
       platform_write_motors(setpoints);
    }
 
