@@ -29,7 +29,6 @@
 import atexit
 import os
 import readline
-import pprint
 from opcd_interface import OPCD_Interface
 from scl import generate_map
 from misc import user_data_dir
@@ -48,12 +47,10 @@ atexit.register(_save_history)
 
 #initialize and define interface:
 _interface = OPCD_Interface(generate_map('opcd_shell')['ctrl'])
-_pp = pprint.PrettyPrinter(indent = 3)
 
 
 def get(key = ''):
    try:
-      _pp.pprint(_interface.get(key, True))
       return _interface.get(key, True)
    except KeyError:
       print('key not found')
