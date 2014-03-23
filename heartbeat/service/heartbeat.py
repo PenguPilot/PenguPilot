@@ -35,7 +35,7 @@ from math import sin, cos, pi
 from misc import daemonize
 from power_pb2 import PowerState
 from msgpack import Packer
-from aircomm_shared import BCAST, HEARTBEAT
+from aircomm_shared import BCAST_NOFW, HEARTBEAT
 
 socket_map = None
 voltage = 17.0
@@ -112,7 +112,7 @@ def main(name):
    packer = Packer(use_single_float = True)
    while True:
       try:
-         data = [BCAST, HEARTBEAT, int(voltage * 10), int(current * 10), int(load), mem_used()]
+         data = [BCAST_NOFW, HEARTBEAT, int(voltage * 10), int(current * 10), int(load), mem_used()]
          with gps_lock:
             try:
                if gps_data.fix >= 2:
