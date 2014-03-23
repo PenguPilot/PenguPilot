@@ -43,9 +43,11 @@ powerman:
    gpio_i2c_address: 0x11
    gpio_power_pin: 0
    battery_cells: 4
-   battery_low_cell_voltage: 3.5
-   low_voltage_hysteresis: 10.0 # battery needs to go below battery_low_cell_voltage for this time period in order to trigger a low power event
-   battery_capacity: 6.6
+   battery_low_cell_voltage_idle: 3.5 # [V]
+   battery_low_cell_voltage_load: 3.3 # [V]
+   battery_current_treshold: 3.0 # [A]
+   low_voltage_hysteresis: 10.0 # [s], battery needs to go below battery_low_cell_voltage for this time period in order to trigger a low power event
+   battery_capacity: 3.0
    power_save_timeout: 60.0
    voltage_adc: 7
    current_adc: 2
@@ -94,8 +96,8 @@ pilot:
    manual_control:
       pitch_roll_speed_max: 90.0 # [deg/s]
       pitch_roll_angle_max: 45.0 # [deg]
-      yaw_speed_max: 360.0 # maximum yaw rotation speed [deg/s]
-      vert_speed_max: 3.0
+      yaw_speed_max: 90.0 # maximum yaw rotation speed [deg/s]
+      vert_speed_max: 5.0
       horiz_speed_max: 5.0 # maximal horizontal speed
       gps_deadzone: 0.05 # if magnitude of gps speed sticks are lower than this value, gps position is locked
       gas_deadzone: 0.07 # if magnitude of centered gas stick is lower than this value, altitude is locked
@@ -115,28 +117,28 @@ pilot:
          jxx_jyy: 0.0097
          jzz: 0.0057292965
          tmc: 0.06
-
+      
       ne_speed:
-         p: 5.0
-         i: 0.0
-         i_max: 0.0
+         p: 2.0
+         i: 0.1
+         i_max: 0.7
       
       attitude:
-         p: 1.0
-         i: 0.0
-         i_max: 0.0
+         p: 3.0
+         i: 0.02
+         i_max: 0.2
          d: 0.0
 
       u_speed:
          p: 5.0
          i: 0.05
          imax: 0.25
-
+      
       u_pos:
-         d: 4.0
-         i: 0.0
-         imax: 0.0
-         p: 8.0
+         p: 4.0
+         i: 0.01
+         imax: 0.5
+         d: 0.5
 
       yaw:
          p: 0.24
@@ -151,7 +153,7 @@ pilot:
          speed_max: 3.5
          sqrt_shift: 3.0
          sqrt_scale: 0.25
-         square_shift: 0.5
+         square_shift: 0.1
          pos_i: 0.015
          pos_i_max: 5.0
          ortho_p: 0.0
@@ -159,7 +161,7 @@ pilot:
    kalman_pos:
       baro_noise: 0.01
       ultra_noise: 0.03
-      gps_noise: 0.03
+      gps_noise: 0.1
       process_noise: 1.0e-6
 
    sensors:

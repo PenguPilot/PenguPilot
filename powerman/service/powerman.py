@@ -55,9 +55,12 @@ class PowerMan:
       self.gpio_mosfet = GPIO_Bank(bus, self.opcd.get('gpio_i2c_address'))
       self.power_pin = self.opcd.get('gpio_power_pin')
       self.cells = self.opcd.get('battery_cells')
-      self.low_cell_voltage = self.opcd.get('battery_low_cell_voltage')
+      self.low_cell_voltage_idle = self.opcd.get('battery_low_cell_voltage_idle')
+      self.low_cell_voltage_load = self.opcd.get('battery_low_cell_voltage_load')
+      self.battery_current_treshold = self.opcd.get('battery_current_treshold')
       self.capacity = self.opcd.get('battery_capacity')
-      self.low_battery_voltage = self.cells * self.low_cell_voltage
+      self.low_battery_voltage_idle = self.cells * self.low_cell_voltage_idle
+      self.low_battery_voltage_load = self.cells * self.low_cell_voltage_load
       self.critical = False
       #self.gpio_mosfet.write()
       self.warning_started = False
@@ -97,7 +100,7 @@ class PowerMan:
             self.voltage = voltage_lambda(voltage_adc.read())  
             self.current = current_lambda(current_adc.read())
             self.current_integral += self.current / 3600
-            if self.voltage < self.low_battery_voltage:
+            if self.voltage < self.low_battery_voltage_idle and self.current < self.battery_current_treshold or self.voltage < self.low_battery_voltage_load and self.current >= self.battery_current_treshold:
                self.critical = hysteresis.set()
             else:
                hysteresis.reset()
