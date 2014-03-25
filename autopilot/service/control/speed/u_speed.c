@@ -40,10 +40,10 @@ static tsfloat_t speed_i;
 static tsfloat_t speed_imax;
 
 
-float u_speed_step(float setpoint, float pos, float dt)
+float u_speed_step(float *err, const float setpoint, const float pos, const float dt)
 {   
-   float err = setpoint - pos;
-   return pid_control(&ctrl, err, 0.0f, dt);
+   *err = setpoint - pos;
+   return pid_control(&ctrl, *err, 0.0f, dt);
 }
 
 

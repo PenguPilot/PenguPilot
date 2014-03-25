@@ -28,7 +28,7 @@
 #define __U_SPEED_H__
 
 
-float u_speed_step(float setpoint, float pos, float dt);
+float u_speed_step(float *err, const float setpoint, const float pos, const float dt);
 
 void u_speed_init(void);
 

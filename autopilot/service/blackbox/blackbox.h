@@ -30,9 +30,13 @@
 
 
 #include "../platform/platform.h"
+#include "../util/math/vec2.h"
 
 
-extern char *blackbox_spec[25];
+#define BLACKBOX_ITEMS 31
+
+
+extern char *blackbox_spec[BLACKBOX_ITEMS];
 
 
 /* initialize blackbox */
@@ -40,15 +44,19 @@ void blackbox_init(void);
 
 
 /* publish a blackbox record */
-void blackbox_record(float dt,
-               marg_data_t *marg_data,
-               gps_data_t *gps_data,
-               float ultra,
-               float baro,
-               float voltage,
-               float current,
-               float channels[MAX_CHANNELS],
-               uint16_t sensor_status);
+void blackbox_record(const float dt, /* sensor inputs ... */
+               const marg_data_t *marg_data,
+               const gps_data_t *gps_data,
+               const float ultra,
+               const float baro,
+               const float voltage,
+               const float current,
+               const float channels[MAX_CHANNELS],
+               const uint16_t sensor_status,
+               const vec2_t *ne_pos_err, /* NEU position errors ... */
+               const float u_pos_err,
+               const vec2_t *ne_spd_err, /* NEU speed errors ... */
+               const float u_spd_err);
 
 
 #endif /* __BLACKBOX_H__ */

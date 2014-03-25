@@ -51,7 +51,7 @@ static simple_thread_t thread;
 static bool locked = false;
 
 
-void gps_start_set(gps_data_t *gps_data)
+void gps_start_set(const gps_data_t *gps_data)
 {
    memcpy(&gps_start, gps_data, sizeof(gps_data_t));
 }

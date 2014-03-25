@@ -50,10 +50,6 @@ display:
 blackbox:
   binary: 'blackbox/service/blackbox.py'
 
-remote:
-  binary: 'remote/service/remote'
-  depends: [opcd]
-
 wifi_sensor:
   binary: 'wifi_sensor/service/wifi_sensor.py'
 
