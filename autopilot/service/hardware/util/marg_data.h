@@ -42,7 +42,7 @@ typedef struct
 marg_data_t;
 
 
-bool gyro_moved(vec3_t *gyro);
+bool gyro_moved(const vec3_t *gyro);
 
 
 #endif /* __MARG_DATA_H__ */

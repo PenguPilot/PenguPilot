@@ -38,6 +38,7 @@
 static tsfloat_t speed_p;
 static tsfloat_t speed_i;
 static tsfloat_t speed_i_max;
+static tsfloat_t speed_d;
 
 static pid_controller_t controllers[2];
 
@@ -52,6 +53,7 @@ void ne_speed_ctrl_init(void)
       {"p", &speed_p.value},
       {"i", &speed_i.value},
       {"i_max", &speed_i_max.value},
+      {"d", &speed_d.value},
       OPCD_PARAMS_END
    };
    opcd_params_apply("controllers.ne_speed.", params);
@@ -59,7 +61,7 @@ void ne_speed_ctrl_init(void)
    /* initialize controllers: */
    FOR_EACH(i, controllers)
    {
-      pid_init(&controllers[i], &speed_p, &speed_i, NULL, &speed_i_max);
+      pid_init(&controllers[i], &speed_p, &speed_i, &speed_d, &speed_i_max);
    }
 }
 
@@ -73,12 +75,12 @@ void ne_speed_ctrl_reset(void)
 }
 
 
-void ne_speed_ctrl_run(vec2_t *forces, const vec2_t *setp, const float dt, const vec2_t *speed)
+void ne_speed_ctrl_run(vec2_t *forces, vec2_t *err, const vec2_t *setp, const float dt, const vec2_t *speed)
 {
    FOR_EACH(i, controllers)
    {
-      float error = setp->vec[i] - speed->vec[i];
-      forces->vec[i] = pid_control(&controllers[i], error, 0.0, dt);
+      err->vec[i] = setp->vec[i] - speed->vec[i];
+      forces->vec[i] = pid_control(&controllers[i], err->vec[i], 0.0, dt);
    }
 }
 

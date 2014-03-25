@@ -42,7 +42,8 @@ static msgpack_sbuffer *msgpack_buf = NULL;
 static msgpack_packer *pk = NULL;
 
 
-char *blackbox_spec[25] = {
+char *blackbox_spec[BLACKBOX_ITEMS] =
+{
    "dt", /* time delta */
    "gyro_x", "gyro_y", "gyro_z", /* gyro */
    "acc_x", "acc_y", "acc_z", /* acc */
@@ -53,7 +54,9 @@ char *blackbox_spec[25] = {
    "voltage", /* voltage */
    "current", /* current */
    "rc_pitch", "rc_roll", "rc_yaw", "rc_gas", "rc_sw_l", "rc_sw_r", /* rc */
-   "sensor_status" /* sensors */
+   "sensor_status", /* sensors */
+   "n_err", "e_err", "u_err", /* 3d position error */
+   "n_spd_err", "e_spd_err", "u_spd_err" /* 3d speed error */
 };
 
 
@@ -84,15 +87,20 @@ void blackbox_init(void)
    scl_copy_send_dynamic(blackbox_socket, msgpack_buf->data, msgpack_buf->size);
 }
 
-void blackbox_record(float dt,
-               marg_data_t *marg_data,
-               gps_data_t *gps_data,
-               float ultra,
-               float baro,
-               float voltage,
-               float current,
-               float channels[MAX_CHANNELS],
-               uint16_t sensor_status)
+
+void blackbox_record(const float dt, /* sensor inputs ... */
+               const marg_data_t *marg_data,
+               const gps_data_t *gps_data,
+               const float ultra,
+               const float baro,
+               const float voltage,
+               const float current,
+               const float channels[MAX_CHANNELS],
+               const uint16_t sensor_status,
+               const vec2_t *ne_pos_err, /* NEU position errors ... */
+               const float u_pos_err,
+               const vec2_t *ne_spd_err, /* NEU speed errors ... */
+               const float u_spd_err)
 {
    msgpack_sbuffer_clear(msgpack_buf);
    msgpack_pack_array(pk, ARRAY_SIZE(blackbox_spec));
@@ -107,6 +115,10 @@ void blackbox_record(float dt,
    PACKF(current);
    PACKFV(channels, 6);
    PACKI(sensor_status);
+   PACKFV(ne_pos_err->vec, 2);
+   PACKF(u_pos_err);
+   PACKFV(ne_spd_err->vec, 2);
+   PACKF(u_spd_err);
    scl_copy_send_dynamic(blackbox_socket, msgpack_buf->data, msgpack_buf->size);
 }
 

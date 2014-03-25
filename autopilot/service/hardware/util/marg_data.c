@@ -30,7 +30,7 @@
 #include "marg_data.h"
 
 
-bool gyro_moved(vec3_t *gyro)
+bool gyro_moved(const vec3_t *gyro)
 {
    FOR_N(i, 3)
    {

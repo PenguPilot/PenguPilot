@@ -31,7 +31,7 @@
 #include "../hardware/util/gps_data.h"
 
 
-void gps_start_set(gps_data_t *gps_data);
+void gps_start_set(const gps_data_t *gps_data);
 
 int cmd_init(void);
 

@@ -86,7 +86,7 @@ int navi_set_travel_speed(float speed);
 /*
  * executes navigation control subsystem
  */
-void navi_run(vec2_t *speed_setpoint, vec2_t *pos, float dt);
+void navi_run(vec2_t *speed_setpoint, vec2_t *err, const vec2_t *pos, const float dt);
 
 
 #endif /* __NAVI_H__ */

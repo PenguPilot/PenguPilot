@@ -28,7 +28,7 @@
 #define __U_CTRL_H__
 
 
-float u_ctrl_step(float setpoint, float pos, float speed, float dt);
+float u_ctrl_step(float *err, const float setpoint, const float pos, const float speed, const float dt);
 
 void u_ctrl_init(void);
 

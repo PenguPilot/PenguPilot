@@ -41,10 +41,10 @@ static tsfloat_t pos_i;
 static tsfloat_t pos_imax;
 
 
-float u_ctrl_step(float setpoint, float pos, float speed, float dt)
+float u_ctrl_step(float *err, const float setpoint, const float pos, const float speed, const float dt)
 {   
-   float err = setpoint - pos;
-   return pid_control(&ctrl, err, speed, dt);
+   *err = setpoint - pos;
+   return pid_control(&ctrl, pos, speed, dt);
 }
 
 
