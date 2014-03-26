@@ -37,7 +37,7 @@ sudo ln -f -s $PENGUPILOT_PATH/scripts/clear_pidfiles.sh pp_clear_pidfiles
 sudo ln -f -s $PENGUPILOT_PATH/svctrl/svctrl.py pp_svctrl
 sudo ln -f -s $PENGUPILOT_PATH/gps/tools/gps_debug.py pp_gps_debug
 sudo ln -f -s $PENGUPILOT_PATH/icarus/tools/icarus_shell.sh pp_icarus_shell
-sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/calibration/cal_begin.sh pp_cal_begin
-sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/calibration/cal_end.sh pp_cal_end
+sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/calibration/cal_start.sh pp_cal_start
+sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/calibration/cal_finish.sh pp_cal_finish
 sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/motor_test.py pp_motor_test
 
