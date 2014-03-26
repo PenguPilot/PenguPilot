@@ -25,7 +25,7 @@ Flight Infrastructure:
   - tools: calibration and other useful utilities
 - blackbox: black box service for logging every sensor input of the autopilot to harddisk/sdcard
 - powerman: power management and monitoring service
-- gps: gps service, similar to gpsd but more efficient and much simpler using nmeablib
+- gpsp: gps publisher, similar to gpsd but more efficient and much simpler using nmeablib
 - icarus: high-level control service for complex commands
 
 Supporting Infrastructures:
