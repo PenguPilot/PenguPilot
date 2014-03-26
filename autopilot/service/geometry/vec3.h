@@ -49,10 +49,13 @@ vec3_t;
 
 
 /* copy vector vi to vo */
-void vec3_copy(vec3_t *vo, vec3_t *vi);
+void vec3_copy(vec3_t *vo, const vec3_t *vi);
 
 /* scalar product */
-void vec3_mul_scalar(vec3_t *out, vec3_t *in, float scalar);
+void vec3_mul_scalar(vec3_t *out, const vec3_t *in, const float scalar);
+
+/* vector length */
+float vec3_len(const vec3_t *in);
 
 
 #endif /* __VEC3_H__ */

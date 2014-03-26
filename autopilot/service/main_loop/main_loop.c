@@ -206,11 +206,15 @@ void main_step(const float dt,
                const uint16_t sensor_status,
                const bool override_hw)
 {
+   int bb_rate;
    if (calibrate)
    {
       ONCE(LOG(LL_INFO, "publishing calibration data; actuators disabled"));
+      bb_rate = 20;
       goto out;
    }
+   else
+      bb_rate = 1;
    
    pos_in.dt = dt;
    pos_in.ultra_u = ultra;
@@ -419,8 +423,8 @@ void main_step(const float dt,
    mon_data_set(ne_pos_err.x, ne_pos_err.y, u_pos_err, yaw_err);
 
 out:
-   blackbox_record(dt, marg_data, gps_data, ultra, baro, voltage, current, channels, sensor_status, /* sensor inputs */
-                   &ne_pos_err, u_pos_err, /* position errors */
-                   &ne_spd_err, u_spd_err /* speed errors */);
+   EVERY_N_TIMES(bb_rate, blackbox_record(dt, marg_data, gps_data, ultra, baro, voltage, current, channels, sensor_status, /* sensor inputs */
+                          &ne_pos_err, u_pos_err, /* position errors */
+                          &ne_spd_err, u_spd_err /* speed errors */));
 }
 
