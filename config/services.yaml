@@ -31,8 +31,8 @@ aircomm:
   binary: 'aircomm/service/aircomm.py'
   depends: [opcd]
 
-gps:
-  binary: 'gps/service/gps'
+gpsp:
+  binary: 'gpsp/service/gpsp'
   depends: [opcd]
 
 powerman:
@@ -41,11 +41,11 @@ powerman:
 
 autopilot:
   binary: 'autopilot/service/autopilot'
-  depends: [opcd, gps, powerman]
+  depends: [opcd, gpsp, powerman]
 
 display:
   binary: 'display/service/display.py'
-  depends: [gps, powerman]
+  depends: [gpsp, powerman]
 
 blackbox:
   binary: 'blackbox/service/blackbox.py'
@@ -55,9 +55,9 @@ wifi_sensor:
 
 heartbeat:
   binary: 'heartbeat/service/heartbeat.py'
-  depends: [gps, powerman, aircomm]
+  depends: [gpsp, powerman, aircomm]
 
 wifi_loc:
   binary: 'wifi_loc/service/wifi_loc.py'
-  depends: [gps, wifi_sensor]
+  depends: [gpsp, wifi_sensor]
 

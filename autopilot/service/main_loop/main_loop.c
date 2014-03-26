@@ -274,7 +274,7 @@ void main_step(const float dt,
 
    /* acc/mag calibration: */
    acc_mag_cal_apply(&cal_marg_data.acc, &cal_marg_data.mag);
-   
+   printf("%f %f %f %f %f %f\n", marg_data->acc.x, marg_data->acc.y, marg_data->acc.z, cal_marg_data.acc.x, cal_marg_data.acc.y, cal_marg_data.acc.z);
    /* determine flight state: */
    bool flying = flight_state_update(&cal_marg_data.acc.vec[0]);
    if (!flying && pos_in.ultra_u == 7.0)
