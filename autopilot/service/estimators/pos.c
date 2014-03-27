@@ -47,6 +47,7 @@ static tsfloat_t ultra_noise;
 static tsfloat_t baro_noise;
 static tsfloat_t gps_noise;
 static tsint_t use_gps_speed;
+static tsfloat_t spd_scale;
 
 
 typedef struct
@@ -102,6 +103,7 @@ void pos_init(void)
       {"baro_noise", &baro_noise},
       {"gps_noise", &gps_noise},
       {"use_gps_speed", &use_gps_speed},
+      {"spd_scale", &spd_scale},
       OPCD_PARAMS_END
    };
    opcd_params_apply("kalman_pos.", params);
@@ -125,8 +127,8 @@ void pos_update(pos_t *out, pos_in_t *in)
    ASSERT_NOT_NULL(in);
 
    /* run kalman filters: */
-   kalman_run(&n_kalman,       &out->ne_pos.n,    &out->ne_speed.n,    in->pos_n,   in->speed_n, in->acc.n, in->dt);
-   kalman_run(&e_kalman,       &out->ne_pos.e,    &out->ne_speed.e,    in->pos_e,   in->speed_e, in->acc.e, in->dt);
+   kalman_run(&n_kalman,       &out->ne_pos.n,    &out->ne_speed.n,    in->pos_n,   in->speed_n * tsfloat_get(&spd_scale), in->acc.n, in->dt);
+   kalman_run(&e_kalman,       &out->ne_pos.e,    &out->ne_speed.e,    in->pos_e,   in->speed_e * tsfloat_get(&spd_scale), in->acc.e, in->dt);
    kalman_run(&baro_u_kalman,  &out->baro_u.pos,  &out->baro_u.speed,  in->baro_u,  0.0f, in->acc.u, in->dt);
    if (fabs(in->ultra_u - ultra_prev) > 10.0 * fabs(in->baro_u - baro_prev))
       kalman_run(&ultra_u_kalman, &out->ultra_u.pos, &out->ultra_u.speed, ultra_prev + in->baro_u - baro_prev, 0.0f, in->acc.u, in->dt);
