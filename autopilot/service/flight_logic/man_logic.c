@@ -64,10 +64,10 @@ static tsfloat_t gas_deadzone;
 static tsfloat_t yaw_speed_max;
 static tsfloat_t sticks_rotation;
 
+static bool always_hard_off = false;
 static bool vert_pos_locked = false;
 static bool horiz_pos_locked = true;
 static int rc_inval_count = 0;
-static float channels_prev[MAX_CHANNELS];
 
 
 void man_logic_init(void)
@@ -180,7 +180,7 @@ static void set_pitch_roll_rates(float pitch, float roll)
 
 static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t *ne_gps_pos, float u_ultra_pos)
 {
-   if (sqrt(pitch * pitch + roll * roll) > tsfloat_get(&gps_deadzone) || u_ultra_pos < 0.4)
+   if (1) //sqrt(pitch * pitch + roll * roll) > tsfloat_get(&gps_deadzone) || u_ultra_pos < 0.4)
    {
       /* set GPS speed based on sticks input: */
       float vmax_sqrt = sqrt(tsfloat_get(&horiz_speed_max));
@@ -213,12 +213,16 @@ void set_att_angles(float pitch, float roll)
 
 static bool emergency_landing(bool gps_valid, vec2_t *ne_gps_pos, float u_ultra_pos)
 {
-   cm_u_set_spd(-0.5f);
+   vert_pos_locked = false;
+   cm_u_set_spd(-0.2);
+   
    if (gps_valid)
       set_horizontal_spd_or_pos(0.0f, 0.0f, 0.0f, ne_gps_pos, u_ultra_pos);
    else
       set_att_angles(0.0f, 0.0f);
    
+   cm_yaw_set_spd(0.0f);
+
    if (u_ultra_pos < 0.4f)
       return true;
 
@@ -241,13 +245,16 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
          /* too much; bring it down */
          if (rc_inval_count == RC_INVAL_MAX_COUNT)
             LOG(LL_ERROR, "performing emergency landing");
-         return !(*hard_off = emergency_landing(sensor_status & GPS_VALID, ne_gps_pos, u_ultra_pos));
+         
+         if (emergency_landing(sensor_status & GPS_VALID, ne_gps_pos, u_ultra_pos))
+         {
+            always_hard_off = true;
+            return false;
+         }
       }
    }
    else
-   {
       rc_inval_count = 0;   
-   }
    
    
    vec2_t pr = {{channels[CH_PITCH], channels[CH_ROLL]}};
@@ -260,10 +267,6 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
    float sw_l = channels[CH_SWITCH_L];
    float sw_r = channels[CH_SWITCH_R];
    bool gps_valid = (sensor_status & GPS_VALID) ? true : false;
-
-   /*if (!(sensor_status & RC_VALID))
-      emergency_landing(gps_valid, ne_gps_pos, u_ultra_pos);
-   */
 
    cm_yaw_set_spd(stick_dz(yaw_stick, 0.075) * deg2rad(tsfloat_get(&yaw_speed_max))); /* the only applied mode in manual operation */
    man_mode_t man_mode = channel_to_man_mode(sw_r);
@@ -299,9 +302,9 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       }
    }
 
-   if ((sensor_status & RC_VALID) && sw_l > 0.5)
+   if (always_hard_off || ((sensor_status & RC_VALID) && sw_l > 0.5))
       *hard_off = true;
 
-   return gas_stick > 0.1;
+   return always_hard_off? false : gas_stick > 0.1;
 }
 
