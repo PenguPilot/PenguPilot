@@ -88,7 +88,7 @@ void _main(int argc, char *argv[])
    (void)argc;
    (void)argv;
    
-   if (scl_init("gps") != 0)
+   if (scl_init("gpsp") != 0)
    {
       syslog(LOG_CRIT, "could not init scl module");
       exit(EXIT_FAILURE);
@@ -232,7 +232,7 @@ void _cleanup(void)
 int main(int argc, char *argv[])
 {
    char pid_file[1024];
-   sprintf(pid_file, "%s/.PenguPilot/run/gps.pid", getenv("HOME"));
+   sprintf(pid_file, "%s/.PenguPilot/run/gpsp.pid", getenv("HOME"));
    daemonize(pid_file, _main, _cleanup, argc, argv);
    return 0;
 }
