@@ -147,17 +147,18 @@ void main_replay(int argc, char *argv[])
       }
       gps_data.lat = double_data[10];
       gps_data.lon = double_data[11];
-      gps_data.course = double_data[12];
-      gps_data.speed = double_data[13];
-      ultra_z = double_data[14];
-      baro_z = double_data[15];
-      voltage = double_data[16];
-      current = double_data[17];
+      gps_data.alt = double_data[12];
+      gps_data.course = double_data[13];
+      gps_data.speed = double_data[14];
+      ultra_z = double_data[15];
+      baro_z = double_data[16];
+      voltage = double_data[17];
+      current = double_data[18];
       FOR_N(i, MAX_CHANNELS)
       {
-         channels[i] = double_data[18 + i];
+         channels[i] = double_data[19 + i];
       }
-      sensor_status = int_data[24];
+      sensor_status = int_data[25];
       main_step(dt, &marg_data, &gps_data, ultra_z, baro_z, voltage, current, channels, sensor_status, 1);
    }
    free(buffer);

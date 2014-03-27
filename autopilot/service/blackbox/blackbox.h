@@ -33,7 +33,7 @@
 #include "../util/math/vec2.h"
 
 
-#define BLACKBOX_ITEMS 31
+#define BLACKBOX_ITEMS 32
 
 
 extern char *blackbox_spec[BLACKBOX_ITEMS];
