@@ -48,7 +48,7 @@ char *blackbox_spec[BLACKBOX_ITEMS] =
    "gyro_x", "gyro_y", "gyro_z", /* gyro */
    "acc_x", "acc_y", "acc_z", /* acc */
    "mag_x", "mag_y", "mag_z", /* mag */
-   "lat", "lon", /* gps */
+   "lat", "lon", "alt", /* gps */
    "gps_course", "gps_speed", /* gps */
    "ultra", "baro", /* ultra / baro */
    "voltage", /* voltage */
@@ -108,7 +108,7 @@ void blackbox_record(const float dt, /* sensor inputs ... */
    PACKFV(marg_data->gyro.vec, 3);
    PACKFV(marg_data->acc.vec, 3);
    PACKFV(marg_data->mag.vec, 3);
-   PACKD(gps_data->lat); PACKD(gps_data->lon);
+   PACKD(gps_data->lat); PACKD(gps_data->lon); PACKF(gps_data->alt);
    PACKF(gps_data->course); PACKF(gps_data->speed);
    PACKF(ultra); PACKF(baro);
    PACKF(voltage);
