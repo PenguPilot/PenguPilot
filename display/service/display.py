@@ -84,8 +84,8 @@ def cpuavg():
          if load is None:
             load = cpu_percent()
          else:
-            load = 0.95 * load + 0.05 * cpu_percent()
-         sleep(0.5)
+            load = 0.85 * load + 0.15 * cpu_percent()
+         sleep(0.1)
 
 
 def pmreader():
