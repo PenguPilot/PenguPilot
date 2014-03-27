@@ -33,6 +33,7 @@
 #include <scl.h>
 #include <msgpack.h>
 #include <periodic_thread.h>
+#include <threadsafe_types.h>
 
 #include "mon.h"
 #include "control_mode.h"
@@ -77,6 +78,8 @@ static interval_t gyro_move_interval;
 static int init = 0;
 static body_to_neu_t *btn;
 static float avg_acc[3] = {0, 0, 9.81};
+static tsfloat_t acc_lowpass;
+
 
 
 typedef union
@@ -112,13 +115,6 @@ void main_init(int argc, char *argv[])
    /* init data structures: */
    memset(&pos_in, 0, sizeof(pos_in_t));
    
-   /* read configuration: */
-   opcd_param_t params[] =
-   {
-      OPCD_PARAMS_END
-   };
-   opcd_params_apply("main.", params);
- 
    /* init SCL subsystem: */
    syslog(LOG_INFO, "initializing signaling and communication link (SCL)");
    if (scl_init("pilot") != 0)
@@ -188,6 +184,13 @@ void main_init(int argc, char *argv[])
    gps_data_init(&gps_data);
 
    cal_init(&rc_cal, 3, 500);
+
+   opcd_param_t params[] =
+   {
+      {"acc_lowpass", &acc_lowpass},
+      OPCD_PARAMS_END
+   };
+   opcd_params_apply("main.", params);
 
    mon_init();
    LOG(LL_INFO, "entering main loop");
@@ -293,7 +296,7 @@ void main_step(const float dt,
    FOR_N(i, 3)
    {
       pos_in.acc.vec[i] = world_acc.vec[i] - avg_acc[i];
-      float a = 0.001;
+      float a = tsfloat_get(&acc_lowpass);
       avg_acc[i] = avg_acc[i] * (1.0 - a) + world_acc.vec[i] * a;
    }
 
@@ -415,6 +418,7 @@ void main_step(const float dt,
 
    /* set monitoring data: */
    mon_data_set(ne_pos_err.x, ne_pos_err.y, u_pos_err, yaw_err);
+   printf("%f %f %f %f\n", pos_est.ne_pos.x, pos_est.ne_pos.y, pos_in.pos_n, pos_in.pos_e);
 
 out:
    EVERY_N_TIMES(bb_rate, blackbox_record(dt, marg_data, gps_data, ultra, baro, voltage, current, channels, sensor_status, /* sensor inputs */
