@@ -40,11 +40,11 @@
 /* if we receive no valid GPS fix for more than this amount of time,
    indicate an error;
    this condition applies if:
-     - the gps service does not send data (driver or bus problem)
-     - the gps service sends data but the fix is not 2D/3D */
+     - the gps publisher does not send data (driver or bus problem)
+     - the gps publisher sends data but the fix is not 2D/3D */
+
 
 #define GPS_TIMEOUT (5.0f)
-
 
 
 static gps_data_t gps_data = {FIX_NOT_SEEN, 0, 0, 0, 0, 0, 0};
