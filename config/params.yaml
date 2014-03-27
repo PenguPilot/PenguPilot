@@ -68,6 +68,9 @@ pilot:
       level: 3
       details: 2
 
+   main:
+      acc_lowpass: 0.001
+
    ahrs:
       beta: 0.025
       yaw_bias: -0.1999999999999993
@@ -131,7 +134,10 @@ pilot:
          i: 0.02
          i_max: 0.2
          d: 0.0
- 
+         pitch_bias: 0.0
+         roll_bias: 0.0
+
+
       u_speed:
          p: 5.0
          i: 0.05
