@@ -46,6 +46,7 @@ static tsfloat_t process_noise;
 static tsfloat_t ultra_noise;
 static tsfloat_t baro_noise;
 static tsfloat_t gps_noise;
+static tsint_t use_gps_speed;
 
 
 typedef struct
@@ -100,6 +101,7 @@ void pos_init(void)
       {"ultra_noise", &ultra_noise},
       {"baro_noise", &baro_noise},
       {"gps_noise", &gps_noise},
+      {"use_gps_speed", &use_gps_speed},
       OPCD_PARAMS_END
    };
    opcd_params_apply("kalman_pos.", params);
@@ -110,8 +112,8 @@ void pos_init(void)
        tsfloat_get(&gps_noise));
 
    /* set-up kalman filters: */
-   kalman_init(&n_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, true);
-   kalman_init(&e_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, true);
+   kalman_init(&n_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, tsint_get(&use_gps_speed));
+   kalman_init(&e_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, tsint_get(&use_gps_speed));
    kalman_init(&baro_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&baro_noise), 0, 0, false);
    kalman_init(&ultra_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&ultra_noise), 0, 0, false);
 }
