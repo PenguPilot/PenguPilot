@@ -26,7 +26,7 @@
 
 components:
 
-   - name: gps
+   - name: gpsp
      gates:
       - opcd_ctrl: req
       - data: pub
@@ -158,13 +158,13 @@ components:
 
 connections:
    - [ wifi_loc.wifi,            wifi_sensor.networks]
-   - [ wifi_loc.gps,             gps.data]
+   - [ wifi_loc.gps,             gpsp.data]
    - [ aircomm_app.out,          aircomm.in]
    - [ aircomm_app.in,           aircomm.out]
-   - [ heartbeat.gps,            gps.data]
+   - [ heartbeat.gps,            gpsp.data]
    - [ heartbeat.power,          powerman.mon]
    - [ display.motors_spinning,  pilot.motors_spinning]
-   - [ display.gps,              gps.data]
+   - [ display.gps,              gpsp.data]
    - [ display.power,            powerman.mon]
    - [ calibration.data,         blackbox.data]
    - [ pilot.blackbox,           blackbox.data]
@@ -176,7 +176,7 @@ connections:
    - [ pilot.blackbox,           optimizer.blackbox]
    - [ opcd.ctrl,                remote.opcd_ctrl]
    - [ opcd.ctrl,                pilot.opcd_ctrl]
-   - [ opcd.ctrl,                gps.opcd_ctrl]
+   - [ opcd.ctrl,                gpsp.opcd_ctrl]
    - [ opcd.ctrl,                powerman.opcd_ctrl]
    - [ mavlink.pilot_mon,        pilot.mon]
    - [ mavlink.power_mon,        powerman.mon]
@@ -185,8 +185,8 @@ connections:
    - [ mavlink.state,            icarus.state]
    - [ remote.data,              pilot.rc]
    - [ console_logger.log,       pilot.log]
-   - [ gps.data,                 pilot.gps]
-   - [ gps.data,                 mavlink.gps]
+   - [ gpsp.data,                 pilot.gps]
+   - [ gpsp.data,                 mavlink.gps]
    - [ icarus.ctrl,              ferry_ctrl.ctrl]
    - [ icarus.power_ctrl,        powerman.ctrl]
    - [ icarus.power_mon,         powerman.mon]
@@ -196,6 +196,6 @@ connections:
    - [ pilot.mon,                icarus.mon]
    - [ pilot.ctrl,               pilot_shell.ctrl]
    - [ pilot.mon,                pilot_shell.mon]
-   - [ gpx_logger.gps,           gps.data]
-   - [ gps.data,                 gps_test.gps]
+   - [ gpx_logger.gps,           gpsp.data]
+   - [ gpsp.data,                 gps_test.gps]
    

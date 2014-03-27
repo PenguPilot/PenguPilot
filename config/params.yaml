@@ -123,7 +123,7 @@ pilot:
          i: 0.4
          i_max: 3.0
          d: 0.1
-         filt_fg: 5.0
+         filt_fg: 10.0
          filt_d: 0.95
       
       attitude:
@@ -131,7 +131,7 @@ pilot:
          i: 0.02
          i_max: 0.2
          d: 0.0
-
+ 
       u_speed:
          p: 5.0
          i: 0.05
