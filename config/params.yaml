@@ -166,6 +166,7 @@ pilot:
       ultra_noise: 0.03
       gps_noise: 0.2
       process_noise: 1.0e-6
+      use_gps_speed: 0
 
    sensors:
       rc_dsl:
