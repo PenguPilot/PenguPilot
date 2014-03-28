@@ -81,7 +81,6 @@ static float avg_acc[3] = {0, 0, 9.81};
 static tsfloat_t acc_lowpass;
 
 
-
 typedef union
 {
    struct
@@ -418,7 +417,7 @@ void main_step(const float dt,
 
    /* set monitoring data: */
    mon_data_set(ne_pos_err.x, ne_pos_err.y, u_pos_err, yaw_err);
-   printf("%f %f %f %f %f %f\n", pos_est.ne_pos.x, pos_est.ne_pos.y, pos_est.ultra_u.pos, pos_in.pos_n, pos_in.pos_e, pos_in.ultra_u);
+   printf("%f %f %f %f\n", pos_in.pos_n, pos_in.pos_e, pos_est.ne_pos.x, pos_est.ne_pos.y);
 
 out:
    EVERY_N_TIMES(bb_rate, blackbox_record(dt, marg_data, gps_data, ultra, baro, voltage, current, channels, sensor_status, /* sensor inputs */

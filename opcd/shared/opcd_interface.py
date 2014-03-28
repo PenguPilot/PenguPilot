@@ -57,7 +57,7 @@ class OPCD_Interface:
       req.id = id
       rep = self._send_and_recv(req)
       if rep.status != 0:
-         raise KeyError
+         raise KeyError(id)
       pairs = []
       for pair in rep.pairs:
          for type in self.map.values():
