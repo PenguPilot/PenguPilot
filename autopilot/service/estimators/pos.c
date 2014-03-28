@@ -189,7 +189,7 @@ static void kalman_init(kalman_t *kf, float q, float r, float pos, float speed, 
    m_set_val(kf->H, 0, 0, 1.0);
    m_set_val(kf->H, 0, 1, 0.0);
    m_set_val(kf->H, 1, 0, 0.0);
-   /* kf->H[1, 1] is set in kalman_correct(...) */
+   m_set_val(kf->H, 1, 1, 1.0 * use_speed);
 
    /* A = | 1.0   dt  |
           | 0.0   1.0 |
@@ -237,16 +237,7 @@ static void kalman_correct(kalman_t *kf, float pos, float speed)
    /* x = x + K * (z - H * x) */
    mv_mlt(kf->H, kf->x, kf->t0);
    v_set_val(kf->z, 0, pos);
-   if (kf->use_speed && speed > 0.1f)
-   {
-      m_set_val(kf->H, 1, 1, 1.0);
-      v_set_val(kf->z, 1, speed);
-   }
-   else
-   {
-      m_set_val(kf->H, 1, 1, 0.0);
-      v_set_val(kf->z, 1, 0.0f);   
-   }
+   v_set_val(kf->z, 1, kf->use_speed * speed);
    v_sub(kf->z, kf->t0, kf->t1);
    mv_mlt(kf->K, kf->t1, kf->t0);
    v_add(kf->x, kf->t0, kf->t1);
