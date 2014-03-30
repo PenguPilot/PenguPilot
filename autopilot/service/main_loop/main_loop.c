@@ -226,14 +226,14 @@ void main_step(const float dt,
    if (!(sensor_status & MARG_VALID))
    {
       marg_err += 1;
-      if (marg_err > 5)
+      if (marg_err > 500)
       {
          /* we are in serious trouble */
          memset(setpoints, 0, sizeof(float) * platform.n_motors);
          platform_write_motors(setpoints);
          die();
       }
-      return;
+      goto out;
    }
    marg_err = 0;
    
@@ -258,6 +258,8 @@ void main_step(const float dt,
          LOG(LL_ERROR, "gyro moved during calibration, retrying");
       cal_reset(&gyro_cal);
    }
+   if (!cal_complete(&gyro_cal))
+      goto out;
 
    /* update relative gps position, if we have a fix: */
    if (sensor_status & GPS_VALID)
@@ -280,12 +282,12 @@ void main_step(const float dt,
    bool flying = flight_state_update(&cal_marg_data.acc.vec[0]);
    if (!flying && pos_in.ultra_u == 7.0)
       pos_in.ultra_u = 0.2;
-
+   
    /* compute orientation estimate: */
    euler_t euler;
    int ahrs_state = cal_ahrs_update(&euler, &cal_marg_data, mag_decl, dt);
-   if (ahrs_state < 0 || !cal_complete(&gyro_cal))
-      return;
+   if (ahrs_state < 0)
+      goto out;
    ONCE(init = 1; LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
 
    /* rotate local ACC measurements into global NEU reference frame: */
@@ -296,9 +298,10 @@ void main_step(const float dt,
    FOR_N(i, 3)
    {
       pos_in.acc.vec[i] = world_acc.vec[i] - avg_acc[i];
-      float a = tsfloat_get(&acc_lowpass);
+      float a = 0.01; //tsfloat_get(&acc_lowpass);
       avg_acc[i] = avg_acc[i] * (1.0 - a) + world_acc.vec[i] * a;
    }
+   EVERY_N_TIMES(10, printf("%f %f %f %f %f %f\n", gps_rel_data.dn, pos_in.speed_n, pos_in.acc.n, gps_rel_data.de, pos_in.speed_e, pos_in.acc.e));
 
    /* compute next 3d position estimate using Kalman filters: */
    pos_t pos_est;
@@ -413,12 +416,11 @@ void main_step(const float dt,
    /* write motors: */
    if (!override_hw)
    {
-      platform_write_motors(setpoints);
+      //platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */
    mon_data_set(ne_pos_err.x, ne_pos_err.y, u_pos_err, yaw_err);
-   printf("%f %f %f %f %f %f\n", pos_est.ne_pos.x, pos_est.ne_pos.y, pos_est.ultra_u.pos, pos_in.pos_n, pos_in.pos_e, pos_in.ultra_u);
 
 out:
    EVERY_N_TIMES(bb_rate, blackbox_record(dt, marg_data, gps_data, ultra, baro, voltage, current, channels, sensor_status, /* sensor inputs */
