@@ -65,7 +65,7 @@
 #include "../force_opt/att_thrust.h"
 #include "../flight_logic/flight_logic.h"
 #include "../blackbox/blackbox.h"
-
+#include "../filters/filter.h"
 
 static bool calibrate = false;
 static float *rpm_square = NULL;
@@ -77,9 +77,7 @@ static calibration_t gyro_cal;
 static interval_t gyro_move_interval;
 static int init = 0;
 static body_to_neu_t *btn;
-static float avg_acc[3] = {0, 0, 9.81};
-static tsfloat_t acc_lowpass;
-
+Filter2 filters[3];
 
 typedef union
 {
@@ -184,12 +182,16 @@ void main_init(int argc, char *argv[])
 
    cal_init(&rc_cal, 3, 500);
 
+   tsfloat_t acc_d, acc_fg;
    opcd_param_t params[] =
    {
-      {"acc_lowpass", &acc_lowpass},
+      {"acc_fg", &acc_fg},
+      {"acc_d", &acc_d},
       OPCD_PARAMS_END
    };
    opcd_params_apply("main.", params);
+   FOR_N(i, 3)
+      filter2_hp_init(&filters[i], tsfloat_get(&acc_fg),tsfloat_get(&acc_d), 0.06, 3);
 
    mon_init();
    LOG(LL_INFO, "entering main loop");
@@ -295,11 +297,7 @@ void main_step(const float dt,
    
    /* center global ACC readings: */
    FOR_N(i, 3)
-   {
-      pos_in.acc.vec[i] = world_acc.vec[i] - avg_acc[i];
-      float a = tsfloat_get(&acc_lowpass);
-      avg_acc[i] = avg_acc[i] * (1.0 - a) + world_acc.vec[i] * a;
-   }
+      filter2_run(&filters[i], &world_acc.vec[i], &pos_in.acc.vec[i]);
 
    /* compute next 3d position estimate using Kalman filters: */
    pos_t pos_est;
