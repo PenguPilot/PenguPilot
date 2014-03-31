@@ -73,23 +73,23 @@ pilot:
 
    ahrs:
       beta: 0.01
-      yaw_bias: -0.1999999999999993
-      pitch_bias: 0.019999999999999962
-      roll_bias: -0.02
+      pitch_bias: 0.06005582305560819
+      roll_bias: 2.5342363763604934
+      yaw_bias: -5.223111248074738
 
    cal:
-      acc_bias_x:  0.0
-      acc_bias_y:  0.0
-      acc_bias_z:  0.0
-      acc_scale_x: 1.0
-      acc_scale_y: 1.0
-      acc_scale_z: 1.0
-      mag_bias_x:  0.0
-      mag_bias_y:  0.0
-      mag_bias_z:  0.0
-      mag_scale_x: 1.0
-      mag_scale_y: 1.0
-      mag_scale_z: 1.0
+      acc_bias_x: 0.316767353077
+      acc_bias_y: 0.0899030422653
+      acc_bias_z: 0.892697600942
+      acc_scale_x: 9.81305830535
+      acc_scale_y: 9.81799913559
+      acc_scale_z: 10.0498586409
+      mag_bias_x: 43.342298502
+      mag_bias_y: -51.0308879804
+      mag_bias_z: 8.27840648943
+      mag_scale_x: 555.414388374
+      mag_scale_y: 570.737903657
+      mag_scale_z: 565.604213821
 
    inv_coupling:
       pitch_enabled: 1
@@ -168,10 +168,10 @@ pilot:
 
    kalman_pos:
       process_noise: 1.0e-6
-      kalman_pos:
+      kalman_pos: 0.1
       baro_noise: 0.01
       gps_noise: 0.02
-      spd_scale: 0.5625734827616433
+      spd_scale: 0.5554474258271733
       ultra_noise: 0.001
       use_gps_speed: 1
 
