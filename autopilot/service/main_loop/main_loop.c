@@ -67,6 +67,7 @@
 #include "../blackbox/blackbox.h"
 #include "../filters/filter.h"
 
+
 static bool calibrate = false;
 static float *rpm_square = NULL;
 static float *setpoints = NULL;
@@ -77,7 +78,7 @@ static calibration_t gyro_cal;
 static interval_t gyro_move_interval;
 static int init = 0;
 static body_to_neu_t *btn;
-static Filter2 lp_filter;
+static Filter1 lp_filter;
 static float acc_vec[3] = {0.0f, 0.0f, -9.81f};
 
 
@@ -418,9 +419,7 @@ void main_step(const float dt,
 
    /* set monitoring data: */
    mon_data_set(ne_pos_err.x, ne_pos_err.y, u_pos_err, yaw_err);
-   printf("%f %f %f %f %f %f\n", pos_in.pos_n, pos_est.ne_pos.x,
-                                 pos_in.pos_e, pos_est.ne_pos.y,
-                                 pos_in.baro_u, pos_est.baro_u.pos);
+   printf("%f %f\n", pos_in.baro_u, pos_est.baro_u.pos);
 
 out:
    EVERY_N_TIMES(bb_rate, blackbox_record(dt, marg_data, gps_data, ultra, baro, voltage, current, channels, sensor_status, /* sensor inputs */
