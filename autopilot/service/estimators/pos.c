@@ -12,7 +12,7 @@
  Kalman Filter based Position/Speed Estimate
    
  | 1 dt | * | p | + | 0.5 * dt ^ 2 | * | a | = | p |
- | 0  1 | * | v |   |     dt       |   | v |
+ | 0  1 | * | v |   |     dt       |           | v |
  
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
  Copyright (C) 2013 Jan Roemisch, Ilmenau University of Technology

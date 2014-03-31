@@ -69,7 +69,8 @@ pilot:
       details: 2
 
    main:
-      acc_lowpass: 0.001
+      acc_fg: 0.01
+      acc_d: 0.95
 
    ahrs:
       beta: 0.025
