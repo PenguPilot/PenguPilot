@@ -168,9 +168,8 @@ pilot:
 
    kalman_pos:
       process_noise: 1.0e-6
-      kalman_pos: 0.1
       baro_noise: 0.01
-      gps_noise: 0.02
+      gps_noise: 0.01
       spd_scale: 0.5554474258271733
       ultra_noise: 0.001
       use_gps_speed: 1
