@@ -77,7 +77,9 @@ static calibration_t gyro_cal;
 static interval_t gyro_move_interval;
 static int init = 0;
 static body_to_neu_t *btn;
-Filter2 filters[3];
+static Filter2 lp_filter;
+static float acc_vec[3] = {0.0f, 0.0f, -9.81f};
+
 
 typedef union
 {
@@ -182,16 +184,14 @@ void main_init(int argc, char *argv[])
 
    cal_init(&rc_cal, 3, 500);
 
-   tsfloat_t acc_d, acc_fg;
+   tsfloat_t acc_fg;
    opcd_param_t params[] =
    {
       {"acc_fg", &acc_fg},
-      {"acc_d", &acc_d},
       OPCD_PARAMS_END
    };
    opcd_params_apply("main.", params);
-   FOR_N(i, 3)
-      filter2_hp_init(&filters[i], tsfloat_get(&acc_fg),tsfloat_get(&acc_d), 0.06, 3);
+   filter1_lp_init(&lp_filter, tsfloat_get(&acc_fg), 0.06, 3);
 
    mon_init();
    LOG(LL_INFO, "entering main loop");
@@ -296,8 +296,9 @@ void main_step(const float dt,
    body_to_neu(btn, &world_acc, &euler, &cal_marg_data.acc);
    
    /* center global ACC readings: */
+   filter1_run(&lp_filter, &world_acc.vec[0], &acc_vec[0]);
    FOR_N(i, 3)
-      filter2_run(&filters[i], &world_acc.vec[i], &pos_in.acc.vec[i]);
+      pos_in.acc.vec[i] = world_acc.vec[i] - acc_vec[i];
 
    /* compute next 3d position estimate using Kalman filters: */
    pos_t pos_est;
@@ -417,7 +418,9 @@ void main_step(const float dt,
 
    /* set monitoring data: */
    mon_data_set(ne_pos_err.x, ne_pos_err.y, u_pos_err, yaw_err);
-   printf("%f %f %f %f\n", pos_in.pos_n, pos_in.pos_e, pos_est.ne_pos.x, pos_est.ne_pos.y);
+   printf("%f %f %f %f %f %f\n", pos_in.pos_n, pos_est.ne_pos.x,
+                                 pos_in.pos_e, pos_est.ne_pos.y,
+                                 pos_in.ultra_u, pos_in.baro_u);
 
 out:
    EVERY_N_TIMES(bb_rate, blackbox_record(dt, marg_data, gps_data, ultra, baro, voltage, current, channels, sensor_status, /* sensor inputs */
