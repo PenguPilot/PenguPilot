@@ -69,11 +69,10 @@ pilot:
       details: 2
 
    main:
-      acc_fg: 0.01
-      acc_d: 0.95
+      acc_fg: 0.1
 
    ahrs:
-      beta: 0.025
+      beta: 0.01
       yaw_bias: -0.1999999999999993
       pitch_bias: 0.019999999999999962
       roll_bias: -0.02
@@ -138,7 +137,6 @@ pilot:
          pitch_bias: 0.0
          roll_bias: 0.0
 
-
       u_speed:
          p: 5.0
          i: 0.05
@@ -169,12 +167,13 @@ pilot:
          ortho_p: 0.0
 
    kalman_pos:
-      baro_noise: 0.01
-      ultra_noise: 0.03
-      gps_noise: 0.2
       process_noise: 1.0e-6
-      use_gps_speed: 0
-      spd_scale: 0.5
+      kalman_pos:
+      baro_noise: 0.01
+      gps_noise: 0.02
+      spd_scale: 0.5625734827616433
+      ultra_noise: 0.001
+      use_gps_speed: 1
 
    sensors:
       rc_dsl:
