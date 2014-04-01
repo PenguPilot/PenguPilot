@@ -26,6 +26,11 @@
 
 components:
 
+   - name: geomag
+     gates:
+      - gps: sub
+      - decl: pub
+
    - name: gpsp
      gates:
       - opcd_ctrl: req
@@ -83,6 +88,7 @@ components:
       - log: pub        # logs useful human-readable data at different verbosity levels
       - blackbox: pub   # publishes data produced in every step of the main loop
       - gps: sub        # subscribes to GPS data provider
+      - decl: sub       # magnetic declination
       - rc: sub         # experimental remote control input
       - ctrl: rep       # control interface
       - mon: pub        # controller error monitoring publisher
@@ -157,6 +163,8 @@ components:
 #
 
 connections:
+   - [ gpsp.data,                geomag.gps]
+   - [ pilot.decl,               geomag.decl]
    - [ wifi_loc.wifi,            wifi_sensor.networks]
    - [ wifi_loc.gps,             gpsp.data]
    - [ aircomm_app.out,          aircomm.in]

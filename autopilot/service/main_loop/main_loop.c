@@ -419,7 +419,8 @@ void main_step(const float dt,
 
    /* set monitoring data: */
    mon_data_set(ne_pos_err.x, ne_pos_err.y, u_pos_err, yaw_err);
-   printf("%f %f\n", pos_in.baro_u, pos_est.baro_u.pos);
+   printf("%f %f %f %f\n", pos_in.pos_n, pos_est.ne_pos.x,
+                           pos_in.pos_e, pos_est.ne_pos.y);
 
 out:
    EVERY_N_TIMES(bb_rate, blackbox_record(dt, marg_data, gps_data, ultra, baro, voltage, current, channels, sensor_status, /* sensor inputs */
