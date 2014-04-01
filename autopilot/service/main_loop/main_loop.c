@@ -71,7 +71,6 @@
 static bool calibrate = false;
 static float *rpm_square = NULL;
 static float *setpoints = NULL;
-static float mag_decl = 0.0f;
 static gps_data_t gps_data;
 static gps_rel_data_t gps_rel_data = {0.0, 0.0, 0.0f, 0.0f};
 static calibration_t gyro_cal;
@@ -183,6 +182,7 @@ void main_init(int argc, char *argv[])
    interval_init(&gyro_move_interval);
    gps_data_init(&gps_data);
 
+   mag_decl_init();
    cal_init(&rc_cal, 3, 500);
 
    tsfloat_t acc_fg;
@@ -264,6 +264,7 @@ void main_step(const float dt,
       goto out;
 
    /* update relative gps position, if we have a fix: */
+   float mag_decl;
    if (sensor_status & GPS_VALID)
    {
       gps_util_update(&gps_rel_data, gps_data);
@@ -271,11 +272,18 @@ void main_step(const float dt,
       pos_in.pos_e = gps_rel_data.de;
       pos_in.speed_n = gps_rel_data.speed_n;
       pos_in.speed_e = gps_rel_data.speed_e;
-      /* compute declination and start gps position once: */
-      ONCE(mag_decl = mag_decl_lookup(gps_data->lat, gps_data->lon);
-           gps_start_set(gps_data);
-           LOG(LL_INFO, "declination lookup yields: %f deg", rad2deg(mag_decl)));
+      ONCE(gps_start_set(gps_data));
+      mag_decl = mag_decl_get();
    }
+   else
+   {
+      pos_in.pos_n = 0.0f;   
+      pos_in.pos_e = 0.0f; 
+      pos_in.speed_n = 0.0f;
+      pos_in.speed_e = 0.0f;
+      mag_decl = 0.0f;
+   }
+   printf("%f\n", mag_decl);
 
    /* acc/mag calibration: */
    acc_mag_cal_apply(&cal_marg_data.acc, &cal_marg_data.mag);
@@ -414,7 +422,7 @@ void main_step(const float dt,
    /* write motors: */
    if (!override_hw)
    {
-      platform_write_motors(setpoints);
+      //platform_write_motors(setpoints);
    }
 
    /* set monitoring data: */

@@ -37,9 +37,6 @@
 
 static ahrs_t ahrs;
 static ahrs_t imu;
-static tsfloat_t yaw_bias;
-static tsfloat_t pitch_bias;
-static tsfloat_t roll_bias;
 
 
 void cal_ahrs_init(float beta_start, float beta_step)
@@ -47,21 +44,15 @@ void cal_ahrs_init(float beta_start, float beta_step)
    ASSERT_ONCE();
    tsfloat_t beta_end;
 
-   /* read configuration and initialize scl gates: */
+   /* read configuration: */
    opcd_param_t params[] =
    {
-      {"yaw_bias", &yaw_bias},
-      {"pitch_bias", &pitch_bias},
-      {"roll_bias", &roll_bias},
       {"beta", &beta_end},
       OPCD_PARAMS_END
    };
    opcd_params_apply("ahrs.", params);
-   LOG(LL_DEBUG, "yaw_bias: %f, pitch_bias: %f, roll_bias: %f",
-       tsfloat_get(&yaw_bias),
-       tsfloat_get(&pitch_bias),
-       tsfloat_get(&roll_bias));
-
+   
+   /* initialize AHRS and IMU filters: */
    ahrs_init(&ahrs, AHRS_ACC_MAG, beta_start, beta_step, tsfloat_get(&beta_end));
    ahrs_init(&imu, AHRS_ACC, beta_start, beta_step, tsfloat_get(&beta_end));
 }
@@ -79,9 +70,9 @@ int cal_ahrs_update(euler_t *euler, marg_data_t *marg_data, float mag_decl, floa
       quat_to_euler(&ahrs_euler, &ahrs.quat);
       quat_to_euler(&imu_euler, &imu.quat);
       /* apply calibration: */
-      euler->yaw = ahrs_euler.yaw + deg2rad(tsfloat_get(&yaw_bias)) + mag_decl;
-      euler->pitch = imu_euler.pitch + deg2rad(tsfloat_get(&pitch_bias));
-      euler->roll = imu_euler.roll + deg2rad(tsfloat_get(&roll_bias));
+      euler->yaw = ahrs_euler.yaw + mag_decl;
+      euler->pitch = imu_euler.pitch;
+      euler->roll = imu_euler.roll;
       euler_normalize(euler);
       EVERY_N_TIMES(200, LOG(LL_INFO, "%f %f %f", rad2deg(euler->pitch),
                                                   rad2deg(euler->roll),

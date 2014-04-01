@@ -243,7 +243,7 @@ def pol2cart(az, el, x, y, r):
 def draw_gps(draw):
    with gps_lock:
       fix_txt = {0: '--', 2: '2D', 3: '3D'}
-      draw.text((0, 0), 'Sats: %d' % gps_data.sats, WHITE, font = font)
+      draw.text((0, 0), 'Sats: %d / %d' % (gps_data.sats, len(gps_data.satinfo)), WHITE, font = font)
       draw.text((0, 13), 'Fix: %s' % fix_txt[gps_data.fix], WHITE, font = font)
       if gps_data.fix >= 2:
          draw.text((0, 13 * 2), 'HD: %.1f' % gps_data.hdop, WHITE, font = font)
@@ -259,13 +259,13 @@ def draw_gps(draw):
       draw.line([(x_pos - outer_rad, y_pos), (x_pos + outer_rad, y_pos)], WHITE)
       sig = 0.0
       for sat in gps_data.satinfo:
-         sig += sat.sig
+         if sat.sig > sig:
+            sig = sat.sig
          x, y = pol2cart(sat.azimuth, sat.elv, x_pos, y_pos, outer_rad)
          if sat.in_use:
             circle(draw, x, y, 3, WHITE, WHITE)
          else:
             circle(draw, x, y, 3, BLACK, WHITE)
-      sig /= len(gps_data.satinfo)
       draw.text((0, 13 * 4), 'Sig: %.1f' % sig, WHITE, font = font)
 
 def draw_gps2(draw):
@@ -303,7 +303,7 @@ def main(name):
    t3.start()
 
    screens = [(draw_health, 15),
-              (draw_gps, 15),
+              (draw_gps, 1500000),
               (draw_gps2, 15)]
 
    screen = 0

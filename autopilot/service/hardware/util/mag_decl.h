@@ -10,14 +10,9 @@
  |___________________________________________________|
   
  
- Magnetic Declination Lookup Table Interface
+ Magnetic Declination SCL Subscriber Interface
  
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
- Copyright (C) Adam M Rivera
- With direction from: Andrew Tridgell, Jason Short, Justin Beech
- Adapted from: http://www.societyofrobots.com/robotforum/index.php?topic=11855.0
- Scott Ferguson
- scottfromscott@gmail.com
  
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -34,10 +29,10 @@
 #define __MAG_DECL_H__
 
 
-/* returns magnetic declination in radians
-   for a given latitude/longitude in degrees */
-float mag_decl_lookup(float lat, float lon);
+int mag_decl_init(void);
+
+float mag_decl_get(void);
 
 
-#endif // __MAG_DECL_H__
+#endif /* __MAG_DECL_H__ */
 

@@ -28,6 +28,8 @@
 
 from geomag.geomag import GeoMag
 from scl import generate_map
+from gps_data_pb2 import GpsData
+from misc import daemonize
 import os
 
 
@@ -40,11 +42,13 @@ def main(name):
    i = 0
    while True:
       data = gps_socket.recv()
-      if i == 5:
+      if i == 20:
          i = 0
          gps_data = GpsData()
          gps_data.ParseFromString(data)
-         decl_socket.send('%f' % gm.GeoMag(gps_data.lat, gps_data.lon).dec)
+         if gps_data.time:
+            decl = gm.GeoMag(gps_data.lat, gps_data.lon).dec
+            decl_socket.send('%f' % decl)
       i += 1
 
-main('geomag')
+daemonize('geomag', main)
