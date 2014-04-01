@@ -37,7 +37,7 @@ try:
    while True:
       str = socket.recv()
       gps_data.ParseFromString(str)
-      print gps_data.fix, gps_data.lat, gps_data.lon
+      print gps_data.fix, gps_data.lat, gps_data.lon, len(gps_data.satinfo)
 except:
    print 'terminated by user'
 

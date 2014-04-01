@@ -36,7 +36,7 @@ gpsp:
   depends: [opcd]
 
 geomag:
-  binary: 'geomag/service/geomag'
+  binary: 'geomag/service/geomag.py'
   depends: [gpsp]
 
 powerman:

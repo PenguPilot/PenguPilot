@@ -73,9 +73,6 @@ pilot:
 
    ahrs:
       beta: 0.01
-      pitch_bias: 0.06005582305560819
-      roll_bias: 2.5342363763604934
-      yaw_bias: -5.223111248074738
 
    cal:
       acc_bias_x: 0.316767353077
