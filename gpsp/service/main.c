@@ -126,28 +126,19 @@ void _main(int argc, char *argv[])
 
    nmeaINFO info;
    nmea_zero_INFO(&info);
+
    int time_set = 0;
    int smask = 0; /* global smask collects all sentences and is never reset,
                      in contrast to info.smask */
    while (running)
    {
-      /* assemble NMEA frame: */
-      char buffer[1024];
-      int pos = 0;
-      int c;
-      do
-      {
-         c = serial_read_char(&port);
-         if (c > 0)
-         {
-            buffer[pos++] = c;
-         }
-      }
-      while (c != '\n');
-      
+      int c = serial_read_char(&port);
+      if (c < 0)
+         continue;
+      char b = c;
+
       /* parse NMEA frame: */
-      info.smask = 0; /* reset mask in order to distinguish between received nmea sentences */
-      if (nmea_parse(&parser, buffer, pos, &info) == 1)
+      if (nmea_parse(&parser, &b, 1, &info) == 1)
       {
          smask |= info.smask;
          if (   (info.smask & GPGGA) /* check for new position update */
@@ -218,6 +209,7 @@ void _main(int argc, char *argv[])
             }
             free(satinfo);
          }
+         nmea_zero_INFO(&info);
       }
    }
 }

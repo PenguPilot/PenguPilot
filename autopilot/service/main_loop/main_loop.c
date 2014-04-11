@@ -143,7 +143,6 @@ void main_init(int argc, char *argv[])
    }
    acc_mag_cal_init();
  
-   //force_opt_init(platform.imtx1, platform.imtx2, platform.imtx3, platform.rpm_square_min, platform.rpm_square_max);
    const size_t array_len = sizeof(float) * platform.n_motors;
    setpoints = malloc(array_len);
    ASSERT_NOT_NULL(setpoints);

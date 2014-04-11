@@ -32,9 +32,12 @@ from gps_data_pb2 import GpsData
 from misc import daemonize
 import os
 from time import time
+from datetime import datetime
+
 
 def main(name):
    script_path = os.path.dirname(os.path.abspath(__file__))
+   gm = GeoMag(script_path + os.sep + 'geomag' + os.sep + 'WMM.COF')
    socket_map = generate_map(name)
    gps_socket = socket_map['gps']
    decl_socket = socket_map['decl']
@@ -46,11 +49,10 @@ def main(name):
          gps_data = GpsData()
          gps_data.ParseFromString(data)
          if gps_data.time and gps_data.fix >= 2:
-            gm = GeoMag(script_path + os.sep + 'geomag' + os.sep + 'WMM.COF')
-            decl = gm.GeoMag(gps_data.lat, gps_data.lon).dec
+            date = datetime.strptime(gps_data.time, '%Y-%m-%d %H:%M:%S').date()
+            decl = gm.GeoMag(gps_data.lat, gps_data.lon, time = date).dec
             print time(), decl
             decl_socket.send('%f' % decl)
       i += 1
 
-main('geomag')
 daemonize('geomag', main)
