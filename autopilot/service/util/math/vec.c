@@ -38,8 +38,9 @@
 void vec_alloc(vec_t *vec, size_t dim)
 {
    assert(dim > 0);
+
    vec->dim = dim;
-   vec->ve = (real_t *)malloc(sizeof(real_t) * dim);
+   vec->ve = (real_t *)malloc(sizeof(real_t) * vec->dim);
    memset(vec->ve, 0, sizeof(real_t) * vec->dim);
 }
 

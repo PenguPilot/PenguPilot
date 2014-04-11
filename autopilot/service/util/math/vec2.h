@@ -52,9 +52,7 @@ vec2_t;
 
 void vec2_init(vec2_t *vec);
 
-void vec2_init_data(vec2_t *vec, real_t x, real_t y);
-
-void vec2_set(vec2_t *vo, float x, float y);
+void vec2_set(vec2_t *vec, real_t x, real_t y);
 
 void vec2_scale(vec2_t *vo, const vec2_t *vi, float factor);
 

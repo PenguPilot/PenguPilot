@@ -55,7 +55,7 @@ vec3_t;
 void vec3_init(vec3_t *vec);
 
 
-void vec3_init_data(vec3_t *vec, real_t x, real_t y, real_t z);
+void vec3_set(vec3_t *vec, real_t x, real_t y, real_t z);
 
 
 #endif /* __VEC3_H__ */

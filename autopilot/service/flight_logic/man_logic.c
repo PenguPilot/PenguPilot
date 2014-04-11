@@ -121,17 +121,17 @@ static float stick_dz(float g, float d)
    float dz_r = d / 2.0;
    linfunc_t left, right;
    vec2_t pr1;
-   vec2_init_data(&pr1, 0.5f, 0.5f);
+   vec2_set(&pr1, 0.5f, 0.5f);
    
    vec2_t pr2;
-   vec2_init_data(&pr2, dz_r, 0.0f);
+   vec2_set(&pr2, dz_r, 0.0f);
    linfunc_init_points(&right, &pr1, &pr2);
    
    vec2_t pl1;
-   vec2_init_data(&pl1, -0.5f, -0.5f);
+   vec2_set(&pl1, -0.5f, -0.5f);
    
    vec2_t pl2;
-   vec2_init_data(&pl2, dz_l, 0.0f);
+   vec2_set(&pl2, dz_l, 0.0f);
    linfunc_init_points(&left, &pl1, &pl2);
    
    if (g < dz_l)
@@ -182,7 +182,7 @@ static void set_pitch_roll_rates(float pitch, float roll)
    float dz = tsfloat_get(&gps_deadzone);
    float rate_max = deg2rad(tsfloat_get(&pitch_roll_speed_max));
    vec2_t pitch_roll;
-   vec2_init_data(&pitch_roll, rate_max * stick_dz(pitch, dz), rate_max * stick_dz(roll, dz));
+   vec2_set(&pitch_roll, rate_max * stick_dz(pitch, dz), rate_max * stick_dz(roll, dz));
    cm_att_set_rates(pitch_roll);
 }
 
@@ -195,7 +195,7 @@ static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t
       float vmax_sqrt = sqrt(tsfloat_get(&horiz_speed_max));
       float dz = tsfloat_get(&gps_deadzone);
       vec2_t pitch_roll_spd_sp;
-      vec2_init_data(&pitch_roll_spd_sp, vmax_sqrt * stick_dz(pitch, dz), vmax_sqrt * stick_dz(roll, dz));
+      vec2_set(&pitch_roll_spd_sp, vmax_sqrt * stick_dz(pitch, dz), vmax_sqrt * stick_dz(roll, dz));
       vec2_t ne_spd_sp;
       vec2_init(&ne_spd_sp); 
       vec2_rotate(&ne_spd_sp, &pitch_roll_spd_sp, yaw);
@@ -218,7 +218,7 @@ void set_att_angles(float pitch, float roll)
    float dz = tsfloat_get(&gps_deadzone);
    float angle_max = deg2rad(tsfloat_get(&pitch_roll_angle_max));
    vec2_t pitch_roll;
-   vec2_init_data(&pitch_roll, angle_max * stick_dz(pitch, dz), angle_max * stick_dz(roll, dz));
+   vec2_set(&pitch_roll, angle_max * stick_dz(pitch, dz), angle_max * stick_dz(roll, dz));
    cm_att_set_angles(pitch_roll);
 }
 
@@ -270,7 +270,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
    
    
    vec2_t pr;
-   vec2_init_data(&pr, channels[CH_PITCH], channels[CH_ROLL]);
+   vec2_set(&pr, channels[CH_PITCH], channels[CH_ROLL]);
    vec2_rotate(&pr, &pr, deg2rad(tsfloat_get(&sticks_rotation)));
    float pitch = pr.ve[0];
    float roll = pr.ve[1];

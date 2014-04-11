@@ -40,23 +40,13 @@ void vec2_init(vec2_t *vec)
 }
 
 
-void vec2_init_data(vec2_t *vec, real_t x, real_t y)
+void vec2_set(vec2_t *vec, real_t x, real_t y)
 {
    assert(vec);
    vec->dim = 2;
    vec->ve = (real_t *)&vec->data;
    vec->x = x;
    vec->y = y;
-}
-
-
-void vec2_set(vec2_t *vo, float x, float y)
-{
-   assert(vo);
-   assert(vo->dim == 2);
-
-   vo->x = x;
-   vo->y = y;
 }
 
 
