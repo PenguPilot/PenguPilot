@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- 2D Vector Interface
+ 2D Vectors Interface
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -24,27 +24,35 @@
  GNU General Public License for more details. */
 
 
-
 #ifndef __VEC2_H__
 #define __VEC2_H__
 
 
-typedef union
+#include "vec.h"
+
+
+typedef struct
 {
-   struct
-   {  /* device coordinates: */
-      float x; /* pitch direction */
-      float y; /* roll direction */
+   size_t dim;
+   real_t *ve;
+   union {
+      real_t data[2];
+      struct {
+         real_t x;
+         real_t y;
+      };
+      struct {
+         real_t n;
+         real_t e;
+      };
    };
-   struct
-   {  /* global coordinates: */
-      float n; /* north */
-      float e; /* east */
-   };
-   float vec[2];
 }
 vec2_t;
 
+
+void vec2_init(vec2_t *vec);
+
+void vec2_init_data(vec2_t *vec, real_t x, real_t y);
 
 void vec2_set(vec2_t *vo, float x, float y);
 
@@ -65,6 +73,7 @@ float vec2_inner(const vec2_t *v1, const vec2_t *v2);
 void vec2_project(vec2_t *vo, const vec2_t *vi1, const vec2_t *vi2);
 
 void vec2_rotate(vec2_t *vo, const vec2_t *vi, float angle);
+
 
 #endif /* __VEC2_H__ */
 

@@ -77,7 +77,6 @@ static gps_rel_data_t gps_rel_data = {0.0, 0.0, 0.0f, 0.0f};
 static calibration_t gyro_cal;
 static interval_t gyro_move_interval;
 static int init = 0;
-static body_to_neu_t *btn;
 static Filter1 lp_filter;
 static float acc_vec[3] = {0.0f, 0.0f, -9.81f};
 
@@ -91,7 +90,7 @@ typedef union
       float pitch; /* rad/s */
       float yaw;   /* rad/s */
    };
-   float vec[4];
+   float ve[4];
 }
 f_local_t;
 
@@ -173,7 +172,6 @@ void main_init(int argc, char *argv[])
 
    /* init calibration data: */
    cal_init(&gyro_cal, 3, 1000);
-   btn = body_to_neu_create();
 
    cal_ahrs_init(10.0f, 5.0f * REALTIME_PERIOD);
    flight_state_init(50, 150, 4.0);
@@ -254,7 +252,7 @@ void main_step(const float dt,
    /* perform gyro calibration: */
    marg_data_t cal_marg_data;
    memcpy(&cal_marg_data, marg_data, sizeof(marg_data_t));
-   if (cal_sample_apply(&gyro_cal, &cal_marg_data.gyro.vec[0]) == 0 && gyro_moved(&marg_data->gyro))
+   if (cal_sample_apply(&gyro_cal, &cal_marg_data.gyro.ve[0]) == 0 && gyro_moved(&marg_data->gyro))
    {
       if (interval_measure(&gyro_move_interval) > 1.0)
          LOG(LL_ERROR, "gyro moved during calibration, retrying");
@@ -281,7 +279,7 @@ void main_step(const float dt,
    acc_mag_cal_apply(&cal_marg_data.acc, &cal_marg_data.mag);
 
    /* determine flight state: */
-   bool flying = flight_state_update(&cal_marg_data.acc.vec[0]);
+   bool flying = flight_state_update(&cal_marg_data.acc.ve[0]);
    if (!flying && pos_in.ultra_u == 7.0)
       pos_in.ultra_u = 0.2;
    
@@ -294,12 +292,13 @@ void main_step(const float dt,
 
    /* rotate local ACC measurements into global NEU reference frame: */
    vec3_t world_acc;
-   body_to_neu(btn, &world_acc, &euler, &cal_marg_data.acc);
+   vec3_init(&world_acc);
+   body_to_neu(&world_acc, &euler, &cal_marg_data.acc);
    
    /* center global ACC readings: */
-   filter1_run(&lp_filter, &world_acc.vec[0], &acc_vec[0]);
+   filter1_run(&lp_filter, &world_acc.ve[0], &acc_vec[0]);
    FOR_N(i, 3)
-      pos_in.acc.vec[i] = world_acc.vec[i] - acc_vec[i];
+      pos_in.acc.ve[i] = world_acc.ve[i] - acc_vec[i];
 
    /* compute next 3d position estimate using Kalman filters: */
    pos_t pos_est;
@@ -326,8 +325,10 @@ void main_step(const float dt,
       a_u = cm_u_setp();
    
    /* execute north/east navigation and/or read speed vector input: */
-   vec2_t ne_pos_err = {{0.0f, 0.0f}};
-   vec2_t ne_speed_sp = {{0.0f, 0.0f}};
+   vec2_t ne_pos_err, ne_speed_sp;
+   vec2_init(&ne_pos_err);
+   vec2_init(&ne_speed_sp);
+
    if (cm_att_is_gps_pos())
    {
       navi_set_dest(cm_att_setp());
@@ -337,17 +338,24 @@ void main_step(const float dt,
       ne_speed_sp = cm_att_setp();
 
    /* execute north/east speed controller: */
-   vec2_t a_ne; /* acceleration vector in north/east direction */
-   vec2_t ne_spd_err;
+   vec2_t a_ne, ne_spd_err;
+   vec2_init(&a_ne);
+   vec2_init(&ne_spd_err);
    ne_speed_ctrl_run(&a_ne, &ne_spd_err, &ne_speed_sp, dt, &pos_est.ne_speed);
-   vec3_t a_neu = {{a_ne.x, a_ne.y, a_u}}, f_neu;
-   vec3_mul_scalar(&f_neu, &a_neu, platform.mass_kg); /* f[i] = a[i] * m, makes ctrl device-independent */
+   
+   vec3_t a_neu;
+   vec3_init_data(&a_neu, a_ne.x, a_ne.y, a_u);
+   vec3_t f_neu;
+   vec3_init(&f_neu);
+   vec_scalar_mul(&f_neu, &a_neu, platform.mass_kg); /* f[i] = a[i] * m, makes ctrl device-independent */
+   
    float hover_force = platform.mass_kg * 10.0f;
    f_neu.z += hover_force;
 
    /* execute NEU forces optimizer: */
    float thrust;
    vec2_t pitch_roll_sp;
+   vec2_init(&pitch_roll_sp);
    att_thrust_calc(&pitch_roll_sp, &thrust, &f_neu, euler.yaw, platform.max_thrust_n, 0);
 
    /* execute direct attitude angle control, if requested: */
@@ -356,21 +364,28 @@ void main_step(const float dt,
 
    /* execute attitude angles controller: */
    vec2_t att_err;
-   vec2_t pitch_roll_speed = {{-cal_marg_data.gyro.y, cal_marg_data.gyro.x}};
+   vec2_init(&att_err);
+   vec2_t pitch_roll_speed;
+   vec2_init_data(&pitch_roll_speed, -cal_marg_data.gyro.y, cal_marg_data.gyro.x);
    vec2_t pitch_roll_ctrl;
-   vec2_t pitch_roll = {{-euler.pitch, euler.roll}};
+   vec2_init(&pitch_roll_ctrl);
+   pitch_roll_ctrl.x = -euler.pitch;
+   pitch_roll_ctrl.y = euler.roll;
+   
+   vec2_t pitch_roll;
+   vec2_init_data(&pitch_roll, -euler.pitch, euler.roll);
    att_ctrl_step(&pitch_roll_ctrl, &att_err, dt, &pitch_roll, &pitch_roll_speed, &pitch_roll_sp);
  
    float piid_sp[3] = {0.0f, 0.0f, 0.0f};
-   piid_sp[PIID_PITCH] = pitch_roll_ctrl.vec[0];
-   piid_sp[PIID_ROLL] = pitch_roll_ctrl.vec[1];
+   piid_sp[PIID_PITCH] = pitch_roll_ctrl.ve[0];
+   piid_sp[PIID_ROLL] = pitch_roll_ctrl.ve[1];
  
    /* execute direct attitude rate control, if requested:*/
    if (cm_att_is_rates())
    {
       vec2_t pitch_roll_rates_sp = cm_att_setp();
-      piid_sp[PIID_PITCH] = pitch_roll_rates_sp.vec[0];
-      piid_sp[PIID_ROLL] = pitch_roll_rates_sp.vec[1];
+      piid_sp[PIID_PITCH] = pitch_roll_rates_sp.ve[0];
+      piid_sp[PIID_ROLL] = pitch_roll_rates_sp.ve[1];
    }
 
    /* execute yaw position controller: */
@@ -384,10 +399,10 @@ void main_step(const float dt,
    /* execute stabilizing PIID controller: */
    f_local_t f_local = {{thrust, 0.0f, 0.0f, 0.0f}};
    float piid_gyros[3] = {cal_marg_data.gyro.x, -cal_marg_data.gyro.y, cal_marg_data.gyro.z};
-   piid_run(&f_local.vec[1], piid_gyros, piid_sp, dt);
+   piid_run(&f_local.ve[1], piid_gyros, piid_sp, dt);
 
    /* computate rpm ^ 2 out of the desired forces: */
-   inv_coupling_calc(rpm_square, f_local.vec);
+   inv_coupling_calc(rpm_square, f_local.ve);
 
    /* compute motor setpoints out of rpm ^ 2: */
    piid_int_enable(platform_ac_calc(setpoints, motors_spinning(), voltage, rpm_square));

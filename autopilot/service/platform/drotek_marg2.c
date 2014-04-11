@@ -42,7 +42,7 @@ int drotek_marg2_read(marg_data_t *data, drotek_marg2_t *marg2)
 {
    THROW_BEGIN();
    THROW_ON_ERR(mpu6050_read(&marg2->mpu, &data->gyro, &data->acc, NULL));
-   THROW_ON_ERR(hmc5883_read_mag(data->mag.vec, &marg2->hmc));
+   THROW_ON_ERR(hmc5883_read_mag(data->mag.ve, &marg2->hmc));
    THROW_END();
 }
 

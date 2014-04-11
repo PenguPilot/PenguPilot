@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- 3D Vector Interface
+ 3D Vectors Interface
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -28,34 +28,34 @@
 #define __VEC3_H__
 
 
-/* generic 3d vector */
-typedef union
+#include "vec.h"
+
+
+typedef struct
 {
-   struct
-   {  /* device coordinates: */
-      float x; /* pitch direction */
-      float y; /* roll direction */
-      float z; /* yaw direction */
+   size_t dim;
+   real_t *ve;
+   union {
+      real_t data[3];
+      struct {
+         real_t x;
+         real_t y;
+         real_t z;
+      };
+      struct {
+         real_t n;
+         real_t e;
+         real_t u;
+      };
    };
-   struct
-   {  /* global coordinates: */
-      float n; /* north */
-      float e; /* east */
-      float u; /* up */
-   };
-   float vec[3];
 }
 vec3_t;
 
 
-/* copy vector vi to vo */
-void vec3_copy(vec3_t *vo, const vec3_t *vi);
+void vec3_init(vec3_t *vec);
 
-/* scalar product */
-void vec3_mul_scalar(vec3_t *out, const vec3_t *in, const float scalar);
 
-/* vector length */
-float vec3_len(const vec3_t *in);
+void vec3_init_data(vec3_t *vec, real_t x, real_t y, real_t z);
 
 
 #endif /* __VEC3_H__ */
