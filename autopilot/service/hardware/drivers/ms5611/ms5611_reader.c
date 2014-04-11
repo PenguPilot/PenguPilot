@@ -52,7 +52,7 @@ SIMPLE_THREAD_BEGIN(thread_func)
       {
          tsfloat_set(&altitude, ms5611.c_a);
       }
-      msleep(10);
+      msleep(100);
    }
    SIMPLE_THREAD_LOOP_END
 }

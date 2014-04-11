@@ -39,12 +39,15 @@ void periodic_thread_start(periodic_thread_t *thread, void *(*func)(void *),
    ASSERT_NOT_NULL(func);
    ASSERT_NOT_NULL(name);
    ASSERT_FALSE(thread->running);
-
+   
+   pthread_attr_t attr;
+   pthread_attr_init(&attr);
+   pthread_attr_setstacksize(&attr, 4096 * 4);
    thread->running = 1;
    thread->name = name;
    thread->private = private;
    thread->periodic_data.period = period;
-   pthread_create(&thread->handle, NULL, func, thread);
+   pthread_create(&thread->handle, &attr, func, thread);
    thread->sched_param.sched_priority = priority;
    pthread_setschedparam(thread->handle, SCHED_FIFO, &thread->sched_param);
 }
