@@ -113,7 +113,8 @@ void main_init(int argc, char *argv[])
 
    /* init data structures: */
    memset(&pos_in, 0, sizeof(pos_in_t));
-   
+   vec3_init(&pos_in.acc);
+
    /* init SCL subsystem: */
    syslog(LOG_INFO, "initializing signaling and communication link (SCL)");
    if (scl_init("pilot") != 0)
@@ -209,6 +210,12 @@ void main_step(const float dt,
                const uint16_t sensor_status,
                const bool override_hw)
 {
+   vec2_t ne_pos_err, ne_speed_sp;
+   vec2_init(&ne_pos_err);
+   vec2_init(&ne_speed_sp);
+   float u_pos_err = 0.0f;
+   float u_spd_err = 0.0f;
+   
    int bb_rate;
    if (calibrate)
    {
@@ -302,6 +309,8 @@ void main_step(const float dt,
 
    /* compute next 3d position estimate using Kalman filters: */
    pos_t pos_est;
+   vec2_init(&pos_est.ne_pos);
+   vec2_init(&pos_est.ne_speed);
    pos_update(&pos_est, &pos_in);
 
    /* execute flight logic (sets cm_x parameters used below): */
@@ -309,9 +318,7 @@ void main_step(const float dt,
    bool motors_enabled = flight_logic_run(&hard_off, sensor_status, flying, cal_channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg);
    
    /* execute up position/speed controller(s): */
-   float u_pos_err = 0.0f;
    float a_u = 0.0f;
-   float u_spd_err = 0.0f;
    if (cm_u_is_pos())
    {
       if (cm_u_is_baro_pos())
@@ -325,10 +332,6 @@ void main_step(const float dt,
       a_u = cm_u_setp();
    
    /* execute north/east navigation and/or read speed vector input: */
-   vec2_t ne_pos_err, ne_speed_sp;
-   vec2_init(&ne_pos_err);
-   vec2_init(&ne_speed_sp);
-
    if (cm_att_is_gps_pos())
    {
       navi_set_dest(cm_att_setp());
@@ -344,7 +347,7 @@ void main_step(const float dt,
    ne_speed_ctrl_run(&a_ne, &ne_spd_err, &ne_speed_sp, dt, &pos_est.ne_speed);
    
    vec3_t a_neu;
-   vec3_init_data(&a_neu, a_ne.x, a_ne.y, a_u);
+   vec3_set(&a_neu, a_ne.x, a_ne.y, a_u);
    vec3_t f_neu;
    vec3_init(&f_neu);
    vec_scalar_mul(&f_neu, &a_neu, platform.mass_kg); /* f[i] = a[i] * m, makes ctrl device-independent */
@@ -366,14 +369,14 @@ void main_step(const float dt,
    vec2_t att_err;
    vec2_init(&att_err);
    vec2_t pitch_roll_speed;
-   vec2_init_data(&pitch_roll_speed, -cal_marg_data.gyro.y, cal_marg_data.gyro.x);
+   vec2_set(&pitch_roll_speed, -cal_marg_data.gyro.y, cal_marg_data.gyro.x);
    vec2_t pitch_roll_ctrl;
    vec2_init(&pitch_roll_ctrl);
    pitch_roll_ctrl.x = -euler.pitch;
    pitch_roll_ctrl.y = euler.roll;
    
    vec2_t pitch_roll;
-   vec2_init_data(&pitch_roll, -euler.pitch, euler.roll);
+   vec2_set(&pitch_roll, -euler.pitch, euler.roll);
    att_ctrl_step(&pitch_roll_ctrl, &att_err, dt, &pitch_roll, &pitch_roll_speed, &pitch_roll_sp);
  
    float piid_sp[3] = {0.0f, 0.0f, 0.0f};

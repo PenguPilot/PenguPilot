@@ -37,9 +37,10 @@ void mat_alloc(mat_t *mat, size_t rows, size_t cols)
 {
    assert(rows > 0);
    assert(cols > 0);
+   
    mat->rows = rows;
    mat->cols = cols;
-   mat->ve = (real_t *)malloc(sizeof(real_t) * rows * cols);
+   mat->ve = (real_t *)malloc(sizeof(real_t) * mat->rows * mat->cols);
    assert(mat->ve);
    memset(mat->ve, 0, sizeof(real_t) * mat->rows * mat->cols);
 }

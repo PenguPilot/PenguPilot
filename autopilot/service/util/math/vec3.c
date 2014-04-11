@@ -38,7 +38,7 @@ void vec3_init(vec3_t *vec)
 }
 
 
-void vec3_init_data(vec3_t *vec, real_t x, real_t y, real_t z)
+void vec3_set(vec3_t *vec, real_t x, real_t y, real_t z)
 {
    vec->dim = 3;
    vec->ve = (real_t *)&vec->data;
