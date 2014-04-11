@@ -30,7 +30,7 @@
 
 #include <stdbool.h>
 
-#include "../../geometry/quat.h"
+#include "../../util/math/vec3.h"
 
 
 typedef struct
@@ -40,6 +40,9 @@ typedef struct
    vec3_t mag;
 }
 marg_data_t;
+
+
+void marg_data_init(marg_data_t *marg_data);
 
 
 bool gyro_moved(const vec3_t *gyro);

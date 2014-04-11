@@ -32,7 +32,6 @@
 
 #include "../util/pid.h"
 #include "../../util/math/conv.h"
-#include "../../util/math/vec2.h"
 #include "../../filters/filter.h"
 
 
@@ -87,12 +86,13 @@ void ne_speed_ctrl_reset(void)
 void ne_speed_ctrl_run(vec2_t *forces, vec2_t *err, const vec2_t *setp, const float dt, const vec2_t *speed)
 {
    vec2_t forces_raw;
+   vec2_init(&forces_raw);
    FOR_EACH(i, controllers)
    {
-      err->vec[i] = setp->vec[i] - speed->vec[i];
-      forces_raw.vec[i] = pid_control(&controllers[i], err->vec[i], 0.0, dt);
+      err->ve[i] = setp->ve[i] - speed->ve[i];
+      forces_raw.ve[i] = pid_control(&controllers[i], err->ve[i], 0.0, dt);
    }
    filter2_lp_update_coeff(&filter_ref, tsfloat_get(&filt_fg), tsfloat_get(&filt_d), dt);
-   filter2_run(&filter_ref, forces_raw.vec, forces->vec);
+   filter2_run(&filter_ref, forces_raw.ve, forces->ve);
 }
 

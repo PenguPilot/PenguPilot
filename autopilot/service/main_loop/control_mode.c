@@ -123,7 +123,7 @@ static enum
    ATT_RATES
 }
 att_mode = ATT_RATES;
-static vec2_t att_setp = {{0.0f, 0.0f}};
+static vec2_t att_setp;
 
 void cm_att_set_gps_pos(vec2_t pos)
 {

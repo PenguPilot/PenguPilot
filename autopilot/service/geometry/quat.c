@@ -93,8 +93,9 @@ void quat_init_axis_v(quat_t *q, const vec3_t *v, float a)
 void quat_rot_vec_self(vec3_t *v, const quat_t *q)
 {
    vec3_t vo;
+   vec3_init(&vo);
    quat_rot_vec(&vo, v, q);
-   vec3_copy(v, &vo);
+   *v = vo;
 }
 
 
