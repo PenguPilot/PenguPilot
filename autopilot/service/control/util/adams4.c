@@ -68,14 +68,15 @@ void adams4_term(adams4_t *a)
 /*
  * x_(k+1) = x_(k) + Ts*(55 * x_(k) - 59 * x_(k-1) + 37 * x_(k-2) - 9 * x_(k-3))/24
 */
-void adams4_run(adams4_t *a, float *x, float ts, int enabled)
+void adams4_run(adams4_t *a, float *out, float *in, float ts, int enabled)
 {
    if (enabled)
    {
-      /* run adams4 algorithm: */
+      /* set f0 and run adams4 integrator: */
       for (size_t i = 0; i < a->dim; i++)
       {
-         x[i] += ts * (55.0f * a->f0[i] - 59.0f * a->f1[i] + 37.0f * a->f2[i] - 9.0f * a->f3[i]) / 24.0f;
+         a->f0[i] = in[i];
+         out[i] += ts * (55.0f * a->f0[i] - 59.0f * a->f1[i] + 37.0f * a->f2[i] - 9.0f * a->f3[i]) / 24.0f;
       }
    }
    /* rotate ring buffer; TS: is it correct not to include this in (enabled)? */
