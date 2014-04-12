@@ -34,10 +34,11 @@
 int adams4_init(adams4_t *a, const size_t dim)
 {
    a->dim = dim;
-   a->f0 = malloc(dim * sizeof(float));
-   a->f1 = malloc(dim * sizeof(float));
-   a->f2 = malloc(dim * sizeof(float));
-   a->f3 = malloc(dim * sizeof(float));
+   a->f0 = malloc((dim + 1) * sizeof(float));
+   a->f1 = malloc((dim + 1) * sizeof(float));
+   a->f2 = malloc((dim + 1) * sizeof(float));
+   a->f3 = malloc((dim + 1) * sizeof(float));
+   a->f4 = malloc((dim + 1) * sizeof(float));
 
    adams4_reset(a);
    return 1;
@@ -46,12 +47,13 @@ int adams4_init(adams4_t *a, const size_t dim)
 
 void adams4_reset(adams4_t *a)
 {
-   for (size_t i = 0; i < a->dim; i++)
+   for (size_t i = 0; i < a->dim + 1; i++)
    {  
       a->f0[i] = 0.0;
       a->f1[i] = 0.0;
       a->f2[i] = 0.0;
       a->f3[i] = 0.0;
+      a->f4[i] = 0.0;
    }
 }
 
@@ -62,6 +64,7 @@ void adams4_term(adams4_t *a)
    free(a->f1);
    free(a->f2);
    free(a->f3);
+   free(a->f4);
 }
 
 
@@ -76,11 +79,24 @@ void adams4_run(adams4_t *a, float *out, float *in, float ts, int enabled)
       for (size_t i = 0; i < a->dim; i++)
       {
          a->f0[i] = in[i];
-         out[i] += ts * (55.0f * a->f0[i] - 59.0f * a->f1[i] + 37.0f * a->f2[i] - 9.0f * a->f3[i]) / 24.0f;
+         a->f0[a->dim] = ts;
+
+         const float coeff[5] = { 191.0f / 720.0f,
+                                 -1387.f / 360.0f,
+                                  109.0f / 30.0f,
+                                 -637.0f / 360.0f,
+                                  251.0f / 720.0f};
+
+         out[i] += coeff[0] * a->f0[i] * a->f0[a->dim];
+         out[i] += coeff[1] * a->f1[i] * a->f1[a->dim];
+         out[i] += coeff[2] * a->f2[i] * a->f2[a->dim];
+         out[i] += coeff[3] * a->f3[i] * a->f3[a->dim];
+         out[i] += coeff[4] * a->f4[i] * a->f4[a->dim];
       }
    }
    /* rotate ring buffer; TS: is it correct not to include this in (enabled)? */
-   float *temp = a->f3;
+   float *temp = a->f4;
+   a->f4 = a->f3;
    a->f3 = a->f2;
    a->f2 = a->f1;
    a->f1 = a->f0;
