@@ -62,7 +62,7 @@ mat_t;
       assert(_cols > 0); \
       mat->rows = _rows; \
       mat->cols = _cols; \
-      mat->ve = (real_t *)&mat->me; \
+      mat->ve = &mat->me[0][0]; \
       memset(mat->ve, 0, sizeof(real_t) * mat->rows * mat->cols); \
    }
 

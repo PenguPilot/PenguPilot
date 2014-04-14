@@ -33,7 +33,7 @@
 
 
 
-void cal_ahrs_init(float beta_start, float beta_step);
+void cal_ahrs_init(void);
 
 int cal_ahrs_update(euler_t *euler, const marg_data_t *marg_data,
                     const float mag_decl, const float dt);

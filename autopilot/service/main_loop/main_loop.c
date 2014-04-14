@@ -172,7 +172,7 @@ void main_init(int argc, char *argv[])
    /* init calibration data: */
    cal_init(&gyro_cal, 3, 1000);
 
-   cal_ahrs_init(10.0f, 5.0f * REALTIME_PERIOD);
+   cal_ahrs_init();
    flight_state_init(50, 150, 4.0);
    
    piid_init(REALTIME_PERIOD);
@@ -268,8 +268,6 @@ void main_step(const float dt,
          LOG(LL_ERROR, "gyro moved during calibration, retrying");
       cal_reset(&gyro_cal);
    }
-   if (!cal_complete(&gyro_cal))
-      goto out;
 
    /* update relative gps position, if we have a fix: */
    float mag_decl;
@@ -303,7 +301,7 @@ void main_step(const float dt,
    /* compute orientation estimate: */
    euler_t euler;
    int ahrs_state = cal_ahrs_update(&euler, &cal_marg_data, mag_decl, dt);
-   if (ahrs_state < 0)
+   if (ahrs_state < 0 || !cal_complete(&gyro_cal))
       goto out;
    ONCE(init = 1; LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
 
@@ -443,7 +441,6 @@ void main_step(const float dt,
    /* write motors: */
    if (!override_hw)
    {
-      EVERY_N_TIMES(20, printf("%f %f %f\n", rad2deg(euler.yaw), rad2deg(euler.pitch), rad2deg(euler.roll)));
       //platform_write_motors(setpoints);
    }
 
@@ -451,6 +448,7 @@ void main_step(const float dt,
    mon_data_set(ne_pos_err.x, ne_pos_err.y, u_pos_err, yaw_err);
 
 out:
+   EVERY_N_TIMES(1, printf("%f\n", rad2deg(euler.roll)));
    EVERY_N_TIMES(bb_rate, blackbox_record(dt, marg_data, gps_data, ultra, baro, voltage, current, channels, sensor_status, /* sensor inputs */
                           &ne_pos_err, u_pos_err, /* position errors */
                           &ne_spd_err, u_spd_err /* speed errors */));

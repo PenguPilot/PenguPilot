@@ -37,22 +37,28 @@ static ahrs_t ahrs;
 static ahrs_t imu;
 
 
-void cal_ahrs_init(float beta_start, float beta_step)
+void cal_ahrs_init(void)
 {
    ASSERT_ONCE();
-   tsfloat_t beta_end;
+   tsfloat_t pitch_roll_beta;
+   tsfloat_t yaw_beta;
+   tsfloat_t beta_start;
+   tsfloat_t beta_step;
 
    /* read configuration: */
    opcd_param_t params[] =
    {
-      {"beta", &beta_end},
+      {"yaw_beta", &yaw_beta},
+      {"pitch_roll_beta", &pitch_roll_beta},
+      {"beta_start", &beta_start},
+      {"beta_step", &beta_step},
       OPCD_PARAMS_END
    };
    opcd_params_apply("ahrs.", params);
    
    /* initialize AHRS and IMU filters: */
-   ahrs_init(&ahrs, AHRS_ACC_MAG, beta_start, beta_step, tsfloat_get(&beta_end));
-   ahrs_init(&imu, AHRS_ACC, beta_start, beta_step, tsfloat_get(&beta_end));
+   ahrs_init(&ahrs, AHRS_ACC_MAG, tsfloat_get(&beta_start), tsfloat_get(&beta_step), tsfloat_get(&yaw_beta));
+   ahrs_init(&imu, AHRS_ACC, tsfloat_get(&beta_start), tsfloat_get(&beta_step), tsfloat_get(&pitch_roll_beta));
 }
 
 
@@ -61,25 +67,16 @@ int cal_ahrs_update(euler_t *euler, const marg_data_t *marg_data,
 {
    ahrs_update(&imu, marg_data, dt);
    int status = ahrs_update(&ahrs, marg_data, dt);
-   if (status != -1)
-   {
-      euler_t ahrs_euler; /* yaw */
-      euler_t imu_euler; /* pitch/roll */
-      /* read euler angles from quaternions: */
-      quat_to_euler(&ahrs_euler, &ahrs.quat);
-      quat_to_euler(&imu_euler, &imu.quat);
-      /* apply calibration: */
-      euler->yaw = ahrs_euler.yaw + mag_decl;
-      euler->pitch = imu_euler.pitch;
-      euler->roll = imu_euler.roll;
-      euler_normalize(euler);
-   }
-   else
-   {
-      euler->pitch = 0.0;
-      euler->roll = 0.0;
-      euler->yaw = 0.0;
-   }
+   euler_t ahrs_euler; /* yaw */
+   euler_t imu_euler; /* pitch/roll */
+   /* read euler angles from quaternions: */
+   quat_to_euler(&ahrs_euler, &ahrs.quat);
+   quat_to_euler(&imu_euler, &imu.quat);
+   /* apply calibration: */
+   euler->yaw = ahrs_euler.yaw + mag_decl;
+   euler->pitch = imu_euler.pitch;
+   euler->roll = imu_euler.roll;
+   euler_normalize(euler);
    return status;
 }
 

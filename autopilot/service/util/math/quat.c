@@ -36,18 +36,18 @@
 void quat_init(quat_t *q)
 {
    q->dim = 4;
-   q->ve = q->data;
-   q->x = REAL(0.0);
+   q->ve = &q->data[0];
+   q->x = REAL(1.0);
    q->y = REAL(0.0);
    q->z = REAL(0.0);
-   q->w = REAL(1.0);
+   q->w = REAL(0.0);
 }
 
 
 void quat_init_data(quat_t *q, real_t x, real_t y, real_t z, real_t w)
 {
    q->dim = 4;
-   q->ve = q->data;
+   q->ve = &q->data[0];
    q->x = x;
    q->y = y;
    q->z = z;
