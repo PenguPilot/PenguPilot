@@ -72,7 +72,10 @@ pilot:
       acc_fg: 0.1
 
    ahrs:
-      beta: 0.01
+      pitch_roll_beta: 0.01
+      yaw_beta: 0.1
+      beta_step: 1.0
+      beta_start: 5.0
 
    cal:
       acc_bias_x: 0.316767353077

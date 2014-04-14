@@ -33,7 +33,7 @@
 void vec3_init(vec3_t *vec)
 {
    vec->dim = 3;
-   vec->ve = vec->data;
+   vec->ve = &vec->data[0];
    memset(vec->ve, 0, sizeof(real_t) * vec->dim);
 }
 
@@ -41,7 +41,7 @@ void vec3_init(vec3_t *vec)
 void vec3_set(vec3_t *vec, real_t x, real_t y, real_t z)
 {
    vec->dim = 3;
-   vec->ve = vec->data;
+   vec->ve = &vec->data[0];
    vec->x = x;
    vec->y = y;
    vec->z = z;

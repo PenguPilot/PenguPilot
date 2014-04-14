@@ -75,7 +75,7 @@ void vec_alloc(vec_t *vec, size_t dim);
    { \
       assert(_dim > 0); \
       vec->dim = _dim; \
-      vec->ve = (real_t *)&vec->data; \
+      vec->ve = &vec->data[0]; \
       memset(vec->ve, 0, sizeof(real_t) * vec->dim); \
    }
 
