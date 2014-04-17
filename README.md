@@ -55,7 +55,7 @@ Library dependencies:
 Example UAV System
 ------------------
 
-Here's an example of a Gumstix Overo Air based PenguCopter with GPS and display:
+Here's an example of a Gumstix Overo Air based PenguCopter with GPS receiver and I2C OLED display:
 
 ![PenguCopter](https://raw.github.com/PenguPilot/PenguPilot/master/doc/GumstixCopter.jpg)
 
