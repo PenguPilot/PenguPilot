@@ -30,7 +30,7 @@
  GNU General Public License for more details. """
 
 
-from time import sleep
+from time import time, sleep
 from threading import Thread, Timer
 from signal import pause
 from smbus import SMBus
@@ -94,12 +94,14 @@ class PowerMan:
       current_lambda = eval(self.opcd.get('adc_2_current'))
       self.current_integral = 0.0
       hysteresis = Hysteresis(self.opcd.get('low_voltage_hysteresis'))
+      time_prev = time()
       while True:
-         sleep(1)
+         sleep(0.1)
          try:
             self.voltage = voltage_lambda(voltage_adc.read())  
             self.current = current_lambda(current_adc.read())
-            self.current_integral += self.current / 3600
+            self.current_integral += self.current / (3600 * (time() - time_prev))
+            time_prev = time()
             if self.voltage < self.low_battery_voltage_idle and self.current < self.battery_current_treshold or self.voltage < self.low_battery_voltage_load and self.current >= self.battery_current_treshold:
                self.critical = hysteresis.set()
             else:
@@ -119,7 +121,7 @@ class PowerMan:
       self.current_integral = (1.0 - batt) * self.capacity
       while True:
          state = PowerState()
-         sleep(1)
+         sleep(0.1)
          try:
             state.voltage = self.voltage
             state.current = self.current

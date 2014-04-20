@@ -36,6 +36,8 @@ static tsfloat_t acc_bias[3];
 static tsfloat_t acc_scale[3];
 static tsfloat_t mag_bias[3];
 static tsfloat_t mag_scale[3];
+static tsfloat_t mag_cc_scale[3];
+static tsfloat_t mag_cc_bias;
 
 
 void acc_mag_cal_init(void)
@@ -61,18 +63,24 @@ void acc_mag_cal_init(void)
       {"mag_scale_x", &mag_scale[0]},
       {"mag_scale_y", &mag_scale[1]},
       {"mag_scale_z", &mag_scale[2]},
+      /* mag current compensation: */
+      {"mag_cc_scale_x", &mag_cc_scale[0]},
+      {"mag_cc_scale_y", &mag_cc_scale[1]},
+      {"mag_cc_scale_z", &mag_cc_scale[2]},
+      {"mag_cc_bias", &mag_cc_bias},
       OPCD_PARAMS_END
    };
    opcd_params_apply("cal.", params);
 }
 
 
-void acc_mag_cal_apply(vec3_t *acc, vec3_t *mag)
+void acc_mag_cal_apply(vec3_t *acc, vec3_t *mag, const float current)
 {
    FOR_N(i, 3)
    {
       acc->ve[i] = 9.80665f * (acc->ve[i] - tsfloat_get(&acc_bias[i])) / tsfloat_get(&acc_scale[i]);
-      mag->ve[i] = (mag->ve[i] - tsfloat_get(&mag_bias[i])) / tsfloat_get(&mag_scale[i]);
+      mag->ve[i] =  (mag->ve[i] - tsfloat_get(&mag_bias[i])) / tsfloat_get(&mag_scale[i])
+                   -(current - tsfloat_get(&mag_cc_bias)) * tsfloat_get(&mag_cc_scale[i]);
    }
 }
 

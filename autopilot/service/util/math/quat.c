@@ -37,9 +37,9 @@ void quat_init(quat_t *q)
 {
    q->dim = 4;
    q->ve = &q->data[0];
-   q->x = REAL(1.0);
+   q->x = REAL(0.0);
    q->y = REAL(0.0);
-   q->z = REAL(0.0);
+   q->z = REAL(1.0);
    q->w = REAL(0.0);
 }
 

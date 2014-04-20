@@ -33,7 +33,6 @@
 #include <scl.h>
 
 #include "scl_power.h"
-#include "../../../filters/filter.h"
 #include "../../../util/logger/logger.h"
 
 
@@ -68,18 +67,6 @@ static void scl_read_power(float *_voltage, float *_current)
 
 SIMPLE_THREAD_BEGIN(thread_func)
 {
-   /* initial measurement: */
-   scl_read_power(&voltage, &current);
-   
-   /* filter set-up: */
-   Filter1 voltage_filter;
-   filter1_lp_init(&voltage_filter, 0.1f, 1.0f, 1);
-   voltage_filter.z[0] = voltage;
-   Filter1 current_filter;
-   filter1_lp_init(&current_filter, 0.1f, 1.0f, 1);
-   current_filter.z[0] = current;
-
-   /* power state reading loop: */
    SIMPLE_THREAD_LOOP_BEGIN
    {
       float voltage_raw;
@@ -87,8 +74,8 @@ SIMPLE_THREAD_BEGIN(thread_func)
       scl_read_power(&voltage_raw, &current_raw);
       
       pthread_mutex_lock(&mutex);
-      filter1_run(&voltage_filter, &voltage_raw, &voltage);
-      filter1_run(&current_filter, &current_raw, &current);
+      voltage = voltage_raw;
+      current = current_raw;
       pthread_mutex_unlock(&mutex);
    }
    SIMPLE_THREAD_LOOP_END
