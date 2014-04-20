@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- ACC/MAG Calibration
+ Current Magnetometer Compensation (CMC) Implementation
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -28,51 +28,32 @@
 #include <threadsafe_types.h>
 #include <util.h>
 
-#include "acc_mag_cal.h"
+#include "cmc.h"
 
 
-/* calibration data: */
-static tsfloat_t acc_bias[3];
-static tsfloat_t acc_scale[3];
-static tsfloat_t mag_bias[3];
-static tsfloat_t mag_scale[3];
+static tsfloat_t scale[3];
+static tsfloat_t bias;
 
 
-void acc_mag_cal_init(void)
+void cmc_init(void)
 {
    ASSERT_ONCE();
 
-   /* load calibration: */
    opcd_param_t params[] =
    {
-      /* acc bias: */
-      {"acc_bias_x", &acc_bias[0]},
-      {"acc_bias_y", &acc_bias[1]},
-      {"acc_bias_z", &acc_bias[2]},
-      /* acc scale: */
-      {"acc_scale_x", &acc_scale[0]},
-      {"acc_scale_y", &acc_scale[1]},
-      {"acc_scale_z", &acc_scale[2]},
-      /* mag bias: */
-      {"mag_bias_x", &mag_bias[0]},
-      {"mag_bias_y", &mag_bias[1]},
-      {"mag_bias_z", &mag_bias[2]},
-      /* mag scale: */
-      {"mag_scale_x", &mag_scale[0]},
-      {"mag_scale_y", &mag_scale[1]},
-      {"mag_scale_z", &mag_scale[2]},
+      {"scale_x", &scale[0]},
+      {"scale_y", &scale[1]},
+      {"scale_z", &scale[2]},
+      {"bias", &bias},
       OPCD_PARAMS_END
    };
-   opcd_params_apply("cal.", params);
+   opcd_params_apply("cmc.", params);
 }
 
 
-void acc_mag_cal_apply(vec3_t *acc, vec3_t *mag)
+void cmc_apply(vec3_t *mag, const float current)
 {
    FOR_N(i, 3)
-   {
-      acc->ve[i] = 9.80665f * (acc->ve[i] - tsfloat_get(&acc_bias[i])) / tsfloat_get(&acc_scale[i]);
-      mag->ve[i] =  (mag->ve[i] - tsfloat_get(&mag_bias[i])) / tsfloat_get(&mag_scale[i]);
-   }
+      mag->ve[i] -= (current - tsfloat_get(&bias)) * tsfloat_get(&scale[i]);
 }
 

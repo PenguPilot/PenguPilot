@@ -50,6 +50,7 @@
 #include "../platform/arcade_quad.h"
 #include "../platform/inv_coupling.h"
 #include "../hardware/util/acc_mag_cal.h"
+#include "../hardware/util/cmc.h"
 #include "../hardware/util/calibration.h"
 #include "../hardware/util/gps_util.h"
 #include "../hardware/util/mag_decl.h"
@@ -142,6 +143,7 @@ void main_init(int argc, char *argv[])
       die();
    }
    acc_mag_cal_init();
+   cmc_init();
  
    const size_t array_len = sizeof(float) * platform.n_motors;
    setpoints = malloc(array_len);
@@ -214,6 +216,8 @@ void main_step(const float dt,
    vec2_init(&ne_pos_err);
    vec2_init(&ne_speed_sp);
    vec2_init(&ne_spd_err);
+   vec3_t mag_normal;
+   vec3_init(&mag_normal);
 
    float u_pos_err = 0.0f;
    float u_spd_err = 0.0f;
@@ -290,8 +294,12 @@ void main_step(const float dt,
       mag_decl = 0.0f;
    }
 
-   /* acc/mag calibration: */
-   acc_mag_cal_apply(&cal_marg_data.acc, &cal_marg_data.mag, current);
+   /* apply acc/mag calibration: */
+   acc_mag_cal_apply(&cal_marg_data.acc, &cal_marg_data.mag);
+   vec_copy(&mag_normal, &cal_marg_data.mag);
+   
+   /* apply current magnetometer compensation: */
+   cmc_apply(&cal_marg_data.mag, current);
 
    /* determine flight state: */
    bool flying = flight_state_update(&cal_marg_data.acc.ve[0]);
@@ -438,6 +446,8 @@ void main_step(const float dt,
    if (hard_off || motors_stopping())
       FOR_N(i, platform.n_motors) setpoints[i] = platform.ac.off_val;
    
+   
+   printf("%f\n", euler.yaw);
    /* write motors: */
    if (!override_hw)
    {
@@ -448,9 +458,9 @@ void main_step(const float dt,
    mon_data_set(ne_pos_err.x, ne_pos_err.y, u_pos_err, yaw_err);
 
 out:
-   EVERY_N_TIMES(1, printf("%f\n", rad2deg(euler.roll)));
    EVERY_N_TIMES(bb_rate, blackbox_record(dt, marg_data, gps_data, ultra, baro, voltage, current, channels, sensor_status, /* sensor inputs */
                           &ne_pos_err, u_pos_err, /* position errors */
-                          &ne_spd_err, u_spd_err /* speed errors */));
+                          &ne_spd_err, u_spd_err /* speed errors */,
+                          &mag_normal));
 }
 

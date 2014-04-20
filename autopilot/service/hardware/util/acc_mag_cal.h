@@ -33,7 +33,7 @@
 
 void acc_mag_cal_init(void);
 
-void acc_mag_cal_apply(vec3_t *acc, vec3_t *mag, const float current);
+void acc_mag_cal_apply(vec3_t *acc, vec3_t *mag);
 
 
 #endif /* __ACC_MAG_CAL_H__ */

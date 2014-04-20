@@ -56,7 +56,8 @@ char *blackbox_spec[BLACKBOX_ITEMS] =
    "rc_pitch", "rc_roll", "rc_yaw", "rc_gas", "rc_sw_l", "rc_sw_r", /* rc */
    "sensor_status", /* sensors */
    "n_err", "e_err", "u_err", /* 3d position error */
-   "n_spd_err", "e_spd_err", "u_spd_err" /* 3d speed error */
+   "n_spd_err", "e_spd_err", "u_spd_err", /* 3d speed error */
+   "mag_cal_x", "mag_cal_y", "mag_cal_z" /* calibrated mag vector */
 };
 
 
@@ -100,7 +101,8 @@ void blackbox_record(const float dt, /* sensor inputs ... */
                const vec2_t *ne_pos_err, /* NEU position errors ... */
                const float u_pos_err,
                const vec2_t *ne_spd_err, /* NEU speed errors ... */
-               const float u_spd_err)
+               const float u_spd_err,
+               const vec3_t *mag_normal)
 {
    msgpack_sbuffer_clear(msgpack_buf);
    msgpack_pack_array(pk, ARRAY_SIZE(blackbox_spec));
@@ -119,6 +121,7 @@ void blackbox_record(const float dt, /* sensor inputs ... */
    PACKF(u_pos_err);
    PACKFV(ne_spd_err->ve, 2);
    PACKF(u_spd_err);
+   PACKFV(mag_normal->ve, 3);
    scl_copy_send_dynamic(blackbox_socket, msgpack_buf->data, msgpack_buf->size);
 }
 
