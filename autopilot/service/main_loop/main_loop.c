@@ -291,7 +291,7 @@ void main_step(const float dt,
    }
 
    /* acc/mag calibration: */
-   acc_mag_cal_apply(&cal_marg_data.acc, &cal_marg_data.mag);
+   acc_mag_cal_apply(&cal_marg_data.acc, &cal_marg_data.mag, current);
 
    /* determine flight state: */
    bool flying = flight_state_update(&cal_marg_data.acc.ve[0]);

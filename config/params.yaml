@@ -90,6 +90,11 @@ pilot:
       mag_scale_x: 555.414388374
       mag_scale_y: 570.737903657
       mag_scale_z: 565.604213821
+      mag_cc_scale_x: 0.0
+      mag_cc_scale_y: 0.0
+      mag_cc_scale_z: 0.0
+      mag_cc_bias: -0.4
+
 
    inv_coupling:
       pitch_enabled: 1
