@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Blackbox Publisher Interface
+ Current Magnetometer Compensation (CMC) Interface
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -24,41 +24,17 @@
  GNU General Public License for more details. */
 
 
-
-#ifndef __BLACKBOX_H__
-#define __BLACKBOX_H__
-
-
-#include "../platform/platform.h"
-#include "../util/math/vec2.h"
+#ifndef __CMC_H__
+#define __CMC_H__
 
 
-#define BLACKBOX_ITEMS 35
+#include "../../util/math/vec3.h"
 
 
-extern char *blackbox_spec[BLACKBOX_ITEMS];
+void cmc_init(void);
+
+void cmc_apply(vec3_t *mag, const float current);
 
 
-/* initialize blackbox */
-void blackbox_init(void);
-
-
-/* publish a blackbox record */
-void blackbox_record(const float dt, /* sensor inputs ... */
-               const marg_data_t *marg_data,
-               const gps_data_t *gps_data,
-               const float ultra,
-               const float baro,
-               const float voltage,
-               const float current,
-               const float channels[MAX_CHANNELS],
-               const uint16_t sensor_status,
-               const vec2_t *ne_pos_err, /* NEU position errors ... */
-               const float u_pos_err,
-               const vec2_t *ne_spd_err, /* NEU speed errors ... */
-               const float u_spd_err,
-               const vec3_t *mag_normal);
-
-
-#endif /* __BLACKBOX_H__ */
+#endif /* __CMC_H__ */
 

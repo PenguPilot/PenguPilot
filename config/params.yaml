@@ -72,7 +72,7 @@ pilot:
       acc_fg: 0.1
 
    ahrs:
-      pitch_roll_beta: 0.01
+      pitch_roll_beta: 0.1
       yaw_beta: 0.1
       beta_step: 1.0
       beta_start: 5.0
@@ -90,11 +90,12 @@ pilot:
       mag_scale_x: 555.414388374
       mag_scale_y: 570.737903657
       mag_scale_z: 565.604213821
-      mag_cc_scale_x: 0.0
-      mag_cc_scale_y: 0.0
-      mag_cc_scale_z: 0.0
-      mag_cc_bias: -0.4
 
+   cmc:
+      scale_x: -0.026869700260038112
+      scale_y: 0.00665336284900826
+      scale_z: 0.016442289765791845
+      bias: 0.40000000596
 
    inv_coupling:
       pitch_enabled: 1
