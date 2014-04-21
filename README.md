@@ -9,6 +9,7 @@
     |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
     |___________________________________________________|
 
+[![Build Status](https://travis-ci.org/PenguPilot/PenguPilot.svg?branch=master)](https://travis-ci.org/PenguPilot/PenguPilot)
 
 Overview
 --------
