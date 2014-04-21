@@ -48,28 +48,34 @@
 #define HMC5883_ID_B    0x0B
 #define HMC5883_ID_C    0x0C
 
+
+/* A register measurements averaging: */
+#define HMC5883_A_MA_1 (0x00 << 5)
+#define HMC5883_A_MA_2 (0x01 << 5)
+#define HMC5883_A_MA_4 (0x02 << 5)
+#define HMC5883_A_MA_8 (0x03 << 5)
 /* A register output data rate: */
-#define HMC5883_A_ODR_05 0x00
-#define HMC5883_A_ODR_1  0x04
-#define HMC5883_A_ODR_2  0x08
-#define HMC5883_A_ODR_5  0x0C
-#define HMC5883_A_ODR_10 0x10
-#define HMC5883_A_ODR_20 0x14
-#define HMC5883_A_ODR_50 0x18
+#define HMC5883_A_DO_0_7 (0x0 << 2)
+#define HMC5883_A_DO_1_5 (0x1 << 2)
+#define HMC5883_A_DO_3   (0x2 << 2)
+#define HMC5883_A_DO_7_5 (0x3 << 2)
+#define HMC5883_A_DO_15  (0x4 << 2)
+#define HMC5883_A_DO_30  (0x5 << 2)
+#define HMC5883_A_DO_75  (0x6 << 2)
 /* A register measurement config: */
-#define HMC5883_A_NORMAL   0x00
-#define HMC5883_A_BIAS_POS 0x01
-#define HMC5883_A_BIAS_NEG 0x02
+#define HMC5883_A_MS_NORMAL   (0x00 << 0)
+#define HMC5883_A_MS_BIAS_POS (0x01 << 0)
+#define HMC5883_A_MS_BIAS_NEG (0x02 << 0)
 
 /* B register settings: */
-#define HMC5883_B_GAIN_0_7 0x00
-#define HMC5883_B_GAIN_1   0x20
-#define HMC5883_B_GAIN_1_5 0x40
-#define HMC5883_B_GAIN_2   0x60
-#define HMC5883_B_GAIN_3_2 0x80
-#define HMC5883_B_GAIN_3_8 0xA0
-#define HMC5883_B_GAIN_4_5 0xC0
-#define HMC5883_B_GAIN_6_5 0xE0
+#define HMC5883_B_GN_0_8 (0x0 << 5)
+#define HMC5883_B_GN_1_3 (0x1 << 5)
+#define HMC5883_B_GN_1_9 (0x2 << 5)
+#define HMC5883_B_GN_2_5 (0x3 << 5)
+#define HMC5883_B_GN_4_0 (0x4 << 5)
+#define HMC5883_B_GN_4_7 (0x5 << 5)
+#define HMC5883_B_GN_5_6 (0x6 << 5)
+#define HMC5883_B_GN_8_1 (0x7 << 5)
 
 /* MR register: */
 #define HMC5883_MODE_CONTINUOUS 0x00
@@ -81,11 +87,15 @@
 /* sensitivity conversion table in LSB/Ga */
 static float sens_conv_tab[8] =
 {
-   1602.0, 1300.0, 970.0, 780.0,
-   530.0, 460.0, 390.0, 280.0
+   0.73e-3,
+   0.92e-3,
+   1.22e-3,
+   1.52e-3,
+   2.27e-3,
+   2.56e-3,
+   3.03e-3,
+   4.35e-3
 };
-#define CFG_A_2_SENS(v) (sens_conv_tab[((v) >> 5)])
-
 
 
 int hmc5883_init(hmc5883_t *hmc, i2c_bus_t *bus)
@@ -95,14 +105,15 @@ int hmc5883_init(hmc5883_t *hmc, i2c_bus_t *bus)
    uint8_t id[3];
    THROW_ON_ERR(i2c_read_block_reg(&hmc->i2c_dev, HMC5883_ID_A, id, sizeof(id)));
    THROW_IF(strncmp("H43", (char *)id, 3) != 0, -ENODEV);
-   THROW_ON_ERR(i2c_write_reg(&hmc->i2c_dev, HMC5883_CFG_A, HMC5883_A_ODR_50));
-   THROW_ON_ERR(i2c_write_reg(&hmc->i2c_dev, HMC5883_CFG_B, HMC5883_B_GAIN_1));
+   THROW_ON_ERR(i2c_write_reg(&hmc->i2c_dev, HMC5883_CFG_A, HMC5883_A_MA_8 | HMC5883_A_DO_75 | HMC5883_A_MS_NORMAL));
+   hmc->gain = HMC5883_B_GN_1_3;
+   THROW_ON_ERR(i2c_write_reg(&hmc->i2c_dev, HMC5883_CFG_B, hmc->gain));
    THROW_ON_ERR(i2c_write_reg(&hmc->i2c_dev, HMC5883_CFG_MR, HMC5883_MODE_CONTINUOUS));
    THROW_END();
 }
 
 
-int hmc5883_read_mag(float mag[3], hmc5883_t *hmc)
+int hmc5883_read_mag(float mag[3], const hmc5883_t *hmc)
 {
    THROW_BEGIN();
    uint8_t data[6];
@@ -110,6 +121,8 @@ int hmc5883_read_mag(float mag[3], hmc5883_t *hmc)
    mag[0] = (int16_t)((data[0] << 8) | data[1]);
    mag[2] = (int16_t)((data[2] << 8) | data[3]);
    mag[1]= (int16_t)((data[4] << 8) | data[5]);
+   FOR_N(i, 3)
+      mag[i] *= sens_conv_tab[hmc->gain >> 5];
    THROW_END();
 }
 
