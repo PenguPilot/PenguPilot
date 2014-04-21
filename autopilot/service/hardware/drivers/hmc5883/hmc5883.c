@@ -39,14 +39,18 @@
 #define HMC5883_CFG_MR  0x02
 #define HMC5883_MAGX_H  0x03
 #define HMC5883_MAGX_L  0x04
-#define HMC5883_MAGY_H  0x05
-#define HMC5883_MAGY_L  0x06
-#define HMC5883_MAGZ_H  0x07
-#define HMC5883_MAGZ_L  0x08
+#define HMC5883_MAGZ_H  0x05
+#define HMC5883_MAGZ_L  0x06
+#define HMC5883_MAGY_H  0x07
+#define HMC5883_MAGY_L  0x08
 #define HMC5883_STATUS  0x09
 #define HMC5883_ID_A    0x0A
 #define HMC5883_ID_B    0x0B
 #define HMC5883_ID_C    0x0C
+
+/* status register values: */
+#define HMC5883_STATUS_LOCK 0x02
+#define HMC5883_STATUS_RDY 0x01
 
 
 /* A register measurements averaging: */
@@ -100,13 +104,13 @@ static float sens_conv_tab[8] =
 
 int hmc5883_init(hmc5883_t *hmc, i2c_bus_t *bus)
 {
+   hmc->gain = HMC5883_B_GN_1_3;
    THROW_BEGIN();
    i2c_dev_init(&hmc->i2c_dev, bus, HMC5883_ADDRESS);
    uint8_t id[3];
    THROW_ON_ERR(i2c_read_block_reg(&hmc->i2c_dev, HMC5883_ID_A, id, sizeof(id)));
    THROW_IF(strncmp("H43", (char *)id, 3) != 0, -ENODEV);
    THROW_ON_ERR(i2c_write_reg(&hmc->i2c_dev, HMC5883_CFG_A, HMC5883_A_MA_8 | HMC5883_A_DO_75 | HMC5883_A_MS_NORMAL));
-   hmc->gain = HMC5883_B_GN_1_3;
    THROW_ON_ERR(i2c_write_reg(&hmc->i2c_dev, HMC5883_CFG_B, hmc->gain));
    THROW_ON_ERR(i2c_write_reg(&hmc->i2c_dev, HMC5883_CFG_MR, HMC5883_MODE_CONTINUOUS));
    THROW_END();
@@ -116,6 +120,10 @@ int hmc5883_init(hmc5883_t *hmc, i2c_bus_t *bus)
 int hmc5883_read_mag(float mag[3], const hmc5883_t *hmc)
 {
    THROW_BEGIN();
+   THROW_ON_ERR(i2c_read_reg(&hmc->i2c_dev, HMC5883_STATUS));
+   if (!(THROW_PREV & HMC5883_STATUS_RDY))
+      return -EAGAIN;
+   
    uint8_t data[6];
    THROW_ON_ERR(i2c_read_block_reg(&hmc->i2c_dev, HMC5883_MAGX_H, data, sizeof(data)));
    mag[0] = (int16_t)((data[0] << 8) | data[1]);
