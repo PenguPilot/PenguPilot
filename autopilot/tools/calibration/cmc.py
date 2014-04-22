@@ -11,14 +11,10 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
 
- reads mag/acc log text file from stdin and writes
- calibration to stdout
+ reads mag/current log text file from stdin and writes
+ calibration to opcd
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
-
- Development of this code has been supported by the Department of Computer Science,
- Universita' degli Studi di Torino, Italy within the Piemonte Project
- http://www.piemonte.di.unito.it
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
