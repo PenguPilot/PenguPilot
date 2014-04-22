@@ -45,15 +45,16 @@ typedef struct
 i2c_dev_t;
 
 
-int i2c_bus_open(i2c_bus_t *bus, char *path);
+int i2c_bus_open(i2c_bus_t *bus, const char *path);
 int i2c_bus_close(i2c_bus_t *bus);
-void i2c_dev_init(i2c_dev_t *dev, i2c_bus_t *bus, uint8_t addr);
-int i2c_xfer(i2c_dev_t *dev, uint8_t len_wr, uint8_t *wr_data, uint8_t len_rd, uint8_t *rd_data);
-int i2c_write(i2c_dev_t *dev, uint8_t val);
-int i2c_write_reg(i2c_dev_t *dev, uint8_t reg, uint8_t val);
-int i2c_read(i2c_dev_t *dev);
-int i2c_read_reg(i2c_dev_t *dev, uint8_t reg);
-int i2c_read_block_reg(i2c_dev_t *dev, uint8_t reg, uint8_t *buf, size_t len);
+void i2c_dev_init(i2c_dev_t *dev, i2c_bus_t *bus, const uint8_t addr);
+
+int i2c_xfer(const i2c_dev_t *dev, const uint8_t len_wr, const uint8_t *wr_data, const uint8_t len_rd, uint8_t *rd_data);
+int i2c_write(const i2c_dev_t *dev, const uint8_t val);
+int i2c_write_reg(const i2c_dev_t *dev, const uint8_t reg, const uint8_t val);
+int i2c_read(const i2c_dev_t *dev);
+int i2c_read_reg(const i2c_dev_t *dev, const uint8_t reg);
+int i2c_read_block_reg(const i2c_dev_t *dev, const uint8_t reg, uint8_t *buf, const size_t len);
 
 
 #endif /* __I2C_H__ */
