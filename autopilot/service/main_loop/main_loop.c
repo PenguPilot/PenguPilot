@@ -299,8 +299,11 @@ void main_step(const float dt,
    vec_copy(&mag_normal, &cal_marg_data.mag);
 
    /* apply current magnetometer compensation: */
-   cmc_apply(&cal_marg_data.mag, current);
-   //printf("%f %f %f %f\n", current, cal_marg_data.mag.x, cal_marg_data.mag.y, cal_marg_data.mag.z);
+   static float _c = 0.0;
+   float x = 0.003;
+   _c = _c * (1-x) + current * x;
+   cmc_apply(&cal_marg_data.mag, _c);
+   //printf("%f %f %f %f\n", _c, cal_marg_data.mag.x, cal_marg_data.mag.y, cal_marg_data.mag.z);
    
    /* determine flight state: */
    bool flying = flight_state_update(&cal_marg_data.acc.ve[0]);
