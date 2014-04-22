@@ -34,48 +34,41 @@
 
 
 static ahrs_t ahrs;
-static ahrs_t imu;
 
 
 void cal_ahrs_init(void)
 {
    ASSERT_ONCE();
-   tsfloat_t pitch_roll_beta;
-   tsfloat_t yaw_beta;
+   tsfloat_t beta;
    tsfloat_t beta_start;
    tsfloat_t beta_step;
 
    /* read configuration: */
    opcd_param_t params[] =
    {
-      {"yaw_beta", &yaw_beta},
-      {"pitch_roll_beta", &pitch_roll_beta},
+      {"beta", &beta},
       {"beta_start", &beta_start},
       {"beta_step", &beta_step},
       OPCD_PARAMS_END
    };
    opcd_params_apply("ahrs.", params);
    
-   /* initialize AHRS and IMU filters: */
-   ahrs_init(&ahrs, AHRS_ACC_MAG, tsfloat_get(&beta_start), tsfloat_get(&beta_step), tsfloat_get(&yaw_beta));
-   ahrs_init(&imu, AHRS_ACC, tsfloat_get(&beta_start), tsfloat_get(&beta_step), tsfloat_get(&pitch_roll_beta));
+   /* initialize AHRS filter: */
+   ahrs_init(&ahrs, AHRS_ACC_MAG, tsfloat_get(&beta_start), tsfloat_get(&beta_step), tsfloat_get(&beta));
 }
 
 
 int cal_ahrs_update(euler_t *euler, const marg_data_t *marg_data,
                     const float mag_decl, const float dt)
 {
-   ahrs_update(&imu, marg_data, dt);
    int status = ahrs_update(&ahrs, marg_data, dt);
-   euler_t ahrs_euler; /* yaw */
-   euler_t imu_euler; /* pitch/roll */
+   euler_t _euler;
    /* read euler angles from quaternions: */
-   quat_to_euler(&ahrs_euler, &ahrs.quat);
-   quat_to_euler(&imu_euler, &imu.quat);
+   quat_to_euler(&_euler, &ahrs.quat);
    /* apply calibration: */
-   euler->yaw = ahrs_euler.yaw + mag_decl;
-   euler->pitch = ahrs_euler.pitch;
-   euler->roll = ahrs_euler.roll;
+   euler->yaw = _euler.yaw + mag_decl;
+   euler->pitch = _euler.pitch;
+   euler->roll = _euler.roll;
    euler_normalize(euler);
    return status;
 }

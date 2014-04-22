@@ -297,10 +297,10 @@ void main_step(const float dt,
    /* apply acc/mag calibration: */
    acc_mag_cal_apply(&cal_marg_data.acc, &cal_marg_data.mag);
    vec_copy(&mag_normal, &cal_marg_data.mag);
-   
+
    /* apply current magnetometer compensation: */
    cmc_apply(&cal_marg_data.mag, current);
-
+   //printf("%f %f %f %f\n", current, cal_marg_data.mag.x, cal_marg_data.mag.y, cal_marg_data.mag.z);
    
    /* determine flight state: */
    bool flying = flight_state_update(&cal_marg_data.acc.ve[0]);
@@ -448,7 +448,7 @@ void main_step(const float dt,
       FOR_N(i, platform.n_motors) setpoints[i] = platform.ac.off_val;
    
    
-   //printf("%f %f %f\n", euler.pitch, euler.roll, euler.yaw);
+   printf("%f %f %f\n", rad2deg(euler.pitch), rad2deg(euler.roll), rad2deg(euler.yaw));
    /* write motors: */
    if (!override_hw)
    {
