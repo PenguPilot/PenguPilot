@@ -36,8 +36,7 @@ from gps_data_pb2 import GpsData
 from math import sin, cos, pi
 from misc import daemonize
 from os import getenv
-from power_pb2 import PowerState
-
+from msgpack import loads
 
 WHITE = 1
 BLACK = 0
@@ -90,7 +89,6 @@ def cpuavg():
 
 def pmreader():
    s = socket_map['power']
-   p = PowerState()
    global spinning, voltage, estimate, critical
    critical = False
    voltage = None
@@ -99,14 +97,12 @@ def pmreader():
       if spinning:
          sleep(1)
       else:
-         p.ParseFromString(s.recv())
-         critical = p.critical
-         estimate = p.estimate
+         _voltage, current, remaining, critical = loads(s.recv())
+         estimate = remaining / current
          if voltage is None:
-            voltage = p.voltage
+            voltage = _voltage
          else:
-            voltage = 0.9 * voltage + 0.1 * p.voltage
-
+            voltage = 0.9 * voltage + 0.1 * _voltage
 
 def show_image(image):
    data = ''.join(map(chr, image.getdata()))
