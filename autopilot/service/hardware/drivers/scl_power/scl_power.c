@@ -29,7 +29,7 @@
 
 #include <util.h>
 #include <simple_thread.h>
-#include <power.pb-c.h>
+#include <msgpack.h>
 #include <scl.h>
 
 #include "scl_power.h"
@@ -42,20 +42,28 @@
 static simple_thread_t thread;
 static pthread_mutexattr_t mutexattr;
 static pthread_mutex_t mutex;
-static void *socket;
+static void *scl_socket;
 static float voltage = 16.0;
 static float current = 0.4;
 
 
 static void scl_read_power(float *_voltage, float *_current)
 {
-   PowerState *state;
-   SCL_RECV_AND_UNPACK_DYNAMIC(state, socket, power_state);
-   if (state)
+   char buffer[128];
+   int ret = scl_recv_static(scl_socket, buffer, sizeof(buffer));
+   if (ret > 0)
    {
-      *_voltage = state->voltage;
-      *_current = state->current;
-      SCL_FREE(power_state, state);
+      msgpack_unpacked msg;
+      msgpack_unpacked_init(&msg);
+      if (msgpack_unpack_next(&msg, buffer, ret, NULL))
+      {
+         msgpack_object root = msg.data;
+         assert (root.type == MSGPACK_OBJECT_ARRAY);
+         assert(root.via.array.size == 4);
+         *_voltage = root.via.array.ptr[0].via.dec;
+         *_current = root.via.array.ptr[1].via.dec;
+      }
+      msgpack_unpacked_destroy(&msg);
    }
    else
    {
@@ -85,8 +93,8 @@ SIMPLE_THREAD_END
 
 int scl_power_init(void)
 {
-   socket = scl_get_socket("power");
-   if (socket == NULL)
+   scl_socket = scl_get_socket("power");
+   if (scl_socket == NULL)
    {
       return -1;
    }

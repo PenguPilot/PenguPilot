@@ -38,6 +38,7 @@ from os import system, sep
 
 from misc import *
 from power_pb2 import *
+from msgpack import dumps
 from scl import generate_map
 from opcd_interface import OPCD_Interface
 from misc import daemonize, Hysteresis, user_data_dir
@@ -68,7 +69,6 @@ class PowerMan:
       # start threads:
       self.standing = True
       self.adc_thread = start_daemon_thread(self.adc_reader)
-      self.emitter_thread = start_daemon_thread(self.power_state_emitter)
       self.request_thread = start_daemon_thread(self.request_handler)
 
 
@@ -92,15 +92,20 @@ class PowerMan:
       current_adc = ADC(self.opcd.get('current_adc'))
       voltage_lambda = eval(self.opcd.get('adc_2_voltage'))
       current_lambda = eval(self.opcd.get('adc_2_current'))
-      self.current_integral = 0.0
+      self.consumed = 0.0
+      vmin = 13.2
+      vmax = 16.4
+      self.voltage = voltage_lambda(voltage_adc.read())  
+      batt = min(1.0, max(0.0, (self.voltage - vmin) / (vmax - vmin)))
+      self.consumed = (1.0 - batt) * self.capacity
       hysteresis = Hysteresis(self.opcd.get('low_voltage_hysteresis'))
       time_prev = time()
       while True:
-         sleep(0.1)
+         sleep(0.2)
          try:
             self.voltage = voltage_lambda(voltage_adc.read())  
             self.current = current_lambda(current_adc.read())
-            self.current_integral += self.current / (3600 * (time() - time_prev))
+            self.consumed += self.current / (3600 * (time() - time_prev))
             time_prev = time()
             if self.voltage < self.low_battery_voltage_idle and self.current < self.battery_current_treshold or self.voltage < self.low_battery_voltage_load and self.current >= self.battery_current_treshold:
                self.critical = hysteresis.set()
@@ -110,34 +115,21 @@ class PowerMan:
                if not self.warning_started:
                   self.warning_started = True
                   start_daemon_thread(self.battery_warning)
-         except Exception, e:
-            pass
-
-   def power_state_emitter(self):
-      sleep(5)
-      vmin = 13.2
-      vmax = 16.4
-      batt = min(1.0, max(0.0, (self.voltage - vmin) / (vmax - vmin)))
-      self.current_integral = (1.0 - batt) * self.capacity
-      while True:
-         state = PowerState()
-         sleep(0.1)
-         try:
-            state.voltage = self.voltage
-            state.current = self.current
-            state.capacity = self.capacity
-            state.consumed = self.current_integral
-            remaining = self.capacity - self.current_integral
+            voltage = self.voltage
+            current = self.current
+            capacity = self.capacity
+            consumed = self.consumed
+            remaining = self.capacity - self.consumed
             if remaining < 0:
                remaining = 0
-            state.remaining = remaining
-            state.critical = self.critical
-            state.estimate = state.remaining / self.current
-         except AttributeError:
+            critical = self.critical
+            state = [self.voltage,  # 0 [V]
+                     self.current,  # 1 [A]
+                     remaining,     # 2 [Ah]
+                     self.critical] # 3 [Bool]
+         except Exception, e:
             continue
-         except: # division by zero in last try block line
-            pass
-         self.monitor_socket.send(state.SerializeToString())
+         self.monitor_socket.send(dumps(state))
 
 
    def power_off(self):

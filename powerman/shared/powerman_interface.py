@@ -26,6 +26,7 @@
 
 
 from power_pb2 import *
+from msgpack import loads
 
 
 class PowerException(Exception):
@@ -57,8 +58,5 @@ class PowerMan:
       self._exec(FLIGHT_POWER)
 
    def read(self):
-      state = PowerState()
-      data = self.mon_socket.recv()
-      state.ParseFromString(data)
-      return state
+      return loads(self.mon_socket.recv())
 
