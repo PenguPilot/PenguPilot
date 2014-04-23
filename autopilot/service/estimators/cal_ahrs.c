@@ -31,9 +31,12 @@
 
 #include "cal_ahrs.h"
 #include "ahrs.h"
+#include "angle_kalman.h"
 
 
 static ahrs_t ahrs;
+
+static angle_kalman_t pitch_kalman;
 
 
 void cal_ahrs_init(void)
@@ -54,7 +57,8 @@ void cal_ahrs_init(void)
    opcd_params_apply("ahrs.", params);
    
    /* initialize AHRS filter: */
-   ahrs_init(&ahrs, AHRS_ACC_MAG, tsfloat_get(&beta_start), tsfloat_get(&beta_step), tsfloat_get(&beta));
+   ahrs_init(&ahrs, AHRS_ACC_MAG, tsfloat_get(&beta_start), tsfloat_get(&beta_step), 1.0);
+   angle_kalman_init(&pitch_kalman);
 }
 
 
@@ -70,6 +74,11 @@ int cal_ahrs_update(euler_t *euler, const marg_data_t *marg_data,
    euler->pitch = _euler.pitch;
    euler->roll = _euler.roll;
    euler_normalize(euler);
+
+   /*float pitch_rate = marg_data->gyro.y;
+   float pitch_angle = atan2(marg_data->acc.x, sqrt(marg_data->acc.y * marg_data->acc.y + marg_data->acc.z * marg_data->acc.z));
+   printf("%f %f\n", euler->pitch, angle_kalman_run(&pitch_kalman, pitch_rate, pitch_angle, dt));
+   */
    return status;
 }
 
