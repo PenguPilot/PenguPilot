@@ -51,15 +51,15 @@ class PowerMan:
       map = generate_map(name)
       self.ctrl_socket = map['ctrl']
       self.monitor_socket = map['mon']
-      self.opcd = OPCD_Interface(map['opcd_ctrl'], 'powerman')
+      self.opcd = OPCD_Interface(map['opcd_ctrl'])
       #bus = SMBus(self.opcd.get('gpio_i2c_bus'))
       #self.gpio_mosfet = GPIO_Bank(bus, self.opcd.get('gpio_i2c_address'))
       #self.power_pin = self.opcd.get('gpio_power_pin')
-      self.cells = self.opcd.get('battery_cells')
-      self.low_cell_voltage_idle = self.opcd.get('battery_low_cell_voltage_idle')
-      self.low_cell_voltage_load = self.opcd.get('battery_low_cell_voltage_load')
-      self.battery_current_treshold = self.opcd.get('battery_current_treshold')
-      self.capacity = self.opcd.get('battery_capacity')
+      self.cells = self.opcd.get('powerman.battery_cells')
+      self.low_cell_voltage_idle = self.opcd.get('powerman.battery_low_cell_voltage_idle')
+      self.low_cell_voltage_load = self.opcd.get('powerman.battery_low_cell_voltage_load')
+      self.battery_current_treshold = self.opcd.get('powerman.battery_current_treshold')
+      self.capacity = self.opcd.get('powerman.battery_capacity')
       self.low_battery_voltage_idle = self.cells * self.low_cell_voltage_idle
       self.low_battery_voltage_load = self.cells * self.low_cell_voltage_load
       self.critical = False
@@ -76,7 +76,7 @@ class PowerMan:
       # do something in order to indicate a low battery:
       msg = 'CRITICAL WARNING: SYSTEM BATTERY VOLTAGE IS LOW; IMMEDIATE SHUTDOWN REQUIRED OR SYSTEM WILL BE DAMAGED'
       system('echo "%s" | wall' % msg)
-      beeper_enabled = self.opcd.get('beeper_enabled')
+      beeper_enabled = self.opcd.get('powerman.beeper_enabled')
       while True:
          if beeper_enabled:
             self.gpio_mosfet.set_gpio(5, False)
@@ -88,18 +88,21 @@ class PowerMan:
 
 
    def adc_reader(self):
-      adc_type = self.opcd.get('adc_type')
+      platform = self.opcd.get('platform')
+      plat_prefix = 'powerman.' + platform
+      adc_type = self.opcd.get(plat_prefix + '.adc_type')
       adcs = {'twl4030_madc': TWL4030_MADC, 'ads1x15': ADS1x15_ADC}
-      voltage_adc = adcs[adc_type](self.opcd.get(adc_type + '.voltage_channel'))
-      current_adc = adcs[adc_type](self.opcd.get(adc_type + '.current_channel'))
-      voltage_lambda = eval(self.opcd.get(adc_type + '.adc_to_voltage'))
-      current_lambda = eval(self.opcd.get(adc_type + '.adc_to_current'))
+      adc_prefix = 'powerman.' + adc_type
+      voltage_adc = adcs[adc_type](self.opcd.get(adc_prefix + '.voltage_channel'))
+      current_adc = adcs[adc_type](self.opcd.get(adc_prefix + '.current_channel'))
+      voltage_lambda = eval(self.opcd.get(adc_prefix + '.adc_to_voltage'))
+      current_lambda = eval(self.opcd.get(adc_prefix + '.adc_to_current'))
       vmin = 13.2
       vmax = 16.4
       self.voltage = voltage_lambda(voltage_adc.read())  
       batt = min(1.0, max(0.0, (self.voltage - vmin) / (vmax - vmin)))
       self.consumed = (1.0 - batt) * self.capacity
-      hysteresis = Hysteresis(self.opcd.get('low_voltage_hysteresis'))
+      hysteresis = Hysteresis(self.opcd.get('powerman.low_voltage_hysteresis'))
       time_prev = time()
       while True:
          sleep(0.2)
@@ -128,6 +131,7 @@ class PowerMan:
                      self.current,  # 1 [A]
                      remaining,     # 2 [Ah]
                      self.critical] # 3 [Bool]
+            print state
          except Exception, e:
             continue
          self.monitor_socket.send(dumps(state))
@@ -138,7 +142,7 @@ class PowerMan:
 
 
    def request_handler(self):
-      timeout = self.opcd.get('power_save_timeout')
+      timeout = self.opcd.get('powerman.power_save_timeout')
       req = PowerReq()
       rep = PowerRep()
       timer = None
