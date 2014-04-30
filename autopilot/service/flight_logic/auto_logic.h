@@ -33,12 +33,14 @@
 #include "../hardware/util/rc_channels.h"
 #include "../util/math/vec2.h"
 
+
 /* initialize autoflight logic */
 void auto_logic_init(void);
 
 
 /* run auto flight logic */
-void auto_logic_run(bool is_full_auto,
+bool auto_logic_run(bool *hard_off,
+                    bool is_full_auto,
                     uint16_t sensor_status,
                     bool flying,
                     float channels[MAX_CHANNELS],
@@ -48,7 +50,6 @@ void auto_logic_run(bool is_full_auto,
 
 
 /* setpoint update functions: */
-
 int auto_logic_set_n(float val);
 
 int auto_logic_set_e(float val);
@@ -58,6 +59,10 @@ int auto_logic_set_u_ground(float val);
 int auto_logic_set_u_msl(float val);
 
 int auto_logic_set_yaw(float val);
+
+
+/* motors enable function: */
+int auto_logic_enable_motors(bool enable);
 
 
 #endif /* __AUTO_LOGIC_H__ */

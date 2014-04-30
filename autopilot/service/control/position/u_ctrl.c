@@ -35,21 +35,20 @@
 static pid_controller_t ctrl;
 
 
-static float u_neutral_gas;
 static tsfloat_t pos_p;
 static tsfloat_t pos_d;
 static tsfloat_t pos_i;
 static tsfloat_t pos_imax;
 
 
-float u_ctrl_step(float setpoint, float pos, float speed, float dt)
+float u_ctrl_step(float *err, const float setpoint, const float pos, const float speed, const float dt)
 {   
-   float err = setpoint - pos;
-   return u_neutral_gas + pid_control(&ctrl, err, speed, dt);
+   *err = setpoint - pos;
+   return pid_control(&ctrl, pos, speed, dt);
 }
 
 
-void u_ctrl_init(float neutral_gas)
+void u_ctrl_init(void)
 {
    ASSERT_ONCE();
    
@@ -64,7 +63,6 @@ void u_ctrl_init(float neutral_gas)
    opcd_params_apply("controllers.u_pos.", params);
 
    pid_init(&ctrl, &pos_p, &pos_i, &pos_d, &pos_imax);
-   u_neutral_gas = neutral_gas;
 }
 
 

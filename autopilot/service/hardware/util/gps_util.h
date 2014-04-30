@@ -43,7 +43,7 @@ typedef struct
 gps_rel_data_t;
 
 
-void gps_util_update(gps_rel_data_t *out, gps_data_t *in);
+void gps_util_update(gps_rel_data_t *out, const gps_data_t *in);
 
 
 #endif /* __GPS_UTIL_H__ */

@@ -51,7 +51,7 @@ static simple_thread_t thread;
 static bool locked = false;
 
 
-void gps_start_set(gps_data_t *gps_data)
+void gps_start_set(const gps_data_t *gps_data)
 {
    memcpy(&gps_start, gps_data, sizeof(gps_data_t));
 }
@@ -204,20 +204,20 @@ SIMPLE_THREAD_BEGIN(thread_func)
       {
          switch (request->type)
          {
-            case REQUEST_TYPE__RESET_CTRL:
-               LOG(LL_DEBUG, "RESET_CTRL");
-               //ctrl_reset();
+            case REQUEST_TYPE__START_MOTORS:
+               LOG(LL_DEBUG, "START_MOTORS");
+               auto_logic_enable_motors(true);
+               break;
+
+            case REQUEST_TYPE__STOP_MOTORS:
+               LOG(LL_DEBUG, "STOP_MOTORS");
+               reply.params = &params;
+               auto_logic_enable_motors(false);
                break;
 
             case REQUEST_TYPE__SET_CTRL_PARAM:
                LOG(LL_DEBUG, "SET_CTRL_PARAM");
                check_and_set_ctrl_param(&reply, request);
-               break;
-
-            case REQUEST_TYPE__GET_PARAMS:
-               LOG(LL_DEBUG, "GET_PARAMS");
-               reply.params = &params;
-               get_state(&params);
                break;
 
             default:

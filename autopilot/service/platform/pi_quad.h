@@ -26,8 +26,8 @@
  GNU General Public License for more details. */
 
 
-#ifndef __ARCADE_QUAD_H__
-#define __ARCADE_QUAD_H__
+#ifndef __PI_QUAD_H__
+#define __PI_QUAD_H__
 
 
 #include "platform.h"
@@ -36,5 +36,5 @@
 int pi_quad_init(platform_t *platform, int override_hw);
 
 
-#endif /* __ARCADE_QUAD_H__ */
+#endif /* __PI_QUAD_H__ */
 

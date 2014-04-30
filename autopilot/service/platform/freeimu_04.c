@@ -42,7 +42,7 @@ int freeimu_04_read(marg_data_t *data, freeimu_04_t *freeimu)
 {
    THROW_BEGIN();
    THROW_ON_ERR(mpu6050_read(&freeimu->mpu, &data->gyro, &data->acc, NULL));
-   THROW_ON_ERR(hmc5883_read_mag(data->mag.vec, &freeimu->hmc));
+   THROW_ON_ERR(hmc5883_read_mag(&data->mag, &freeimu->hmc));
    THROW_END();
 }
 

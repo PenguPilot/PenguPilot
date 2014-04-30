@@ -27,7 +27,7 @@
 platform: 'gumstix_quad' # or pi_quad, exynos_quad
 
 aircomm:
-   id: 0
+   id: 1
    psk: "This is the PenguPilot Standard Pre-Shared Key for NRF24L01+ Communication"
 
 gps:
@@ -44,9 +44,11 @@ powerman:
    gpio_i2c_address: 0x11
    gpio_power_pin: 0
    battery_cells: 4
-   battery_low_cell_voltage: 3.5
-   low_voltage_hysteresis: 10.0 # battery needs to go below battery_low_cell_voltage for this time period in order to trigger a low power event
-   battery_capacity: 6.6
+   battery_low_cell_voltage_idle: 3.5 # [V]
+   battery_low_cell_voltage_load: 3.3 # [V]
+   battery_current_treshold: 3.0 # [A]
+   low_voltage_hysteresis: 10.0 # [s], battery needs to go below battery_low_cell_voltage for this time period in order to trigger a low power event
+   battery_capacity: 3.0
    power_save_timeout: 60.0
    
    # select adc_type based on platform name:
@@ -87,32 +89,49 @@ pilot:
       level: 3
       details: 2
 
+   main:
+      acc_fg: 0.1
+   
    ahrs:
-      beta: 0.05
-      yaw_bias: -0.1999999999999993
-      pitch_bias: 0.019999999999999962
-      roll_bias: -0.02
-
+      beta: 0.1
+      beta_start: 50.0
+      beta_step: 5.0
+   
    cal:
-      acc_bias_x:  0.0
-      acc_bias_y:  0.0
-      acc_bias_z:  0.0
-      acc_scale_x: 1.0
-      acc_scale_y: 1.0
-      acc_scale_z: 1.0
-      mag_bias_x:  0.0
-      mag_bias_y:  0.0
-      mag_bias_z:  0.0
-      mag_scale_x: 1.0
-      mag_scale_y: 1.0
-      mag_scale_z: 1.0
+      acc_bias_x: 0.313252937548
+      acc_bias_y: 0.168026474259
+      acc_bias_z: 0.218608441262
+      acc_scale_x: 9.87794649866
+      acc_scale_y: 9.83300152686
+      acc_scale_z: 10.0003835985
+      mag_bias_x: 0.0498902542405
+      mag_bias_y: -0.0437473939547
+      mag_bias_z: 0.0159657398081
+      mag_scale_x: 0.361097461536
+      mag_scale_y: 0.40723533953
+      mag_scale_z: 0.428943700944
 
-   sticks:
-      pitch_roll_p: 3.0
-      pitch_roll_angle_max: 45.0
-      yaw_p: 2.0
-      vert_speed_max: 0.3
-      horiz_speed_max: 1.3
+   cmc:
+      bias: 0.40000000596
+      scale_x: -0.03445416109912508
+      scale_y: 0.007504328769427603
+      scale_z: 0.02975504812236219
+
+   inv_coupling:
+      pitch_enabled: 1
+      roll_enabled: 1
+      yaw_enabled: 1
+
+   manual_control:
+      pitch_roll_speed_max: 60.0 # [deg/s]
+      pitch_roll_angle_max: 40.0 # [deg]
+      yaw_speed_max: 90.0 # maximum yaw rotation speed [deg/s]
+      vert_speed_max: 5.0
+      horiz_speed_max: 5.0 # maximal horizontal speed
+      gps_deadzone: 0.05 # if magnitude of gps speed sticks are lower than this value, gps position is locked
+      gas_deadzone: 0.07 # if magnitude of centered gas stick is lower than this value, altitude is locked
+      gas_acc_max: 10.0 # maximum positive/negative acceleration in m/s^2
+      sticks_rotation: 0.0 # 0 = "+" mode, 90 = "x mode"
 
    controllers:
 
@@ -121,50 +140,48 @@ pilot:
          att_ki: 3.13780298778e+00
          att_kii: 3.45789342669e+00
          att_kd: 2.94830266817e-02
-         yaw_kp: 0.0417780282447742
-         yaw_ki: 0.3259955464790617
-         yaw_kii: 0.3710534021821698
-         yaw_kd: 0.002657035449808173                                                                                                                                   
+         yaw_kp: 0.3
+         yaw_ki: 0.05
          filt_fg: 10.0
          filt_d: 0.95
          jxx_jyy: 0.0097
          jzz: 0.0057292965
-         tmc: 0.06
-
-      ne_speed:
-         p: 0.5
-         i: 0.0
-         i_max: 0.3
+         tmc: 0.0033333333333333335
       
-      attitude:
-         p: 1.0
-         i: 0.01
-         i_max: 0.5
+      ne_speed:
          d: 0.1
+         filt_fg: 10.0
+         filt_d: 0.95
+         i: 0.1
+         i_max: 0.1
+         p: 3.0
+
+      attitude:
+         d: 0.0
+         filt_fg: 150.0
+         i: 0.0
+         i_max: 0.2
+         p: 2.0
+         pitch_bias: 2.0
+         roll_bias: 2.75
 
       u_speed:
-         p: 0.2
-         i: 0.0
-         imax: 0.0
-         d: 0.0
-      u_speed:
-         d: 0.02
-         i: 0.002
-         imax: 0.03
-         p: 0.1
+         i: 0.15
+         imax: 1.0
+         p: 2.0
 
       u_pos:
-         p: 0.2 
-         i: 0.001                                                                                                                                                       
-         imax: 0.2
-         d: 0.05                                                                                                                                                        
-
+         p: 4.0
+         i: 0.1
+         imax: 2.0
+         d: 0.5
+      
       yaw:
-         p: 0.24
-         i: 0.7
-         i_max: 0.5
          d: 0.0
-         pid_lim: 0.2
+         i: 0.0
+         i_max: 0.0
+         p: 3.0
+         pid_lim: 5.0
 
       navigation:
          speed_min: 0.5
@@ -172,15 +189,17 @@ pilot:
          speed_max: 3.5
          sqrt_shift: 3.0
          sqrt_scale: 0.25
-         square_shift: 0.5
+         square_shift: 0.1
          pos_i: 0.015
          pos_i_max: 5.0
          ortho_p: 0.0
 
    kalman_pos:
-      ultra_noise: 0.1
-      baro_noise: 0.1
-      gps_noise: 0.1
       process_noise: 1.0e-6
+      baro_noise: 0.01
+      gps_noise: 0.01
+      spd_scale: 0.5554474258271733
+      ultra_noise: 0.001
+      use_gps_speed: 1
 
 

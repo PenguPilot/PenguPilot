@@ -35,9 +35,10 @@
 #include <opcd_interface.h>
 
 #include "piid.h"
-#include "../util/adams4.h"
+#include "../util/pid.h"
 #include "../../filters/filter.h"
 #include "../../util/logger/logger.h"
+#include "../../util/math/adams5.h"
 
 
 /* configuration parameters: */
@@ -47,8 +48,6 @@ static tsfloat_t att_kii;
 static tsfloat_t att_kd;
 static tsfloat_t yaw_kp;
 static tsfloat_t yaw_ki;
-static tsfloat_t yaw_kii;
-static tsfloat_t yaw_kd;
 static tsfloat_t filt_fg;
 static tsfloat_t filt_d;
 static tsfloat_t jxx_jyy;
@@ -56,15 +55,12 @@ static tsfloat_t jzz;
 static tsfloat_t tmc;
 
 
-static float Ts = 0.0f;
-
-
 /* ff [x, y, z] 2nd order filters: */
 Filter2 filters[3];
 
 /* integrators: */
-static adams4_t int_err1;
-static adams4_t int_err2;
+static adams5_t int_err1;
+static adams5_t int_err2;
 
 /* filters: */
 static Filter1 filter_lp_err;
@@ -77,12 +73,14 @@ static float *xii_err = NULL;
 #define CTRL_NUM_TSTEP 7
 static float ringbuf[3 * CTRL_NUM_TSTEP];
 static int ringbuf_idx = 0;
+pid_controller_t yaw_ctrl;
+
 
 /* integrator enable flag: */
 static int int_enable = 0;
 
 
-void piid_init(float _Ts)
+void piid_init(float Ts)
 {
    ASSERT_ONCE();
 
@@ -94,8 +92,6 @@ void piid_init(float _Ts)
       {"att_kd", &att_kd},
       {"yaw_kp", &yaw_kp},
       {"yaw_ki", &yaw_ki},
-      {"yaw_kii", &yaw_kii},
-      {"yaw_kd", &yaw_kd},
       {"filt_fg", &filt_fg},
       {"filt_d", &filt_d},
       {"jxx_jyy", &jxx_jyy},
@@ -104,19 +100,17 @@ void piid_init(float _Ts)
       OPCD_PARAMS_END
    };
    opcd_params_apply("controllers.stabilizing.", params);
+   pid_init(&yaw_ctrl, &yaw_kp, &yaw_ki, NULL, NULL);
 
-   LOG(LL_INFO, "ctrl dt = %fs", _Ts);
+   LOG(LL_INFO, "ctrl dt = %fs", Ts);
    LOG(LL_INFO, "filter: fg = %f Hz, d = %f",
                 tsfloat_get(&filt_fg), tsfloat_get(&filt_d));
    LOG(LL_INFO, "att-ctrl: P = %f, I = %f, II = %f, D = %f",
                 tsfloat_get(&att_kp), tsfloat_get(&att_ki), tsfloat_get(&att_kii), tsfloat_get(&att_kd));
-   LOG(LL_INFO, "yaw-ctrl: P = %f, I = %f, II = %f, D = %f", 
-                tsfloat_get(&yaw_kp), tsfloat_get(&yaw_ki), tsfloat_get(&yaw_kii), tsfloat_get(&yaw_kd));
+   LOG(LL_INFO, "yaw-ctrl: P = %f, I = %f", tsfloat_get(&yaw_kp), tsfloat_get(&yaw_ki));
    LOG(LL_INFO, "feed-forward: jxx_jyy = %f, jzz = %f, tmc = %f",
                 tsfloat_get(&jxx_jyy), tsfloat_get(&jzz), tsfloat_get(&tmc));
    
-   Ts = _Ts;
-
    /* initialize feed-forward system: */
    float T = 1.0f / (2.0f * M_PI * tsfloat_get(&filt_fg));
    float a0 = (4.0f * T * T + 4.0f * tsfloat_get(&filt_d) * T * Ts + Ts * Ts);
@@ -144,8 +138,8 @@ void piid_init(float _Ts)
    filter2_init(&filters[2], a, b, Ts, 1);
 
    /* initialize multistep integrator: */
-   adams4_init(&int_err1, 3);
-   adams4_init(&int_err2, 3);
+   adams5_init(&int_err1, 3);
+   adams5_init(&int_err2, 3);
 
    /* initialize error and reference signal filters: */
    filter1_lp_init(&filter_lp_err, tsfloat_get(&filt_fg), Ts, 3);
@@ -173,13 +167,39 @@ void piid_int_enable(int val)
 void piid_reset(void)
 {
    int_enable = 0;
-   adams4_reset(&int_err1);
-   adams4_reset(&int_err2);
+   adams5_reset(&int_err1);
+   adams5_reset(&int_err2);
+   pid_reset(&yaw_ctrl);
 }
 
 
-void piid_run(float u_ctrl[4], float gyro[3], float rc[3])
-{
+void piid_run(float u_ctrl[4], float gyro[3], float rc[3], float dt)
+{   
+   float T = 1.0f / (2.0f * M_PI * tsfloat_get(&filt_fg));
+   float a0 = (4.0f * T * T + 4.0f * tsfloat_get(&filt_d) * T * dt + dt * dt);
+
+   float a[2];
+   a[0] = (2.0f * dt * dt - 8.0f * T * T) / a0;
+   a[1] = (4.0f * T * T   - 4.0f * tsfloat_get(&filt_d) * T * dt + dt * dt) / a0;
+
+   float b[3];
+   #define __FF_B_SETUP(j) \
+      b[0] =  (2.0f * j * (2.0f * tsfloat_get(&tmc) + dt)) / a0; \
+      b[1] = -(8.0f * j * tsfloat_get(&tmc)) / a0; \
+      b[2] =  (2.0f * j * (2.0f * tsfloat_get(&tmc) - dt)) / a0;
+
+   /* x-axis: */
+   __FF_B_SETUP(tsfloat_get(&jxx_jyy));
+   filter2_update_coeff(&filters[0], a, b);
+
+   /* y-axis: */
+   __FF_B_SETUP(tsfloat_get(&jxx_jyy));
+   filter2_update_coeff(&filters[1], a, b);
+
+   /* z-axis: */
+   __FF_B_SETUP(tsfloat_get(&jzz));
+   filter2_update_coeff(&filters[2], a, b);
+
    /* run feed-forward: */
    FOR_N(i, 3)
    {
@@ -192,12 +212,13 @@ void piid_run(float u_ctrl[4], float gyro[3], float rc[3])
    float rc_filt[3];
 
    /* filter reference signals */
+   filter2_lp_update_coeff(&filter_ref, tsfloat_get(&filt_fg), tsfloat_get(&filt_d), dt);
    filter2_run(&filter_ref, rc, rc_filt);
 
    FOR_N(i, 3)
    {
       error[i] = ringbuf[ringbuf_idx + i] - gyro[i];
-      ringbuf[ringbuf_idx + i] = rc_filt[i];
+      ringbuf[ringbuf_idx + i] = rc[i];
    }
 
    ringbuf_idx += 3;
@@ -207,22 +228,17 @@ void piid_run(float u_ctrl[4], float gyro[3], float rc[3])
    }
 
    /* error high/lowpass filter: */
+   filter1_hp_update_coeff(&filter_hp_err, tsfloat_get(&filt_fg), dt);
    filter1_run(&filter_hp_err, error, derror);
+   
+   filter1_lp_update_coeff(&filter_lp_err, tsfloat_get(&filt_fg), dt);
    filter1_run(&filter_lp_err, error, error);
 
    /* 1st error integration: */
-   FOR_N(i, 3)
-   {
-      int_err1.f0[i] = error[i];
-   }
-   adams4_run(&int_err1, xi_err, Ts, int_enable);
+   adams5_run(&int_err1, xi_err, error, dt, int_enable);
 
    /* 2nd error integration: */
-   FOR_N(i, 3)
-   {
-      int_err2.f0[i] = xi_err[i];
-   }
-   adams4_run(&int_err2, xii_err, Ts, int_enable);
+   adams5_run(&int_err2, xii_err, xi_err, dt, int_enable);
 
    /* attitude feedback: */
    FOR_N(i, 2)
@@ -234,9 +250,6 @@ void piid_run(float u_ctrl[4], float gyro[3], float rc[3])
    }
 
    /* yaw feedback: */
-   u_ctrl[PIID_YAW] +=   tsfloat_get(&yaw_kp) * error[PIID_YAW] 
-                       + tsfloat_get(&yaw_ki) * xi_err[PIID_YAW]
-                       + tsfloat_get(&yaw_kii) * xii_err[PIID_YAW]
-                       + tsfloat_get(&yaw_kd) * derror[PIID_YAW];
+   u_ctrl[PIID_YAW] = pid_control(&yaw_ctrl, rc[PIID_YAW] - gyro[PIID_YAW], 0.0f, dt);
 }
 

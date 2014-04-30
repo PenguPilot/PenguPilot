@@ -32,7 +32,7 @@
  GNU General Public License for more details. """
 
 
-from core_pb2 import *
+from pilot_pb2 import *
 from math import atan2
 from time import sleep, time
 from icarus_pb2 import TAKEOFF, LAND, MOVE, STOP, ROT
@@ -42,13 +42,12 @@ from activities.land import LandActivity
 from activities.move import MoveActivity
 from activities.stop import StopActivity
 from activities.dummy import DummyActivity
-from flight_sm import flight_sm, flight_Hovering
-from flight_sm import flight_Standing, flight_Moving, flight_Stopping
+from flightsm.flightsm import FlightSM
 from util.geomath import bearing, gps_add_meters
 from misc import *
 from misc import daemonize
 from scl import generate_map
-from core_interface import CoreInterface
+from pilot_interface import PilotInterface
 from interface.state_emitter import StateEmitter
 from powerman import PowerMan
 from logging import basicConfig as log_config, debug as log_debug
@@ -58,13 +57,12 @@ from os import sep
 from misc import user_data_dir
 from util.landing_spots import LandingSpots
 from icarus_interface import ICARUS_MissionFactory
-from util.flight_state import to_string
 
 
 class ICARUS:
 
    def __init__(self, sockets):
-      logfile = user_data_dir() + sep + 'ICARUS.log'
+      logfile = user_data_dir + sep + 'ICARUS.log'
       log_config(filename = logfile, level = DEBUG,
                  format = '%(asctime)s - %(levelname)s: %(message)s')
       log_info('icarus starting up')
@@ -73,15 +71,15 @@ class ICARUS:
       self.icarus_takeover = False
       self.emergency_land = False
       self.factory = ICARUS_MissionFactory
-      self.fsm = flight_sm(self)
+      self.fsm = FlightSM(self.error, self.broadcast, self.takeoff, self.land, self.move, self.stop)
       self.landing_spots = LandingSpots(3.0)
-      self.core = CoreInterface(sockets['core'], sockets['mon'])
+      self.pilot = PilotInterface(sockets['pilot'], sockets['mon'])
       #self.gps_shifter = GPS_Shifter()
       self.state_emitter = StateEmitter(sockets['state'])
       self.powerman = PowerMan(sockets['power_ctrl'], sockets['power_mon'])
       start_daemon_thread(self.power_state_monitor)
       start_daemon_thread(self.state_time_monitor)
-      start_daemon_thread(self.core_monitor)
+      start_daemon_thread(self.pilot_monitor)
       self.activity = DummyActivity()
       self.activity.start()
       self.icarus_srv = ICARUS_Server(sockets['ctrl'], self)
@@ -92,7 +90,7 @@ class ICARUS:
    def state_time_monitor(self):
       log_info('starting state time monitor')
       while True:
-         if self.fsm._state != flight_Standing:
+         if self.fsm.state != 'standing':
             # count the time for "in-the-air-states":
             self.flight_time += 1
          else:
@@ -104,16 +102,16 @@ class ICARUS:
          sleep(1)
 
 
-   def core_monitor(self):
-      log_info('starting core state monitor')
+   def pilot_monitor(self):
+      log_info('starting pilot state monitor')
       rc_timeout = 1.0
       return_when_signal_lost = False
       self.mon_data = MonData()
       last_valid = time()
       while True:
-         self.core.mon_read(self.mon_data)
-         self.kalman_lat, self.kalman_lon = gps_add_meters((self.core.params.start_lat,
-                                                           self.core.params.start_lon),
+         self.pilot.mon_read(self.mon_data)
+         self.kalman_lat, self.kalman_lon = gps_add_meters((self.pilot.params.start_lat,
+                                                           self.pilot.params.start_lon),
                                                            self.setpoints[0 : 2])
          if self.mon_data.signal_valid:
             last_valid = time()
@@ -139,7 +137,7 @@ class ICARUS:
    def move_and_land(self, x, y):
       # try to stop and move somewhere
       try:
-         self.fsm.stop()
+         self.fsm.handle('stop')
       except:
          pass
       try:
@@ -147,11 +145,11 @@ class ICARUS:
          self.arg.type = MOVE
          self.arg.move_data.p0 = x
          self.arg.move_data.p1 = y
-         self.fsm.move()
+         self.fsm.handle('move')
       except:
          pass
       try:
-         self.fsm.land()
+         self.fsm.handle('land')
       except:
          pass
 
@@ -161,11 +159,11 @@ class ICARUS:
       # we don't care about the system's state:
       # just try to stop and land it!
       try:
-         self.fsm.stop()
+         self.fsm.handle('stop')
       except:
          pass
       try:
-         self.fsm.land()
+         self.fsm.handle('land')
       except:
          pass
       # after emergency landing, the interface will stay locked
@@ -190,7 +188,7 @@ class ICARUS:
       while True:
          sleep(1)
          # when landing: setting a new rotation setpoint is not allowed:
-         if self.fsm._state is flight_Landing:
+         if self.fsm.state is 'landing':
             continue
          if self.mon_data.z_ground < self.min_rot_z_ground:
             print 'system is able to rotate'
@@ -205,7 +203,7 @@ class ICARUS:
                   yaw = atan2(self.mon_data.y - poi_y, self.mon_data.x - poi_x)
                if prev_yaw != yaw:
                   print 'setting yaw to:', yaw
-                  self.core.set_ctrl_param(POS_YAW, yaw)
+                  self.pilot.set_ctrl_param(POS_YAW, yaw)
                prev_yaw = yaw
             except AttributeError:
                pass
@@ -219,13 +217,13 @@ class ICARUS:
          raise ICARUS_Exception(msg)
       self.arg = req
       if req.type == TAKEOFF:
-         self.fsm.takeoff()
+         self.fsm.handle('takeoff')
       elif req.type == LAND:
-         self.fsm.land()
+         self.fsm.handle('land')
       elif req.type == MOVE:
-         self.fsm.move()
+         self.fsm.handle('move')
       elif req.type == STOP:
-         self.fsm.stop()
+         self.fsm.handle('stop')
       elif req.type == ROT:
          self.rotate(arg)
 
@@ -233,23 +231,18 @@ class ICARUS:
    # following _prefix methods are called internally from state machine
    # and must not be called explicitly
 
-   def _error(self):
-      msg = 'flight state machine error'
+   def error(self, state, event):
+      msg = 'in state: %s, could not handle event: %s' % (state, event)
       log_err(msg)
       raise ICARUS_Exception(msg)
 
 
-   def _broadcast(self):
-      log_info('new state: %s' % to_string(self.fsm._state))
-      self.state_emitter.send(self.fsm._state)
+   def broadcast(self, state):
+      log_info('new state: %s' % state)
+      self.state_emitter.send(state)
 
 
-   def _save_power_activity(self):
-      log_info('standing')
-      self.powerman.stand_power()
-
-
-   def _takeoff_activity(self):
+   def takeoff(self):
       log_info('taking off')
       self.landing_spots.add((self.mon_data.x, self.mon_data.y))
       self.activity.cancel_and_join()
@@ -259,26 +252,25 @@ class ICARUS:
       self.activity.start()
 
 
-   def _land_activity(self):
+   def land(self):
       log_info('landing')
       self.activity.cancel_and_join()
       self.activity = LandActivity(self)
       self.activity.start()
 
 
-   def _move_activity(self):
+   def move(self):
       log_info('moving')
       self.activity.cancel_and_join()
       self.activity = MoveActivity(self)
       self.activity.start()
 
 
-   def _stop_activity(self):
+   def stop(self):
       log_info('stopping')
       self.activity.cancel_and_join()
       self.activity = StopActivity(self)
       self.activity.start()
-
 
 
 def main(name):

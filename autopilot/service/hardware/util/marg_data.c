@@ -30,11 +30,27 @@
 #include "marg_data.h"
 
 
-bool gyro_moved(vec3_t *gyro)
+void marg_data_init(marg_data_t *marg_data)
+{
+   vec3_init(&marg_data->gyro);   
+   vec3_init(&marg_data->acc);   
+   vec3_init(&marg_data->mag);   
+}
+
+
+void marg_data_copy(marg_data_t *out, const marg_data_t *in)
+{
+   vec_copy(&out->gyro, &in->gyro);
+   vec_copy(&out->acc, &in->acc);
+   vec_copy(&out->mag, &in->mag);
+}
+
+
+bool gyro_moved(const vec3_t *gyro)
 {
    FOR_N(i, 3)
    {
-      if (fabs(gyro->vec[i]) > 0.15)
+      if (fabs(gyro->ve[i]) > 0.15)
       {
          return 1;   
       }

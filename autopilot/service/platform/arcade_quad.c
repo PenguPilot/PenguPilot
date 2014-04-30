@@ -52,7 +52,6 @@
 
 
 static i2c_bus_t i2c_3;
-static deadzone_t deadzone;
 static rc_channels_t rc_channels;
 static uint8_t channel_mapping[MAX_CHANNELS] =  {0, 1, 3, 2, 4, 5}; /* pitch: 0, roll: 1, yaw: 3, gas: 2, switch left: 4, switch right: 5 */
 static float channel_scale[MAX_CHANNELS] =  {1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
@@ -119,7 +118,7 @@ int arcade_quad_init(platform_t *plat, int override_hw)
       /* m4 */ imtx1,  imtx2,   0.0f,  imtx3
    };
 
-   LOG(LL_INFO, "ic matrix [gas pitch roll yaw]");
+   LOG(LL_INFO, "ic matrix [gas roll pitch yaw]");
    FOR_N(i, 4)
    {
       LOG(LL_INFO, "[m%d]: %.0f, %.0f, %.0f, %.0f", i,
@@ -130,14 +129,13 @@ int arcade_quad_init(platform_t *plat, int override_hw)
    
   
    plat->max_thrust_n = 40.0f;
-   plat->mass_kg = 1.125f;
+   plat->mass_kg = 1.0f;
    plat->n_motors = N_MOTORS;
 
    LOG(LL_INFO, "initializing inverse coupling matrix");
-   inv_coupling_init(&plat->inv_coupling, N_MOTORS, icmatrix);
-      
-   deadzone_init(&deadzone, 0.01f, 1.0f, 1.0f);
-   rc_channels_init(&rc_channels, channel_mapping, channel_scale, &deadzone);
+   inv_coupling_init(N_MOTORS, icmatrix);
+
+   rc_channels_init(&rc_channels, channel_mapping, channel_scale);
 
    if (!override_hw)
    {

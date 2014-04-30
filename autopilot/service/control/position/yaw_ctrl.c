@@ -94,7 +94,7 @@ float yaw_ctrl_step(float *err_out, float setpoint, float yaw, float _speed, flo
 {
    float err;
    float yaw_ctrl;
-   err = circle_err(yaw, setpoint);
+   err = circle_err(setpoint, yaw);
    yaw_ctrl = pid_control(&controller, err, _speed, dt);
    *err_out = err;
    return sym_limit(yaw_ctrl, tsfloat_get(&pid_lim));

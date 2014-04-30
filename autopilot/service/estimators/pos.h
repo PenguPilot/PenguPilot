@@ -32,8 +32,8 @@
 #define __POS_H__
 
 
-#include "../geometry/quat.h"
 #include "../util/math/vec2.h"
+#include "../util/math/vec3.h"
 
 
 typedef struct

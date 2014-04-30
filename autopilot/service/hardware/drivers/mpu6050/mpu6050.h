@@ -31,7 +31,7 @@
 
 #include <util.h>
 
-#include "../../../geometry/quat.h"
+#include "../../../util/math/vec3.h"
 #include <i2c/i2c.h>
 
 

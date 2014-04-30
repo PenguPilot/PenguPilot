@@ -8,7 +8,7 @@
 *_pb2.py
 *.pb-c.c
 *.pb-c.h
-gps/service/gps
+gpsp/service/gpsp
 autopilot/service/autopilot
 autopilot/tools/acc_mag_cal/acc_mag_dump
 remote/service/remote

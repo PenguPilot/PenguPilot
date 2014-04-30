@@ -1,6 +1,4 @@
 before_script:
-   - sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu/ raring main universe"
-   - sudo apt-get -q update
-   - sudo apt-get -o Dpkg::Options::="--force-overwrite" install protobuf-compiler libmsgpack-dev libyaml-cpp-dev libprotobuf-dev python-yaml protobuf-c-compiler libprotobuf-c0-dev  libzmq-dev python-zmq libyaml-dev libtinyxml-dev graphviz  openjdk-7-jre-headless libglib2.0-dev libmeschach-dev
+   - sudo apt-get -o Dpkg::Options::="--force-overwrite" install swig protobuf-compiler libmsgpack-dev libprotobuf-dev python-yaml protobuf-c-compiler libprotobuf-c0-dev libzmq-dev python-zmq libyaml-dev libglib2.0-dev
 language: c
 script: scons

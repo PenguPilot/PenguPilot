@@ -57,11 +57,17 @@ Filter2;
 
 
 /* init functions */
+void filter1_lp_update_coeff(Filter1 *filter, float fg, float dt);
+
 void filter1_lp_init(Filter1 *filter, float fg, float Ts, int dim);
+
+void filter1_hp_update_coeff(Filter1 *filter, float fg, float dt);
 
 void filter1_hp_init(Filter1 *filter, float fg, float Ts, int dim);
 
 void filter1_init(Filter1 *filter, float *a, float *b, float Ts, int dim);
+
+void filter2_lp_update_coeff(Filter2 *filter, float fg, float d, float dt);
 
 void filter2_lp_init(Filter2 *filter, float fg, float damping, float Ts, int dim);
 
@@ -71,6 +77,8 @@ void filter2_init(Filter2 *filter, float *a, float *b, float Ts, int dim);
 
 /* execution functions */
 void filter1_run(Filter1 *filter, float *u, float *y);
+
+void filter2_update_coeff(Filter2 *filter, float *a, float *b);
 
 void filter2_run(Filter2 *filter, float *u, float *y);
 

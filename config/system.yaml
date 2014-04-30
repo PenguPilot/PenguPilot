@@ -26,7 +26,12 @@
 
 components:
 
-   - name: gps
+   - name: geomag
+     gates:
+      - gps: sub
+      - decl: pub
+
+   - name: gpsp
      gates:
       - opcd_ctrl: req
       - data: pub
@@ -83,6 +88,7 @@ components:
       - log: pub        # logs useful human-readable data at different verbosity levels
       - blackbox: pub   # publishes data produced in every step of the main loop
       - gps: sub        # subscribes to GPS data provider
+      - decl: sub       # magnetic declination
       - rc: sub         # experimental remote control input
       - ctrl: rep       # control interface
       - mon: pub        # controller error monitoring publisher
@@ -128,6 +134,7 @@ components:
    - name: aircomm
      gates:
       - in: sub
+      - out: pub
       - opcd_ctrl: req
 
    - name: display
@@ -138,9 +145,13 @@ components:
 
    - name: heartbeat
      gates:
-      - out: pub
       - gps: sub
       - power: sub
+
+   - name: aircomm_app
+     gates:
+      - in: sub
+      - out: pub
 
    - name: wifi_loc
      gates:
@@ -152,44 +163,47 @@ components:
 #
 
 connections:
+   - [ gpsp.data,                geomag.gps]
+   - [ pilot.decl,               geomag.decl]
    - [ wifi_loc.wifi,            wifi_sensor.networks]
-   - [ wifi_loc.gps,             gps.data]
-   - [ heartbeat.out,            aircomm.in]
-   - [ heartbeat.gps,            gps.data]
+   - [ wifi_loc.gps,             gpsp.data]
+   - [ aircomm_app.out,          aircomm.in]
+   - [ aircomm_app.in,           aircomm.out]
+   - [ heartbeat.gps,            gpsp.data]
    - [ heartbeat.power,          powerman.mon]
    - [ display.motors_spinning,  pilot.motors_spinning]
-   - [ display.gps,              gps.data]
+   - [ display.gps,              gpsp.data]
    - [ display.power,            powerman.mon]
    - [ calibration.data,         blackbox.data]
    - [ pilot.blackbox,           blackbox.data]
-   - [ opcd.ctrl,                aircomm.opcd_ctrl    ]
-   - [ pilot.power,              powerman.mon         ]
-   - [ opcd.event,               pilot.opcd_event      ]
-   - [ opcd.ctrl,                opcd_shell.ctrl      ]
-   - [ opcd.ctrl,                optimizer.opcd_ctrl   ]
-   - [ pilot.blackbox,           optimizer.blackbox   ]
-   - [ opcd.ctrl,                remote.opcd_ctrl      ]
-   - [ opcd.ctrl,                pilot.opcd_ctrl       ]
-   - [ opcd.ctrl,                gps.opcd_ctrl ]
-   - [ opcd.ctrl,                powerman.opcd_ctrl   ]
-   - [ mavlink.pilot_mon,        pilot.mon             ]
-   - [ mavlink.power_mon,        powerman.mon         ]
-   - [ mavlink.ctrl,             opcd.ctrl            ]
-   - [ mavlink.icarus_ctrl,      icarus.ctrl          ]
-   - [ mavlink.state,            icarus.state         ]
-   - [ remote.data,              pilot.rc            ]
-   - [ console_logger.log,       pilot.log             ]
-   - [ gps.data,                 pilot.gps             ]
-   - [ gps.data,                 mavlink.gps          ]
-   - [ icarus.ctrl,              ferry_ctrl.ctrl      ]
-   - [ icarus.power_ctrl,        powerman.ctrl        ]
-   - [ icarus.power_mon,         powerman.mon         ]
-   - [ ferry_ctrl.state,         icarus.state         ]
-   - [ icarus.ctrl,              icarus_shell.ctrl    ]
-   - [ pilot.ctrl,               icarus.pilot          ]
-   - [ pilot.mon,                icarus.mon           ]
-   - [ pilot.ctrl,               pilot_shell.ctrl      ]
-   - [ pilot.mon,                pilot_shell.mon       ]
-   - [ gpx_logger.gps,           gps.data       ]
-   - [ gps.data,                 gps_test.gps         ]
+   - [ opcd.ctrl,                aircomm.opcd_ctrl]
+   - [ pilot.power,              powerman.mon]
+   - [ opcd.event,               pilot.opcd_event]
+   - [ opcd.ctrl,                opcd_shell.ctrl]
+   - [ opcd.ctrl,                optimizer.opcd_ctrl]
+   - [ pilot.blackbox,           optimizer.blackbox]
+   - [ opcd.ctrl,                remote.opcd_ctrl]
+   - [ opcd.ctrl,                pilot.opcd_ctrl]
+   - [ opcd.ctrl,                gpsp.opcd_ctrl]
+   - [ opcd.ctrl,                powerman.opcd_ctrl]
+   - [ mavlink.pilot_mon,        pilot.mon]
+   - [ mavlink.power_mon,        powerman.mon]
+   - [ mavlink.ctrl,             opcd.ctrl]
+   - [ mavlink.icarus_ctrl,      icarus.ctrl]
+   - [ mavlink.state,            icarus.state]
+   - [ remote.data,              pilot.rc]
+   - [ console_logger.log,       pilot.log]
+   - [ gpsp.data,                 pilot.gps]
+   - [ gpsp.data,                 mavlink.gps]
+   - [ icarus.ctrl,              ferry_ctrl.ctrl]
+   - [ icarus.power_ctrl,        powerman.ctrl]
+   - [ icarus.power_mon,         powerman.mon]
+   - [ ferry_ctrl.state,         icarus.state]
+   - [ icarus.ctrl,              icarus_shell.ctrl]
+   - [ pilot.ctrl,               icarus.pilot]
+   - [ pilot.mon,                icarus.mon]
+   - [ pilot.ctrl,               pilot_shell.ctrl]
+   - [ pilot.mon,                pilot_shell.mon]
+   - [ gpx_logger.gps,           gpsp.data]
+   - [ gpsp.data,                 gps_test.gps]
    

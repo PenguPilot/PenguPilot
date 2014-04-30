@@ -36,8 +36,7 @@ from gps_data_pb2 import GpsData
 from math import sin, cos, pi
 from misc import daemonize
 from os import getenv
-from power_pb2 import PowerState
-
+from msgpack import loads
 
 WHITE = 1
 BLACK = 0
@@ -84,27 +83,26 @@ def cpuavg():
          if load is None:
             load = cpu_percent()
          else:
-            load = 0.8 * load + 0.2 * cpu_percent()
+            load = 0.85 * load + 0.15 * cpu_percent()
          sleep(0.1)
 
 
 def pmreader():
    s = socket_map['power']
-   p = PowerState()
-   global spinning, voltage, critical
+   global spinning, voltage, estimate, critical
    critical = False
    voltage = None
+   estimate = None
    while True:
       if spinning:
          sleep(1)
       else:
-         p.ParseFromString(s.recv())
-         critical = p.critical
+         _voltage, current, remaining, critical = loads(s.recv())
+         estimate = remaining / current
          if voltage is None:
-            voltage = p.voltage
+            voltage = _voltage
          else:
-            voltage = 0.9 * voltage + 0.1 * p.voltage
-
+            voltage = 0.9 * voltage + 0.1 * _voltage
 
 def show_image(image):
    data = ''.join(map(chr, image.getdata()))
@@ -222,8 +220,10 @@ def draw_health(draw):
    vmin = 13.2
    vmax = 16.4
    batt = min(1.0, max(0.0, (voltage - vmin) / (vmax - vmin)))
+   if not estimate:
+      etimate = ''
 
-   draw.text((0, 24), 'Battery: %.1f%%' % (100.0 * batt), WHITE, font = font)
+   draw.text((0, 24), 'BAT: %.1f%%, T: %.1fh' % (100.0 * batt, estimate), WHITE, font = font)
    bar(draw, 0, 38, 127, 6, batt)
    
 def circle(draw, x, y, rad, i, o):
@@ -239,7 +239,7 @@ def pol2cart(az, el, x, y, r):
 def draw_gps(draw):
    with gps_lock:
       fix_txt = {0: '--', 2: '2D', 3: '3D'}
-      draw.text((0, 0), 'Sats: %d' % gps_data.sats, WHITE, font = font)
+      draw.text((0, 0), 'Sats: %d / %d' % (gps_data.sats, len(gps_data.satinfo)), WHITE, font = font)
       draw.text((0, 13), 'Fix: %s' % fix_txt[gps_data.fix], WHITE, font = font)
       if gps_data.fix >= 2:
          draw.text((0, 13 * 2), 'HD: %.1f' % gps_data.hdop, WHITE, font = font)
@@ -255,13 +255,13 @@ def draw_gps(draw):
       draw.line([(x_pos - outer_rad, y_pos), (x_pos + outer_rad, y_pos)], WHITE)
       sig = 0.0
       for sat in gps_data.satinfo:
-         sig += sat.sig
+         if sat.sig > sig:
+            sig = sat.sig
          x, y = pol2cart(sat.azimuth, sat.elv, x_pos, y_pos, outer_rad)
          if sat.in_use:
             circle(draw, x, y, 3, WHITE, WHITE)
          else:
             circle(draw, x, y, 3, BLACK, WHITE)
-      sig /= len(gps_data.satinfo)
       draw.text((0, 13 * 4), 'Sig: %.1f' % sig, WHITE, font = font)
 
 def draw_gps2(draw):
@@ -298,9 +298,9 @@ def main(name):
    t3.daemon = True
    t3.start()
 
-   screens = [(draw_health, 15),
-              (draw_gps, 15),
-              (draw_gps2, 15)]
+   screens = [(draw_health, 10),
+              (draw_gps, 10),
+              (draw_gps2, 10)]
 
    screen = 0
    oled.init('/dev/i2c-3', W, H)

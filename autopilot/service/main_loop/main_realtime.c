@@ -24,7 +24,6 @@
  GNU General Public License for more details. */
 
 
-
 #include <sched.h>
 #include <unistd.h>
 #include <stdlib.h>

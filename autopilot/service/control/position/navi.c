@@ -51,15 +51,13 @@ static tsfloat_t ortho_p;
 
 
 /* vectors for use in navigation algorithm: */
-static vec2_t dest_pos;
 static vec2_t pos_err_sum;
+static vec2_t dest_pos;
 static vec2_t prev_dest_pos;
 
 
 /* setpoints: */
 static tsfloat_t travel_speed;
-static tsfloat_t dest_e; /* destination in lon direction, in m */
-static tsfloat_t dest_n; /* destination in lat direction, in m */
 
 
 float desired_speed(float dist)
@@ -115,8 +113,6 @@ void navi_init(void)
    vec2_set(&prev_dest_pos, 0.0, 0.0);
 
    tsfloat_init(&travel_speed, 0.0f);
-   tsfloat_init(&dest_e, 0.0f);
-   tsfloat_init(&dest_n, 0.0f);
 
    navi_reset_travel_speed();
 }
@@ -125,37 +121,6 @@ void navi_init(void)
 void navi_reset(void)
 {
    vec2_set(&pos_err_sum, 0.0f, 0.0f);
-}
-
-
-void navi_set_dest_e(float e)
-{
-   tsfloat_set(&dest_e, e);
-}
-
-
-void navi_set_dest_n(float n)
-{
-   tsfloat_set(&dest_n, n);
-}
-
-
-void navi_set_dest(vec2_t vec)
-{
-   navi_set_dest_n(vec.y);  
-   navi_set_dest_e(vec.x);  
-}
-
-
-float navi_get_dest_e(void)
-{
-   return tsfloat_get(&dest_e);
-}
-
-
-float navi_get_dest_n(void)
-{
-   return tsfloat_get(&dest_n);
 }
 
 
@@ -179,21 +144,15 @@ int navi_set_travel_speed(float speed)
 /*
  * executes navigation control subsystem
  */
-void navi_run(vec2_t *speed_setpoint, vec2_t *pos, float dt)
+void navi_run(vec2_t *speed_setpoint, vec2_t *err, const vec2_t *pos_sp, const vec2_t *pos, const float dt)
 {
    /* set-up input vectors: */
-   float _dest_e = tsfloat_get(&dest_e);
-   float _dest_n = tsfloat_get(&dest_n);
-
-   if (dest_pos.e != _dest_e ||
-       dest_pos.n != _dest_n)
+   if (!vec_equal(&dest_pos, &prev_dest_pos))
    {
-      prev_dest_pos = dest_pos;
-      vec2_set(&dest_pos, _dest_e, _dest_n);
+      vec_copy(&prev_dest_pos, &dest_pos);
+      vec_copy(&dest_pos, pos_sp);
    }
-   vec2_t pos_err;
-   vec2_sub(&pos_err, &dest_pos, pos);
- 
+   vec2_sub(err, &dest_pos, pos);
 
    /* add correction for inter-setpoint trajectory */
    vec2_t ortho_thrust;
@@ -209,7 +168,7 @@ void navi_run(vec2_t *speed_setpoint, vec2_t *pos, float dt)
       vec2_t ortho_vec;
       vec2_ortho_right(&ortho_vec, &setpoints_dir);
       vec2_t ortho_pos_err;
-      vec2_project(&ortho_pos_err, &pos_err, &ortho_vec);
+      vec2_project(&ortho_pos_err, err, &ortho_vec);
       vec2_scale(&ortho_thrust, &ortho_pos_err, tsfloat_get(&ortho_p));
    }
 
@@ -231,7 +190,7 @@ void navi_run(vec2_t *speed_setpoint, vec2_t *pos, float dt)
       float _speed_max = tsfloat_get(&speed_max);
       float i_weight = (_speed_max - desired_speed(target_dist)) / _speed_max;
       vec2_t pos_err_addend;
-      vec2_scale(&pos_err_addend, &pos_err, dt * tsfloat_get(&pos_i) * i_weight);
+      vec2_scale(&pos_err_addend, err, dt * tsfloat_get(&pos_i) * i_weight);
       vec2_add(&pos_err_sum, &pos_err_sum, &pos_err_addend);
    }
 

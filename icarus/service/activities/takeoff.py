@@ -25,7 +25,7 @@
  GNU General Public License for more details. """
 
 
-from core_pb2 import *
+from pilot_pb2 import *
 from activity import Activity, StabMixIn
 
 from logging import debug as log_debug, info as log_info, warning as log_warn, error as log_err
@@ -50,9 +50,9 @@ class TakeoffActivity(Activity, StabMixIn):
 
    def run(self):
       arg = self.icarus.arg
-      core = self.icarus.core
+      pilot = self.icarus.pilot
       mon_data = self.icarus.mon_data
-      params = self.icarus.core.params
+      params = self.icarus.pilot.params
 
       if arg.HasField('move_data'):
          z_setpoint = arg.move_data.z
@@ -60,7 +60,7 @@ class TakeoffActivity(Activity, StabMixIn):
             log_warn('rel field ignored for take-off')
          if arg.HasField('glob'):
             if not arg.glob:
-               if z_setpoint < core.params.start_alt + mon_data.z + 3.0:
+               if z_setpoint < pilot.params.start_alt + mon_data.z + 3.0:
                   msg = 'absolute z setpoint %f is below current altitude' % z_setpoint
                   log_err(msg)
                   raise ValueError(msg)
@@ -71,28 +71,22 @@ class TakeoffActivity(Activity, StabMixIn):
       else:
          z_setpoint = self.STD_HOVERING_ALT
 
-      try:
-         core.spin_up()
-      except:
-         core.spin_down()
-         self.fsm.failed()
-         log_error('could not spin up motors');
-         return
+      pilot.start_motors()
 
       if self.canceled:
-         core.spin_down()
+         pilot.stop_motors()
          log_error('take-off canceled');
          return
 
       # "point of no return":
       # reset controllers:
-      core.set_ctrl_param(POS_YAW, mon_data.yaw)
-      core.set_ctrl_param(POS_E, mon_data.e)
-      core.set_ctrl_param(POS_N, mon_data.n)
-      core.reset_ctrl()
+      pilot.set_ctrl_param(POS_YAW, mon_data.yaw)
+      pilot.set_ctrl_param(POS_E, mon_data.e)
+      pilot.set_ctrl_param(POS_N, mon_data.n)
+      pilot.reset_ctrl()
 
       # set new altitude setpoint and stabilize:
-      core.set_ctrl_param(POS_U, u_setpoint)
+      pilot.set_ctrl_param(POS_U, u_setpoint)
       self.stabilize()
-      self.fsm.done()
+      self.fsm.handle('done')
 

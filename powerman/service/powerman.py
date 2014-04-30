@@ -30,18 +30,15 @@
  GNU General Public License for more details. """
 
 
-
-from time import sleep
+from time import time, sleep
 from threading import Thread, Timer
 from signal import pause
 from smbus import SMBus
 from os import system, sep
-from logging import basicConfig as log_config, debug as log_debug
-from logging import info as log_info, warning as log_warn, error as log_err
-from logging import DEBUG
 
 from misc import *
 from power_pb2 import *
+from msgpack import dumps
 from scl import generate_map
 from opcd_interface import OPCD_Interface
 from misc import daemonize, Hysteresis, user_data_dir
@@ -51,12 +48,6 @@ from hardware import *
 class PowerMan:
 
    def __init__(self, name):
-      # set-up logger:
-      logfile = user_data_dir + sep + 'PowerMan.log'
-      log_config(filename = logfile, filemode = 'w', level = DEBUG,
-                 format = '%(asctime)s - %(levelname)s: %(message)s')
-      # initialized and load config:
-      log_info('powerman starting up')
       map = generate_map(name)
       self.ctrl_socket = map['ctrl']
       self.monitor_socket = map['mon']
@@ -65,9 +56,12 @@ class PowerMan:
       #self.gpio_mosfet = GPIO_Bank(bus, self.opcd.get('gpio_i2c_address'))
       #self.power_pin = self.opcd.get('gpio_power_pin')
       self.cells = self.opcd.get('battery_cells')
-      self.low_cell_voltage = self.opcd.get('battery_low_cell_voltage')
+      self.low_cell_voltage_idle = self.opcd.get('battery_low_cell_voltage_idle')
+      self.low_cell_voltage_load = self.opcd.get('battery_low_cell_voltage_load')
+      self.battery_current_treshold = self.opcd.get('battery_current_treshold')
       self.capacity = self.opcd.get('battery_capacity')
-      self.low_battery_voltage = self.cells * self.low_cell_voltage
+      self.low_battery_voltage_idle = self.cells * self.low_cell_voltage_idle
+      self.low_battery_voltage_load = self.cells * self.low_cell_voltage_load
       self.critical = False
       #self.gpio_mosfet.write()
       self.warning_started = False
@@ -75,15 +69,12 @@ class PowerMan:
       # start threads:
       self.standing = True
       self.adc_thread = start_daemon_thread(self.adc_reader)
-      self.emitter_thread = start_daemon_thread(self.power_state_emitter)
       self.request_thread = start_daemon_thread(self.request_handler)
-      log_info('powerman running')
 
 
    def battery_warning(self):
       # do something in order to indicate a low battery:
       msg = 'CRITICAL WARNING: SYSTEM BATTERY VOLTAGE IS LOW; IMMEDIATE SHUTDOWN REQUIRED OR SYSTEM WILL BE DAMAGED'
-      log_warn(msg)
       system('echo "%s" | wall' % msg)
       beeper_enabled = self.opcd.get('beeper_enabled')
       while True:
@@ -103,15 +94,21 @@ class PowerMan:
       current_adc = adcs[adc_type](self.opcd.get(adc_type + '.current_channel'))
       voltage_lambda = eval(self.opcd.get(adc_type + '.adc_to_voltage'))
       current_lambda = eval(self.opcd.get(adc_type + '.adc_to_current'))
-      self.current_integral = 0.0
+      vmin = 13.2
+      vmax = 16.4
+      self.voltage = voltage_lambda(voltage_adc.read())  
+      batt = min(1.0, max(0.0, (self.voltage - vmin) / (vmax - vmin)))
+      self.consumed = (1.0 - batt) * self.capacity
       hysteresis = Hysteresis(self.opcd.get('low_voltage_hysteresis'))
+      time_prev = time()
       while True:
-         sleep(1)
+         sleep(0.2)
          try:
             self.voltage = voltage_lambda(voltage_adc.read())  
             self.current = current_lambda(current_adc.read())
-            self.current_integral += self.current / 3600
-            if self.voltage < self.low_battery_voltage:
+            self.consumed += self.current / (3600 * (time() - time_prev))
+            time_prev = time()
+            if self.voltage < self.low_battery_voltage_idle and self.current < self.battery_current_treshold or self.voltage < self.low_battery_voltage_load and self.current >= self.battery_current_treshold:
                self.critical = hysteresis.set()
             else:
                hysteresis.reset()
@@ -119,31 +116,21 @@ class PowerMan:
                if not self.warning_started:
                   self.warning_started = True
                   start_daemon_thread(self.battery_warning)
-         except Exception, e:
-            log_err(str(e))
-
-   def power_state_emitter(self):
-      while True:
-         state = PowerState()
-         sleep(1)
-         try:
-            state.voltage = self.voltage
-            state.current = self.current
-            state.capacity = self.capacity
-            state.consumed = self.current_integral
-
-            remaining = self.capacity - self.current_integral
+            voltage = self.voltage
+            current = self.current
+            capacity = self.capacity
+            consumed = self.consumed
+            remaining = self.capacity - self.consumed
             if remaining < 0:
                remaining = 0
-            state.remaining = remaining
-            state.critical = self.critical
-            state.estimate = state.remaining / self.current * 3600
-            log_info(str(state).replace('\n', ' '))
-         except AttributeError:
+            critical = self.critical
+            state = [self.voltage,  # 0 [V]
+                     self.current,  # 1 [A]
+                     remaining,     # 2 [Ah]
+                     self.critical] # 3 [Bool]
+         except Exception, e:
             continue
-         except: # division by zero in last try block line
-            pass
-         self.monitor_socket.send(state.SerializeToString())
+         self.monitor_socket.send(dumps(state))
 
 
    def power_off(self):

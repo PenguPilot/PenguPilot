@@ -32,12 +32,13 @@
 #include "../platform/platform.h"
 
 
-#define REALTIME_PERIOD (0.006)
+#define REALTIME_PERIOD (1.0f / 300.0f)
 
 
 #define DATA_DEFINITION() \
    float channels[MAX_CHANNELS]; \
    marg_data_t marg_data; \
+   marg_data_init(&marg_data); \
    float dt; \
    float ultra_z; \
    float baro_z; \
@@ -59,16 +60,16 @@ stick_t;
 
 void main_init(int argc, char *argv[]);
 
-void main_step(float dt,
-               marg_data_t *marg_data,
-               gps_data_t *gps_data,
-               float ultra,
-               float baro,
-               float voltage,
-               float current,
-               float channels[MAX_CHANNELS],
-               uint16_t sensor_status,
-               bool override_hw);
+void main_step(const float dt,
+               const marg_data_t *marg_data,
+               const gps_data_t *gps_data,
+               const float ultra,
+               const float baro,
+               const float voltage,
+               const float current,
+               const float channels[MAX_CHANNELS],
+               const uint16_t sensor_status,
+               const bool override_hw);
 
 void main_calibrate(int enabled);
 

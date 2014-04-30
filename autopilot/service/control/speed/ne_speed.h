@@ -32,9 +32,11 @@
 #include "../../util/math/vec2.h"
 
 
-void ne_speed_ctrl_init(void);
+void ne_speed_ctrl_init(float Ts);
 
-void ne_speed_ctrl_run(vec2_t *ctrl_body, const vec2_t *setp, const float dt, const vec2_t *speed);
+void ne_speed_ctrl_reset(void);
+
+void ne_speed_ctrl_run(vec2_t *forces, vec2_t *err, const vec2_t *setp, const float dt, const vec2_t *speed);
 
 
 #endif /* __NE_SPEED_H__ */

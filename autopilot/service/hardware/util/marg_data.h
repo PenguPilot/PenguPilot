@@ -30,7 +30,7 @@
 
 #include <stdbool.h>
 
-#include "../../geometry/quat.h"
+#include "../../util/math/vec3.h"
 
 
 typedef struct
@@ -42,7 +42,11 @@ typedef struct
 marg_data_t;
 
 
-bool gyro_moved(vec3_t *gyro);
+void marg_data_init(marg_data_t *marg_data);
+
+void marg_data_copy(marg_data_t *out, const marg_data_t *in);
+
+bool gyro_moved(const vec3_t *gyro);
 
 
 #endif /* __MARG_DATA_H__ */
