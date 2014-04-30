@@ -347,7 +347,6 @@ SIMPLE_THREAD_END
 
 void opcd_params_init(char *_prefix, int enable_events)
 {
-   ASSERT_ONCE();
    ASSERT_NOT_NULL(_prefix);
    prefix = _prefix;
    ctrl_socket = scl_get_socket("opcd_ctrl");

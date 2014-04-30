@@ -105,12 +105,12 @@ void _main_serial(int argc, char *argv[])
   
    opcd_param_t params[] =
    {
-      {"serial_path", &serial_path},
-      {"serial_speed", &serial_speed},
+      {"path", &serial_path},
+      {"speed", &serial_speed},
       OPCD_PARAMS_END
    };
    
-   opcd_params_init("sensors.gps.", 0);
+   opcd_params_init("gpsp.serial.", 0);
    opcd_params_apply("", params);
    
    int status = serial_open(&port, serial_path, tsint_get(&serial_speed), 0, 0, 0);

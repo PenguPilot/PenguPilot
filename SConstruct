@@ -38,7 +38,6 @@ def set_compiler_dependent_cflags():
    cflags = '-D_GNU_SOURCE -pipe -fomit-frame-pointer -std=c99 -O3 -Wall -Wextra '
    pipe = subprocess.Popen([env['CC'], '-v'], env=env['ENV'], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
    gcc_info = pipe.stderr.read();
-   print gcc_info
    if 'armv7a' in gcc_info:
       cflags += ' -O3 -ftree-vectorize -ffast-math -fomit-frame-pointer -funroll-loops -march=armv7-a -mtune=cortex-a8 -mfpu=vfpv3-d16 -mfloat-abi=hard'
    if 'armv6' in gcc_info:
@@ -124,8 +123,8 @@ ap_pb_lib = make_proto_lib(ap_pb_dir, 'autopilot_pb')
 ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = common_libs + [pm_pb_lib, gpsp_pb_lib, ap_pb_lib] + ['m', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
 
 # Display:
-display_src = map(lambda x: 'display/shared/' + x, ['pyssd1306.c', 'pyssd1306.i', 'ssd1306.c'])
-env.SharedLibrary('display/shared/_pyssd1306.so', display_src, LIBS = [shared_sh_lib])
+display_src = map(lambda x: 'display/shared/' + x, ['pyssd1306.c', 'pyssd1306.i', 'ssd1306.c']) + ['shared/i2c/i2c.c']
+env.SharedLibrary('display/shared/_pyssd1306.so', display_src)
 
 # HLFM:
 hlfm_dir = 'hlfm/'

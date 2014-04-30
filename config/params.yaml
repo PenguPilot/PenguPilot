@@ -30,12 +30,10 @@ aircomm:
    id: 1
    psk: "This is the PenguPilot Standard Pre-Shared Key for NRF24L01+ Communication"
 
-gps:
-   gumstix_quad: 'serial'
-   pi_quad: 'i2c'
+gpsp:
    serial:
-      serial_path: "/dev/ttyO2"
-      serial_speed: 115200
+      path: "/dev/ttyO2"
+      speed: 115200
 
 powerman:
    beeper_enabled: False
