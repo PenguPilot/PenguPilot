@@ -208,9 +208,7 @@ static int read_raw(mpu6050_t *mpu, int16_t *data)
    THROW_ON_ERR(i2c_read_block_reg(&mpu->i2c_dev, MPU6050_ACCEL_XOUT_H, raw, sizeof(raw)));
 
    FOR_N(i, sizeof(raw) >> 1)
-   {
       data[i] = (int16_t)((raw[(i << 1)] << 8) | raw[(i << 1) + 1]);
-   }
 
    THROW_END();
 }
@@ -226,25 +224,15 @@ int mpu6050_read(mpu6050_t *mpu, vec3_t *gyro, vec3_t *acc, float *temperature)
    THROW_ON_ERR(read_raw(mpu, val));
 
    if (acc != NULL)
-   {
       FOR_N(i, 3)
-      {
-         acc->vec[i] = 9.81f * (float)(val[i]) / (float)((1 << 14) >> mpu->afs);
-      }
-   }
+         acc->ve[i] = 9.81f * (float)(val[i]) / (float)((1 << 14) >> mpu->afs);
 
    if (temperature != NULL)
-   {
       *temperature = (float)(val[3]) / 340.0f + 36.53f;
-   }
 
    if (gyro != NULL)
-   {
       FOR_N(i, 3)
-      {
-         gyro->vec[i] = M_PI /180.0f * (float)(val[i + 4]) * (float)(250 << mpu->gfs) / (float)(1 << 15);
-      }
-   }
+         gyro->ve[i] = M_PI / 180.0f * (float)(val[i + 4]) * (float)(250 << mpu->gfs) / (float)(1 << 15);
 
    THROW_END();
 }

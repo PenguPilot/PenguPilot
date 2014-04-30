@@ -64,7 +64,7 @@ periodic_thread_t;
 
 #define PERIODIC_THREAD_LOOP_BEGIN \
    periodic_thread_init_period(thread); \
-   display_thread_sched_attr(thread->name); \
+   /* display_thread_sched_attr(thread->name); */ \
    while (thread->running) \
    { \
       periodic_thread_wait_for_next_period(thread);

@@ -33,11 +33,15 @@ from scl import generate_map
 from gps_data_pb2 import GpsData
 from math import sin, cos, pi
 from misc import daemonize
-from power_pb2 import PowerState
+from msgpack import loads
 from msgpack import Packer
-from aircomm_shared import BCAST, HEARTBEAT
+from aircomm_shared import BCAST_NOFW, HEARTBEAT
+
 
 socket_map = None
+voltage = 17.0
+current = 0.4
+critical = False
 
 
 def gps():
@@ -45,13 +49,14 @@ def gps():
    socket = socket_map['gps']
    i = 0
    while True:
-      with gps_lock:
-         data = socket.recv()
-         if i == 5:
-            i = 0
+      data = socket.recv()
+      if i == 5:
+         i = 0
+         with gps_lock:
             gps_data = GpsData()
             gps_data.ParseFromString(data)
-         i += 1
+      i += 1
+
 
 def cpuavg():
    global load
@@ -66,21 +71,17 @@ def cpuavg():
 
 def pmreader():
    s = socket_map['power']
-   p = PowerState()
-   global voltage, current
-   voltage = None
-   current = None
+   global voltage, current, critical
    while True:
-      p.ParseFromString(s.recv())
+      _voltage, _current, _, critical = loads(s.recv())
       if voltage is None:
-         voltage = p.voltage
+         voltage = _voltage
       else:
-         voltage = 0.9 * voltage + 0.1 * p.voltage
+         voltage = 0.9 * voltage + 0.1 * _voltage
       if current is None:
-         current = p.current
+         current = _current
       else:
-         current = 0.9 * current + 0.1 * p.current
-
+         current = 0.9 * current + 0.1 * _current
 
 
 def mem_used():
@@ -89,7 +90,6 @@ def mem_used():
    free = float(lines[1].split(' ')[-2])
    cached = float(lines[3].split(' ')[-2])
    return int(100 * (1.0 - (free + cached) / total))
-
 
 
 def main(name):
@@ -109,19 +109,22 @@ def main(name):
    t3.daemon = True
    t3.start()
 
-   socket = socket_map['out']
+   socket = generate_map('aircomm_app')['out']
    packer = Packer(use_single_float = True)
    while True:
       try:
-         data = [BCAST, HEARTBEAT, int(voltage * 10), int(current * 10), int(load), mem_used()]
+         data = [BCAST_NOFW, HEARTBEAT, int(voltage * 10), int(current * 10), int(load), mem_used(), critical]
          with gps_lock:
-            if gps_data.fix >= 2:
-               data += [gps_data.lon, gps_data.lat]
+            try:
+               if gps_data.fix >= 2:
+                  data += [gps_data.lon, gps_data.lat]
+            except:
+               pass
          socket.send(packer.pack(data))
       except Exception, e:
          pass
       sleep(1.0)
-         
+
 
 daemonize('heartbeat', main)
 

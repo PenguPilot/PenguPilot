@@ -45,33 +45,6 @@ void navi_reset(void);
 
 
 /*
- * setter for e position
- */
-void navi_set_dest_e(float x);
-
-
-/*
- * setter for n position
- */
-void navi_set_dest_n(float y);
-
-
-void navi_set_dest(vec2_t vec);
-
-
-/*
- * getter for e position
- */
-float navi_get_dest_e(void);
-
-
-/*
- * getter for n position
- */
-float navi_get_dest_n(void);
-
-
-/*
  * set travel speed to standard
  */
 void navi_reset_travel_speed(void);
@@ -86,7 +59,7 @@ int navi_set_travel_speed(float speed);
 /*
  * executes navigation control subsystem
  */
-void navi_run(vec2_t *speed_setpoint, vec2_t *pos, float dt);
+void navi_run(vec2_t *speed_setpoint, vec2_t *err, const vec2_t *pos_sp, const vec2_t *pos, const float dt);
 
 
 #endif /* __NAVI_H__ */

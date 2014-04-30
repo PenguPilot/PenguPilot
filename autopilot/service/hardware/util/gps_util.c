@@ -38,18 +38,18 @@ static double start_lon; /* start longitude in meters */
 static double start_lat; /* start latitude in meters */
 
 
-void gps_util_update(gps_rel_data_t *out, gps_data_t *in)
+void gps_util_update(gps_rel_data_t *out, const gps_data_t *in)
 {
-   if (in->fix >= FIX_2D && !initialized)
+   if (!initialized)
    {
       /* set-up start positions */
-      initialized = 1;
       start_lon = in->lon;
       start_lat = in->lat;
+      initialized = 1;
    }
 
    /* calculate deltas: */
-   if (in->fix >= FIX_2D && initialized)
+   if (initialized)
    {
       meter_offset(&out->dn, &out->de,
                     in->lat, in->lon,
@@ -57,8 +57,9 @@ void gps_util_update(gps_rel_data_t *out, gps_data_t *in)
    }
 
    float speed_m = in->speed * 0.51444444444f; /* knots to meter/s */
-   out->speed_n = speed_m * cosf(deg2rad(in->course));
-   out->speed_e = speed_m * sinf(deg2rad(in->course));
+   float alpha = deg2rad(in->course);
+   out->speed_n = speed_m * cos(alpha);
+   out->speed_e = speed_m * sin(alpha);
 }
 
 

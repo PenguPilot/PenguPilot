@@ -35,18 +35,15 @@ re_pb = re.compile('.*\.proto$')
 
 
 def set_compiler_dependent_cflags():
-   cflags = '-D_GNU_SOURCE -pipe -std=c99 -Wall -Wextra '
+   cflags = '-D_GNU_SOURCE -pipe -fomit-frame-pointer -std=c99 -O3 -Wall -Wextra '
    pipe = subprocess.Popen([env['CC'], '-v'], env=env['ENV'], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
    gcc_info = pipe.stderr.read();
    print gcc_info
    if 'armv7a' in gcc_info:
       cflags += ' -O3 -ftree-vectorize -ffast-math -fomit-frame-pointer -funroll-loops -march=armv7-a -mtune=cortex-a8 -mfpu=vfpv3-d16 -mfloat-abi=hard'
-
    if 'armv6' in gcc_info:
-	cflags += ' -O3 -ftree-vectorize -ffast-math -fomit-frame-pointer -funroll-loops -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard'
-
+	   cflags += ' -O3 -ftree-vectorize -ffast-math -fomit-frame-pointer -funroll-loops -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard'
    env['CFLAGS'] = cflags
-
 
 def collect_files(path, regex):
    flist = []
@@ -89,58 +86,49 @@ env['CPPPATH'] += ['.', 'shared', 'tools']
 env['LIBPATH'] = ['shared']
 
 
-# build scl:
+# SCL:
 scl_bindings_dir = 'scl/shared'
 scl_lib = env.Library('scl/shared/scl', collect_files(scl_bindings_dir, re_cc))
 append_inc_lib(scl_bindings_dir)
 
-# build shared:
+# Shared:
 shared_dir = 'shared/'
 shared_lib = env.Library(shared_dir + 'shared', collect_files(shared_dir, re_cc))
 shared_sh_lib = env.SharedLibrary(shared_dir + 'shared', collect_files(shared_dir, re_cc))
 append_inc_lib(shared_dir)
 
-# build opcd:
+# OPCD:
 opcd_pb_dir = 'opcd/shared/'
 opcd_pb_lib = make_proto_lib(opcd_pb_dir, 'opcd_pb')
 opcd_lib = env.Library('opcd/shared/opcd', collect_files('opcd', re_cc))
 Requires(opcd_lib, scl_lib + opcd_pb_lib)
 append_inc_lib('opcd/shared')
 
-# build powerman:
+# PowerMan:
 pm_pb_lib = make_proto_lib('powerman/shared/', 'powerman_pb')
-common_libs = scl_lib + shared_lib + opcd_lib + opcd_pb_lib
+common_libs = scl_lib + opcd_lib + opcd_pb_lib + shared_lib
 
-# build remote:
-remote_dir = 'remote/'
-remote_pb_dir = remote_dir + 'shared/'
-remote_src = collect_files(remote_dir + 'service', re_cc)
-remote_pb_lib = make_proto_lib(remote_pb_dir, 'remote_pb')
-remote_bin = env.Program(remote_dir + 'service/remote', remote_src, LIBS = ['m', 'opcd', 'opcd_pb', 'pthread', 'shared', 'scl', 'protobuf-c', 'remote_pb', 'yaml', 'zmq', 'glib-2.0'])
-Requires(remote_bin, common_libs + remote_pb_lib)
+# GPS Publisher:
+append_inc_lib('gpsp/service/nmealib')
+gpsp_dir = 'gpsp/'
+gpsp_pb_dir = gpsp_dir + 'shared/'
+gpsp_pb_lib = make_proto_lib(gpsp_pb_dir, 'gpsp_pb')
+append_inc_lib('gpsp/shared')
+gpsp_bin = env.Program('gpsp/service/gpsp', collect_files(gpsp_dir + 'service', re_cc), LIBS = common_libs + gpsp_pb_lib + ['m', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
 
-# build autopilot:
+# Autopilot:
 ap_dir = 'autopilot/'
 ap_pb_dir = ap_dir + 'shared/'
 ap_src = collect_files(ap_dir + 'service', re_cc)
 ap_pb_lib = make_proto_lib(ap_pb_dir, 'autopilot_pb')
-ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = ['m', 'msgpack', 'meschach', 'pthread', 'opcd', 'opcd_pb', 'shared', 'scl', 'powerman_pb', 'gps_pb', 'autopilot_pb', 'protobuf-c', 'yaml', 'zmq', 'glib-2.0'])
-Requires(ap_bin, common_libs + pm_pb_lib + ap_pb_lib)
+ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = common_libs + [pm_pb_lib, gpsp_pb_lib, ap_pb_lib] + ['m', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
 
-# build gps publisher:
-append_inc_lib('gps/shared')
-append_inc_lib('gps/service/nmealib')
-gps_dir = 'gps/'
-gps_pb_dir = gps_dir + 'shared/'
-gps_pb_lib = make_proto_lib(gps_pb_dir, 'gps_pb')
-gps_bin = env.Program('gps/service/gps', collect_files(gps_dir + 'service', re_cc), LIBS = ['m', 'pthread', 'opcd', 'opcd_pb', 'shared', 'scl', 'yaml', 'zmq', 'glib-2.0', 'gps_pb', 'protobuf-c'])
-Requires(gps_bin, common_libs + gps_pb_lib)
-
-# build display:
+# Display:
 display_src = map(lambda x: 'display/shared/' + x, ['pyssd1306.c', 'pyssd1306.i', 'ssd1306.c'])
 env.SharedLibrary('display/shared/_pyssd1306.so', display_src, LIBS = [shared_sh_lib])
 
-# build icarus:
-ic_dir = 'icarus/'
-ic_pb_dir = ic_dir + 'shared/'
-ic_pb_lib = make_proto_lib(ic_pb_dir, 'icarus_pb')
+# HLFM:
+hlfm_dir = 'hlfm/'
+hlfm_pb_dir = hlfm_dir + 'shared/'
+hlfm_pb_lib = make_proto_lib(hlfm_pb_dir, 'hlfm_pb')
+

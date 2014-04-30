@@ -28,8 +28,8 @@
 #define __ATT_THRUST_H__
 
 
-#include "../geometry/vec3.h"
 #include "../util/math/vec2.h"
+#include "../util/math/vec3.h"
 
 
 int att_thrust_calc(vec2_t *pr_angles, float *thrust, /* output: pitch/roll angles + thrust */

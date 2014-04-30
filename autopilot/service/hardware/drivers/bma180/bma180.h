@@ -34,7 +34,7 @@
 #include <util.h>
 
 #include <i2c/i2c.h>
-#include "../../../geometry/quat.h"
+#include "../../../util/math/quat.h"
 
 
 /* accelerometer range: */

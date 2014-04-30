@@ -32,7 +32,7 @@
 int drotek_marg2_init(drotek_marg2_t *marg2, i2c_bus_t *bus)
 {
    THROW_BEGIN();
-   THROW_ON_ERR(mpu6050_init(&marg2->mpu, bus, 0x69, MPU6050_DLPF_CFG_94_98Hz, MPU6050_FS_SEL_2000, MPU6050_AFS_SEL_8G));
+   THROW_ON_ERR(mpu6050_init(&marg2->mpu, bus, 0x69, MPU6050_DLPF_CFG_94_98Hz, MPU6050_FS_SEL_500, MPU6050_AFS_SEL_4G));
    THROW_ON_ERR(hmc5883_init(&marg2->hmc, bus));
    THROW_END();
 }
@@ -42,7 +42,7 @@ int drotek_marg2_read(marg_data_t *data, drotek_marg2_t *marg2)
 {
    THROW_BEGIN();
    THROW_ON_ERR(mpu6050_read(&marg2->mpu, &data->gyro, &data->acc, NULL));
-   THROW_ON_ERR(hmc5883_read_mag(data->mag.vec, &marg2->hmc));
+   THROW_ON_ERR(hmc5883_read_mag(&data->mag, &marg2->hmc));
    THROW_END();
 }
 

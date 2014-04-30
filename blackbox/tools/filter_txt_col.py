@@ -30,14 +30,14 @@ if __name__ == '__main__':
    from sys import stdin, argv
    extract = argv[1:]
    lines = stdin.readlines()
-   header = lines[0].split(' ')
+   header = lines[0][0:-1].split(' ')
    indices = []
    for name in extract:
       indices.append(header.index(name))
    print ' '.join(extract)
    for line in lines[1:]:
       array = []
-      line_array = line.split(' ')
+      line_array = line[0:-1].split(' ')
       for index in indices:
          array.append(line_array[index])
       print ' '.join(array)

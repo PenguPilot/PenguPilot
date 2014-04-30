@@ -42,18 +42,22 @@ static msgpack_sbuffer *msgpack_buf = NULL;
 static msgpack_packer *pk = NULL;
 
 
-char *blackbox_spec[25] = {
+char *blackbox_spec[BLACKBOX_ITEMS] =
+{
    "dt", /* time delta */
    "gyro_x", "gyro_y", "gyro_z", /* gyro */
    "acc_x", "acc_y", "acc_z", /* acc */
    "mag_x", "mag_y", "mag_z", /* mag */
-   "lat", "lon", /* gps */
+   "lat", "lon", "alt", /* gps */
    "gps_course", "gps_speed", /* gps */
    "ultra", "baro", /* ultra / baro */
    "voltage", /* voltage */
    "current", /* current */
    "rc_pitch", "rc_roll", "rc_yaw", "rc_gas", "rc_sw_l", "rc_sw_r", /* rc */
-   "sensor_status" /* sensors */
+   "sensor_status", /* sensors */
+   "n_err", "e_err", "u_err", /* 3d position error */
+   "n_spd_err", "e_spd_err", "u_spd_err", /* 3d speed error */
+   "mag_cal_x", "mag_cal_y", "mag_cal_z" /* calibrated mag vector */
 };
 
 
@@ -84,29 +88,40 @@ void blackbox_init(void)
    scl_copy_send_dynamic(blackbox_socket, msgpack_buf->data, msgpack_buf->size);
 }
 
-void blackbox_record(float dt,
-               marg_data_t *marg_data,
-               gps_data_t *gps_data,
-               float ultra,
-               float baro,
-               float voltage,
-               float current,
-               float channels[MAX_CHANNELS],
-               uint16_t sensor_status)
+
+void blackbox_record(const float dt, /* sensor inputs ... */
+               const marg_data_t *marg_data,
+               const gps_data_t *gps_data,
+               const float ultra,
+               const float baro,
+               const float voltage,
+               const float current,
+               const float channels[MAX_CHANNELS],
+               const uint16_t sensor_status,
+               const vec2_t *ne_pos_err, /* NEU position errors ... */
+               const float u_pos_err,
+               const vec2_t *ne_spd_err, /* NEU speed errors ... */
+               const float u_spd_err,
+               const vec3_t *mag_normal)
 {
    msgpack_sbuffer_clear(msgpack_buf);
    msgpack_pack_array(pk, ARRAY_SIZE(blackbox_spec));
    PACKF(dt);
-   PACKFV(marg_data->gyro.vec, 3);
-   PACKFV(marg_data->acc.vec, 3);
-   PACKFV(marg_data->mag.vec, 3);
-   PACKD(gps_data->lat); PACKD(gps_data->lon);
+   PACKFV(marg_data->gyro.ve, 3);
+   PACKFV(marg_data->acc.ve, 3);
+   PACKFV(marg_data->mag.ve, 3);
+   PACKD(gps_data->lat); PACKD(gps_data->lon); PACKF(gps_data->alt);
    PACKF(gps_data->course); PACKF(gps_data->speed);
    PACKF(ultra); PACKF(baro);
    PACKF(voltage);
    PACKF(current);
    PACKFV(channels, 6);
    PACKI(sensor_status);
+   PACKFV(ne_pos_err->ve, 2);
+   PACKF(u_pos_err);
+   PACKFV(ne_spd_err->ve, 2);
+   PACKF(u_spd_err);
+   PACKFV(mag_normal->ve, 3);
    scl_copy_send_dynamic(blackbox_socket, msgpack_buf->data, msgpack_buf->size);
 }
 

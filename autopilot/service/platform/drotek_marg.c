@@ -42,9 +42,9 @@ int drotek_marg_init(drotek_marg_t *marg, i2c_bus_t *bus)
 int drotek_marg_read(marg_data_t *data, drotek_marg_t *marg)
 {
    THROW_BEGIN();
-   THROW_ON_ERR(itg3200_read_gyro(data->gyro.vec, &marg->itg));
-   THROW_ON_ERR(bma180_read_acc(data->acc.vec, &marg->bma));
-   THROW_ON_ERR(hmc5883_read_mag(data->mag.vec, &marg->hmc));
+   THROW_ON_ERR(itg3200_read_gyro(data->gyro.ve, &marg->itg));
+   THROW_ON_ERR(bma180_read_acc(data->acc.ve, &marg->bma));
+   THROW_ON_ERR(hmc5883_read_mag(&data->mag, &marg->hmc));
    THROW_END();
 }
 

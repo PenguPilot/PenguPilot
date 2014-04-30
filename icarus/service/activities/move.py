@@ -29,7 +29,7 @@ from math import hypot
 from time import sleep
 from util.geomath import LinearInterpolation
 from numpy import array, zeros
-from core_pb2 import *
+from pilot_pb2 import *
 from activity import Activity, StabMixIn
 from util.geomath import gps_add_meters, gps_meters_offset
 #from util.srtm import SrtmElevMap
@@ -55,8 +55,8 @@ class MoveActivity(Activity, StabMixIn):
       arg = self.icarus.arg
       move_data = arg.move_data
       mon_data = self.icarus.mon_data
-      core = self.icarus.core
-      params = core.params
+      pilot = self.icarus.pilot
+      params = pilot.params
       fsm = self.icarus.fsm
       prev_setp_rel = self.icarus.setpoints
       start_gps = (params.start_lat, params.start_lon)
@@ -114,15 +114,15 @@ class MoveActivity(Activity, StabMixIn):
                coord[i] = prev_setp_rel[i]
       
       if arg.HasField('speed'):
-         core.set_ctrl_param(SPEED_XY, arg.speed)
-         #core.set_ctrl_param(SPEED_Z, self.Z_SPEED_MAX)
+         pilot.set_ctrl_param(SPEED_XY, arg.speed)
+         #pilot.set_ctrl_param(SPEED_Z, self.Z_SPEED_MAX)
       
 
       print 'coord output:', coord
       self.icarus.setpoints = coord
       # set position
-      core.set_ctrl_param(POS_E, coord[0])
-      core.set_ctrl_param(POS_N, coord[1])
+      pilot.set_ctrl_param(POS_E, coord[0])
+      pilot.set_ctrl_param(POS_N, coord[1])
       
       # did the altitude change?:
       if coord[2] != prev_setp_rel[2]:
@@ -134,9 +134,9 @@ class MoveActivity(Activity, StabMixIn):
          while target_dist > self.LAT_STAB_EPSILON:
             sleep(1)
             if self.canceled:
-               core.set_ctrl_param(POS_E, mon_data.e)
-               core.set_ctrl_param(POS_N, mon_data.n)
-               core.set_ctrl_param(POS_U, mon_data.u)
+               pilot.set_ctrl_param(POS_E, mon_data.e)
+               pilot.set_ctrl_param(POS_N, mon_data.n)
+               pilot.set_ctrl_param(POS_U, mon_data.u)
                self.stabilize()
                return # not going into hovering state
             z = z_interp(dist - target_dist)
@@ -144,11 +144,11 @@ class MoveActivity(Activity, StabMixIn):
             srtm_z = 1000.0 #_srtm_elev_map.lookup(lat, lon) - params.start_alt
             if z < srtm_alt + self.SRTM_SAFETY_ALT:
                z = srtm_alt + self.SRTM_SAFETY_ALT
-            core.set_ctrl_param(POS_Z, z)
+            pilot.set_ctrl_param(POS_Z, z)
       
       self.stabilize()
       if not self.canceled:
-         fsm.done()
+         fsm.handle('done')
 
 
    def _cancel(self):

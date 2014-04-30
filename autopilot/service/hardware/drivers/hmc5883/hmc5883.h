@@ -33,20 +33,23 @@
 #include <util.h>
 
 #include <i2c/i2c.h>
-#include "../../../geometry/quat.h"
+#include "../../../util/math/vec3.h"
 
 
 typedef struct
 {
    /* i2c device: */
    i2c_dev_t i2c_dev;
+   /* privated data: */
+   uint8_t gain;
+   vec3_t prev;
 }
 hmc5883_t;
 
 
 int hmc5883_init(hmc5883_t *dev, i2c_bus_t *bus);
 
-int hmc5883_read_mag(float mag[3], hmc5883_t *dev);
+int hmc5883_read_mag(vec3_t *mag, const hmc5883_t *dev);
 
 
 #endif /* __HMC5883_H__ */

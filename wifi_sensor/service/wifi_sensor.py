@@ -39,9 +39,11 @@ def main(name):
       pipe = Popen(['iwlist', 'wlan0', 'scan'], stdout = PIPE).stdout
       cells = parse_cells(pipe.readlines())
       for cell in cells:
-         pair = [cell['Address'], int(cell['Signal'][0:-3])]
+         pair = [cell['Address'] + '_' + cell['Name'], int(cell['Signal'][0:-3])]
+         print pair
          socket.send(dumps(pair))
-      sleep(1.0)
+      print 
+      sleep(0.5)
 
 daemonize('wifi_sensor', main)
 

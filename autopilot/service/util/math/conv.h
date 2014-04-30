@@ -32,6 +32,10 @@ float deg2rad(float x);
 
 float rad2deg(float x);
 
+float norm_angle_0_2pi(float a);
+ 
+float norm_angle_sym_pi(float a);
+
 
 #endif /* __CONV_H__ */
 

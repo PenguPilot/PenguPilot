@@ -58,21 +58,35 @@ void flight_logic_init(void)
 }
 
 
-void flight_logic_run(uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos)
+bool flight_logic_run(bool *hard_off,
+                      uint16_t sensor_status,
+                      bool flying,
+                      float channels[MAX_CHANNELS],
+                      float yaw,
+                      vec2_t *ne_gps_pos,
+                      float u_baro_pos,
+                      float u_ultra_pos,
+                      float f_max,
+                      float mass,
+                      float dt)
+
 {
+   bool motors_enabled = false;
    switch (flight_mode)
    {
       case MODE_MANUAL:
-         man_logic_run(sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos);
+         motors_enabled = man_logic_run(hard_off, sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos, f_max, mass, dt);
          break;
 
       case MODE_SAFE_AUTO:
-         auto_logic_run(0, sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos);
+         motors_enabled = auto_logic_run(hard_off, false, sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos);
          break;
 
       case MODE_FULL_AUTO:
-         auto_logic_run(1, sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos);
+         motors_enabled = auto_logic_run(hard_off, true, sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos);
          break;
+
    }
+   return motors_enabled;
 }
 
