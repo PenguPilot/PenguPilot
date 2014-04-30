@@ -25,15 +25,26 @@
  GNU General Public License for more details. """
 
 
+from Adafruit_ADS1x15 import ADS1x15
 
-class ADC:
+
+class ADS1x15_ADC:
+
+   def __init__(self, adc_id):
+      self.adc = ADS1x15(ic=0) # 0 -> ADS1015 # TODO: support more channels; so far, only voltage ADC is read
+      result = self.adc.startContinuousConversion(0, 6144)
+
+   def read(self):
+      return self.adc.getLastConversionResults()
+
+
+class TWL4030_MADC:
 
    def __init__(self, adc_id):
       self.path = '/sys/class/hwmon/hwmon0/device/in%d_input' % adc_id
 
    def read(self):
       return int(open(self.path).read())
-
 
 class GPIO_Bank:
 

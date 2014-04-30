@@ -37,8 +37,14 @@ re_pb = re.compile('.*\.proto$')
 def set_compiler_dependent_cflags():
    cflags = '-D_GNU_SOURCE -pipe -std=c99 -Wall -Wextra '
    pipe = subprocess.Popen([env['CC'], '-v'], env=env['ENV'], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-   if 'armv7a' in pipe.stderr.read():
+   gcc_info = pipe.stderr.read();
+   print gcc_info
+   if 'armv7a' in gcc_info:
       cflags += ' -O3 -ftree-vectorize -ffast-math -fomit-frame-pointer -funroll-loops -march=armv7-a -mtune=cortex-a8 -mfpu=vfpv3-d16 -mfloat-abi=hard'
+
+   if 'armv6' in gcc_info:
+	cflags += ' -O3 -ftree-vectorize -ffast-math -fomit-frame-pointer -funroll-loops -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard'
+
    env['CFLAGS'] = cflags
 
 
@@ -91,6 +97,7 @@ append_inc_lib(scl_bindings_dir)
 # build shared:
 shared_dir = 'shared/'
 shared_lib = env.Library(shared_dir + 'shared', collect_files(shared_dir, re_cc))
+shared_sh_lib = env.SharedLibrary(shared_dir + 'shared', collect_files(shared_dir, re_cc))
 append_inc_lib(shared_dir)
 
 # build opcd:
@@ -130,8 +137,8 @@ gps_bin = env.Program('gps/service/gps', collect_files(gps_dir + 'service', re_c
 Requires(gps_bin, common_libs + gps_pb_lib)
 
 # build display:
-display_src = map(lambda x: 'display/shared/' + x, ['pyssd1306.c', 'pyssd1306.i', 'i2c/i2c.c', 'ssd1306.c'])
-env.SharedLibrary('display/shared/_pyssd1306.so', display_src)
+display_src = map(lambda x: 'display/shared/' + x, ['pyssd1306.c', 'pyssd1306.i', 'ssd1306.c'])
+env.SharedLibrary('display/shared/_pyssd1306.so', display_src, LIBS = [shared_sh_lib])
 
 # build icarus:
 ic_dir = 'icarus/'

@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- MS5611 I2C Driver Implementation
+ FreeIMU V0.4 Driver Interface
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -24,58 +24,28 @@
  GNU General Public License for more details. */
 
 
-#ifndef __MS5611_H__
-#define __MS5611_H__
+
+#ifndef __FREEIMU_04_H__
+#define __FREEIMU_04_H__
 
 
-#include <stdint.h>
-
-#include <i2c/i2c.h>
-#include "../../../geometry/quat.h"
-
-
-
-/* over-sampling rates: */
-typedef enum
-{
-   MS5611_OSR256,
-   MS5611_OSR512,
-   MS5611_OSR1024,
-   MS5611_OSR2048,
-   MS5611_OSR4096
-}
-ms5611_osr_t;
+#include "../hardware/util/marg_data.h"
+#include "../hardware/drivers/mpu6050/mpu6050.h"
+#include "../hardware/drivers/hmc5883/hmc5883.h"
 
 
 typedef struct
 {
-   /* i2c device: */
-   i2c_dev_t i2c_dev;
-   
-   /* over-sampling rates: */
-   ms5611_osr_t p_osr;
-   ms5611_osr_t t_osr;
-
-   /* PROM data: */
-   uint16_t prom[8];
-
-   /* raw measurements: */
-   uint32_t raw_t; /* raw temperature */
-   uint32_t raw_p; /* raw pressure */
-
-   /* compensated values: */
-   double c_t; /* temperature */
-   double c_p; /* pressure */
-   double c_a; /* altitude */
+   mpu6050_t mpu;
+   hmc5883_t hmc;
 }
-ms5611_t;
+freeimu_04_t;
 
 
-int ms5611_init(ms5611_t *ms5611, i2c_bus_t *bus, ms5611_osr_t p_osr, ms5611_osr_t t_osr);
+int freeimu_04_init(freeimu_04_t *freeimu, i2c_bus_t *bus);
+
+int freeimu_04_read(marg_data_t *data, freeimu_04_t *freeimu);
 
 
-int ms5611_measure(ms5611_t *ms5611);
-
-
-#endif /* __MS5611_H__ */
+#endif /* __FREEIMU_04_H__ */
 

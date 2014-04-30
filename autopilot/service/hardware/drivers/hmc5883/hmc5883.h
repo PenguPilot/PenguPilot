@@ -32,7 +32,7 @@
 
 #include <util.h>
 
-#include "../../bus/i2c/i2c.h"
+#include <i2c/i2c.h>
 #include "../../../geometry/quat.h"
 
 

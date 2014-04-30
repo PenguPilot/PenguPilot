@@ -29,6 +29,7 @@
 #include <simple_thread.h>
 #include <threadsafe_types.h>
 
+#include <util.h>
 #include "i2cxl_reader.h"
 #include "i2cxl.h"
 

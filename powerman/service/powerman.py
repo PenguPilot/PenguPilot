@@ -30,6 +30,7 @@
  GNU General Public License for more details. """
 
 
+
 from time import sleep
 from threading import Thread, Timer
 from signal import pause
@@ -44,7 +45,7 @@ from power_pb2 import *
 from scl import generate_map
 from opcd_interface import OPCD_Interface
 from misc import daemonize, Hysteresis, user_data_dir
-from hardware import ADC, GPIO_Bank
+from hardware import *
 
 
 class PowerMan:
@@ -60,9 +61,9 @@ class PowerMan:
       self.ctrl_socket = map['ctrl']
       self.monitor_socket = map['mon']
       self.opcd = OPCD_Interface(map['opcd_ctrl'], 'powerman')
-      bus = SMBus(self.opcd.get('gpio_i2c_bus'))
-      self.gpio_mosfet = GPIO_Bank(bus, self.opcd.get('gpio_i2c_address'))
-      self.power_pin = self.opcd.get('gpio_power_pin')
+      #bus = SMBus(self.opcd.get('gpio_i2c_bus'))
+      #self.gpio_mosfet = GPIO_Bank(bus, self.opcd.get('gpio_i2c_address'))
+      #self.power_pin = self.opcd.get('gpio_power_pin')
       self.cells = self.opcd.get('battery_cells')
       self.low_cell_voltage = self.opcd.get('battery_low_cell_voltage')
       self.capacity = self.opcd.get('battery_capacity')
@@ -96,10 +97,12 @@ class PowerMan:
 
 
    def adc_reader(self):
-      voltage_adc = ADC(self.opcd.get('voltage_adc'))
-      current_adc = ADC(self.opcd.get('current_adc'))
-      voltage_lambda = eval(self.opcd.get('adc_2_voltage'))
-      current_lambda = eval(self.opcd.get('adc_2_current'))
+      adc_type = self.opcd.get('adc_type')
+      adcs = {'twl4030_madc': TWL4030_MADC, 'ads1x15': ADS1x15_ADC}
+      voltage_adc = adcs[adc_type](self.opcd.get(adc_type + '.voltage_channel'))
+      current_adc = adcs[adc_type](self.opcd.get(adc_type + '.current_channel'))
+      voltage_lambda = eval(self.opcd.get(adc_type + '.adc_to_voltage'))
+      current_lambda = eval(self.opcd.get(adc_type + '.adc_to_current'))
       self.current_integral = 0.0
       hysteresis = Hysteresis(self.opcd.get('low_voltage_hysteresis'))
       while True:
@@ -128,6 +131,7 @@ class PowerMan:
             state.current = self.current
             state.capacity = self.capacity
             state.consumed = self.current_integral
+
             remaining = self.capacity - self.current_integral
             if remaining < 0:
                remaining = 0
