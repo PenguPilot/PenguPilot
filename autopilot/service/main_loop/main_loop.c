@@ -27,6 +27,7 @@
 #include <syslog.h>
 #include <unistd.h>
 
+
 #include <opcd_interface.h>
 #include <util.h>
 #include <scl.h>
@@ -46,6 +47,7 @@
 #include "../platform/ac.h"
 #include "../platform/platform.h"
 #include "../platform/arcade_quad.h"
+#include "../platform/pi_quad.h"
 #include "../hardware/util/acc_mag_cal.h"
 #include "../hardware/util/calibration.h"
 #include "../hardware/util/gps_util.h"
@@ -135,10 +137,24 @@ void main_init(int argc, char *argv[])
    syslog(LOG_CRIT, "logger opened");
    
    LOG(LL_INFO, "initializing platform");
-   if (arcade_quad_init(&platform, override_hw) < 0)
+   
+   char *plat_name = NULL;;
+   opcd_param_get("platform", &plat_name);
+   if (strcmp(plat_name, "gumstix_quad") == 0)
    {
-      LOG(LL_ERROR, "could not initialize platform");
-      die();
+      if (arcade_quad_init(&platform, override_hw) < 0)
+      {
+         LOG(LL_ERROR, "could not initialize platform");
+         die();
+      }
+   }
+   else if (strcmp(plat_name, "pi_quad") == 0)
+   {
+      if (pi_quad_init(&platform, override_hw) < 0)
+      {
+         LOG(LL_ERROR, "could not initialize platform");
+         die();
+      }
    }
    acc_mag_cal_init();
  
@@ -203,6 +219,7 @@ void main_step(float dt,
                uint16_t sensor_status,
                bool override_hw)
 {
+   voltage = 16.0;
    blackbox_record(dt, marg_data, gps_data, ultra, baro, voltage, current, channels, sensor_status);
    if (calibrate)
    {

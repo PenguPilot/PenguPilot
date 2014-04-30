@@ -8,8 +8,8 @@
  |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
-  
- MS5611 I2C Driver Implementation
+ 
+ GPS Publisher and System Time Update Service
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -24,58 +24,12 @@
  GNU General Public License for more details. */
 
 
-#ifndef __MS5611_H__
-#define __MS5611_H__
+#ifndef __MAIN_SERIAL_H__
+#define __MAIN_SERIAL_H__
 
 
-#include <stdint.h>
-
-#include <i2c/i2c.h>
-#include "../../../geometry/quat.h"
+void _main_serial(int argc, char *argv[]);
 
 
-
-/* over-sampling rates: */
-typedef enum
-{
-   MS5611_OSR256,
-   MS5611_OSR512,
-   MS5611_OSR1024,
-   MS5611_OSR2048,
-   MS5611_OSR4096
-}
-ms5611_osr_t;
-
-
-typedef struct
-{
-   /* i2c device: */
-   i2c_dev_t i2c_dev;
-   
-   /* over-sampling rates: */
-   ms5611_osr_t p_osr;
-   ms5611_osr_t t_osr;
-
-   /* PROM data: */
-   uint16_t prom[8];
-
-   /* raw measurements: */
-   uint32_t raw_t; /* raw temperature */
-   uint32_t raw_p; /* raw pressure */
-
-   /* compensated values: */
-   double c_t; /* temperature */
-   double c_p; /* pressure */
-   double c_a; /* altitude */
-}
-ms5611_t;
-
-
-int ms5611_init(ms5611_t *ms5611, i2c_bus_t *bus, ms5611_osr_t p_osr, ms5611_osr_t t_osr);
-
-
-int ms5611_measure(ms5611_t *ms5611);
-
-
-#endif /* __MS5611_H__ */
+#endif /* __MAIN_SERIAL_H__ */
 

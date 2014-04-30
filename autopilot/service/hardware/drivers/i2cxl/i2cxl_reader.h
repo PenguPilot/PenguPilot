@@ -28,7 +28,7 @@
 #define __I2CXL_READER_H__
 
 
-#include "../../bus/i2c/i2c.h"
+#include <i2c/i2c.h>
 
 
 int i2cxl_reader_init(i2c_bus_t *bus);

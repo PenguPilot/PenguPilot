@@ -24,17 +24,18 @@
 # GNU General Public License for more details.
 
 
+platform: 'gumstix_quad' # or pi_quad, exynos_quad
+
 aircomm:
    id: 0
    psk: "This is the PenguPilot Standard Pre-Shared Key for NRF24L01+ Communication"
 
-
-sensors:
-   gps:
+gps:
+   gumstix_quad: 'serial'
+   pi_quad: 'i2c'
+   serial:
       serial_path: "/dev/ttyO2"
       serial_speed: 115200
-   remote:
-      serial_path: "/dev/ttyO0"
 
 powerman:
    beeper_enabled: False
@@ -47,10 +48,24 @@ powerman:
    low_voltage_hysteresis: 10.0 # battery needs to go below battery_low_cell_voltage for this time period in order to trigger a low power event
    battery_capacity: 6.6
    power_save_timeout: 60.0
-   voltage_adc: 7
-   current_adc: 2
-   adc_2_voltage: 'lambda x: (x + 27.0951) / 117.1319'
-   adc_2_current: 'lambda x: 0.0303 * (2500 - x) + 0.4'
+   
+   # select adc_type based on platform name:
+   gumstix_quad:
+      adc_type: 'twl4030_madc'
+   pi_quad:
+      adc_type: 'ads1x15'
+  
+   # select config based on adc_type:
+   twl4030_madc:
+      voltage_channel: 7
+      current_channel: 2
+      adc_to_voltage: 'lambda x: x'
+      adc_to_current: 'lambda x: 0.0303 * (2500 - x) + 0.4'
+   ads1x15:
+      voltage_channel: 0 # currently ignored
+      current_channel: 1 # currently ignored
+      adc_to_voltage: 'lambda x : x * 0.003 * 3.6045'
+      adc_to_current: 'lambda x : x'
 
 icarus:
    takeoff:
@@ -62,6 +77,12 @@ icarus:
 
 
 pilot:
+   # hardware-specific stuff:
+   gumstix_quad:
+      dsl_serial_port: "/dev/ttyO0"
+   pi_quad:
+      dsl_serial_port: "/dev/ttyAMA0"
+
    logger:
       level: 3
       details: 2
@@ -162,7 +183,4 @@ pilot:
       gps_noise: 0.1
       process_noise: 1.0e-6
 
-   sensors:
-      rc_dsl:
-         serial_port: "/dev/ttyO0"
 

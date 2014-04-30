@@ -32,7 +32,7 @@
 #include <util.h>
 
 #include "../../../geometry/quat.h"
-#include "../../bus/i2c/i2c.h"
+#include <i2c/i2c.h>
 
 
 /* Digital low pass filter (dlpf) settings
@@ -97,7 +97,7 @@ typedef struct
 mpu6050_t;
 
 
-int mpu6050_init(mpu6050_t *mpu, i2c_bus_t *bus, mpu6050_dlpf_cfg_t dlpf, mpu6050_fs_sel_t fs_sel, mpu6050_afs_sel_t afs_sel);
+int mpu6050_init(mpu6050_t *mpu, i2c_bus_t *bus, uint8_t addr, mpu6050_dlpf_cfg_t dlpf, mpu6050_fs_sel_t fs_sel, mpu6050_afs_sel_t afs_sel);
 
 /* read gyro, acc and temperature; parameters may be NULL */
 int mpu6050_read(mpu6050_t *mpu, vec3_t *gyro, vec3_t *acc, float *temperature);

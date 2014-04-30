@@ -58,5 +58,11 @@ void opcd_float_param_set(char *id, float val);
 void opcd_params_apply(char *prefix, opcd_param_t *params);
 
 
+/*
+ * write single parameter into data ptr (if it's a string, memory is allocated)
+ */
+void opcd_param_get(char *full_name, void *data);
+
+
 #endif /* __OPCD_INTERFACE_H__ */
 

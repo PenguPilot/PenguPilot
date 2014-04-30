@@ -29,7 +29,7 @@
 
 #include <stdint.h>
 
-#include "../../bus/i2c/i2c.h"
+#include <i2c/i2c.h>
 
 
 #define HOLGER_I2C_OFF    0

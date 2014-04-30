@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- ARCADE Quadrotor Platform
+ Raspberry Pi Quadrotor Platform
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
  Copyright (C) 2013 Alexander Barth, Ilmenau University of Technology
@@ -46,17 +46,17 @@
 #include "../hardware/drivers/rc_dsl/rc_dsl_reader.h"
 #include "../hardware/drivers/scl_power/scl_power.h"
 #include "../hardware/util/rc_channels.h"
-#include "drotek_marg2.h"
+#include "freeimu_04.h"
 #include "holger_quad.h"
 #include "pwm_quad.h"
 
 
-static i2c_bus_t i2c_3;
+static i2c_bus_t i2c_bus;
 static deadzone_t deadzone;
 static rc_channels_t rc_channels;
 static uint8_t channel_mapping[MAX_CHANNELS] =  {0, 1, 3, 2, 4, 5}; /* pitch: 0, roll: 1, yaw: 3, gas: 2, switch left: 4, switch right: 5 */
 static float channel_scale[MAX_CHANNELS] =  {1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
-static drotek_marg2_t marg;
+static freeimu_04_t marg;
 
 
 static int read_rc(float channels[MAX_CHANNELS])
@@ -79,11 +79,11 @@ static int read_rc(float channels[MAX_CHANNELS])
 
 static int read_marg(marg_data_t *marg_data)
 {
-   return drotek_marg2_read(marg_data, &marg);   
+   return freeimu_04_read(marg_data, &marg);   
 }
 
 
-int arcade_quad_init(platform_t *plat, int override_hw)
+int pi_quad_init(platform_t *plat, int override_hw)
 {
    ASSERT_ONCE();
    THROW_BEGIN();
@@ -115,8 +115,8 @@ int arcade_quad_init(platform_t *plat, int override_hw)
    {         /* gas     roll    pitch    yaw */
       /* m1 */ imtx1,   0.0f, -imtx2, -imtx3,
       /* m2 */ imtx1,   0.0f,  imtx2, -imtx3,
-      /* m3 */ imtx1, -imtx2,   0.0f,  imtx3,
-      /* m4 */ imtx1,  imtx2,   0.0f,  imtx3
+      /* m4 */ imtx1,  imtx2,   0.0f,  imtx3,
+      /* m3 */ imtx1, -imtx2,   0.0f,  imtx3
    };
 
    LOG(LL_INFO, "ic matrix [gas pitch roll yaw]");
@@ -142,19 +142,19 @@ int arcade_quad_init(platform_t *plat, int override_hw)
    if (!override_hw)
    {
       LOG(LL_INFO, "initializing i2c bus");
-      THROW_ON_ERR(i2c_bus_open(&i2c_3, "/dev/i2c-3"));
-      plat->priv = &i2c_3;
+      THROW_ON_ERR(i2c_bus_open(&i2c_bus, "/dev/i2c-1"));
+      plat->priv = &i2c_bus;
 
       LOG(LL_INFO, "initializing MARG sensor cluster");
-      THROW_ON_ERR(drotek_marg2_init(&marg, &i2c_3));
+      THROW_ON_ERR(freeimu_04_init(&marg, &i2c_bus));
       plat->read_marg = read_marg;
 
       LOG(LL_INFO, "initializing i2cxl sonar sensor");
-      THROW_ON_ERR(i2cxl_reader_init(&i2c_3));
+      THROW_ON_ERR(i2cxl_reader_init(&i2c_bus));
       plat->read_ultra = i2cxl_reader_get_alt;
       
       LOG(LL_INFO, "initializing ms5611 barometric pressure sensor");
-      THROW_ON_ERR(ms5611_reader_init(&i2c_3));
+      THROW_ON_ERR(ms5611_reader_init(&i2c_bus));
       plat->read_baro = ms5611_reader_get_alt;
    
       /* initialize motors: */

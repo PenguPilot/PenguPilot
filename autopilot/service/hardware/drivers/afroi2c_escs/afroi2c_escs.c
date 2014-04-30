@@ -9,9 +9,10 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- MS5611 I2C Driver Implementation
+ AfroI2C I2C-PWM Converter Implementation
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Martin Turetschek, Ilmenau University of Technology
+ Copyright (C) 2014 Kevin Ernst, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,58 +25,43 @@
  GNU General Public License for more details. */
 
 
-#ifndef __MS5611_H__
-#define __MS5611_H__
-
-
+#include <util.h>
 #include <stdint.h>
 
-#include <i2c/i2c.h>
-#include "../../../geometry/quat.h"
+#include "afroi2c_escs.h"
 
 
+#define AFROI2C_MAX_ESCS 8
+#define AFROI2C_ADDRESS	0x29
+#define AFROI2C_MIN 0x00
+#define AFROI2C_MAX 0xFF
 
-/* over-sampling rates: */
-typedef enum
+
+static size_t _n_escs;
+static i2c_dev_t device;
+
+
+void afroi2c_init(i2c_bus_t *bus, size_t n_escs)
 {
-   MS5611_OSR256,
-   MS5611_OSR512,
-   MS5611_OSR1024,
-   MS5611_OSR2048,
-   MS5611_OSR4096
+    ASSERT_ONCE();
+    ASSERT_TRUE(n_escs > 0 && n_escs <= AFROI2C_MAX_ESCS);
+    _n_escs = n_escs;
+    i2c_dev_init(&device, bus, AFROI2C_ADDRESS);
 }
-ms5611_osr_t;
 
 
-typedef struct
+int afroi2c_write(float *setpoints)
 {
-   /* i2c device: */
-   i2c_dev_t i2c_dev;
-   
-   /* over-sampling rates: */
-   ms5611_osr_t p_osr;
-   ms5611_osr_t t_osr;
-
-   /* PROM data: */
-   uint16_t prom[8];
-
-   /* raw measurements: */
-   uint32_t raw_t; /* raw temperature */
-   uint32_t raw_p; /* raw pressure */
-
-   /* compensated values: */
-   double c_t; /* temperature */
-   double c_p; /* pressure */
-   double c_a; /* altitude */
+    uint8_t data[AFROI2C_MAX_ESCS];    
+    THROW_BEGIN();
+    FOR_N(i, _n_escs)
+    {
+        uint16_t val = setpoints[i] * AFROI2C_MAX;
+        if (val > AFROI2C_MAX)
+           val = AFROI2C_MAX;
+        data[i] = (uint8_t)val;
+    }
+    THROW_ON_ERR(i2c_xfer(&device, _n_escs, data, 0, NULL));
+    THROW_END();
 }
-ms5611_t;
-
-
-int ms5611_init(ms5611_t *ms5611, i2c_bus_t *bus, ms5611_osr_t p_osr, ms5611_osr_t t_osr);
-
-
-int ms5611_measure(ms5611_t *ms5611);
-
-
-#endif /* __MS5611_H__ */
 

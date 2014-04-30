@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- MS5611 I2C Driver Implementation
+ FreeIMU V0.4 Driver Implementation
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -24,58 +24,26 @@
  GNU General Public License for more details. */
 
 
-#ifndef __MS5611_H__
-#define __MS5611_H__
+#include <util.h>
+
+#include "freeimu_04.h"
 
 
-#include <stdint.h>
-
-#include <i2c/i2c.h>
-#include "../../../geometry/quat.h"
-
-
-
-/* over-sampling rates: */
-typedef enum
+int freeimu_04_init(freeimu_04_t *freeimu, i2c_bus_t *bus)
 {
-   MS5611_OSR256,
-   MS5611_OSR512,
-   MS5611_OSR1024,
-   MS5611_OSR2048,
-   MS5611_OSR4096
+   THROW_BEGIN();
+   THROW_ON_ERR(mpu6050_init(&freeimu->mpu, bus, 0x68, MPU6050_DLPF_CFG_94_98Hz, MPU6050_FS_SEL_2000, MPU6050_AFS_SEL_8G));
+   THROW_ON_ERR(hmc5883_init(&freeimu->hmc, bus));
+   THROW_END();
 }
-ms5611_osr_t;
 
 
-typedef struct
+int freeimu_04_read(marg_data_t *data, freeimu_04_t *freeimu)
 {
-   /* i2c device: */
-   i2c_dev_t i2c_dev;
-   
-   /* over-sampling rates: */
-   ms5611_osr_t p_osr;
-   ms5611_osr_t t_osr;
-
-   /* PROM data: */
-   uint16_t prom[8];
-
-   /* raw measurements: */
-   uint32_t raw_t; /* raw temperature */
-   uint32_t raw_p; /* raw pressure */
-
-   /* compensated values: */
-   double c_t; /* temperature */
-   double c_p; /* pressure */
-   double c_a; /* altitude */
+   THROW_BEGIN();
+   THROW_ON_ERR(mpu6050_read(&freeimu->mpu, &data->gyro, &data->acc, NULL));
+   THROW_ON_ERR(hmc5883_read_mag(data->mag.vec, &freeimu->hmc));
+   THROW_END();
 }
-ms5611_t;
 
-
-int ms5611_init(ms5611_t *ms5611, i2c_bus_t *bus, ms5611_osr_t p_osr, ms5611_osr_t t_osr);
-
-
-int ms5611_measure(ms5611_t *ms5611);
-
-
-#endif /* __MS5611_H__ */
 

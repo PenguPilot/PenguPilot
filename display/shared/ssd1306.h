@@ -28,8 +28,7 @@
 #ifndef __SSD1306_H__
 #define __SSD1306_H__
 
-#include "i2c/i2c.h"
-
+#include <i2c/i2c.h>
 #include <stdint.h>
 
 

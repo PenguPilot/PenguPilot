@@ -221,6 +221,73 @@ void opcd_params_apply(char *_prefix, opcd_param_t *params)
 }
 
 
+static void init_param_simple(Value *val, void *data)
+{
+   var_type_t type = get_data_type(val);
+   
+   /* copy initial data: */
+   switch (type)
+   {
+      case TYPE_STR:
+      {
+         /* NOTE: strings are not updated online */
+         char *mem = malloc(strlen(val->str_val) + 1);
+         strcpy(mem, val->str_val);
+         *(char **)data = mem;
+         break;
+      }
+      case TYPE_INT:
+      {
+         *(int *)data = val->int_val;
+         break;
+      }
+      case TYPE_FLOAT:
+      {
+         *(float *)data = val->dbl_val;
+         break;
+      }
+      case TYPE_BOOL:
+      {
+         *(int *)data = val->bool_val;
+         break;
+      }
+   }
+}
+
+
+void opcd_param_get(char *full_name, void *data)
+{
+   /* build and send request: */
+   CtrlReq req = CTRL_REQ__INIT;
+   req.type = CTRL_REQ__TYPE__GET;
+   req.id = full_name;
+   SCL_PACK_AND_SEND_DYNAMIC(ctrl_socket, ctrl_req, req);
+
+   /* receive and parse reply: */
+   CtrlRep *rep;
+   SCL_RECV_AND_UNPACK_DYNAMIC(rep, ctrl_socket, ctrl_rep);
+   if (rep != NULL)
+   {
+      if (rep->status == CTRL_REP__STATUS__OK)
+      {
+         /* NOTE: hash table takes care of full_id memory */
+         init_param_simple(rep->pairs[0]->val, data);
+      }
+      else
+      {
+         fprintf(stderr, "libOPCD: could not find parameter: %s\n", req.id);   
+         exit(EXIT_FAILURE);
+      }
+      SCL_FREE(ctrl_rep, rep);
+   }
+   else
+   {
+      fprintf(stderr, "libOPCD: could not communicate with opcd\n");
+      exit(EXIT_FAILURE);
+   }
+}
+
+
 void opcd_float_param_set(char *id, float val)
 {
    /* build and send request: */
