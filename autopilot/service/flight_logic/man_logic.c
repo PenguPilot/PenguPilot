@@ -70,6 +70,7 @@ static bool vert_pos_locked = false;
 static bool horiz_pos_locked = true;
 static int rc_inval_count = 0;
 static float yaw_pos_sp = 0.0f;
+static float pos = -5.0;
 
 
 void man_logic_init(void)
@@ -156,27 +157,12 @@ static float stick_dz(float g, float d)
 static void set_vertical_spd_or_pos(float gas_stick, float baro_u_pos, float ultra_u_pos)
 {
    float dz = tsfloat_get(&gas_deadzone);
-   if (1) //fabs(gas_stick) > dz || ultra_u_pos < 0.4)
-   {
-      float vmax = tsfloat_get(&vert_speed_max);
-      cm_u_set_spd(stick_dz(gas_stick, dz) * vmax);
-      vert_pos_locked = false;
-   }
-   else if (!vert_pos_locked)
-   {
-      u_ctrl_reset();
-      vert_pos_locked = true;
-      if (0) //ultra_u_pos < 6.5)
-      {
-         LOG(LL_INFO, "vertical position lock at ultra pos: %fm", ultra_u_pos);
-         cm_u_set_ultra_pos(ultra_u_pos);
-      }
-      else
-      {
-         LOG(LL_INFO, "vertical position lock at baro pos: %fm", baro_u_pos);
-         cm_u_set_baro_pos(baro_u_pos);
-      }
-   }
+   float vmax = tsfloat_get(&vert_speed_max);
+   float inc = stick_dz(gas_stick, dz) * vmax * 0.00333333;
+   if (!(pos - baro_u_pos < -5.0f && inc < 0.0f))
+      pos += stick_dz(gas_stick, dz) * vmax * 0.00333333;
+   cm_u_set_baro_pos(pos);
+   EVERY_N_TIMES(100, LOG(LL_INFO, "u_pos_sp: %f, u_pos: %f", pos, baro_u_pos));
 }
 
 
@@ -299,16 +285,15 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
    }
    handle_mode_update(man_mode);
    
-   /* standard mode is yaw speed */
-   cm_yaw_set_spd(stick_dz(yaw_stick, 0.075) * deg2rad(tsfloat_get(&yaw_speed_max)));
 
    if (ultra_u_pos < 0.3)
    {
-      /* reset yaw setpoint if we are too low 
-       * and fall back to yaw speed control: */
+      /* reset yaw setpoint if we are too low: */
       yaw_pos_sp = yaw;
+      /* control only yaw speed */
+      cm_yaw_set_spd(stick_dz(yaw_stick, 0.075) * deg2rad(tsfloat_get(&yaw_speed_max)));
    }
-   else if (man_mode == MAN_RELAXED || man_mode == MAN_NOVICE)
+   else
    {
       /* if the mode request it and we are flying high enough,
        * allow fixed yaw control: */
@@ -330,7 +315,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       {
          set_att_angles(pitch, roll);
          cm_u_set_acc(tsfloat_get(&gas_acc_max) * (gas_stick - 0.5));
-         //set_vertical_spd_or_pos(gas_stick - 0.5, baro_u_pos, ultra_u_pos);
+         set_vertical_spd_or_pos(gas_stick - 0.5, baro_u_pos, ultra_u_pos);
          break;
       }
 
