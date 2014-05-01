@@ -9,11 +9,10 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Madgwick AHRS Algorithm Interface
- See: http://www.x-io.co.uk/open-source-imu-and-ahrs-algorithms
+ Angle Kalman Filter
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
- Copyright (C) 2014 SOH Madgwick, X-IO Technologies
+ based on: http://blog.tkjelectronics.dk/2012/09/a-practical-approach-to-kalman-filter-and-how-to-implement-it/
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -26,44 +25,31 @@
  GNU General Public License for more details. */
 
 
-#ifndef __AHRS_H__
-#define __AHRS_H__
-
-
-#include "../hardware/util/marg_data.h"
-#include "../util/math/quat.h"
-#include "../util/math/adams5.h"
-
-
-typedef enum
-{
-   AHRS_ACC_MAG,
-   AHRS_ACC
-}
-ahrs_type_t;
+#ifndef __ANGLE_KALMAN_H__
+#define __ANGLE_KALMAN_H__
 
 
 typedef struct
 {
-   real_t beta; /* 2 * beta (Kp) */
-   real_t beta_step;
-   real_t beta_end;
-   ahrs_type_t type; /* AHRS_ACC_MAG or AHRS_ACC */
-   quat_t quat; /* quaternion of sensor frame relative to auxiliary frame */
-   adams5_t adams5;
+   float Q_angle; // Process noise variance for the accelerometer
+   float Q_bias; // Process noise variance for the gyro bias
+   float R_measure; // Measurement noise variance - this is actually the variance of the measurement noise
+   float angle; // The angle calculated by the Kalman filter - part of the 2x1 state vector
+   float bias; // The gyro bias calculated by the Kalman filter - part of the 2x1 state vector
+   float rate; // Unbiased rate calculated from the rate and the calculated bias - you have to call getAngle to update the rate
+   float P[2][2]; // Error covariance matrix - This is a 2x2 matrix
+   float K[2]; // Kalman gain - This is a 2x1 vector
+   float y; // Angle difference
+   float S; // Estimate error
 }
-ahrs_t;
+angle_kalman_t;
 
 
-void ahrs_init(ahrs_t *ahrs, ahrs_type_t type, real_t beta_start, real_t beta_step, real_t beta_end);
-
-/*
- * returns -1 if the ahrs is not ready
- *          1 if the ahrs became ready
- *          0 on normal operation
- */
-int ahrs_update(ahrs_t *ahrs, const marg_data_t *marg_data, const real_t dt);
+void angle_kalman_init(angle_kalman_t *kalman);
 
 
-#endif /* __AHRS_H__ */
+float angle_kalman_run(angle_kalman_t *kalman, const float newRate, const float newAngle, const float dt);
+
+
+#endif /* __ANGLE_KALMAN_H__ */
 
