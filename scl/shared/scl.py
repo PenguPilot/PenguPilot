@@ -10,7 +10,7 @@
  |__________________________________|
 
  SCL Python interface
- converts system specification into component gate specification,
+ converts system specification into component socket specification,
  enriched with the corresponding zeromq socket-pair definitions
 
  REQ <-> REP: 1 shared link
@@ -75,11 +75,10 @@ def generate_map(component_name):
    context = zmq.Context()
    socket_map = {}
    for entry in zmq_spec[component_name]:
-      gate_name = entry['gate_name']
+      socket_name = entry['socket_name']
       socket_type = entry['zmq_socket_type']
       socket_path = entry['zmq_socket_path']
       socket = context.socket(socket_type)
-      
       if socket_type in [zmq.SUB, zmq.REQ]:
          if socket_type == zmq.SUB:
             socket.setsockopt(zmq.SUBSCRIBE, "")
@@ -88,7 +87,7 @@ def generate_map(component_name):
          socket.bind(socket_path)
       else:
          raise ZSEx("unknown socket type: %d" % socket_type)
-      socket_map[gate_name] = socket
+      socket_map[socket_name] = socket
 
    return socket_map
 

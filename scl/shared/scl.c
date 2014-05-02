@@ -120,7 +120,7 @@ int scl_init(char *comp_name)
          {
             yaml_node_t *list_node = yaml_document_get_node(&document, *j);
             assert(list_node->type == YAML_MAPPING_NODE);
-            char *gate_name = NULL;
+            char *socket_name = NULL;
             char *ipc_path = NULL;
             int socket_type = -1;
             for (yaml_node_pair_t *k = list_node->data.mapping.pairs.start;
@@ -129,10 +129,10 @@ int scl_init(char *comp_name)
             {
                char *key_name = (char *)yaml_document_get_node(&document, k->key)->data.scalar.value;
                char *val_name = (char *)yaml_document_get_node(&document, k->value)->data.scalar.value;
-               if (strcmp(key_name, "gate_name") == 0)
+               if (strcmp(key_name, "socket_name") == 0)
                {
-                  assert(gate_name == NULL);
-                  gate_name = val_name;
+                  assert(socket_name == NULL);
+                  socket_name = val_name;
                }
                else if (strcmp(key_name, "zmq_socket_path") == 0)
                {
@@ -146,7 +146,7 @@ int scl_init(char *comp_name)
                   socket_type = atoi(val_name);
                }
             }
-            add_socket(gate_name, ipc_path, socket_type);
+            add_socket(socket_name, ipc_path, socket_type);
          }
       }
    }
@@ -168,9 +168,9 @@ void *scl_get_context(void)
 }
 
 
-void *scl_get_socket(char *gate)
+void *scl_get_socket(char *socket)
 {
-   return g_hash_table_lookup(params_ht, gate);
+   return g_hash_table_lookup(params_ht, socket);
 }
 
 
