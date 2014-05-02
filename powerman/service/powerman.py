@@ -69,10 +69,10 @@ def main(name):
       if remaining < 0:
          remaining = 0
       critical = critical
-      state = [voltage,       # 0 [V]
-               current,       # 1 [A]
-               remaining,     # 2 [Ah]
-               critical] # 3 [Bool]
+      state = [voltage,   # 0 [V]
+               current,   # 1 [A]
+               remaining, # 2 [Ah]
+               critical]  # 3 [Bool]
       powerman_socket.send(dumps(state))
 
 

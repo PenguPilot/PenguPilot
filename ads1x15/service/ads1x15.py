@@ -11,8 +11,10 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- TWL4030 Power Publisher Service
+ ADS1x15 Power Publisher Service
 
+ Copyright (C) 2014 Martin Turetschek, Ilmenau University of Technology
+ Copyright (C) 2014 Kevin Ernst, Ilmenau University of Technology
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
@@ -31,32 +33,34 @@ from scl import generate_map
 from opcd_interface import OPCD_Interface
 from misc import daemonize
 from time import sleep
+from Adafruit_ADS1x15 import ADS1x15
 
 
-class TWL4030_MADC:
+class ADS1x15_ADC:
 
    def __init__(self, adc_id):
-      self.path = '/sys/class/hwmon/hwmon0/device/in%d_input' % adc_id
+      self.adc = ADS1x15(ic = 0)
+      result = self.adc.startContinuousConversion(0, 6144)
 
    def read(self):
-      return int(open(self.path).read())
+      return self.adc.getLastConversionResults()
 
 
 def main(name):
    map = generate_map(name)
    socket = map['power']
-   opcd = OPCD_Interface(map['opcd_ctrl'], 'gumstix_quad')
-   voltage_adc = TWL4030_MADC(opcd.get('voltage_channel'))
-   current_adc = TWL4030_MADC(opcd.get('current_channel'))
+   opcd = OPCD_Interface(map['opcd_ctrl'], 'pi_quad')
+   voltage_adc = ADS1x15_ADC(opcd.get('voltage_channel'))
+   #current_adc = ADS1x15_ADC(opcd.get('current_channel'))
    voltage_lambda = eval(opcd.get('adc_to_voltage'))
-   current_lambda = eval(opcd.get('adc_to_current'))
+   #current_lambda = eval(opcd.get('adc_to_current'))
    while True:
       sleep(0.2)
       voltage = voltage_lambda(voltage_adc.read())  
-      current = current_lambda(current_adc.read())
+      #current = current_lambda(current_adc.read())
       state = [voltage,  # 0 [V]
-               current]  # 1 [A]
+               0.4]      # 1 [A]
       socket.send(dumps(state))
 
-daemonize('twl4030_madc', main)
+daemonize('ads1x15_adc', main)
 
