@@ -83,21 +83,12 @@ static double convert(double val)
 }
 
 
-void _main_serial(int argc, char *argv[])
+void main_serial(void)
 {
-   (void)argc;
-   (void)argv;
-   
-   if (scl_init("gpsp") != 0)
-   {
-      syslog(LOG_CRIT, "could not init scl module");
-      exit(EXIT_FAILURE);
-   }
-
-   gps_socket = scl_get_socket("data");
+   gps_socket = scl_get_socket("gps");
    if (gps_socket == NULL)
    {
-      syslog(LOG_CRIT, "could not get scl gate");   
+      syslog(LOG_CRIT, "could not get gps socket");   
       exit(EXIT_FAILURE);
    }
    int64_t hwm = 1;

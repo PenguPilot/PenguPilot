@@ -30,7 +30,7 @@ def main(name):
    map = generate_map(name)
    gps_reader = GPS_Reader(map['gps'])
    gps_reader.start()
-   wifi_socket = map['wifi']
+   wifi_socket = map['networks']
    f = file("/tmp/wifi.log", "w")
    while True:
       try:

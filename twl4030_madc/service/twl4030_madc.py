@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
   ___________________________________________________
  |  _____                       _____ _ _       _    |
@@ -10,7 +11,11 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Powerman Interface
+ TWL4030 Power Publisher Service
+ - monitors system power
+ - estimates battery state of charge (SOC)
+ - predicts remaining battery lifetime
+ - manages main power and lights
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -25,38 +30,37 @@
  GNU General Public License for more details. """
 
 
-from power_pb2 import *
-from msgpack import loads
+from msgpack import dumps
+from scl import generate_map
+from opcd_interface import OPCD_Interface
+from misc import daemonize
+from time import sleep
 
 
-class PowerException(Exception):
-   pass
+class TWL4030_MADC:
 
-
-class PowerMan:
-   
-   def __init__(self, ctrl_socket, mon_socket):
-      self.ctrl_socket = ctrl_socket
-      self.mon_socket = mon_socket
-
-   def _exec(self, cmd):
-      req = PowerReq()
-      req.cmd = cmd
-      self.ctrl_socket.send(req.SerializeToString())
-      rep = PowerRep()
-      rep.ParseFromString(self.ctrl_socket.recv())
-      if rep.status != OK:
-         if rep.status == E_SYNTAX:
-            print 'received reply garbage'
-         else:
-            raise PowerException
-
-   def stand_power(self):
-      self._exec(STAND_POWER)
-
-   def flight_power(self):
-      self._exec(FLIGHT_POWER)
+   def __init__(self, adc_id):
+      self.path = '/sys/class/hwmon/hwmon0/device/in%d_input' % adc_id
 
    def read(self):
-      return loads(self.mon_socket.recv())
+      return int(open(self.path).read())
+
+
+def main(name):
+   map = generate_map(name)
+   socket = map['power']
+   opcd = OPCD_Interface(map['opcd_ctrl'], 'gumstix_quad')
+   voltage_adc = TWL4030_MADC(opcd.get('voltage_channel'))
+   current_adc = TWL4030_MADC(opcd.get('current_channel'))
+   voltage_lambda = eval(opcd.get('adc_to_voltage'))
+   current_lambda = eval(opcd.get('adc_to_current'))
+   while True:
+      sleep(0.2)
+      voltage = voltage_lambda(voltage_adc.read())  
+      current = current_lambda(current_adc.read())
+      state = [voltage,  # 0 [V]
+               current]  # 1 [A]
+      socket.send(dumps(state))
+
+daemonize('twl4030_madc', main)
 

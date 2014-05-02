@@ -42,6 +42,12 @@
   sockets:
    - gps: sub
 
+
+- name: twl4030_madc
+  sockets:
+   - power: pub
+   - opcd_ctrl: req
+
 - name: console_logger
   sockets:
    - ap_log: sub
@@ -53,30 +59,29 @@
 
 - name: ferry_ctrl
   sockets:
-   - state: sub
-   - ctrl: req
+   - hlfm_state: sub
+   - hlfm_ctrl: req
 
-- name: icarus
+- name: hlfm # high-level flight manager
   sockets:
    - mon: sub
-   - state: pub
-   - pilot: req
-   - ctrl: rep
-   - power_ctrl: req
-   - power_mon: sub
+   - hlfm_state: pub
+   - pilot_ctrl: req
+   - hlfm_ctrl: rep
+   - powerman: sub
 
 - name: wifi_sensor
   sockets:
-   - wifi: pub
+   - networks: pub
 
 - name: blackbox
   sockets:
-   - ap_blackbox: sub
+   - blackbox: sub
 
 - name: autopilot
   sockets:
    - ap_log: pub        # logs useful human-readable data at different verbosity levels
-   - ap_blackbox: pub   # publishes data produced in every step of the main loop
+   - blackbox: pub   # publishes data produced in every step of the main loop
    - gps: sub        # subscribes to GPS data provider
    - decl: sub       # magnetic declination
    - remote: sub         # experimental remote control input
@@ -109,8 +114,8 @@
 - name: powerman
   sockets:
    - powerman_ctrl: rep
-   - powerman_in: sub
-   - powerman_out: pub
+   - power: sub
+   - powerman: pub
    - opcd_ctrl: req
 
 - name: opcd
@@ -132,12 +137,12 @@
   sockets:
    - motors_spinning: sub
    - gps: sub
-   - power: sub
+   - powerman: sub
 
 - name: heartbeat
   sockets:
    - gps: sub
-   - power: sub
+   - powerman: sub
 
 - name: aircomm_app
   sockets:
@@ -146,6 +151,6 @@
 
 - name: wifi_loc
   sockets:
-   - wifi: sub
+   - networks: sub
    - gps: sub
 

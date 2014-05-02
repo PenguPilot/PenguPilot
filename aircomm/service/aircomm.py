@@ -92,8 +92,8 @@ def main(name):
    crypt.init(key)
    mhist = MessageHistory(60)
 
-   out_socket = sm['out']
-   in_socket = sm['in']
+   out_socket = sm['aircomm_out']
+   in_socket = sm['aircomm_in']
 
    aci = Interface('/dev/ttyACM0')
    acr = ACIReader(aci, out_socket, mhist)

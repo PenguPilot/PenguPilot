@@ -47,6 +47,10 @@ autopilot:
   binary: 'autopilot/service/autopilot'
   depends: [opcd, gpsp, powerman]
 
+twl4030_madc:
+  binary: 'twl4030_madc/service/twl4030_madc.py'
+  depends: [opcd]
+
 display:
   binary: 'display/service/display.py'
   depends: [gpsp, powerman]

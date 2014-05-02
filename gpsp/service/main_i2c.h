@@ -28,7 +28,7 @@
 #define __MAIN_I2C_H__
 
 
-void _main_i2c(int argc, char *argv[]);
+void main_i2c(void);
 
 
 #endif /* __MAIN_I2C_H__ */

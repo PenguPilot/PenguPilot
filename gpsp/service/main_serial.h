@@ -28,7 +28,7 @@
 #define __MAIN_SERIAL_H__
 
 
-void _main_serial(int argc, char *argv[]);
+void main_serial(void);
 
 
 #endif /* __MAIN_SERIAL_H__ */

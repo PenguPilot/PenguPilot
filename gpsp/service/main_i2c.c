@@ -103,11 +103,8 @@ static double convert(double val)
 }
 
 
-void _main_i2c(int argc, char *argv[])
+void main_i2c(void)
 {
-   (void)argc;
-   (void)argv;
-
    i2c_bus_t bus;
    i2c_dev_t device;
 

@@ -88,7 +88,7 @@ def cpuavg():
 
 
 def pmreader():
-   s = socket_map['power']
+   s = socket_map['powerman']
    global spinning, voltage, estimate, critical
    critical = False
    voltage = None
