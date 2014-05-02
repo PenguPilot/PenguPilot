@@ -10,7 +10,7 @@
  |__________________________________|
 
  SCL Specification Generator
- converts system specification into component gate specification,
+ converts system specification into component socket specification,
  enriched with the corresponding zeromq socket-pair definitions
 
  REQ <-> REP: 1 shared link
@@ -61,25 +61,21 @@ try:
    socket_type_map = {'sub': zmq.SUB, 'pub': zmq.PUB, 'req': zmq.REQ, 'rep': zmq.REP}
    # regex definitions:
    ident_re = Regex('^[a-zA-Z_][a-zA-Z_0-9]*$') # identifier
-   comp_gate_re = Regex('^[a-zA-Z_][a-zA-Z_0-9]*[.][a-zA-Z_][a-zA-Z_0-9]*$') # component.gate (2 identifiers)
+   comp_socket_re = Regex('^[a-zA-Z_][a-zA-Z_0-9]*[.][a-zA-Z_][a-zA-Z_0-9]*$') # component.socket (2 identifiers)
 
    # parse command line arguments:
    args = parse_args()
 
    # load yaml file from stdin:
-   data = yaml.load(sys.stdin)
-   if not isinstance(data, dict):
-      raise AssertionError('top level type of config file must be dict, got: %s' % data.__class__)
-   if len(data) != 2:
-      raise AssertionError('top level dict must contain 2 entries, got: %d' % len(data))
+   components = yaml.load(sys.stdin)
+   if not isinstance(components, list):
+      raise AssertionError('top level type of config file must be list, got: %s' % data.__class__)
 
-   # comp_map maps (comp, gate) tuples to gate_type
+   # comp_map maps (comp, socket) tuples to socket_type
    comp_map = {}
-   comp_count = 1
-   expected_keys = set(['components', 'connections'])
-   if set(data.keys()) != expected_keys:
-      raise AssertionError('top level dict must contain keys: %s' % expected_keys)
-   components = data['components']
+   socket_map = {}
+   comp_count = 0
+   socket_id = 0
    if not isinstance(components, list):
       raise AssertionError('components must be a list, got: %s' % components.__class__)
    if len(components) == 0:
@@ -94,104 +90,43 @@ try:
       if not ident_re.matching(comp_name):
          raise AssertionError("component %d's name field did not match regex: %s" % (comp_count, ident_re.re_str))
       try:
-         comp_gates = comp['gates']
+         sockets = comp['sockets']
       except:
-         raise AssertionError('component %s (%d) must contain a gates field' % (comp_name, comp_count))
-      if not isinstance(comp_gates, list):
-         raise AssertionError("gate structure of component %s (%d) must be a list, got: %s" % (comp_name, comp_count, comp.__class__))
-      if len(comp_gates) == 0:
-         raise AssertionError("gate list of component %s (%d) must not be empty" % (comp_name, comp_count))
-      gate_count = 1
-      for gate in comp_gates:
-         if not isinstance(gate, dict):
-            raise AssertionError("gate %d [component %s (%d)] must be a dict, got: %s" % (gate_count, comp_name, comp_count, gate.__class__))
-         if len(gate) != 1:
-            raise AssertionError("length of gate %d [component %s (%d)] must be 1" % (gate_count, comp_name, comp_count))
-         gate_name, gate_type = gate.items()[0]
-         if not ident_re.matching(gate_name):
-            raise AssertionError("gate %d's name [component %s (%d)] did not match regex: %s" % (comp_count, ident_re.re_str))
-         if not gate_type in socket_type_map.keys():
-            raise AssertionError("gate %d's type [component %s (%d)] was not found in: %s" % socket_type_map.keys())
-         comp_map[(comp_name, gate_name)] = gate_type
-         gate_count += 1
+         raise AssertionError('component %s (%d) must contain a sockets field' % (comp_name, comp_count))
+      if not isinstance(sockets, list):
+         raise AssertionError("socket structure of component %s (%d) must be a list, got: %s" % (comp_name, comp_count, comp.__class__))
+      if len(sockets) == 0:
+         raise AssertionError("socket list of component %s (%d) must not be empty" % (comp_name, comp_count))
+      socket_count = 1
+      for socket in sockets:
+         if not isinstance(socket, dict):
+            raise AssertionError("socket %d [component %s (%d)] must be a dict, got: %s" % (socket_count, comp_name, comp_count, socket.__class__))
+         if len(socket) != 1:
+            raise AssertionError("length of socket %d [component %s (%d)] must be 1" % (socket_count, comp_name, comp_count))
+         socket_name, socket_type = socket.items()[0]
+         if not ident_re.matching(socket_name):
+            raise AssertionError("socket %d's name [component %s (%d)] did not match regex: %s" % (comp_count, ident_re.re_str))
+         if not socket_type in socket_type_map.keys():
+            raise AssertionError("socket %d's type [component %s (%d)] was not found in: %s" % socket_type_map.keys())
+         comp_map[(comp_name, socket_name)] = socket_type
+         if args.debug == 'True':
+            socket_str = 'tcp://localhost:%d' % (args.base_id + socket_id)
+         else:
+            socket_str = 'ipc:///tmp/scl_%d' % (args.base_id + socket_id)
+         if socket_name not in socket_map.keys():
+            socket_map[socket_name] = socket_str
+            socket_id += 1
       comp_count += 1
 
-   # conns is a list containing: ((comp1, gate1, type1), (comp2, gate2, type2))
-   conns = []
-   comp_gates_seen = set()
-   connections = data['connections']
-   if not isinstance(connections, list):
-      raise AssertionError('connections must be a list, got: %s' % connections.__class__)
-   if len(connections) == 0:
-      raise AssertionError('at least one connection needs to be defined')
-   conn_count = 1
-   for conn in connections:
-      if not isinstance(conn, list):
-         raise AssertionError('connection %d must be a list, got: %s' % (conn_count, conn.__class))
-      if len(conn) != 2:
-         raise AssertionError('connection %d must contain 2 component.gate entries')
-      comp_gates = []
-      for i in range(2):
-         conn_entry = conn[i]
-         if not comp_gate_re.matching(conn_entry):
-            raise AssertionError('connection %d, index %d did not match regex: %s' % (conn_count, i, comp_gate_re.re_str))
-         comp_gates.append(conn_entry.split('.'))
-      types = []
-      for i in range(2):
-         comp, gate = comp_gates[i]
-         types.append(comp_map[(comp, gate)])
-         if (comp, gate) not in comp_map.keys():
-            raise AssertionError('connection %d, index %d is an unknown component/gate combination' % (comp_count, i))
-         comp_gates_seen |= set([(comp, gate)])
-      valid_types_set = [set(['pub', 'sub']), set(['req', 'rep'])]
-      cgt_list = []
-      for i in range(2):
-         cgt_list.append(tuple(comp_gates[i] + [types[i]]))
-         connected_types = set([types[i], types[1 - i]])
-         if connected_types not in valid_types_set:
-            raise AssertionError('invalid type combination: %s, expected one of: %s' % (connected_types, valid_types_set))
-
-      conns.append(tuple(cgt_list))
-      conn_count += 1
-
-   #gates_unconn = set(comp_map.keys()) - comp_gates_seen
-   #if len(gates_unconn) > 0:
-   #   raise AssertionError('unconnected gates detected: ' % map(lambda x: '%s.%s' % (x[0], x[1]), gates_unconn))
-
-   # create socket generating set of components/gates:
-   sock_gen_set = set()
-   for conn in conns:
-      for i in range(2):
-         if conn[i][2] in ['pub', 'rep']:
-            sock_gen_set |= set([conn[i][0:2]])
-   sock_gen_list = list(sock_gen_set)
-
-   # build socket map for pub & rep:
-   socket_map = {}
-   for i in range(len(sock_gen_list)):
-      if args.debug == 'True':
-         socket_str = 'tcp://localhost:%d' % (args.base_id + i)
-      else:
-         socket_str = 'ipc:///tmp/scl_%d' % (args.base_id + i)
-      socket_map[sock_gen_list[i]] = socket_str
-
-   # build socket map for sub & req:
-   for conn in conns:
-      for i in range(2):
-         if conn[i][2] in ['sub', 'req']:
-            socket_map[tuple(conn[i][0:2])] = socket_map[tuple(conn[1 - i][0:2])]
-
-   # finally, build zmq specification:
    zmq_spec = {}
-   for (comp_name, gate_name), gate_type in comp_map.items():
+   for (comp_name, socket_name), socket_type in comp_map.items():
       if not comp_name in zmq_spec:
          zmq_spec[comp_name] = []
-      entry = {'gate_name': gate_name,
-               'zmq_socket_type': socket_type_map[gate_type],
-               'zmq_socket_path': socket_map[(comp_name, gate_name)]}
+      entry = {'socket_name': socket_name,
+               'zmq_socket_type': socket_type_map[socket_type],
+               'zmq_socket_path': socket_map[socket_name]}
       zmq_spec[comp_name].append(entry)
 
-   # write generated code to stdout:
    sys.stdout.write(yaml.dump(zmq_spec))
 
 except Exception, e:
