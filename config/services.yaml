@@ -65,6 +65,10 @@ heartbeat:
   binary: 'heartbeat/service/heartbeat.py'
   depends: [gpsp, powerman, aircomm]
 
+remote:
+  binary: 'remote/service/remote'
+  depends: [opcd]
+
 wifi_loc:
   binary: 'wifi_loc/service/wifi_loc.py'
   depends: [gpsp, wifi_sensor]

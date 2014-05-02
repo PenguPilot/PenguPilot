@@ -59,7 +59,7 @@ static void scl_read_power(float *_voltage, float *_current)
       {
          msgpack_object root = msg.data;
          assert (root.type == MSGPACK_OBJECT_ARRAY);
-         assert(root.via.array.size == 4);
+         assert(root.via.array.size == 2);
          *_voltage = root.via.array.ptr[0].via.dec;
          *_current = root.via.array.ptr[1].via.dec;
       }
