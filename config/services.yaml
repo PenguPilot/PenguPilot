@@ -64,6 +64,7 @@ twl4030_madc:
 
 display:
   binary: 'display/service/display.py'
+  platforms: [gumstix_quad]
   depends: [gpsp, powerman]
 
 blackbox:

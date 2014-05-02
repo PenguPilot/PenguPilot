@@ -62,9 +62,9 @@ int arduino_escs_write(float *setpoints)
    FOR_N(i, PWM_COUNT_MAX)
    {
       values[i] = (uint8_t)(setpoints[i] * 120.0f + 127.0f);
-      printf("%.2f %hhu ", setpoints[i], values[i]);
+      //printf("%.2f %hhu ", setpoints[i], values[i]);
    }
-   printf("\n");
+   //printf("\n");
 
    int len = pwm_build_frame(buffer, values, PWM_COUNT_MAX);
    int ret = serial_write(&port, (const char *)buffer, len);	

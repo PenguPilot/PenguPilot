@@ -26,7 +26,7 @@
  GNU General Public License for more details. """
 
 
-from os import sep, symlink, unlink, fsync
+from os import sep, symlink, unlink
 from scl import generate_map
 from misc import daemonize, user_data_dir
 from datetime import datetime
@@ -50,8 +50,6 @@ def main(name):
       f = open(new_file, "wb")
       while True:
          f.write(socket.recv())
-         #f.flush()
-         #fsync(f.fileno())
    finally:
       try:
          f.close()

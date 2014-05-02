@@ -46,6 +46,7 @@
 #include "../hardware/drivers/ms5611/ms5611_reader.h"
 #include "../hardware/drivers/arduino_escs/arduino_escs.h"
 #include "../hardware/drivers/scl_power/scl_power.h"
+#include "../hardware/drivers/scl_rc/scl_rc.h"
 #include "../hardware/util/rc_channels.h"
 #include "../hardware/util/gps_data.h"
 #include "../../arduino/service/ppm_common.h"
@@ -58,21 +59,12 @@ static uint8_t channel_mapping[MAX_CHANNELS] =  {0, 1, 3, 2, 4, 5}; /* pitch: 0,
 static float channel_scale[MAX_CHANNELS] =  {1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
 static freeimu_04_t marg;
 
-static gps_data_t gps = {
-	.fix = FIX_3D,
-	.sats = 11,
-	.lon = 13.,
-	.lat = 51.,
-	.alt = 500.f,
-	.course = .0f,
-	.speed = .0f
-};
 
 static int read_rc(float channels[MAX_CHANNELS])
 {
-   float ppm_channels[PPM_CHAN_MAX];
-   int ret = 0; //arduino_rc_get(ppm_channels);
-
+   float dsl_channels[SCL_MAX_CHANNELS];
+   int ret = scl_rc_read(dsl_channels);
+   
    /* for (int i = 0; i < RC_DSL_CHANNELS; i++)
       printf("(%d, %f) ", i, dsl_channels[i]);
       printf("\n");
@@ -80,9 +72,8 @@ static int read_rc(float channels[MAX_CHANNELS])
 
    for (int c = 0; c < MAX_CHANNELS; c++)
    {
-      channels[c] = rc_channels_get(&rc_channels, ppm_channels, c);
+      channels[c] = rc_channels_get(&rc_channels, dsl_channels, c);
    }
-
    return ret;
 }
 
@@ -102,17 +93,13 @@ static int read_marg(marg_data_t *marg_data)
    return ret;
 }
 
+
 static int ultra_dummy_read(float *dist)
 {
 	*dist = .1f;
 	return 0;
 }
 
-static int gps_dummy_read(gps_data_t *data)
-{
-	*data = gps;
-	return 0;
-}
 
 static float force_to_esc(float force, float volt)
 {
@@ -130,6 +117,7 @@ static float force_to_esc(float force, float volt)
 
    return (pwm - 10000.0f) / 10000.0f;
 }
+
 
 int exynos_quad_init(platform_t *plat, int override_hw)
 {
@@ -202,16 +190,17 @@ int exynos_quad_init(platform_t *plat, int override_hw)
       THROW_ON_ERR(ms5611_reader_init(&i2c_4));
       plat->read_baro = ms5611_reader_get_alt;
    
-      plat->read_gps = gps_dummy_read;
+      /* set-up gps driver: */
+      scl_gps_init();
+      plat->read_gps = scl_gps_read;
 
-      /* set-up arduino interface */
-      LOG(LL_INFO, "Initializing arduino bridge to escs");
-      if (arduino_escs_init() < 0)
+      /* set-up dsl reader: */
+      LOG(LL_INFO, "initializing remote control reader");
+      if (scl_rc_init() < 0)
       {
-      	LOG(LL_ERROR, "could not initialize arduino interface");
-	exit(1);
+         LOG(LL_ERROR, "could not initialize remote control reader");
+         exit(1);
       }
-
       plat->read_rc = read_rc;
 
       if (scl_power_init() < 0)
@@ -220,10 +209,16 @@ int exynos_quad_init(platform_t *plat, int override_hw)
          exit(1);
       }
       plat->read_power = scl_power_read;
-
-      ac_init(&plat->ac, 0.1f, 0.7f, 12.0f, 17.0f, c, 4, force_to_esc, 0.0f);
-
+ 
+      /* set-up arduino interface */
+      LOG(LL_INFO, "Initializing arduino bridge to escs");
+      if (arduino_escs_init() < 0)
+      {
+      	LOG(LL_ERROR, "could not initialize arduino interface");
+	      exit(1);
+      }
       plat->write_motors = arduino_escs_write;
+      ac_init(&plat->ac, 0.1f, 0.7f, 12.0f, 17.0f, c, 4, force_to_esc, 0.0f);
    }
 
    LOG(LL_INFO, "exynos_quadro platform initialized");
