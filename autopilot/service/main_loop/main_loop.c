@@ -482,10 +482,6 @@ void main_step(const float dt,
    /* write motors: */
    if (!override_hw)
    {
-      setpoints[0] = 0.1;
-      setpoints[1] = 0.1;
-      setpoints[2] = 0.1;
-      setpoints[3] = 0.1;
       platform_write_motors(setpoints);
    }
 

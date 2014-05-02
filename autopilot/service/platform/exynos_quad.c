@@ -49,14 +49,14 @@
 #include "../hardware/util/rc_channels.h"
 #include "../hardware/util/gps_data.h"
 #include "../../arduino/service/ppm_common.h"
-#include "drotek_marg2.h"
+#include "freeimu_04.h"
 
 
 static i2c_bus_t i2c_4;
 static rc_channels_t rc_channels;
 static uint8_t channel_mapping[MAX_CHANNELS] =  {0, 1, 3, 2, 4, 5}; /* pitch: 0, roll: 1, yaw: 3, gas: 2, switch left: 4, switch right: 5 */
 static float channel_scale[MAX_CHANNELS] =  {1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
-static drotek_marg2_t marg;
+static freeimu_04_t marg;
 
 static gps_data_t gps = {
 	.fix = FIX_3D,
@@ -89,7 +89,7 @@ static int read_rc(float channels[MAX_CHANNELS])
 
 static int read_marg(marg_data_t *marg_data)
 {
-   int ret = drotek_marg2_read(marg_data, &marg);
+   int ret = freeimu_04_read(marg_data, &marg);
    quat_t q;
    quat_init_axis(&q, 0, 1, 0, M_PI);
    quat_rot_vec(&marg_data->acc, &marg_data->acc, &q);
@@ -193,7 +193,7 @@ int exynos_quad_init(platform_t *plat, int override_hw)
       plat->priv = &i2c_4;
 
       LOG(LL_INFO, "initializing MARG sensor cluster");
-      THROW_ON_ERR(drotek_marg2_init(&marg, &i2c_4));
+      THROW_ON_ERR(freeimu_04_init(&marg, &i2c_4));
       plat->read_marg = read_marg;
      
       plat->read_ultra = ultra_dummy_read;

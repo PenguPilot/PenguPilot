@@ -48,7 +48,7 @@ int arduino_escs_init(void)
    ASSERT_ONCE();
    THROW_BEGIN();
    opcd_param_get("exynos_quad.arduino_serial.path", &dev_path);
-   opcd_param_get("exynos_quad.arduino_serial.speed", &dev_path);
+   opcd_param_get("exynos_quad.arduino_serial.speed", &dev_speed);
    THROW_ON_ERR(serial_open(&port, dev_path, dev_speed, 0, 0, 0));
    THROW_END();
 }
