@@ -70,7 +70,7 @@ def cpuavg():
 
 
 def pmreader():
-   s = socket_map['power']
+   s = socket_map['powerman']
    global voltage, current, critical
    while True:
       _voltage, _current, _, critical = loads(s.recv())
@@ -109,7 +109,7 @@ def main(name):
    t3.daemon = True
    t3.start()
 
-   socket = generate_map('aircomm_app')['out']
+   socket = generate_map('aircomm_app')['aircomm_in']
    packer = Packer(use_single_float = True)
    while True:
       try:
@@ -122,9 +122,8 @@ def main(name):
                pass
          socket.send(packer.pack(data))
       except Exception, e:
-         pass
+         print e
       sleep(1.0)
-
 
 daemonize('heartbeat', main)
 

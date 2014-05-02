@@ -18,7 +18,7 @@ void _cleanup(void)
 }
 
 
-int main(int argc, char *argv[])
+int _main(int argc, char *argv[])
 {
    if (scl_init("gpsp") != 0)
    {
@@ -29,17 +29,23 @@ int main(int argc, char *argv[])
    opcd_params_init("", 0);
    char *plat = NULL;
    opcd_param_get("platform", &plat);
-
-   char pid_file[1024];
-   sprintf(pid_file, "%s/.PenguPilot/run/gpsp.pid", getenv("HOME"));
    if (strcmp(plat, "gumstix_quad") == 0)
    {
-      daemonize(pid_file, _main_serial, _cleanup, argc, argv);
+      main_serial();
    }
    else if (strcmp(plat, "pi_quad") == 0)
    {
-      daemonize(pid_file, _main_i2c, _cleanup, argc, argv);   
+      main_i2c();   
    }
+   return 0;
+}
+
+
+int main(int argc, char *argv[])
+{
+   char pid_file[1024];
+   sprintf(pid_file, "%s/.PenguPilot/run/gpsp.pid", getenv("HOME"));
+   daemonize(pid_file, _main, _cleanup, argc, argv);
    return 0;
 }
 

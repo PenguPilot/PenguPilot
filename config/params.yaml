@@ -26,6 +26,20 @@
 
 platform: 'gumstix_quad' # or pi_quad, exynos_quad
 
+gumstix_quad:
+   adc_type: 'twl4030_madc'
+   voltage_channel: 7
+   current_channel: 2
+   adc_to_voltage: 'lambda x: (x + 27.0951) / 117.1319'
+   adc_to_current: 'lambda x: 0.0303 * (2500 - x) + 0.4'
+
+pi_quad:
+   adc_type: 'ads1x15'
+   voltage_channel: 0 # currently ignored
+   current_channel: 1 # currently ignored
+   adc_to_voltage: 'lambda x : x * 0.003 * 3.6045'
+   adc_to_current: 'lambda x : x'
+
 aircomm:
    id: 1
    psk: "This is the PenguPilot Standard Pre-Shared Key for NRF24L01+ Communication"
@@ -48,25 +62,7 @@ powerman:
    low_voltage_hysteresis: 10.0 # [s], battery needs to go below battery_low_cell_voltage for this time period in order to trigger a low power event
    battery_capacity: 3.0
    power_save_timeout: 60.0
-   
-   # select adc_type based on platform name:
-   gumstix_quad:
-      adc_type: 'twl4030_madc'
-   pi_quad:
-      adc_type: 'ads1x15'
-  
-   # select config based on adc_type:
-   twl4030_madc:
-      voltage_channel: 7
-      current_channel: 2
-      adc_to_voltage: 'lambda x: (x + 27.0951) / 117.1319'
-      adc_to_current: 'lambda x: 0.0303 * (2500 - x) + 0.4'
-   ads1x15:
-      voltage_channel: 0 # currently ignored
-      current_channel: 1 # currently ignored
-      adc_to_voltage: 'lambda x : x * 0.003 * 3.6045'
-      adc_to_current: 'lambda x : x'
-
+ 
 icarus:
    takeoff:
       standard_rel_z: 4.0

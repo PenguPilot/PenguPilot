@@ -33,7 +33,7 @@ from datetime import datetime
 from sys import argv
 
 def main(name):
-   socket = generate_map(name)['data']
+   socket = generate_map(name)['blackbox']
    prefix = user_data_dir + sep + 'log' + sep
    try:
       now = datetime.today().isoformat().replace(':', '')
