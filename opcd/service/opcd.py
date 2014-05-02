@@ -39,8 +39,8 @@ class OPCD:
 
    def __init__(self, name):
       map = generate_map(name)
-      self.ctrl_socket = map['ctrl']
-      self.event_socket = map['event']
+      self.ctrl_socket = map['opcd_ctrl']
+      self.event_socket = map['opcd_event']
       self.conf = Config()
       self.map = {str: 'str_val', int: 'int_val', float: 'dbl_val', bool: 'bool_val'}
 

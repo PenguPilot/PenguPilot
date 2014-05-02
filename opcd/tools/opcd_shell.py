@@ -46,7 +46,7 @@ atexit.register(_save_history)
 
 
 #initialize and define interface:
-_interface = OPCD_Interface(generate_map('opcd_shell')['ctrl'])
+_interface = OPCD_Interface(generate_map('opcd_shell')['opcd_ctrl'])
 
 
 def get(key = ''):
