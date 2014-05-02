@@ -13,3 +13,4 @@ autopilot/service/autopilot
 autopilot/tools/acc_mag_cal/acc_mag_dump
 remote/service/remote
 display/shared/pyssd1306.py
+arduino/shared/arduino
