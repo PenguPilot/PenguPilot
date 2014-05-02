@@ -23,8 +23,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-platform: 'gumstix_quad' # or pi_quad, exynos_quad
-
 
 gumstix_quad:
    voltage_channel: 7
@@ -34,7 +32,6 @@ gumstix_quad:
    dsl_serial:
       path: '/dev/ttyO0'
       speed: 38400
-
 
 pi_quad:
    voltage_channel: 0 # currently ignored
@@ -83,7 +80,7 @@ icarus:
       z_low: 0.5
 
 
-pilot:
+autopilot:
    # hardware-specific stuff:
    gumstix_quad:
       dsl_serial_port: "/dev/ttyO0"

@@ -70,7 +70,7 @@ class OPCD:
 
          # GET REQUEST:
          if req.type == CtrlReq.GET:
-            all_keys = self.conf.get_all_keys(self.conf.base)
+            all_keys = self.conf.get_all_keys(self.conf.base) + ['platform']
             if req.id in all_keys:
                # exact match:
                self._pairs_add(req.id, rep)
@@ -117,7 +117,6 @@ class OPCD:
 def main(name):
    opcd = OPCD(name)
    opcd.run()
-
 
 daemonize('opcd', main)
 
