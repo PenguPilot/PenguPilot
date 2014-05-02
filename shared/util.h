@@ -224,6 +224,7 @@ int binsearch(int x, const int v[], int n);
 #define THROW_IF(cond, code) \
    if (cond) \
    { \
+      fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, code, errno); \
       ___return_code = code; \
       goto __catch_label; \
    }

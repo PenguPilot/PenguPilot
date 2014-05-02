@@ -59,7 +59,7 @@
 - name: arduino
   sockets:
    - power: pub
-   - remoter: pub
+   - remote: pub
    - opcd_ctrl: req
 
 - name: ferry_ctrl

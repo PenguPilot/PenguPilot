@@ -11,10 +11,6 @@
 
  SCL Specification Generator
  converts system specification into component socket specification,
- enriched with the corresponding zeromq socket-pair definitions
-
- REQ <-> REP: 1 shared link
- PUB --> SUB: 1 publisher, multiple subscribers
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 

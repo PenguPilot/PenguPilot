@@ -347,15 +347,15 @@ SIMPLE_THREAD_END
 
 void opcd_params_init(char *_prefix, int enable_events)
 {
+   ASSERT_ONCE();
    ASSERT_NOT_NULL(_prefix);
    prefix = _prefix;
    ctrl_socket = scl_get_socket("opcd_ctrl");
    ASSERT_NOT_NULL(ctrl_socket);
+   params_ht = g_hash_table_new(g_str_hash, g_str_equal);
+   ASSERT_NOT_NULL(params_ht);
    if (enable_events)
    {
-      ASSERT_ONCE();
-      params_ht = g_hash_table_new(g_str_hash, g_str_equal);
-      ASSERT_NOT_NULL(params_ht);
       event_socket = scl_get_socket("opcd_event");
       ASSERT_NOT_NULL(event_socket);
       simple_thread_start(&thread, thread_func, THREAD_NAME, THREAD_PRIORITY, NULL);

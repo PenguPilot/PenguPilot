@@ -68,13 +68,14 @@ int _main(void)
    /* fetch parameters: */
    char *dev_path;
    tsint_t dev_speed;
+   opcd_params_init("exynos_quad.arduino_serial.", 0);
    opcd_param_t params[] =
    {
-      {"arduino_serial.path", &dev_path},
-      {"arduino_serial.speed", &dev_speed},
+      {"path", &dev_path},
+      {"speed", &dev_speed},
       OPCD_PARAMS_END
    };
-   opcd_params_apply("exynos_quad.", params);
+   opcd_params_apply("", params);
    
    /* opern serial port: */
    serialport_t port;
@@ -114,6 +115,7 @@ int _main(void)
          msgpack_pack_array(pk, 1 + PPM_CHAN_MAX);
          PACKI(sig_valid);               /* index 0: valid */
          PACKFV(channels, PPM_CHAN_MAX); /* index 1, .. : channels */
+         //printf("ppm status: %d\n", sig_valid);
          scl_copy_send_dynamic(rc_socket, msgpack_buf->data, msgpack_buf->size);
       }
 
@@ -129,7 +131,8 @@ int _main(void)
          msgpack_pack_array(pk, 2);
          PACKF(voltage); /* index 0 */
          PACKF(current); /* index 1 */
-         scl_copy_send_dynamic(power_socket, msgpack_buf->data, msgpack_buf->size);
+         //printf("voltage: %f, current: %f\n", voltage, current);
+	 scl_copy_send_dynamic(power_socket, msgpack_buf->data, msgpack_buf->size);
       }
    }
    THROW_END();
@@ -155,6 +158,7 @@ int main(int argc, char *argv[])
 {
    char pid_file[1024];
    sprintf(pid_file, "%s/.PenguPilot/run/arduino.pid", getenv("HOME"));
+   //main_wrap(argc, argv);
    daemonize(pid_file, main_wrap, _cleanup, argc, argv);
    return 0;
 }
