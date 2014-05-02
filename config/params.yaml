@@ -32,6 +32,7 @@ gumstix_quad:
    current_channel: 2
    adc_to_voltage: 'lambda x: (x + 27.0951) / 117.1319'
    adc_to_current: 'lambda x: 0.0303 * (2500 - x) + 0.4'
+   dsl_serial_path: '/dev/ttyO0'
 
 pi_quad:
    adc_type: 'ads1x15'
@@ -39,6 +40,7 @@ pi_quad:
    current_channel: 1 # currently ignored
    adc_to_voltage: 'lambda x : x * 0.003 * 3.6045'
    adc_to_current: 'lambda x : x'
+   dsl_serial_path: '/dev/ttyAMA0'
 
 aircomm:
    id: 1

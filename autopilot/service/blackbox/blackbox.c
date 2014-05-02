@@ -31,11 +31,6 @@
 #include <msgpack.h>
 
 
-#define PACKI(val) msgpack_pack_int(pk, val) /* pack integer */
-#define PACKF(val) msgpack_pack_float(pk, val) /* pack float */
-#define PACKD(val) msgpack_pack_double(pk, val) /* pack double */
-#define PACKFV(ptr, n) FOR_N(i, n) PACKF(ptr[i]) /* pack float vector */
-
 
 static void *blackbox_socket = NULL;
 static msgpack_sbuffer *msgpack_buf = NULL;
