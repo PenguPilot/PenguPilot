@@ -76,13 +76,18 @@ int _main(void)
    
    char *platform = NULL;
    opcd_param_get("platform", &platform);
-   char buffer[128];
-   strcpy(buffer, platform);
-   strcat(buffer, ".dsl_serial_path");
+   char buffer_path[128];
+   char buffer_speed[128];
+   strcpy(buffer_path, platform);
+   strcpy(buffer_speed, platform);
+   strcat(buffer_path, ".dsl_serial.path");
+   strcat(buffer_speed, ".dsl_serial.speed");
    char *dev_path;
-   opcd_param_get(buffer, &dev_path);
+   opcd_param_get(buffer_path, &dev_path);
+   int dev_speed;
+   opcd_param_get(buffer_speed, &dev_speed);
    serialport_t port;
-   THROW_ON_ERR(serial_open(&port, dev_path, 38400, 0, 0, 0));
+   THROW_ON_ERR(serial_open(&port, dev_path, dev_speed, 0, 0, 0));
    rc_dsl_t rc_dsl;
    rc_dsl_init(&rc_dsl);
 
