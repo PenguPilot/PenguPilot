@@ -31,14 +31,19 @@ gumstix_quad:
    current_channel: 2
    adc_to_voltage: 'lambda x: (x + 27.0951) / 117.1319'
    adc_to_current: 'lambda x: 0.0303 * (2500 - x) + 0.4'
-   dsl_serial_path: '/dev/ttyO0'
+   dsl_serial:
+      path: '/dev/ttyO0'
+      speed: 38400
+
 
 pi_quad:
    voltage_channel: 0 # currently ignored
    current_channel: 1 # currently ignored
    adc_to_voltage: 'lambda x : x * 0.003 * 3.6045'
    adc_to_current: 'lambda x : x'
-   dsl_serial_path: '/dev/ttyAMA0'
+   dsl_serial:
+      path: '/dev/ttyAMA0'
+      speed: 38400
 
 exynos_quad:
    arduino_serial:
