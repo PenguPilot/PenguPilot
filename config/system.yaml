@@ -34,6 +34,10 @@
    - opcd_ctrl: req
    - gps: pub
 
+- name: svctrl
+  sockets:
+   - opcd_ctrl: req
+
 - name: gps_test
   sockets:
    - gps: sub

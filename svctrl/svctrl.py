@@ -26,6 +26,13 @@
  GNU General Public License for more details. """
 
 import copy
+from opcd_interface import OPCD_Interface
+from scl import generate_map
+
+
+opcd = OPCD_Interface(generate_map('svctrl')['opcd_ctrl'])
+platform = opcd.get('platform')
+
 
 def parse_args():
    parser = argparse.ArgumentParser(description = 'svctrl - service control utility')
@@ -61,9 +68,6 @@ def read_config():
             return False
 
    try:
-      # regex definition for identifier:
-      ident_re = Regex('^[a-zA-Z_][a-zA-Z_0-9]*$')
-
       # load yaml file:
       comp_base = os.getenv('PENGUPILOT_PATH')
       conf_file = comp_base + os.sep + 'config' + os.sep + 'services.yaml'
@@ -74,10 +78,16 @@ def read_config():
          raise AssertionError('top level type of config file must be dict, got: %s' % data.__class__)
 
       count = 1
+      service_available = {}
       config = {}
       for name, service in services.items():
-         #if not ident_re.matches(name):
-         #   raise AssertionError('service %d name is not a valid identifier' % count)
+	 try:
+	    plat_list = service['platforms']
+	    plat_match = platform in plat_list
+	 except:
+	    plat_match = True
+	 service_available[name] = plat_match
+
          if not isinstance(service, dict):
             raise AssertionError("service %d data must be a dict, got: %s" % service.__class__)
          
@@ -107,8 +117,14 @@ def read_config():
          config[name] = (cmd, depends)
          count += 1
 
+      filt_config = {}
+      for name in config:
+         if service_available[name]:
+	    cmd, depends = config[name]
+	    depends = filter(lambda x : service_available[x], depends)
+	    filt_config[name] = cmd, depends
       # return services config map
-      return config
+      return filt_config
 
    except Exception, e:
       sys.stderr.write(str(e) + '\n')
