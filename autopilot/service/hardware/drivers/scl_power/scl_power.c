@@ -101,7 +101,7 @@ int scl_power_init(void)
    pthread_mutexattr_init(&mutexattr);
    pthread_mutexattr_setprotocol(&mutexattr, PTHREAD_PRIO_INHERIT);
    pthread_mutex_init(&mutex, &mutexattr);
-   simple_thread_start(&thread, thread_func, "voltage_reader", THREAD_PRIORITY, NULL);
+   simple_thread_start(&thread, thread_func, "power_reader", THREAD_PRIORITY, NULL);
    return 0;
 }
 
