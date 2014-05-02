@@ -33,6 +33,12 @@ aircomm:
 
 arduino:
   binary: 'arduino/service/arduino'
+  platforms: [exynos_quad]
+  depends: [opcd]
+
+ads1x15:
+  binary: 'ads1x15/service/ads1x15.py'
+  platforms: [pi_quad]
   depends: [opcd]
 
 gpsp:
@@ -45,7 +51,7 @@ geomag:
 
 powerman:
   binary: 'powerman/service/powerman.py'
-  depends: [opcd]
+  depends: [opcd, arduino, twl4030_madc, ads1x15]
 
 autopilot:
   binary: 'autopilot/service/autopilot'
@@ -53,6 +59,7 @@ autopilot:
 
 twl4030_madc:
   binary: 'twl4030_madc/service/twl4030_madc.py'
+  platforms: [gumstix_quad]
   depends: [opcd]
 
 display:
@@ -71,6 +78,7 @@ heartbeat:
 
 remote:
   binary: 'remote/service/remote'
+  platforms: [gumstix_quad, pi_quad]
   depends: [opcd]
 
 wifi_loc:
