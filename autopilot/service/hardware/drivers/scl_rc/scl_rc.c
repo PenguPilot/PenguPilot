@@ -28,17 +28,16 @@
 
 
 #include <util.h>
-#include <serial.h>
 #include <simple_thread.h>
 #include <opcd_interface.h>
 #include <pthread.h>
+#include <scl.h>
+#include <msgpack.h>
+
+#include "scl_rc.h"
 
 
-#include "rc_dsl_reader.h"
-#include "../../../util/logger/logger.h"
-
-
-#define THREAD_NAME       "rc_dsl_reader"
+#define THREAD_NAME       "scl_rc_reader"
 #define THREAD_PRIORITY   96
 
 
@@ -46,37 +45,50 @@
 
 
 static simple_thread_t thread;
-static serialport_t port;
-static rc_dsl_t rc_dsl;
-static char *dev_path = NULL;
 static pthread_mutexattr_t mutexattr;   
 static pthread_mutex_t mutex;
-static float channels[RC_DSL_CHANNELS];
-static int sig_valid = 0;
+static float channels[SCL_MAX_CHANNELS];
+static void *scl_socket;
+static int sig_valid;
+
+
+static void scl_read_channels(int *valid, float *_channels)
+{
+   char buffer[128];
+   int ret = scl_recv_static(scl_socket, buffer, sizeof(buffer));
+   if (ret > 0)
+   {
+      msgpack_unpacked msg;
+      msgpack_unpacked_init(&msg);
+      if (msgpack_unpack_next(&msg, buffer, ret, NULL))
+      {
+         msgpack_object root = msg.data;
+         assert (root.type == MSGPACK_OBJECT_ARRAY);
+         int n_channels = root.via.array.size - 1;
+         *valid = root.via.array.ptr[0].via.i64;
+         FOR_N(i, n_channels)
+            if (i < SCL_MAX_CHANNELS)
+               _channels[i] = root.via.array.ptr[1 + i].via.dec;
+      }
+      msgpack_unpacked_destroy(&msg);
+   }
+   else
+   {
+      msleep(1);
+   }
+}
 
 
 SIMPLE_THREAD_BEGIN(thread_func)
 {
+   float _channels[SCL_MAX_CHANNELS];
    SIMPLE_THREAD_LOOP_BEGIN
    {
-      int b = serial_read_char(&port);
-      if (b < 0)
-      {
-         msleep(1);
-      }
-      int status = rc_dsl_parse_dsl_data(&rc_dsl, (uint8_t)b);
-      if (status < 0)
-      {
-         LOG(LL_ERROR, "could not parse dsl frame");   
-      }
-      else if (status == 1)
-      {
-         pthread_mutex_lock(&mutex);
-         sig_valid = rc_dsl.RSSI > RSSI_MIN;
-         if (sig_valid)
-            memcpy(channels, rc_dsl.channels, sizeof(channels));   
-         pthread_mutex_unlock(&mutex);
-      }
+      scl_read_channels(&sig_valid, _channels);
+      pthread_mutex_lock(&mutex);
+      if (sig_valid)
+         memcpy(channels, _channels, sizeof(channels));   
+      pthread_mutex_unlock(&mutex);
    }
    SIMPLE_THREAD_LOOP_END
 }
@@ -84,28 +96,21 @@ SIMPLE_THREAD_END
 
 
 
-int rc_dsl_reader_init(void)
+int scl_rc_init(void)
 {
    ASSERT_ONCE();
-   THROW_BEGIN();
    memset(channels, 0, sizeof(channels));
-   opcd_param_t params[] =
-   {
-      {"serial_port", &dev_path},
-      OPCD_PARAMS_END   
-   };
-   opcd_params_apply("sensors.rc_dsl.", params);
-   THROW_ON_ERR(serial_open(&port, dev_path, 38400, 0, 0, 0));
-   rc_dsl_init(&rc_dsl);
+   scl_socket = scl_get_socket("remote");
+   ASSERT_NOT_NULL(scl_socket);
    pthread_mutexattr_init(&mutexattr); 
    pthread_mutexattr_setprotocol(&mutexattr, PTHREAD_PRIO_INHERIT); 
    pthread_mutex_init(&mutex, &mutexattr);
    simple_thread_start(&thread, thread_func, THREAD_NAME, THREAD_PRIORITY, NULL);
-   THROW_END();
+   return 0;
 }
 
 
-int rc_dsl_reader_get(float channels_out[RC_DSL_CHANNELS])
+int scl_rc_read(float channels_out[SCL_MAX_CHANNELS])
 {
    pthread_mutex_lock(&mutex);
    memcpy(channels_out, channels, sizeof(channels));

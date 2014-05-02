@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- RC DSL Reader Interface
+ SCL Remote Control Interface
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -24,17 +24,17 @@
  GNU General Public License for more details. */
 
 
-#ifndef __RC_DSL_READER_H__
-#define __RC_DSL_READER_H__
+#ifndef __SCL_RC_H__
+#define __SCL_RC_H__
 
 
-#include "rc_dsl.h"
+#define SCL_MAX_CHANNELS 8
 
 
-int rc_dsl_reader_init(void);
+int scl_rc_init(void);
 
-int rc_dsl_reader_get(float channels_out[RC_DSL_CHANNELS]);
+int scl_rc_read(float channels_out[SCL_MAX_CHANNELS]);
 
 
-#endif /* __RC_DSL_READER_H__ */
+#endif /* __SCL_RC_H__ */
 

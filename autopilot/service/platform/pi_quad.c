@@ -43,7 +43,7 @@
 #include "../hardware/drivers/scl_gps/scl_gps.h"
 #include "../hardware/drivers/i2cxl/i2cxl_reader.h"
 #include "../hardware/drivers/ms5611/ms5611_reader.h"
-#include "../hardware/drivers/rc_dsl/rc_dsl_reader.h"
+#include "../hardware/drivers/scl_rc/scl_rc.h"
 #include "../hardware/drivers/scl_power/scl_power.h"
 #include "../hardware/util/rc_channels.h"
 #include "freeimu_04.h"
@@ -60,8 +60,8 @@ static freeimu_04_t marg;
 
 static int read_rc(float channels[MAX_CHANNELS])
 {
-   float dsl_channels[RC_DSL_CHANNELS];
-   int ret = rc_dsl_reader_get(dsl_channels);
+   float dsl_channels[SCL_MAX_CHANNELS];
+   int ret = scl_rc_read(dsl_channels);
    
    /* for (int i = 0; i < RC_DSL_CHANNELS; i++)
       printf("(%d, %f) ", i, dsl_channels[i]);
@@ -173,10 +173,10 @@ int pi_quad_init(platform_t *plat, int override_hw)
       plat->read_gps = scl_gps_read;
 
       /* set-up dsl reader: */
-      LOG(LL_INFO, "initializing DSL reader");
-      if (rc_dsl_reader_init() < 0)
+      LOG(LL_INFO, "initializing remote control reader");
+      if (scl_rc_init() < 0)
       {
-         LOG(LL_ERROR, "could not initialize dsl reader");
+         LOG(LL_ERROR, "could not initialize remote control reader");
          exit(1);
       }
       plat->read_rc = read_rc;
