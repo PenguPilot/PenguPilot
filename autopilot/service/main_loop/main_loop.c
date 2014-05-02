@@ -119,7 +119,7 @@ void main_init(int argc, char *argv[])
 
    /* init SCL subsystem: */
    syslog(LOG_INFO, "initializing signaling and communication link (SCL)");
-   if (scl_init("pilot") != 0)
+   if (scl_init("autopilot") != 0)
    {
       syslog(LOG_CRIT, "could not init scl module");
       die();
@@ -127,7 +127,7 @@ void main_init(int argc, char *argv[])
    
    /* init params subsystem: */
    syslog(LOG_INFO, "initializing opcd interface");
-   opcd_params_init("pilot.", 1);
+   opcd_params_init("autopilot.", 1);
    
    /* initialize logger: */
    syslog(LOG_INFO, "opening logger");
@@ -482,6 +482,10 @@ void main_step(const float dt,
    /* write motors: */
    if (!override_hw)
    {
+      setpoints[0] = 0.1;
+      setpoints[1] = 0.1;
+      setpoints[2] = 0.1;
+      setpoints[3] = 0.1;
       platform_write_motors(setpoints);
    }
 

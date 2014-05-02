@@ -56,7 +56,7 @@ int logger_open(void)
    };
    opcd_params_apply("logger.", params);
    
-   log_socket = scl_get_socket("log");
+   log_socket = scl_get_socket("ap_log");
    if (log_socket == NULL)
    {
       return -1;

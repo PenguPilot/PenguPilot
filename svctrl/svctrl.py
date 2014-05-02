@@ -25,13 +25,12 @@
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details. """
 
+
 import copy
-from opcd_interface import OPCD_Interface
 from scl import generate_map
-
-
-opcd = OPCD_Interface(generate_map('svctrl')['opcd_ctrl'])
-platform = opcd.get('platform')
+from misc import user_data_dir
+import sys
+from termcolor import red, blue, green
 
 
 def parse_args():
@@ -224,7 +223,14 @@ def calc_deps_reverse_bfs(name):
    return list
 
 
-from termcolor import red, blue, green
+
+plat_file_name = user_data_dir + '/config/platform'
+try:
+   platform = file(plat_file_name).read()
+except:
+   print red('platform not defined in ' + plat_file_name)
+   sys.exit(1)
+
 try:
    import sys
    import yaml

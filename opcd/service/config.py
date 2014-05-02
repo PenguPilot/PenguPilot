@@ -79,7 +79,15 @@ class Config:
       get attribute using key
       '''
       try:
-         return self._find_entry(self.overlay, key)
+         print key
+         if key == 'platform':
+            plat_file_path = user_data_dir + '/config/platform'
+            try:
+               return file(plat_file_path).read()
+            except:
+               raise ConfigError(plat_file_path + ' was not found')
+         else:
+            return self._find_entry(self.overlay, key)
       except KeyError:
          try:
             return self._find_entry(self.base, key)
