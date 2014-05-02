@@ -33,17 +33,21 @@ from time import sleep
 from misc import daemonize
 from msgpack import dumps
 
+
 def main(name):
    socket = generate_map(name)['networks']
    while True:
       pipe = Popen(['iwlist', 'wlan0', 'scan'], stdout = PIPE).stdout
       cells = parse_cells(pipe.readlines())
       for cell in cells:
-         pair = [cell['Address'] + '_' + cell['Name'], int(cell['Signal'][0:-3])]
-         print pair
+         try:
+            sig = int(cell['Signal'][0:-3])
+         except:
+            sig = int(cell['Signal'][0:-4])
+         pair = [cell['Address'] + '_' + cell['Name'], sig]
          socket.send(dumps(pair))
-      print 
       sleep(0.5)
+
 
 daemonize('wifi_sensor', main)
 
