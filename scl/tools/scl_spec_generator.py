@@ -112,7 +112,7 @@ try:
          if args.debug == 'True':
             socket_str = 'tcp://localhost:%d' % (args.base_id + socket_id)
          else:
-            socket_str = 'ipc:///tmp/scl_%d' % (args.base_id + socket_id)
+            socket_str = 'ipc:///tmp/scl_%d' % socket_name
          if socket_name not in socket_map.keys():
             socket_map[socket_name] = socket_str
             socket_id += 1
