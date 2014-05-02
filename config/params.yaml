@@ -42,7 +42,7 @@ pi_quad:
 
 exynos_quad:
    arduino_serial:
-      path: '/dev/ttyAMA0'
+      path: '/dev/ttySAC0'
       speed: 115200
 
 
