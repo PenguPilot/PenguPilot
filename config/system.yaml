@@ -42,7 +42,6 @@
   sockets:
    - gps: sub
 
-
 - name: twl4030_madc
   sockets:
    - power: pub
@@ -55,6 +54,12 @@
 - name: remote
   sockets:
    - remote: pub
+   - opcd_ctrl: req
+
+- name: arduino
+  sockets:
+   - power: pub
+   - remoter: pub
    - opcd_ctrl: req
 
 - name: ferry_ctrl

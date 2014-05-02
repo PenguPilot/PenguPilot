@@ -103,7 +103,7 @@ opcd_lib = env.Library('opcd/shared/opcd', collect_files('opcd', re_cc))
 Requires(opcd_lib, scl_lib + opcd_pb_lib)
 append_inc_lib('opcd/shared')
 
-common_libs = scl_lib + opcd_lib + opcd_pb_lib + shared_lib
+common_libs = opcd_lib + opcd_pb_lib + scl_lib + shared_lib
 
 # GPS Publisher:
 append_inc_lib('gpsp/service/nmealib')
@@ -112,6 +112,11 @@ gpsp_pb_dir = gpsp_dir + 'shared/'
 gpsp_pb_lib = make_proto_lib(gpsp_pb_dir, 'gpsp_pb')
 append_inc_lib('gpsp/shared')
 gpsp_bin = env.Program('gpsp/service/gpsp', collect_files(gpsp_dir + 'service', re_cc), LIBS = common_libs + gpsp_pb_lib + ['m', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
+
+# Arduino RC / Power Publisher:
+arduino_dir = 'arduino/'
+arduino_bin = env.Program('arduino/service/arduino', collect_files(arduino_dir + 'service', re_cc), LIBS = common_libs + ['m', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
+Requires(arduino_bin, common_libs)
 
 # Autopilot:
 ap_dir = 'autopilot/'

@@ -31,6 +31,10 @@ aircomm:
   binary: 'aircomm/service/aircomm.py'
   depends: [opcd]
 
+arduino:
+  binary: 'arduino/service/arduino'
+  depends: [opcd]
+
 gpsp:
   binary: 'gpsp/service/gpsp'
   depends: [opcd]

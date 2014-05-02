@@ -23,11 +23,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
-
 platform: 'gumstix_quad' # or pi_quad, exynos_quad
 
+
 gumstix_quad:
-   adc_type: 'twl4030_madc'
    voltage_channel: 7
    current_channel: 2
    adc_to_voltage: 'lambda x: (x + 27.0951) / 117.1319'
@@ -35,12 +34,17 @@ gumstix_quad:
    dsl_serial_path: '/dev/ttyO0'
 
 pi_quad:
-   adc_type: 'ads1x15'
    voltage_channel: 0 # currently ignored
    current_channel: 1 # currently ignored
    adc_to_voltage: 'lambda x : x * 0.003 * 3.6045'
    adc_to_current: 'lambda x : x'
    dsl_serial_path: '/dev/ttyAMA0'
+
+exynos_quad:
+   arduino_serial:
+      path: '/dev/ttyAMA0'
+      speed: 115200
+
 
 aircomm:
    id: 1

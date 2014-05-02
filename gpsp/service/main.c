@@ -18,7 +18,7 @@ void _cleanup(void)
 }
 
 
-int _main(int argc, char *argv[])
+void _main(int argc, char *argv[])
 {
    if (scl_init("gpsp") != 0)
    {
@@ -37,7 +37,6 @@ int _main(int argc, char *argv[])
    {
       main_i2c();   
    }
-   return 0;
 }
 
 
