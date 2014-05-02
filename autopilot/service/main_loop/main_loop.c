@@ -48,6 +48,7 @@
 #include "../platform/ac.h"
 #include "../platform/platform.h"
 #include "../platform/arcade_quad.h"
+#include "../platform/exynos_quad.h"
 #include "../platform/pi_quad.h"
 #include "../platform/inv_coupling.h"
 #include "../hardware/util/acc_mag_cal.h"
@@ -156,7 +157,21 @@ void main_init(int argc, char *argv[])
          LOG(LL_ERROR, "could not initialize platform");
          die();
       }
+   }  
+   else if (strcmp(plat_name, "exynos_quad") == 0)
+   {
+      if (exynos_quad_init(&platform, override_hw) < 0)
+      {
+         LOG(LL_ERROR, "could not initialize platform");
+         die();
+      }
    }
+   else
+   {
+      LOG(LL_ERROR, "unknown platform: %s", plat_name);
+      die();   
+   }
+
    acc_mag_cal_init();
    cmc_init();
  
