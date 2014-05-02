@@ -56,6 +56,7 @@ do { \
 } while (0)
 
 
+#define PACKB(val) msgpack_pack_bool(pk, val) /* pack bool */
 #define PACKI(val) msgpack_pack_int(pk, val) /* pack integer */
 #define PACKF(val) msgpack_pack_float(pk, val) /* pack float */
 #define PACKD(val) msgpack_pack_double(pk, val) /* pack double */

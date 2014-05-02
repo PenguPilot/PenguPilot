@@ -31,10 +31,9 @@
 #include <stdint.h>
 
 
-#define RC_DSL_VALID_SIGNAL  7
+#define RC_DSL_RSSI_VALID(x) (x > (7.0f / 255.0f))
 #define RC_DSL_CHANNELS     16
 
-#define RSSI_SCALE(x) (((float)x) / 255.0f)
 
 
 typedef struct

@@ -29,6 +29,7 @@
 #include <string.h>
 
 
+#define RSSI_SCALE(x) (((float)x) / 255.0f)
 #define CHANNEL_SCALE(x) (((float)x) / 2000.0f)
 
 
