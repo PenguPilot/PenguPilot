@@ -40,7 +40,7 @@
 static simple_thread_t thread;
 static pthread_mutexattr_t mutexattr;
 static pthread_mutex_t mutex;
-static void *socket;
+static void *decl_socket;
 static float decl;
 
 
@@ -49,7 +49,7 @@ SIMPLE_THREAD_BEGIN(thread_func)
    SIMPLE_THREAD_LOOP_BEGIN
    {
       char buffer[128];
-      int len = scl_recv_static(socket, buffer, sizeof(buffer));
+      int len = scl_recv_static(decl_socket, buffer, sizeof(buffer));
       if (len > 0)
       {
          buffer[len] = '\0';
@@ -67,8 +67,8 @@ SIMPLE_THREAD_END
 
 int mag_decl_init(void)
 {
-   socket = scl_get_socket("decl");
-   if (socket == NULL)
+   decl_socket = scl_get_socket("decl");
+   if (decl_socket == NULL)
    {
       return -1;
    }

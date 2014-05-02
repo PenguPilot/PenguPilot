@@ -39,7 +39,7 @@
 #include "util.h"
 
 
-static void *socket = NULL;
+static void *log_socket = NULL;
 static tsint_t loglevel;
 static tsint_t details;
 
@@ -56,8 +56,8 @@ int logger_open(void)
    };
    opcd_params_apply("logger.", params);
    
-   socket = scl_get_socket("log");
-   if (socket == NULL)
+   log_socket = scl_get_socket("log");
+   if (log_socket == NULL)
    {
       return -1;
    }
@@ -67,7 +67,7 @@ int logger_open(void)
 
 void logger_write(char *file, loglevel_t level, unsigned int line, char *format, ...)
 {
-   ASSERT_NOT_NULL(socket);
+   ASSERT_NOT_NULL(log_socket);
    ASSERT_NOT_NULL(file);
 
    if (level <= (unsigned int)tsint_get(&loglevel))
@@ -96,7 +96,7 @@ void logger_write(char *file, loglevel_t level, unsigned int line, char *format,
       if (buffer != NULL)
       {
          log_data__pack(&log_data, buffer);
-         scl_send_dynamic(socket, buffer, log_data_len, ZMQ_NOBLOCK);
+         scl_send_dynamic(log_socket, buffer, log_data_len, ZMQ_NOBLOCK);
       }
       else
       {
@@ -108,7 +108,7 @@ void logger_write(char *file, loglevel_t level, unsigned int line, char *format,
 
 int logger_close(void)
 {
-   ASSERT_NOT_NULL(socket);
-   return zmq_close(socket);
+   ASSERT_NOT_NULL(log_socket);
+   return zmq_close(log_socket);
 }
 

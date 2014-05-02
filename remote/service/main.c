@@ -29,12 +29,15 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/mman.h>
+#include <msgpack.h>
+
+#include <daemon.h>
 #include <util.h>
 #include <scl.h>
-#include <daemon.h>
-#include "rc_dsl/rc_dsl_reader.h"
-#include <msgpack.h>
-#include <syslog.h>
+#include <opcd_interface.h>
+#include <serial.h>
+
+#include "rc_dsl.h"
 
 
 static struct sched_param sp;
@@ -45,7 +48,7 @@ static int realtime_init(void)
 {
    ASSERT_ONCE();
 
-   sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
+   sp.sched_priority = sched_get_priority_max(SCHED_FIFO) - 1;
    sched_setscheduler(getpid(), SCHED_FIFO, &sp);
 
    if (nice(-20) == -1)
@@ -61,60 +64,55 @@ static int realtime_init(void)
 }
 
 
-static msgpack_sbuffer *msgpack_buf = NULL;
-static msgpack_packer *pk = NULL;
 
 
-void _main(int argc, char *argv[])
+int _main(void)
 {
-   (void)argc;
-   (void)argv;
+   THROW_BEGIN();
+   THROW_ON_ERR(realtime_init());
    
-   if (realtime_init() < 0)
-   {
-      exit(EXIT_FAILURE);
-   }
-
-   if (scl_init("remote") != 0)
-   {
-      syslog(LOG_CRIT, "could not init scl module");
-      exit(EXIT_FAILURE);
-   }
-
-   if (rc_dsl_reader_init() < 0)
-   {
-      exit(EXIT_FAILURE);
-   }
+   THROW_ON_ERR(scl_init("remote"));
+   opcd_params_init("", 0);
    
+   char *platform = NULL;
+   opcd_param_get("platform", &platform);
+   char buffer[128];
+   strcpy(buffer, platform);
+   strcat(buffer, ".dsl_serial_path");
+   char *dev_path;
+   opcd_param_get(buffer, &dev_path);
+   serialport_t port;
+   THROW_ON_ERR(serial_open(&port, dev_path, 38400, 0, 0, 0));
+   rc_dsl_t rc_dsl;
+   rc_dsl_init(&rc_dsl);
+
    void *rc_socket = scl_get_socket("remote");
-   if (rc_socket == NULL)
-   {
-      syslog(LOG_CRIT, "could not get scl gate");
-      exit(EXIT_FAILURE);
-   }
+   THROW_IF(rc_socket == NULL, -1);
    
-   ASSERT_NULL(msgpack_buf);
-   msgpack_buf = msgpack_sbuffer_new();
-   ASSERT_NOT_NULL(msgpack_buf);
-   ASSERT_NULL(pk);
-   pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
-   ASSERT_NOT_NULL(pk);
+   msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new();
+   THROW_IF(!msgpack_buf, -ENOMEM);
+   msgpack_packer *pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
+   THROW_IF(!pk, -ENOMEM);
  
    while (running)
    {
-      float rssi;
-      float channels[16];
-      int status = rc_dsl_reader_get(&rssi, channels);
-      if (status == 0)
+      int b = serial_read_char(&port);
+      if (b < 0)
       {
-         msgpack_pack_array(pk, 16);
-         PACKF(rssi);
-         PACKFV(channels, 16);
-         scl_copy_send_dynamic(rc_socket, msgpack_buf->data, msgpack_buf->size);
-         msgpack_sbuffer_clear(msgpack_buf);
+         usleep(1000);
+         continue;
       }
-      usleep(1000 * 10);
+      int status = rc_dsl_parse_dsl_data(&rc_dsl, (uint8_t)b);
+      if (status == 1)
+      {
+         msgpack_sbuffer_clear(msgpack_buf);
+         msgpack_pack_array(pk, RC_DSL_CHANNELS + 1);
+         PACKI(RC_DSL_RSSI_VALID(rc_dsl.RSSI)); /* valid */
+         PACKFV(rc_dsl.channels, RC_DSL_CHANNELS); /* channels */
+         scl_copy_send_dynamic(rc_socket, msgpack_buf->data, msgpack_buf->size);
+      }
    }
+   THROW_END();
 }
 
 
@@ -124,11 +122,20 @@ void _cleanup(void)
 }
 
 
+main_wrap(int argc, char *argv[])
+{
+   (void)argc;
+   (void)argv;
+
+   exit(-_main());   
+}
+
+
 int main(int argc, char *argv[])
 {
    char pid_file[1024];
    sprintf(pid_file, "%s/.PenguPilot/run/remote.pid", getenv("HOME"));
-   daemonize(pid_file, _main, _cleanup, argc, argv);
+   daemonize(pid_file, main_wrap, _cleanup, argc, argv);
    return 0;
 }
 
