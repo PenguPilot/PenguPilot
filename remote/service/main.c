@@ -107,8 +107,8 @@ int _main(void)
       {
          msgpack_sbuffer_clear(msgpack_buf);
          msgpack_pack_array(pk, RC_DSL_CHANNELS + 1);
-         PACKI(RC_DSL_RSSI_VALID(rc_dsl.RSSI)); /* valid */
-         PACKFV(rc_dsl.channels, RC_DSL_CHANNELS); /* channels */
+         PACKI(RC_DSL_RSSI_VALID(rc_dsl.RSSI));    /* index 0: valid */
+         PACKFV(rc_dsl.channels, RC_DSL_CHANNELS); /* index 1, .. : channels */
          scl_copy_send_dynamic(rc_socket, msgpack_buf->data, msgpack_buf->size);
       }
    }
@@ -122,7 +122,7 @@ void _cleanup(void)
 }
 
 
-main_wrap(int argc, char *argv[])
+void main_wrap(int argc, char *argv[])
 {
    (void)argc;
    (void)argv;
