@@ -46,7 +46,7 @@ def main(name):
             sig = int(cell['Signal'][0:-4])
          pair = [cell['Address'] + '_' + cell['Name'], sig]
          socket.send(dumps(pair))
-      sleep(0.5)
+      sleep(1.0)
 
 
 daemonize('wifi_sensor', main)
