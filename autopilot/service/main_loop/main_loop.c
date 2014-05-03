@@ -140,7 +140,7 @@ void main_init(int argc, char *argv[])
    
    LOG(LL_INFO, "initializing platform");
    
-   char *plat_name = NULL;;
+   char *plat_name = NULL;
    opcd_param_get("platform", &plat_name);
    if (strcmp(plat_name, "overo_quad") == 0)
    {

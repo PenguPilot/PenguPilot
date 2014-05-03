@@ -45,7 +45,7 @@ class TWL4030_MADC:
 def main(name):
    map = generate_map(name)
    socket = map['power']
-   opcd = OPCD_Interface(map['opcd_ctrl'], 'gumstix_quad')
+   opcd = OPCD_Interface(map['opcd_ctrl'], 'overo_quad')
    voltage_adc = TWL4030_MADC(opcd.get('voltage_channel'))
    current_adc = TWL4030_MADC(opcd.get('current_channel'))
    voltage_lambda = eval(opcd.get('adc_to_voltage'))
