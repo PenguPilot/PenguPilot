@@ -169,7 +169,7 @@ int mpu6050_init(mpu6050_t *mpu, i2c_bus_t *bus, uint8_t addr, mpu6050_dlpf_cfg_
 
    /* verify chip identification: */
    THROW_ON_ERR(i2c_read_reg(&mpu->i2c_dev, MPU6050_WHO_AM_I));
-   THROW_IF(THROW_PREV != mpu->i2c_dev.addr, -ENODEV);
+   THROW_IF(THROW_PREV != mpu->i2c_dev.addr && THROW_PREV != mpu->i2c_dev.addr - 1, -ENODEV);
 
    /* reset device: */
    THROW_ON_ERR(i2c_write_reg(&mpu->i2c_dev, MPU6050_PWR_MGMT_1, MPU6050_PWR_MGMT_1_DEVICE_RESET));
@@ -188,8 +188,8 @@ int mpu6050_init(mpu6050_t *mpu, i2c_bus_t *bus, uint8_t addr, mpu6050_dlpf_cfg_
    THROW_ON_ERR(i2c_write_reg(&mpu->i2c_dev, MPU6050_ACCEL_CONFIG, MPU6050_ACCEL_CONFIG_AFS_SEL(mpu->afs)));
 
    /* enable i2c bypass mode: */
-   //THROW_ON_ERR(i2c_write_reg(&mpu->i2c_dev, MPU6050_INT_PIN_CFG, 0x02));
-   //THROW_ON_ERR(i2c_write_reg(&mpu->i2c_dev, MPU6050_USER_CTRL, 0x00));
+   THROW_ON_ERR(i2c_write_reg(&mpu->i2c_dev, MPU6050_INT_PIN_CFG, 0x02));
+   THROW_ON_ERR(i2c_write_reg(&mpu->i2c_dev, MPU6050_USER_CTRL, 0x00));
 
    msleep(1);
 
