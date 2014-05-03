@@ -77,10 +77,9 @@ SIMPLE_THREAD_BEGIN(thread_func)
 {
    SIMPLE_THREAD_LOOP_BEGIN
    {
-      float voltage_raw;
-      float current_raw;
+      float voltage_raw = 0.0;
+      float current_raw = 0.0;
       scl_read_power(&voltage_raw, &current_raw);
-      
       pthread_mutex_lock(&mutex);
       voltage = voltage_raw;
       current = current_raw;

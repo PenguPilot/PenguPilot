@@ -27,6 +27,7 @@
 #include <opcd_interface.h>
 #include <threadsafe_types.h>
 #include <util.h>
+#include <physics.h>
 
 #include "acc_mag_cal.h"
 
@@ -71,7 +72,7 @@ void acc_mag_cal_apply(vec3_t *acc, vec3_t *mag)
 {
    FOR_N(i, 3)
    {
-      acc->ve[i] = 9.80665f * (acc->ve[i] - tsfloat_get(&acc_bias[i])) / tsfloat_get(&acc_scale[i]);
+      acc->ve[i] = G_CONSTANT * (acc->ve[i] - tsfloat_get(&acc_bias[i])) / tsfloat_get(&acc_scale[i]);
       mag->ve[i] =  (mag->ve[i] - tsfloat_get(&mag_bias[i])) / tsfloat_get(&mag_scale[i]);
    }
 }
