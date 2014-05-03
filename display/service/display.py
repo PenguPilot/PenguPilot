@@ -325,8 +325,8 @@ def main(name):
             else:
                caution()
                sleep(0.2)
-         except Exception, e:
-            print e
+         except:
+            pass
          screen = (screen + 1) % len(screens)
    except:
       oled.invert(False)

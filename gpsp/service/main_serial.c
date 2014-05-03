@@ -101,7 +101,7 @@ void main_serial(void)
       OPCD_PARAMS_END
    };
    opcd_params_apply("gpsp.serial.", params);
-   
+   printf("%s %d\n", serial_path, tsint_get(&serial_speed));
    int status = serial_open(&port, serial_path, tsint_get(&serial_speed), 0, 0, 0);
    if (status < 0)
    {
@@ -109,10 +109,8 @@ void main_serial(void)
       exit(EXIT_FAILURE);
    }
 
-
    nmeaPARSER parser;
    nmea_parser_init(&parser);
-
    nmeaINFO info;
    nmea_zero_INFO(&info);
 
@@ -198,7 +196,6 @@ void main_serial(void)
             }
             free(satinfo);
          }
-         nmea_zero_INFO(&info);
       }
    }
 }
