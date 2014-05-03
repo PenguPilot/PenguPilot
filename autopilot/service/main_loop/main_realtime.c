@@ -31,11 +31,11 @@
 
 #include <periodic_thread.h>
 #include <util.h>
+#include <interval.h>
 
 #include "main_util.h"
 #include "main_loop.h"
 #include "../util/logger/logger.h"
-#include "../util/time/interval.h"
 
 
 static struct sched_param sp;

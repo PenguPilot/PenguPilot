@@ -61,10 +61,10 @@ def gps():
    socket = socket_map['gps']
    i = 0
    while True:
+      data = socket.recv()
+      if spinning:
+         continue
       with gps_lock:
-         data = socket.recv()
-         if spinning:
-            continue
          if i == 5:
             i = 0
             gps_data = GpsData()
@@ -85,6 +85,21 @@ def cpuavg():
          else:
             load = 0.85 * load + 0.15 * cpu_percent()
          sleep(0.1)
+
+
+def remote_reader():
+   s = socket_map['remote']
+   global channels
+   i = 0
+   while True:
+      if spinning:
+         sleep(1)
+      else:
+         raw = s.recv()
+         if i == 10:
+            i = 0
+            channels = loads(raw)
+         i += 1
 
 
 def pmreader():
@@ -108,8 +123,10 @@ def show_image(image):
    data = ''.join(map(chr, image.getdata()))
    oled.blit(data)
 
+
 def hline(draw, h):
    draw.line([(0, h), (W - 1, h)], WHITE)
+
 
 def decorations(draw):
    hline(draw, 0)
@@ -129,6 +146,7 @@ def fit_text_width(txt, img_fraction, font_path = getenv('PENGUPILOT_PATH') + '/
       font = ImageFont.truetype(font_path, fontsize)
    fontsize -= 1
    return ImageFont.truetype(font_path, fontsize)
+
 
 def batt_low():
    image = Image.new("1", (W, H), BLACK)
@@ -198,10 +216,12 @@ class Alert(Thread):
             oled.invert(False)
             sleep(self.inner)
 
+
 def bar(draw, x, y, w, h, p):
    draw.polygon([(x, y), (x + w, y), (x + w, y + h), (x, y + h)], False, WHITE)
    pw = round((w - 1) * p, 0)
    draw.polygon([(x + 1, y + 1), (x + 1 + pw, y + 1), (x + 1 + pw, y + h - 1), (x + 1, y + h - 1)], True, WHITE)
+
 
 def mem_used():
    lines = file('/proc/meminfo').readlines()
@@ -209,6 +229,7 @@ def mem_used():
    free = float(lines[1].split(' ')[-2])
    cached = float(lines[3].split(' ')[-2])
    return 100 * (1.0 - (free + cached) / total)
+
 
 def draw_health(draw):
    mem = mem_used()
@@ -225,9 +246,20 @@ def draw_health(draw):
 
    draw.text((0, 24), 'BAT: %.1f%%, T: %.1fh' % (100.0 * batt, estimate), WHITE, font = font)
    bar(draw, 0, 38, 127, 6, batt)
-   
+ 
+
+def draw_remote(draw):
+   if channels[0]:
+      draw.text((21, 0), 'RC signal: valid', WHITE, font = font)
+   else:
+      draw.text((15, 0), 'RC signal: invalid', WHITE, font = font)
+   for i in range(6):
+      bar(draw, 0, 17 + i * 8, 127, 6, channels[1 + i] + 0.5)
+
+
 def circle(draw, x, y, rad, i, o):
    draw.ellipse((x - rad, y - rad, x + rad, y + rad), i, o)
+
 
 def pol2cart(az, el, x, y, r):
    az *= (pi / 180.0)
@@ -235,6 +267,7 @@ def pol2cart(az, el, x, y, r):
    xout = x + sin(az) * el * r
    yout = y - cos(az) * el * r
    return (int(xout), int(yout))      
+
 
 def draw_gps(draw):
    with gps_lock:
@@ -263,6 +296,7 @@ def draw_gps(draw):
          else:
             circle(draw, x, y, 3, BLACK, WHITE)
       draw.text((0, 13 * 4), 'Sig: %.1f' % sig, WHITE, font = font)
+
 
 def draw_gps2(draw):
    with gps_lock:
@@ -297,10 +331,16 @@ def main(name):
    t3 = Thread(target = gps)
    t3.daemon = True
    t3.start()
+   
+   t4 = Thread(target = remote_reader)
+   t4.daemon = True
+   t4.start()
+
 
    screens = [(draw_health, 10),
               (draw_gps, 10),
-              (draw_gps2, 10)]
+              (draw_gps2, 10),
+              (draw_remote, 10)]
 
    screen = 0
    oled.init('/dev/i2c-3', W, H)
@@ -332,6 +372,7 @@ def main(name):
       oled.invert(False)
       oled.clear()
       oled.update()
+
 
 daemonize('display', main)
 

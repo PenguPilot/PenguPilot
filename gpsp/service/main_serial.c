@@ -117,6 +117,10 @@ void main_serial(void)
    int time_set = 0;
    int smask = 0; /* global smask collects all sentences and is never reset,
                      in contrast to info.smask */
+   double lat_prev = 0.0;
+   double lon_prev = 0.0;
+   unsigned int count = 0;
+   
    while (running)
    {
       int c = serial_read_char(&port);
@@ -131,6 +135,10 @@ void main_serial(void)
          if (   (info.smask & GPGGA) /* check for new position update */
              && (smask & (GPGSA | GPRMC))) /* go sure that we collect all sentences for first output*/
          {
+            /* limit sending data rate: */
+            if (((count++ % 50) != 0) && convert(info.lat) == lat_prev && convert(info.lon) == lon_prev)
+               continue;
+
             GpsData gps_data = GPS_DATA__INIT;
             
             /* set general data: */
@@ -158,6 +166,8 @@ void main_serial(void)
                PB_SET(gps_data, sats, info.satinfo.inuse);
                PB_SET(gps_data, course, info.track);
                PB_SET(gps_data, speed, info.speed);
+               lat_prev = gps_data.lat;
+               lon_prev = gps_data.lon;
             }
               
             /* set data for 3d fix: */

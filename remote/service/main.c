@@ -34,8 +34,12 @@
 #include <scl.h>
 #include <opcd_interface.h>
 #include <serial.h>
+#include <interval.h>
 
 #include "rc_dsl.h"
+
+
+#define SEND_TIMEOUT 0.1
 
 
 static int running = 1;
@@ -72,23 +76,32 @@ int _main(void)
    THROW_IF(!msgpack_buf, -ENOMEM);
    msgpack_packer *pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
    THROW_IF(!pk, -ENOMEM);
- 
+
+   float timer = 0.0f;
+   interval_t interval;
+   interval_init(&interval);
+
    while (running)
    {
       int b = serial_read_char(&port);
       if (b < 0)
       {
-         usleep(1000);
+         msleep(1);
          continue;
       }
       int status = rc_dsl_parse_dsl_data(&rc_dsl, (uint8_t)b);
       if (status == 1)
       {
-         msgpack_sbuffer_clear(msgpack_buf);
-         msgpack_pack_array(pk, RC_DSL_CHANNELS + 1);
-         PACKI(RC_DSL_RSSI_VALID(rc_dsl.RSSI));    /* index 0: valid */
-         PACKFV(rc_dsl.channels, RC_DSL_CHANNELS); /* index 1, .. : channels */
-         scl_copy_send_dynamic(rc_socket, msgpack_buf->data, msgpack_buf->size);
+         timer += interval_measure(&interval);
+         if (timer > SEND_TIMEOUT)
+         {
+            msgpack_sbuffer_clear(msgpack_buf);
+            msgpack_pack_array(pk, RC_DSL_CHANNELS + 1);
+            PACKI(RC_DSL_RSSI_VALID(rc_dsl.RSSI));    /* index 0: valid */
+            PACKFV(rc_dsl.channels, RC_DSL_CHANNELS); /* index 1, .. : channels */
+            scl_copy_send_dynamic(rc_socket, msgpack_buf->data, msgpack_buf->size);
+            timer = SEND_TIMEOUT - timer;
+         }
       }
    }
    THROW_END();
