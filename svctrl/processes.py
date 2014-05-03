@@ -52,7 +52,6 @@ def sched_set_prio(pid, prio):
    schedParams.sched_priority = prio
    err = libc.sched_setscheduler(pid, _SCHED_FIFO, ctypes.byref(schedParams))
    if err != 0:
-      print pid, prio
       raise OSError('could not set priority, code: %d' % err)
 
 
