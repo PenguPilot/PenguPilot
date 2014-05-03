@@ -147,6 +147,7 @@
    - motors_spinning: sub
    - gps: sub
    - powerman: sub
+   - remote: sub
 
 - name: heartbeat
   sockets:

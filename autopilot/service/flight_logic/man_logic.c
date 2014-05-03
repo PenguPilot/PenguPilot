@@ -29,13 +29,13 @@
 #include <threadsafe_types.h>
 #include <opcd_interface.h>
 #include <util.h>
+#include <interval.h>
 
 #include "man_logic.h"
 #include "../hardware/util/calibration.h"
 #include "../util/logger/logger.h"
 #include "../util/math/conv.h"
 #include "../util/math/linfunc.h"
-#include "../util/time/interval.h"
 #include "../hardware/platform/platform.h"
 #include "../control/position/navi.h"
 #include "../control/position/u_ctrl.h"
