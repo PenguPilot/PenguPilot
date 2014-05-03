@@ -11,14 +11,10 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
 
- calibration math
+ Calibration Math
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
- Copyright (C) 2014 Fabio Varesano <fabio at varesano dot net>
-
- Development of this code has been supported by the Department of Computer Science,
- Universita' degli Studi di Torino, Italy within the Piemonte Project
- http://www.piemonte.di.unito.it
+ Copyright (C) 2013 Fabio Varesano <fabio at varesano dot net>
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by

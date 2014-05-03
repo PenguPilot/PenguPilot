@@ -34,6 +34,7 @@
 #include <msgpack.h>
 #include <periodic_thread.h>
 #include <threadsafe_types.h>
+#include <physics.h>
 
 #include "mon.h"
 #include "control_mode.h"
@@ -80,7 +81,7 @@ static calibration_t gyro_cal;
 static interval_t gyro_move_interval;
 static int init = 0;
 static Filter1 lp_filter;
-static float acc_vec[3] = {0.0f, 0.0f, -9.81f};
+static float acc_vec[3] = {0.0f, 0.0f, -G_CONSTANT};
 
 
 typedef union
@@ -402,7 +403,7 @@ void main_step(const float dt,
    vec3_init(&f_neu);
    vec_scalar_mul(&f_neu, &a_neu, platform.mass_kg); /* f[i] = a[i] * m, makes ctrl device-independent */
    
-   float hover_force = platform.mass_kg * 9.81f;
+   float hover_force = platform.mass_kg * G_CONSTANT;
    f_neu.z += hover_force;
 
    /* execute NEU forces optimizer: */

@@ -31,15 +31,16 @@
 #include <syslog.h>
 #include <math.h>
 
+#include <util.h>
 #include <threadsafe_types.h>
 #include <opcd_interface.h>
 #include <serial.h>
 #include <gps_data.pb-c.h>
 #include <scl.h>
+#include <i2c/i2c.h>
 
 #include "linux_sys.h"
 #include "i2c/navigatron_gtpa010.h"
-#include <i2c/i2c.h>
 
 
 #define TIME_STR_LEN 128
@@ -136,8 +137,7 @@ void main_i2c(void)
 
    while (1)
    {
-		usleep(200000);
-
+		msleep(200);
 		GpsData gps_data = GPS_DATA__INIT;
 
 		/*  GPS STATUS  */
