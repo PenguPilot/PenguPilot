@@ -40,7 +40,7 @@ def set_compiler_dependent_cflags():
    for line in all_info.split('\n'):
       if "Hardware" in line:
          board = re.sub( ".*Hardware.*: ", "", line, 1)
-   print 'compiler optimization for board: ' + board
+   print 'scons: Optimization for board: ' + board
    if board == 'ODROID-U2/U3':
       cflags += ' -O3 -pipe -mcpu=cortex-a9 -mfpu=neon-fp16 -mfloat-abi=hard -ffast-math'
    elif board == 'Gumstix Overo':
