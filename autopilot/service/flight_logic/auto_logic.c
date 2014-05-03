@@ -32,8 +32,8 @@
 #include <opcd_interface.h>
 
 #include "auto_logic.h"
-#include "../platform/platform.h"
 #include "../main_loop/control_mode.h"
+#include "../hardware/platform/platform.h"
 
 
 /* n/e direction in meters: */

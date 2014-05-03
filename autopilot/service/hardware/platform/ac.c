@@ -25,7 +25,7 @@
 
 
 #include <assert.h>
-#include "util.h"
+#include <util.h>
 
 
 #include "ac.h"

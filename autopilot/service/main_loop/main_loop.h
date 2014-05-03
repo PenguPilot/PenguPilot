@@ -29,7 +29,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "../platform/platform.h"
+#include "../hardware/platform/platform.h"
 
 
 #define REALTIME_PERIOD (1.0f / 200.0f)

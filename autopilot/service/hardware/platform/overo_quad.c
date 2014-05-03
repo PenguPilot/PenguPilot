@@ -32,22 +32,20 @@
 #include <math.h>
 
 #include <util.h>
+#include <i2c/i2c.h>
 #include "inv_coupling.h"
 #include "overo_quad.h"
 #include "platform.h"
-#include "../util/logger/logger.h"
-
-/* hardware includes: */
-#include <i2c/i2c.h>
-#include "../hardware/drivers/scl_gps/scl_gps.h"
-#include "../hardware/drivers/i2cxl/i2cxl_reader.h"
-#include "../hardware/drivers/ms5611/ms5611_reader.h"
-#include "../hardware/drivers/scl_rc/scl_rc.h"
-#include "../hardware/drivers/scl_power/scl_power.h"
-#include "../hardware/drivers/pwm_esc/pwm_escs.h"
-#include "../hardware/util/rc_channels.h"
 #include "drotek_marg2.h"
 #include "force_to_esc.h"
+#include "../drivers/scl_gps/scl_gps.h"
+#include "../drivers/i2cxl/i2cxl_reader.h"
+#include "../drivers/ms5611/ms5611_reader.h"
+#include "../drivers/scl_rc/scl_rc.h"
+#include "../drivers/scl_power/scl_power.h"
+#include "../drivers/pwm_esc/pwm_escs.h"
+#include "../util/rc_channels.h"
+#include "../../util/logger/logger.h"
 
 
 #define N_MOTORS 4

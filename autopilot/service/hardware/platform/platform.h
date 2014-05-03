@@ -27,9 +27,9 @@
 #ifndef __PLATFORM_H__
 #define __PLATFORM_H__
 
-#include "../hardware/util/gps_data.h"
-#include "../hardware/util/rc_channels.h"
-#include "../hardware/util/marg_data.h"
+#include "../util/gps_data.h"
+#include "../util/rc_channels.h"
+#include "../util/marg_data.h"
 #include "ac.h"
 
 

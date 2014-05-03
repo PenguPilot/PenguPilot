@@ -35,7 +35,6 @@
 #include <scl.h>
 
 #include "interface.h"
-#include "../platform/platform.h"
 #include "../util/logger/logger.h"
 #include "../flight_logic/auto_logic.h"
 #include "../control/position/navi.h"

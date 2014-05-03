@@ -29,7 +29,7 @@
 #define __BLACKBOX_H__
 
 
-#include "../platform/platform.h"
+#include "../hardware/platform/platform.h"
 #include "../util/math/vec2.h"
 
 
