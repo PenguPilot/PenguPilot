@@ -99,14 +99,16 @@ SIMPLE_THREAD_END
 int scl_rc_init(void)
 {
    ASSERT_ONCE();
+   THROW_BEGIN();
    memset(channels, 0, sizeof(channels));
    scl_socket = scl_get_socket("remote");
+   THROW_IF(scl_socket == NULL, -ENODEV);
    ASSERT_NOT_NULL(scl_socket);
    pthread_mutexattr_init(&mutexattr); 
    pthread_mutexattr_setprotocol(&mutexattr, PTHREAD_PRIO_INHERIT); 
    pthread_mutex_init(&mutex, &mutexattr);
    simple_thread_start(&thread, thread_func, THREAD_NAME, THREAD_PRIORITY, NULL);
-   return 0;
+   THROW_END();
 }
 
 

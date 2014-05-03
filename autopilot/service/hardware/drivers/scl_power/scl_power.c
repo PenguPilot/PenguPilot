@@ -24,7 +24,6 @@
  GNU General Public License for more details. */
 
 
-
 #include <unistd.h>
 
 #include <util.h>
@@ -92,16 +91,14 @@ SIMPLE_THREAD_END
 
 int scl_power_init(void)
 {
+   THROW_BEGIN();
    scl_socket = scl_get_socket("power");
-   if (scl_socket == NULL)
-   {
-      return -1;
-   }
+   THROW_IF(scl_socket == NULL, -ENODEV);
    pthread_mutexattr_init(&mutexattr);
    pthread_mutexattr_setprotocol(&mutexattr, PTHREAD_PRIO_INHERIT);
    pthread_mutex_init(&mutex, &mutexattr);
    simple_thread_start(&thread, thread_func, "power_reader", THREAD_PRIORITY, NULL);
-   return 0;
+   THROW_END();
 }
 
 
