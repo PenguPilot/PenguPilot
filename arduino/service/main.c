@@ -25,23 +25,18 @@
  GNU General Public License for more details. */
 
 
-#include <string.h>
-
-#include <util.h>
-#include <serial.h>
 #include <stdbool.h>
 #include <msgpack.h>
 
+#include <util.h>
+#include <serial.h>
 #include <scl.h>
 #include <opcd_interface.h>
-#include <pthread.h>
 #include <threadsafe_types.h>
 #include <daemon.h>
 
-
 #include "ppm_common.h"
 #include "ppm_parse.h"
-
 #include "power_common.h"
 #include "power_parse.h"
 
@@ -55,15 +50,15 @@ int _main(void)
    /* init scl and get sockets:: */
    THROW_ON_ERR(scl_init("arduino"));
    void *rc_socket = scl_get_socket("remote");
-   THROW_IF(!rc_socket, -EIO);
+   THROW_IF(rc_socket == NULL, -ENODEV);
    void *power_socket = scl_get_socket("power");
-   THROW_IF(!power_socket, -EIO);
+   THROW_IF(power_socket == NULL, -ENODEV);
 
    /* allocate msgpack buffers: */
    msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new();
-   THROW_IF(!msgpack_buf, -ENOMEM);
+   THROW_IF(msgpack_buf == NULL, -ENOMEM);
    msgpack_packer *pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
-   THROW_IF(!pk, -ENOMEM);
+   THROW_IF(pk == NULL, -ENOMEM);
  
    /* fetch parameters: */
    char *dev_path;
@@ -115,7 +110,6 @@ int _main(void)
          msgpack_pack_array(pk, 1 + PPM_CHAN_MAX);
          PACKI(sig_valid);               /* index 0: valid */
          PACKFV(channels, PPM_CHAN_MAX); /* index 1, .. : channels */
-         //printf("ppm status: %d\n", sig_valid);
          scl_copy_send_dynamic(rc_socket, msgpack_buf->data, msgpack_buf->size);
       }
 
@@ -131,8 +125,7 @@ int _main(void)
          msgpack_pack_array(pk, 2);
          PACKF(voltage); /* index 0 */
          PACKF(current); /* index 1 */
-         //printf("voltage: %f, current: %f\n", voltage, current);
-	 scl_copy_send_dynamic(power_socket, msgpack_buf->data, msgpack_buf->size);
+	      scl_copy_send_dynamic(power_socket, msgpack_buf->data, msgpack_buf->size);
       }
    }
    THROW_END();
@@ -154,11 +147,11 @@ void main_wrap(int argc, char *argv[])
    exit(-_main());
 }
 
+
 int main(int argc, char *argv[])
 {
    char pid_file[1024];
    sprintf(pid_file, "%s/.PenguPilot/run/arduino.pid", getenv("HOME"));
-   //main_wrap(argc, argv);
    daemonize(pid_file, main_wrap, _cleanup, argc, argv);
    return 0;
 }

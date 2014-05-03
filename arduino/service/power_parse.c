@@ -25,106 +25,109 @@
 
 
 #include <assert.h>
-#include <stdio.h>
 
 #include "power_common.h"
 #include "checksum.h"
 
+
 static enum
 {
-	READ_SYNC0,
-	READ_SYNC1,
-	READ_VOLTAGE0,
-	READ_VOLTAGE1,
-	READ_VOLTAGE2,
-	READ_VOLTAGE3,
-	READ_CURRENT0,
-	READ_CURRENT1,
-	READ_CURRENT2,
-	READ_CURRENT3,
-	READ_CS0,
-	READ_CS1
-} state = READ_SYNC0;
+   READ_SYNC0,
+   READ_SYNC1,
+   READ_VOLTAGE0,
+   READ_VOLTAGE1,
+   READ_VOLTAGE2,
+   READ_VOLTAGE3,
+   READ_CURRENT0,
+   READ_CURRENT1,
+   READ_CURRENT2,
+   READ_CURRENT3,
+   READ_CS0,
+   READ_CS1
+}
+state = READ_SYNC0;
 
 static uint16_t cs;
 
+
 int power_parse_frame(uint32_t *voltage, uint32_t *current, uint8_t c)
 {
-	int ret = 0;
-	uint32_t data[2];
+   int ret = 0;
+   uint32_t data[2];
 
+   assert(voltage);
+   assert(current);
 
-	assert(voltage);
-	assert(current);
+   switch(state)
+   {
+      case READ_SYNC0:
+         if (c == (uint8_t)(POWER_PREAMBLE & 0xFF))
+            state = READ_SYNC1;
+         break;
 
-	switch(state)
-	{
-		case READ_SYNC0:
-			if(c == (uint8_t)(POWER_PREAMBLE & 0xFF))
-			{
-				state = READ_SYNC1;
-			}
-			break;
-		case READ_SYNC1:
-			if(c == (uint8_t)(POWER_PREAMBLE >> 8))
-			{
-				state = READ_VOLTAGE0;
-			}
-			else
-			{
-				state = READ_SYNC0;
-			}
-			break;
-		case READ_VOLTAGE0:
-			*voltage = c;
-			state = READ_VOLTAGE1;
-			break;
-		case READ_VOLTAGE1:
-			*voltage |= c << 8;
-			state = READ_VOLTAGE2;
-			break;
-		case READ_VOLTAGE2:
-			*voltage |= c << 16;
-			state = READ_VOLTAGE3;
-			break;
-		case READ_VOLTAGE3:
-			*voltage |= c << 24;
-			state = READ_CURRENT0;
-			break;
-		case READ_CURRENT0:
-			*current = c;
-			state = READ_CURRENT1;
-			break;
-		case READ_CURRENT1:
-			*current |= c << 8;
-			state = READ_CURRENT2;
-			break;
-		case READ_CURRENT2:
-			*current |= c << 16;
-			state = READ_CURRENT3;
-			break;
-		case READ_CURRENT3:
-			*current |= c << 24;
-			state = READ_CS0;
-			break;
-		case READ_CS0:
-			cs = c;
-			state = READ_CS1;
-			break;
-		case READ_CS1:
-			cs |= c << 8;
+      case READ_SYNC1:
+         if (c == (uint8_t)(POWER_PREAMBLE >> 8))
+            state = READ_VOLTAGE0;
+         else
+            state = READ_SYNC0;
+         break;
 
-			data[0] = *voltage;
-			data[1] = *current;
+      case READ_VOLTAGE0:
+         *voltage = c;
+         state = READ_VOLTAGE1;
+         break;
 
-			if(cs == checksum((uint8_t *)(data), sizeof(data)))
-			{
-				ret = 1;
-			}
-			state = READ_SYNC0;
-			break;
-	}
+      case READ_VOLTAGE1:
+         *voltage |= c << 8;
+         state = READ_VOLTAGE2;
+         break;
 
-	return ret;
+      case READ_VOLTAGE2:
+         *voltage |= c << 16;
+         state = READ_VOLTAGE3;
+         break;
+
+      case READ_VOLTAGE3:
+         *voltage |= c << 24;
+         state = READ_CURRENT0;
+         break;
+
+      case READ_CURRENT0:
+         *current = c;
+         state = READ_CURRENT1;
+         break;
+
+      case READ_CURRENT1:
+         *current |= c << 8;
+         state = READ_CURRENT2;
+         break;
+         
+      case READ_CURRENT2:
+         *current |= c << 16;
+         state = READ_CURRENT3;
+         break;
+
+      case READ_CURRENT3:
+         *current |= c << 24;
+         state = READ_CS0;
+         break;
+
+      case READ_CS0:
+         cs = c;
+         state = READ_CS1;
+         break;
+
+      case READ_CS1:
+         cs |= c << 8;
+
+         data[0] = *voltage;
+         data[1] = *current;
+
+         if (cs == checksum((uint8_t *)(data), sizeof(data)))
+            ret = 1;
+         state = READ_SYNC0;
+         break;
+   }
+   return ret;
 }
 
