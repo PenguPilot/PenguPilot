@@ -26,35 +26,4 @@
  GNU General Public License for more details. """
 
 
-from os import sep
-from misc import user_data_dir
-
-
-def set_priority(name):
-   try:
-      from yaml import load
-      path = user_data_dir + sep + 'priorities.yaml'
-      prio = load(open(path))[name]
-      _sched_set_prio(prio)
-   except IOError:
-      raise ValueError('could not find/read file "%s"; your system is not configured' % path)
-   except KeyError:
-      raise ValueError('could not retrieve priority of process: %s' % name)
-
-
-def _sched_set_prio(prio):
-   _SCHED_FIFO = 1
-   import ctypes, ctypes.util as util
-   libc = ctypes.cdll.LoadLibrary(util.find_library('c'))
-   if prio > libc.sched_get_priority_max(_SCHED_FIFO):
-      raise ValueError('priority too high: %d' % prio)
-   elif prio < libc.sched_get_priority_min(_SCHED_FIFO):
-      raise ValueError('priority too high: %d' % prio)
-   class _SchedParams(ctypes.Structure):
-      _fields_ = [('sched_priority', ctypes.c_int)]
-   schedParams = _SchedParams()
-   schedParams.sched_priority = prio
-   err = libc.sched_setscheduler(0, _SCHED_FIFO, ctypes.byref(schedParams))
-   if err != 0:
-      raise OSError('could not set priority, code: %d' % err)
 

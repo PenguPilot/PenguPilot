@@ -59,7 +59,6 @@ gpsp:
 
 powerman:
    beeper_enabled: False
-   priority: 94
    gpio_i2c_bus: 3
    gpio_i2c_address: 0x11
    gpio_power_pin: 0

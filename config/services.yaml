@@ -24,65 +24,91 @@
 # GNU General Public License for more details.
 
 
-opcd:
-  binary: 'opcd/service/opcd.py'
+# high-priority system services:
 
-aircomm:
-  binary: 'aircomm/service/aircomm.py'
-  depends: [opcd]
+autopilot:
+   binary: 'autopilot/service/autopilot'
+   depends: [opcd, gpsp, powerman]
+   priority: sys_high
+
+
+# medium-priority system services:
 
 arduino:
-  binary: 'arduino/service/arduino'
-  platforms: [exynos_quad]
-  depends: [opcd]
+   binary: 'arduino/service/arduino'
+   platforms: [exynos_quad]
+   depends: [opcd]
+   priority: sys_medium
 
 ads1x15:
-  binary: 'ads1x15/service/ads1x15.py'
-  platforms: [pi_quad]
-  depends: [opcd]
+   binary: 'ads1x15/service/ads1x15.py'
+   platforms: [pi_quad]
+   depends: [opcd]
+   priority: sys_medium
 
 gpsp:
-  binary: 'gpsp/service/gpsp'
-  depends: [opcd]
+   binary: 'gpsp/service/gpsp'
+   depends: [opcd]
+   priority: sys_medium
 
-geomag:
-  binary: 'geomag/service/geomag.py'
-  depends: [gpsp]
+twl4030_madc:
+   binary: 'twl4030_madc/service/twl4030_madc.py'
+   platforms: [overo_quad]
+   depends: [opcd]
+   priority: sys_medium
+
+remote:
+   binary: 'remote/service/remote'
+   platforms: [overo_quad, pi_quad]
+   depends: [opcd]
+   priority: sys_medium
+
+
+# low-priority system services:
+
+opcd:
+  binary: 'opcd/service/opcd.py'
+  priority: sys_low
 
 powerman:
   binary: 'powerman/service/powerman.py'
   depends: [opcd, arduino, twl4030_madc, ads1x15]
-
-autopilot:
-  binary: 'autopilot/service/autopilot'
-  depends: [opcd, gpsp, powerman]
-
-twl4030_madc:
-  binary: 'twl4030_madc/service/twl4030_madc.py'
-  platforms: [overo_quad]
-  depends: [opcd]
+  priority: sys_low
 
 display:
   binary: 'display/service/display.py'
   platforms: [overo_quad]
   depends: [gpsp, powerman]
+  priority: sys_low
 
 blackbox:
   binary: 'blackbox/service/blackbox.py'
+  priority: sys_low
 
-wifi_sensor:
-  binary: 'wifi_sensor/service/wifi_sensor.py'
+aircomm:
+  binary: 'aircomm/service/aircomm.py'
+  depends: [opcd]
+  priority: sys_low
 
 heartbeat:
   binary: 'heartbeat/service/heartbeat.py'
   depends: [gpsp, powerman, aircomm]
+  priority: sys_low
 
-remote:
-  binary: 'remote/service/remote'
-  platforms: [overo_quad, pi_quad]
-  depends: [opcd]
+geomag:
+  binary: 'geomag/service/geomag.py'
+  depends: [gpsp]
+  priority: sys_low
+
+
+# application-level services:
+
+wifi_sensor:
+  binary: 'wifi_sensor/service/wifi_sensor.py'
+  priority: app
 
 wifi_loc:
   binary: 'wifi_loc/service/wifi_loc.py'
   depends: [gpsp, wifi_sensor]
+  priority: app
 

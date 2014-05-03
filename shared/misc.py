@@ -96,36 +96,3 @@ def await_signal():
    except:
       print 'killed by user'
 
-
-
-
-# process priority modification:
-
-_c = ctypes.cdll.LoadLibrary(ctypes.util.find_library('c'))
-
-_SCHED_FIFO = 1
-
-class _SchedParams(ctypes.Structure):
-   _fields_ = [('sched_priority', ctypes.c_int)]
-
-
-def sched_get_minprio():
-   return _c.sched_get_priority_min(_SCHED_FIFO)
-
-
-def sched_get_maxprio():
-   return _c.sched_get_priority_max(_SCHED_FIFO)
-
-
-def sched_rtprio(priority):
-    priority = int(priority)
-    if priority > sched_get_maxprio():
-       raise ValueError('priority too high')
-    elif priority < sched_get_minprio():
-       raise ValueError('priority too high')
-    schedParams = _SchedParams()
-    schedParams.sched_priority = priority
-    err = _c.sched_setscheduler(0, _SCHED_FIFO, ctypes.byref(schedParams))
-    if err != 0:
-      raise OSError('could not set priority, code: %d' % err)
-
