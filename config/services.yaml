@@ -81,6 +81,10 @@ display:
   depends: [gpsp, powerman]
   priority: sys_low
 
+emerg_kill:
+  binary: 'emerg_kill/service/emerg_kill.py'
+  priority: sys_low
+
 blackbox:
   binary: 'blackbox/service/blackbox.py'
   priority: sys_low
