@@ -35,6 +35,17 @@ from msgpack import loads, dumps
 from scl import generate_map
 from opcd_interface import OPCD_Interface
 from misc import daemonize
+from os import system
+
+
+warning_sent = False
+
+def warning():
+   global warning_sent
+   if not warning_sent:
+      warning_sent = True   
+      msg = 'WARNING: SYSTEM BATTERY VOLTAGE IS LOW; IMMEDIATE SHUTDOWN REQUIRED'
+      system('echo "%s" | wall' % msg)
 
 
 def main(name):
@@ -68,7 +79,8 @@ def main(name):
       remaining = capacity - consumed
       if remaining < 0:
          remaining = 0
-      critical = critical
+      if critical:
+         warning()
       state = [voltage,   # 0 [V]
                current,   # 1 [A]
                remaining, # 2 [Ah]
