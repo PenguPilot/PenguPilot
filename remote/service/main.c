@@ -24,8 +24,6 @@
  GNU General Public License for more details. */
 
 
-
-#include <sched.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/mman.h>
@@ -40,36 +38,12 @@
 #include "rc_dsl.h"
 
 
-static struct sched_param sp;
 static int running = 1;
-
-
-static int realtime_init(void)
-{
-   ASSERT_ONCE();
-
-   sp.sched_priority = sched_get_priority_max(SCHED_FIFO) - 1;
-   sched_setscheduler(getpid(), SCHED_FIFO, &sp);
-
-   if (nice(-20) == -1)
-   {
-      return -2;
-   }
-
-   if (mlockall(MCL_CURRENT | MCL_FUTURE) != 0)
-   {
-      return -3;
-   }
-   return 0;
-}
-
-
 
 
 int _main(void)
 {
    THROW_BEGIN();
-   THROW_ON_ERR(realtime_init());
    
    THROW_ON_ERR(scl_init("remote"));
    opcd_params_init("", 0);
