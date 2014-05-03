@@ -130,7 +130,7 @@ def start(name, prio, path, args):
                prio_fail = True
             print green('[OK]')
          if prio_fail:
-            print 'warning: could not set process priority'
+            print red('warning:') + ' could not set process priority'
       except Exception as e:
          print red('[ERROR]: ' + str(e))
 
