@@ -26,7 +26,6 @@
 
 
 #include <util.h>
-#include <stdint.h>
 
 #include "afroi2c_escs.h"
 
@@ -37,15 +36,17 @@
 #define AFROI2C_MAX 0xFF
 
 
-static size_t _n_escs;
+static size_t _n_escs = 0;
 static i2c_dev_t device;
+static uint8_t *_motors_map = NULL;
 
 
-void afroi2c_init(i2c_bus_t *bus, size_t n_escs)
+void afroi2c_init(i2c_bus_t *bus, uint8_t *motors_map, size_t n_escs)
 {
     ASSERT_ONCE();
     ASSERT_TRUE(n_escs > 0 && n_escs <= AFROI2C_MAX_ESCS);
     _n_escs = n_escs;
+    _motors_map = motors_map;
     i2c_dev_init(&device, bus, AFROI2C_ADDRESS);
 }
 
@@ -59,7 +60,7 @@ int afroi2c_write(float *setpoints)
         uint16_t val = setpoints[i] * AFROI2C_MAX;
         if (val > AFROI2C_MAX)
            val = AFROI2C_MAX;
-        data[i] = (uint8_t)val;
+        data[_motors_map[i]] = (uint8_t)val;
     }
     THROW_ON_ERR(i2c_xfer(&device, _n_escs, data, 0, NULL));
     THROW_END();

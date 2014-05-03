@@ -47,7 +47,7 @@
 #include "../estimators/pos.h"
 #include "../platform/ac.h"
 #include "../platform/platform.h"
-#include "../platform/arcade_quad.h"
+#include "../platform/overo_quad.h"
 #include "../platform/exynos_quad.h"
 #include "../platform/pi_quad.h"
 #include "../platform/inv_coupling.h"
@@ -142,9 +142,9 @@ void main_init(int argc, char *argv[])
    
    char *plat_name = NULL;;
    opcd_param_get("platform", &plat_name);
-   if (strcmp(plat_name, "gumstix_quad") == 0)
+   if (strcmp(plat_name, "overo_quad") == 0)
    {
-      if (arcade_quad_init(&platform, override_hw) < 0)
+      if (overo_quad_init(&platform, override_hw) < 0)
       {
          LOG(LL_ERROR, "could not initialize platform");
          die();

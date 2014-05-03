@@ -33,8 +33,6 @@
 
 #include <util.h>
 #include "inv_coupling.h"
-#include "quad.h"
-#include "arcade_quad.h"
 #include "platform.h"
 #include "../util/logger/logger.h"
 
@@ -45,10 +43,13 @@
 #include "../hardware/drivers/ms5611/ms5611_reader.h"
 #include "../hardware/drivers/scl_rc/scl_rc.h"
 #include "../hardware/drivers/scl_power/scl_power.h"
+#include "../hardware/drivers/afroi2c_escs/afroi2c_escs.h"
 #include "../hardware/util/rc_channels.h"
 #include "freeimu_04.h"
-#include "holger_quad.h"
-#include "pwm_quad.h"
+#include "force_to_esc.h"
+
+
+#define N_MOTORS 4
 
 
 static i2c_bus_t i2c_bus;
@@ -56,6 +57,7 @@ static rc_channels_t rc_channels;
 static uint8_t channel_mapping[MAX_CHANNELS] =  {0, 1, 3, 2, 4, 5}; /* pitch: 0, roll: 1, yaw: 3, gas: 2, switch left: 4, switch right: 5 */
 static float channel_scale[MAX_CHANNELS] =  {1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
 static freeimu_04_t marg;
+static uint8_t motors_map[N_MOTORS] = {0, 1, 2, 3};
 
 
 static int read_rc(float channels[MAX_CHANNELS])
@@ -156,18 +158,10 @@ int pi_quad_init(platform_t *plat, int override_hw)
       plat->read_baro = ms5611_reader_get_alt;
    
       /* initialize motors: */
-      int holger_blmc = 0;
-      if (holger_blmc)
-      {
-         LOG(LL_INFO, "initializing holger motors");
-         holger_quad_init(plat, c);
-      }
-      else
-      {
-         LOG(LL_INFO, "initializing pwm motors");
-         pwm_quad_init(plat, c);
-      }
- 
+      ac_init(&plat->ac, 0.1f, 0.7f, 12.0f, 17.0f, c, N_MOTORS, force_to_esc_setup3, 0.0f);
+      afroi2c_init(&i2c_bus, motors_map, N_MOTORS);
+      plat->write_motors = afroi2c_write;
+
       /* set-up gps driver: */
       scl_gps_init();
       plat->read_gps = scl_gps_read;
@@ -189,7 +183,7 @@ int pi_quad_init(platform_t *plat, int override_hw)
       plat->read_power = scl_power_read;
    }
 
-   LOG(LL_INFO, "arcade_quadro platform initialized");
+   LOG(LL_INFO, "pi_quadro platform initialized");
    THROW_END();
 }
 

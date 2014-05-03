@@ -29,10 +29,11 @@
 #define __AFROI2C_H__
 
 
+#include <stdint.h>
 #include <i2c/i2c.h>
 
 
-void afroi2c_init(i2c_bus_t *bus, size_t n_escs);
+void afroi2c_init(i2c_bus_t *bus, uint8_t *motor_map, size_t n_escs);
 
 
 int afroi2c_write(float *setpoints);

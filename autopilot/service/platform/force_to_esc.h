@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- holger quad platform interface
+ Force [N] and Voltage [V] to relative ESC Command Interface
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -24,15 +24,31 @@
  GNU General Public License for more details. */
 
 
-#ifndef __HOLGER_QUAD_H__
-#define __HOLGER_QUAD_H__
+#ifndef __FORCE_TO_ESC_H__
+#define __FORCE_TO_ESC_H__
 
 
-#include "platform.h"
+/*
+ * ESC:       Mikrokopter BL-CTRL 1.2
+ * Motor:     Robby Roxxy 2827-35
+ * Propeller: 10x4.5 inch
+ */
+float force_to_esc_setup1(float force, float voltage);
+
+/*
+ * ESC:       HobbyKing 20A UBEC SimonK
+ * Motor:     Robby Roxxy 2827-35
+ * Propeller: 10x4.5 inch
+ */
+float force_to_esc_setup2(float force, float voltage);
+
+/*
+ * ESC:       Flyduino HEXFET20A SimonK
+ * Motor:     Suppo A2212/13
+ * Propeller: 10x4.5 inch
+ */
+float force_to_esc_setup3(float force, float voltage);
 
 
-int holger_quad_init(platform_t *plat, float f_c);
-
-
-#endif /* __HOLGER_QUAD_H__ */
+#endif /* __FORCE_TO_ESC_H__ */
 
