@@ -27,21 +27,24 @@
 
 import os
 import re
-import subprocess
 import distutils.sysconfig
 
 re_cc = re.compile('.*\.(c|cpp)$')
 re_pb = re.compile('.*\.proto$')
 
-
 def set_compiler_dependent_cflags():
    cflags = '-D_GNU_SOURCE -pipe -fomit-frame-pointer -std=c99 -O3 -Wall -Wextra '
-   pipe = subprocess.Popen([env['CC'], '-v'], env=env['ENV'], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-   gcc_info = pipe.stderr.read();
-   if 'armv7a' in gcc_info:
-      cflags += ' -O3 -ftree-vectorize -ffast-math -fomit-frame-pointer -funroll-loops -march=armv7-a -mtune=cortex-a8 -mfpu=vfpv3-d16 -mfloat-abi=hard'
-   if 'armv6' in gcc_info:
-	   cflags += ' -O3 -ftree-vectorize -ffast-math -fomit-frame-pointer -funroll-loops -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard'
+   command = "cat /proc/cpuinfo"
+   all_info = file('/proc/cpuinfo').read()
+   for line in all_info.split('\n'):
+      if "Hardware" in line:
+         board = re.sub( ".*Hardware.*: ", "", line, 1)
+   if board == 'ODROID-U2/U3':
+      cflags += ' -O3 -pipe -mcpu=cortex-a9 -mfpu=neon-fp16 -mfloat-abi=hard -ffast-math'
+   elif board == 'Gumstix Overo':
+      cflags += ' -O3 -ftree-vectorize -ffast-math -march=armv7-a -mtune=cortex-a8 -mfpu=vfpv3-d16 -mfloat-abi=hard'
+   elif board == 'BCM2708':
+	   cflags += ' -O3 -ftree-vectorize -ffast-math -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard'
    env['CFLAGS'] = cflags
 
 def collect_files(path, regex):

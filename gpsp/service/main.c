@@ -20,6 +20,9 @@ void _cleanup(void)
 
 void _main(int argc, char *argv[])
 {
+   (void)argc;
+   (void)argv;
+
    if (scl_init("gpsp") != 0)
    {
       syslog(LOG_CRIT, "could not init scl module");

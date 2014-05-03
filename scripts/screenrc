@@ -1,0 +1,21 @@
+defnonblock on
+defscrollback 65536
+defutf8 on
+
+chdir PenguPilot
+
+screen bash
+title "PenguPilot"
+
+screen /root/PenguPilot/autopilot/tools/logger.py
+title "logger"
+
+split
+
+focus bottom
+resize -10
+select 1
+
+focus top
+select 0
+
