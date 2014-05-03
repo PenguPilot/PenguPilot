@@ -30,10 +30,10 @@
 
 #include <util.h>
 
-#include "../hardware/util/marg_data.h"
-#include "../hardware/drivers/itg3200/itg3200.h"
-#include "../hardware/drivers/bma180/bma180.h"
-#include "../hardware/drivers/hmc5883/hmc5883.h"
+#include "../util/marg_data.h"
+#include "../drivers/itg3200/itg3200.h"
+#include "../drivers/bma180/bma180.h"
+#include "../drivers/hmc5883/hmc5883.h"
 
 
 typedef struct

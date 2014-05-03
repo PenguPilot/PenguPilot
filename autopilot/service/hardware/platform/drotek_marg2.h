@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- FreeIMU V0.4 Driver Interface
+ DROTEK MARG (MPU) Driver Interface
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -25,13 +25,13 @@
 
 
 
-#ifndef __FREEIMU_04_H__
-#define __FREEIMU_04_H__
+#ifndef __DROTEK_MARG2_H__
+#define __DROTEK_MARG2_H__
 
 
-#include "../hardware/util/marg_data.h"
-#include "../hardware/drivers/mpu6050/mpu6050.h"
-#include "../hardware/drivers/hmc5883/hmc5883.h"
+#include "../util/marg_data.h"
+#include "../drivers/mpu6050/mpu6050.h"
+#include "../drivers/hmc5883/hmc5883.h"
 
 
 typedef struct
@@ -39,13 +39,13 @@ typedef struct
    mpu6050_t mpu;
    hmc5883_t hmc;
 }
-freeimu_04_t;
+drotek_marg2_t;
 
 
-int freeimu_04_init(freeimu_04_t *freeimu, i2c_bus_t *bus);
+int drotek_marg2_init(drotek_marg2_t *marg, i2c_bus_t *bus);
 
-int freeimu_04_read(marg_data_t *data, freeimu_04_t *freeimu);
+int drotek_marg2_read(marg_data_t *data, drotek_marg2_t *marg);
 
 
-#endif /* __FREEIMU_04_H__ */
+#endif /* __DROTEK_MARG2_H__ */
 

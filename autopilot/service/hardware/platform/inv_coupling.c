@@ -32,9 +32,9 @@
 #include <opcd_interface.h>
 #include <threadsafe_types.h>
 
-#include "../util/math/vec.h"
-#include "../util/math/mat.h"
 #include "inv_coupling.h"
+#include "../../util/math/vec.h"
+#include "../../util/math/mat.h"
 
 
 static tsint_t enabled[4];

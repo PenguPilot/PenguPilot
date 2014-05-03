@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- ARCADE Quadrotor Platform
+ Raspberry Pi Quadrotor Platform
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
  Copyright (C) 2013 Alexander Barth, Ilmenau University of Technology
@@ -32,34 +32,30 @@
 #include <math.h>
 
 #include <util.h>
+#include <i2c/i2c.h>
 #include "inv_coupling.h"
 #include "platform.h"
-#include "../util/logger/logger.h"
-#include "../util/math/quat.h"
-#include <i2c/i2c.h>
-
-/* hardware includes: */
-#include "../hardware/drivers/scl_gps/scl_gps.h"
-#include "../hardware/drivers/i2cxl/i2cxl_reader.h"
-#include "../hardware/drivers/ms5611/ms5611_reader.h"
-#include "../hardware/drivers/arduino_escs/arduino_escs.h"
-#include "../hardware/drivers/scl_power/scl_power.h"
-#include "../hardware/drivers/scl_rc/scl_rc.h"
-#include "../hardware/util/rc_channels.h"
-#include "../hardware/util/gps_data.h"
-#include "../../arduino/service/ppm_common.h"
-
 #include "freeimu_04.h"
 #include "force_to_esc.h"
+#include "../drivers/scl_gps/scl_gps.h"
+#include "../drivers/i2cxl/i2cxl_reader.h"
+#include "../drivers/ms5611/ms5611_reader.h"
+#include "../drivers/scl_rc/scl_rc.h"
+#include "../drivers/scl_power/scl_power.h"
+#include "../drivers/afroi2c_escs/afroi2c_escs.h"
+#include "../util/rc_channels.h"
+#include "../../util/logger/logger.h"
+
 
 #define N_MOTORS 4
 
 
-static i2c_bus_t i2c_4;
+static i2c_bus_t i2c_bus;
 static rc_channels_t rc_channels;
 static uint8_t channel_mapping[MAX_CHANNELS] =  {0, 1, 3, 2, 4, 5}; /* pitch: 0, roll: 1, yaw: 3, gas: 2, switch left: 4, switch right: 5 */
 static float channel_scale[MAX_CHANNELS] =  {1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
 static freeimu_04_t marg;
+static uint8_t motors_map[N_MOTORS] = {0, 1, 2, 3};
 
 
 static int read_rc(float channels[MAX_CHANNELS])
@@ -82,28 +78,11 @@ static int read_rc(float channels[MAX_CHANNELS])
 
 static int read_marg(marg_data_t *marg_data)
 {
-   int ret = freeimu_04_read(marg_data, &marg);
-   quat_t q;
-   quat_init_axis(&q, 0, 1, 0, M_PI);
-   quat_rot_vec(&marg_data->acc, &marg_data->acc, &q);
-   quat_rot_vec(&marg_data->gyro, &marg_data->gyro, &q);
-   quat_rot_vec(&marg_data->mag, &marg_data->mag, &q);
-   quat_init_axis(&q, 0, 0, 1, -M_PI / 4.0f);
-   quat_rot_vec(&marg_data->acc, &marg_data->acc, &q);
-   quat_rot_vec(&marg_data->gyro, &marg_data->gyro, &q);
-   quat_rot_vec(&marg_data->mag, &marg_data->mag, &q);
-   return ret;
+   return freeimu_04_read(marg_data, &marg);   
 }
 
 
-static int ultra_dummy_read(float *dist)
-{
-	*dist = .1f;
-	return 0;
-}
-
-
-int exynos_quad_init(platform_t *plat, int override_hw)
+int pi_quad_init(platform_t *plat, int override_hw)
 {
    ASSERT_ONCE();
    THROW_BEGIN();
@@ -134,12 +113,12 @@ int exynos_quad_init(platform_t *plat, int override_hw)
    const float icmatrix[4 * N_MOTORS] =
    {         /* gas     roll    pitch    yaw */
       /* m1 */ imtx1,   0.0f, -imtx2, -imtx3,
-      /* m3 */ imtx1, -imtx2,   0.0f,  imtx3,
-      /* m4 */ imtx1,  imtx2,   0.0f,  imtx3,
       /* m2 */ imtx1,   0.0f,  imtx2, -imtx3,
+      /* m4 */ imtx1,  imtx2,   0.0f,  imtx3,
+      /* m3 */ imtx1, -imtx2,   0.0f,  imtx3
    };
 
-   LOG(LL_INFO, "ic matrix [gas roll pitch yaw]");
+   LOG(LL_INFO, "ic matrix [gas pitch roll yaw]");
    FOR_N(i, 4)
    {
       LOG(LL_INFO, "[m%d]: %.0f, %.0f, %.0f, %.0f", i,
@@ -150,30 +129,37 @@ int exynos_quad_init(platform_t *plat, int override_hw)
    
   
    plat->max_thrust_n = 40.0f;
-   plat->mass_kg = 1.1f;
+   plat->mass_kg = 1.125f;
    plat->n_motors = N_MOTORS;
 
    LOG(LL_INFO, "initializing inverse coupling matrix");
    inv_coupling_init(N_MOTORS, icmatrix);
-
+      
    rc_channels_init(&rc_channels, channel_mapping, channel_scale);
 
    if (!override_hw)
    {
       LOG(LL_INFO, "initializing i2c bus");
-      THROW_ON_ERR(i2c_bus_open(&i2c_4, "/dev/i2c-4"));
-      plat->priv = &i2c_4;
+      THROW_ON_ERR(i2c_bus_open(&i2c_bus, "/dev/i2c-1"));
+      plat->priv = &i2c_bus;
 
       LOG(LL_INFO, "initializing MARG sensor cluster");
-      THROW_ON_ERR(freeimu_04_init(&marg, &i2c_4));
+      THROW_ON_ERR(freeimu_04_init(&marg, &i2c_bus));
       plat->read_marg = read_marg;
-     
-      plat->read_ultra = ultra_dummy_read;
 
+      LOG(LL_INFO, "initializing i2cxl sonar sensor");
+      THROW_ON_ERR(i2cxl_reader_init(&i2c_bus));
+      plat->read_ultra = i2cxl_reader_get_alt;
+      
       LOG(LL_INFO, "initializing ms5611 barometric pressure sensor");
-      THROW_ON_ERR(ms5611_reader_init(&i2c_4));
+      THROW_ON_ERR(ms5611_reader_init(&i2c_bus));
       plat->read_baro = ms5611_reader_get_alt;
    
+      /* initialize motors: */
+      ac_init(&plat->ac, 0.1f, 0.7f, 12.0f, 17.0f, c, N_MOTORS, force_to_esc_setup3, 0.0f);
+      afroi2c_init(&i2c_bus, motors_map, N_MOTORS);
+      plat->write_motors = afroi2c_write;
+
       /* set-up gps driver: */
       scl_gps_init();
       plat->read_gps = scl_gps_read;
@@ -193,19 +179,9 @@ int exynos_quad_init(platform_t *plat, int override_hw)
          exit(1);
       }
       plat->read_power = scl_power_read;
- 
-      /* set-up arduino interface */
-      LOG(LL_INFO, "Initializing arduino bridge to escs");
-      if (arduino_escs_init() < 0)
-      {
-      	LOG(LL_ERROR, "could not initialize arduino interface");
-	      exit(1);
-      }
-      plat->write_motors = arduino_escs_write;
-      ac_init(&plat->ac, 0.1f, 0.7f, 12.0f, 17.0f, c, 4, force_to_esc_setup3, 0.0f);
    }
 
-   LOG(LL_INFO, "exynos_quadro platform initialized");
+   LOG(LL_INFO, "pi_quadro platform initialized");
    THROW_END();
 }
 
