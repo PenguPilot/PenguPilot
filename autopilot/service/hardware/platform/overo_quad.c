@@ -41,7 +41,7 @@
 #include "force_to_esc.h"
 #include "../drivers/i2cxl/i2cxl_reader.h"
 #include "../drivers/ms5611/ms5611_reader.h"
-#include "../drivers/pwm_esc/pwm_escs.h"
+#include "../drivers/omap3_pwms/omap3_pwms.h"
 #include "../../util/logger/logger.h"
 
 
@@ -151,10 +151,10 @@ int overo_quad_init(platform_t *plat, int override_hw)
       THROW_ON_ERR(ms5611_reader_init(&i2c_3));
       plat->read_baro = ms5611_reader_get_alt;
    
-      /* initialize motors: */
+      LOG(LL_INFO, "initializing motors via omap3-pwm interface");
+      THROW_ON_ERR(omap3_pwms_init(motor_addrs, N_MOTORS));
+      plat->write_motors = omap3_pwms_write;
       ac_init(&plat->ac, 0.1f, 0.7f, 12.0f, 17.0f, c, N_MOTORS, force_to_esc_setup2, 0.0f);
-      pwm_escs_init(motor_addrs, N_MOTORS);
-      plat->write_motors = pwm_escs_write;
    }
 
    LOG(LL_INFO, "overo_quadro platform initialized");

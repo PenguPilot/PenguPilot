@@ -9,9 +9,10 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Modified OMAP3-PWM Multi-ESC Interface
+ AfroI2C I2C-PWM Converter Implementation
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Martin Turetschek, Ilmenau University of Technology
+ Copyright (C) 2014 Kevin Ernst, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,18 +25,19 @@
  GNU General Public License for more details. */
 
 
-#ifndef __PWM_ESCS_H__
-#define __PWM_ESCS_H__
+#ifndef __AFROI2C_PWMS_H__
+#define __AFROI2C_PWMS_H__
 
 
 #include <stdint.h>
-#include "pwm_esc.h"
+#include <i2c/i2c.h>
 
 
-int pwm_escs_init(uint8_t *pwm_ids, size_t n_escs);
-
-int pwm_escs_write(float *setpoints);
+int afroi2c_pwms_init(i2c_bus_t *bus, uint8_t *motor_map, size_t n_pwms);
 
 
-#endif /* __PWM_ESCS_H__ */
+int afroi2c_pwms_write(float *setpoints);
+
+
+#endif /* __AFROI2C_PWMS_H__ */
 

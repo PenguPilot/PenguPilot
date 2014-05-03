@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Arduino Serial ESC Bridge Driver Implementation
+ Arduino Serial ESC Bridge Driver Interface
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
  Copyright (C) 2014 Jan Roemisch, Ilmenau University of Technology
@@ -25,49 +25,13 @@
  GNU General Public License for more details. */
 
 
-
-#include <string.h>
-
-#include <util.h>
-#include <serial.h>
-#include <simple_thread.h>
-#include <opcd_interface.h>
-#include <pthread.h>
-
-#include "pwm_common.h"
-#include "pwm_build.h"
+#ifndef __ARDUINO_PWMS_H__
+#define __ARDUINO_PWMS_H__
 
 
-static serialport_t port;
-static char *dev_path = NULL;
-static int dev_speed = 0;
+int arduino_pwms_init(void);
+
+int arduino_pwms_write(float *setpoints);
 
 
-int arduino_escs_init(void)
-{
-   ASSERT_ONCE();
-   THROW_BEGIN();
-   opcd_param_get("exynos_quad.arduino_serial.path", &dev_path);
-   opcd_param_get("exynos_quad.arduino_serial.speed", &dev_speed);
-   THROW_ON_ERR(serial_open(&port, dev_path, dev_speed, 0, 0, 0));
-   THROW_END();
-}
-
-
-int arduino_escs_write(float *setpoints)
-{
-   uint8_t values[PWM_COUNT_MAX];
-   uint8_t buffer[16];
-
-   FOR_N(i, PWM_COUNT_MAX)
-   {
-      values[i] = (uint8_t)(setpoints[i] * 120.0f + 127.0f);
-      //printf("%.2f %hhu ", setpoints[i], values[i]);
-   }
-   //printf("\n");
-
-   int len = pwm_build_frame(buffer, values, PWM_COUNT_MAX);
-   int ret = serial_write(&port, (const char *)buffer, len);	
-   return (ret < 0) ? -EAGAIN : 0;
-}
-
+#endif /* __ARDUINO_PWMS_H__ */

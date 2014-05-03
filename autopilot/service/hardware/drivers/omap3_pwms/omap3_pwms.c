@@ -9,10 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Modified OMAP3-PWM ESC Implementation
+ Modified OMAP3-PWM Multi-ESC Interface
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
- Copyright (C) 2014 Jan Roemisch, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -25,45 +24,44 @@
  GNU General Public License for more details. */
 
 
-#include <unistd.h>
+#include <util.h>
+#include <malloc.h>
 #include <stdio.h>
-#include <math.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
+
+#include "omap3_pwm.h"
+#include "omap3_pwms.h"
 
 
-#include "pwm_esc.h"
+static size_t _n_pwms;
+static omap3_pwm_t *pwms = NULL;
 
 
-int pwm_esc_init(pwm_esc_t *esc, char *dev)
+int omap3_pwms_init(uint8_t *pwm_ids, size_t n_pwms)
 {
-   int f = open(dev, O_RDWR);
-   if (f < 0)
+   ASSERT_ONCE();
+   THROW_BEGIN();
+   ASSERT_NOT_NULL(pwm_ids);
+   ASSERT_TRUE(n_pwms > 0);
+   pwms = malloc(sizeof(omap3_pwm_t) * n_pwms);
+   ASSERT_NOT_NULL(pwms);
+   FOR_N(i, n_pwms)
    {
-      return f;
+      char buffer[128];
+      snprintf(buffer, sizeof(buffer), "/dev/pwm%d", pwm_ids[i]);
+      THROW_ON_ERR(omap3_pwm_init(&pwms[i], buffer));
    }
-   esc->file = f;
-   return 0;
+   _n_pwms = n_pwms;
+   THROW_END();
 }
 
 
-int pwm_esc_write_raw(pwm_esc_t *esc, int val)
+int omap3_pwms_write(float *setpoints)
 {
-   char buffer[10];
-   if (val < PWM_ESC_RAW_MIN || val > PWM_ESC_RAW_MAX)
+   THROW_BEGIN();
+   FOR_N(i, _n_pwms)
    {
-      return -EINVAL;  
+      THROW_ON_ERR(omap3_pwm_write_float(&pwms[i], setpoints[i]));
    }
-   int len = snprintf(buffer, sizeof(buffer), "%d", val);
-   return write(esc->file, buffer, len);
-}
-
-
-int pwm_esc_write_float(pwm_esc_t *esc, float val)
-{
-   long int_val = PWM_ESC_RAW_MIN + lroundf(val * (float)(PWM_ESC_RAW_MAX - PWM_ESC_RAW_MIN));
-   return pwm_esc_write_raw(esc, int_val);
+   THROW_END();
 }
 

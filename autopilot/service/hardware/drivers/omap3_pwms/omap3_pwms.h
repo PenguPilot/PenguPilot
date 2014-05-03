@@ -24,43 +24,18 @@
  GNU General Public License for more details. */
 
 
-#include <util.h>
-#include <malloc.h>
-#include <stdio.h>
-
-#include "pwm_escs.h"
+#ifndef __OMAP3_PWMS_H__
+#define __OMAP3_PWMS_H__
 
 
-static size_t _n_escs;
-static pwm_esc_t *escs = NULL;
+#include <stdint.h>
+#include "omap3_pwm.h"
 
 
-int pwm_escs_init(uint8_t *pwm_ids, size_t n_escs)
-{
-   ASSERT_ONCE();
-   THROW_BEGIN();
-   ASSERT_NOT_NULL(pwm_ids);
-   ASSERT_TRUE(n_escs > 0);
-   escs = malloc(sizeof(pwm_esc_t) * n_escs);
-   ASSERT_NOT_NULL(escs);
-   FOR_N(i, n_escs)
-   {
-      char buffer[128];
-      snprintf(buffer, sizeof(buffer), "/dev/pwm%d", pwm_ids[i]);
-      THROW_ON_ERR(pwm_esc_init(&escs[i], buffer));
-   }
-   _n_escs = n_escs;
-   THROW_END();
-}
+int omap3_pwms_init(uint8_t *pwm_ids, size_t n_pwms);
+
+int omap3_pwms_write(float *setpoints);
 
 
-int pwm_escs_write(float *setpoints)
-{
-   THROW_BEGIN();
-   FOR_N(i, _n_escs)
-   {
-      THROW_ON_ERR(pwm_esc_write_float(&escs[i], setpoints[i]));
-   }
-   THROW_END();
-}
+#endif /* __OMAP3_PWMS_H__ */
 

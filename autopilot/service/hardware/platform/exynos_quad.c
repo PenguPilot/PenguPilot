@@ -40,7 +40,7 @@
 #include "force_to_esc.h"
 #include "../drivers/i2cxl/i2cxl_reader.h"
 #include "../drivers/ms5611/ms5611_reader.h"
-#include "../drivers/arduino_escs/arduino_escs.h"
+#include "../drivers/arduino_pwms/arduino_pwms.h"
 #include "../util/gps_data.h"
 #include "../../util/logger/logger.h"
 #include "../../util/math/quat.h"
@@ -147,13 +147,9 @@ int exynos_quad_init(platform_t *plat, int override_hw)
       THROW_ON_ERR(ms5611_reader_init(&i2c_4));
       plat->read_baro = ms5611_reader_get_alt;
    
-      LOG(LL_INFO, "Initializing arduino bridge to escs");
-      if (arduino_escs_init() < 0)
-      {
-      	LOG(LL_ERROR, "could not initialize arduino interface");
-	      exit(1);
-      }
-      plat->write_motors = arduino_escs_write;
+      LOG(LL_INFO, "initializing arduino bridge to motor drivers");
+      THROW_ON_ERR(arduino_pwms_init());
+      plat->write_motors = arduino_pwms_write;
       ac_init(&plat->ac, 0.1f, 0.7f, 12.0f, 17.0f, c, 4, force_to_esc_setup3, 0.0f);
    }
 

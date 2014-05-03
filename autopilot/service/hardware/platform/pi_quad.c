@@ -40,7 +40,7 @@
 #include "force_to_esc.h"
 #include "../drivers/i2cxl/i2cxl_reader.h"
 #include "../drivers/ms5611/ms5611_reader.h"
-#include "../drivers/afroi2c_escs/afroi2c_escs.h"
+#include "../drivers/afroi2c_pwms/afroi2c_pwms.h"
 #include "../util/rc_channels.h"
 #include "../../util/logger/logger.h"
 
@@ -132,10 +132,10 @@ int pi_quad_init(platform_t *plat, int override_hw)
       THROW_ON_ERR(ms5611_reader_init(&i2c_bus));
       plat->read_baro = ms5611_reader_get_alt;
    
-      /* initialize motors: */
+      LOG(LL_INFO, "initializing motors via afroi2c bridge");
+      THROW_ON_ERR(afroi2c_pwms_init(&i2c_bus, motors_map, N_MOTORS));
+      plat->write_motors = afroi2c_pwms_write;
       ac_init(&plat->ac, 0.1f, 0.7f, 12.0f, 17.0f, c, N_MOTORS, force_to_esc_setup3, 0.0f);
-      afroi2c_init(&i2c_bus, motors_map, N_MOTORS);
-      plat->write_motors = afroi2c_write;
    }
 
    LOG(LL_INFO, "pi_quadro platform initialized");
