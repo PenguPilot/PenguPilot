@@ -9,10 +9,10 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- AfroI2C I2C-PWM Converter Implementation
+ Modified OMAP3-PWM ESC Implementation
 
- Copyright (C) 2014 Martin Turetschek, Ilmenau University of Technology
- Copyright (C) 2014 Kevin Ernst, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Jan Roemisch, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -25,44 +25,45 @@
  GNU General Public License for more details. */
 
 
-#include <util.h>
-
-#include "afroi2c_escs.h"
-
-
-#define AFROI2C_MAX_ESCS 8
-#define AFROI2C_ADDRESS	0x29
-#define AFROI2C_MIN 0x00
-#define AFROI2C_MAX 0xFF
+#include <unistd.h>
+#include <stdio.h>
+#include <math.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
 
 
-static size_t _n_escs = 0;
-static i2c_dev_t device;
-static uint8_t *_motors_map = NULL;
+#include "omap3_pwm.h"
 
 
-void afroi2c_init(i2c_bus_t *bus, uint8_t *motors_map, size_t n_escs)
+int omap3_pwm_init(omap3_pwm_t *pwm, char *dev)
 {
-    ASSERT_ONCE();
-    ASSERT_TRUE(n_escs > 0 && n_escs <= AFROI2C_MAX_ESCS);
-    _n_escs = n_escs;
-    _motors_map = motors_map;
-    i2c_dev_init(&device, bus, AFROI2C_ADDRESS);
+   int f = open(dev, O_RDWR);
+   if (f < 0)
+   {
+      return f;
+   }
+   pwm->file = f;
+   return 0;
 }
 
 
-int afroi2c_write(float *setpoints)
+int omap3_pwm_write_raw(omap3_pwm_t *pwm, int val)
 {
-    uint8_t data[AFROI2C_MAX_ESCS];    
-    THROW_BEGIN();
-    FOR_N(i, _n_escs)
-    {
-        uint16_t val = setpoints[i] * AFROI2C_MAX;
-        if (val > AFROI2C_MAX)
-           val = AFROI2C_MAX;
-        data[_motors_map[i]] = (uint8_t)val;
-    }
-    THROW_ON_ERR(i2c_xfer(&device, _n_escs, data, 0, NULL));
-    THROW_END();
+   char buffer[10];
+   if (val < OMAP3_PWM_RAW_MIN || val > OMAP3_PWM_RAW_MAX)
+   {
+      return -EINVAL;  
+   }
+   int len = snprintf(buffer, sizeof(buffer), "%d", val);
+   return write(pwm->file, buffer, len);
+}
+
+
+int omap3_pwm_write_float(omap3_pwm_t *pwm, float val)
+{
+   long int_val = OMAP3_PWM_RAW_MIN + lroundf(val * (float)(OMAP3_PWM_RAW_MAX - OMAP3_PWM_RAW_MIN));
+   return omap3_pwm_write_raw(pwm, int_val);
 }
 

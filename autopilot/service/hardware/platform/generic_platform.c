@@ -33,9 +33,10 @@
 #include "../../util/logger/logger.h"
 
 
-static rc_channels_t rc_channels;
-static uint8_t channel_mapping[MAX_CHANNELS] =  {0, 1, 3, 2, 4, 5}; /* pitch: 0, roll: 1, yaw: 3, gas: 2, switch left: 4, switch right: 5 */
+/* pitch: 0, roll: 1, yaw: 3, gas: 2, switch left: 4, switch right: 5 */
+static uint8_t channel_mapping[MAX_CHANNELS] =  {0, 1, 3, 2, 4, 5}; 
 static float channel_scale[MAX_CHANNELS] =  {1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
+static rc_channels_t rc_channels;
 
 
 static int read_rc(float channels[MAX_CHANNELS])
@@ -43,9 +44,7 @@ static int read_rc(float channels[MAX_CHANNELS])
    float dsl_channels[MAX_CHANNELS];
    int ret = scl_rc_read(dsl_channels);
    for (int c = 0; c < MAX_CHANNELS; c++)
-   {
       channels[c] = rc_channels_get(&rc_channels, dsl_channels, c);
-   }
    return ret;
 }
 
@@ -54,6 +53,7 @@ int generic_platform_init(platform_t *plat)
 {
    ASSERT_ONCE();
    THROW_BEGIN();
+   
    LOG(LL_INFO, "initializing remote control reader");
    rc_channels_init(&rc_channels, channel_mapping, channel_scale);
    THROW_ON_ERR(scl_rc_init());
@@ -67,7 +67,6 @@ int generic_platform_init(platform_t *plat)
    THROW_ON_ERR(scl_gps_init());
    plat->read_gps = scl_gps_read;
 
-   LOG(LL_INFO, "generic platform sections initialized");
    THROW_END();
 }
 

@@ -25,19 +25,45 @@
  GNU General Public License for more details. */
 
 
-#ifndef __AFROI2C_H__
-#define __AFROI2C_H__
+#include <util.h>
+
+#include "afroi2c_pwms.h"
 
 
-#include <stdint.h>
-#include <i2c/i2c.h>
+#define AFROI2C_PWMS_MAX_ESCS 8
+#define AFROI2C_PWMS_ADDRESS	0x29
+#define AFROI2C_PWMS_MIN 0x00
+#define AFROI2C_PWMS_MAX 0xFF
 
 
-void afroi2c_init(i2c_bus_t *bus, uint8_t *motor_map, size_t n_escs);
+static size_t _n_pwms = 0;
+static i2c_dev_t device;
+static uint8_t *_pwms_map = NULL;
 
 
-int afroi2c_write(float *setpoints);
+int afroi2c_pwms_init(i2c_bus_t *bus, uint8_t *pwms_map, size_t n_pwms)
+{
+   ASSERT_ONCE();
+   ASSERT_TRUE(n_pwms > 0 && n_pwms <= AFROI2C_PWMS_MAX_ESCS);
+   _n_pwms = n_pwms;
+   _pwms_map = pwms_map;
+   i2c_dev_init(&device, bus, AFROI2C_PWMS_ADDRESS);
+   return 0;
+}
 
 
-#endif /* __AFROI2C_H__ */
+int afroi2c_pwms_write(float *setpoints)
+{
+    uint8_t data[AFROI2C_PWMS_MAX_ESCS];    
+    THROW_BEGIN();
+    FOR_N(i, _n_pwms)
+    {
+        uint16_t val = setpoints[i] * AFROI2C_PWMS_MAX;
+        if (val > AFROI2C_PWMS_MAX)
+           val = AFROI2C_PWMS_MAX;
+        data[_pwms_map[i]] = (uint8_t)val;
+    }
+    THROW_ON_ERR(i2c_xfer(&device, _n_pwms, data, 0, NULL));
+    THROW_END();
+}
 

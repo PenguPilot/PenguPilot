@@ -25,30 +25,30 @@
  GNU General Public License for more details. */
 
 
-#ifndef __PWM_ESC_H__
-#define __PWM_ESC_H__
+#ifndef __OMAP3_PWM_H__
+#define __OMAP3_PWM_H__
 
 
-#define PWM_ESC_RAW_MIN (10000)
-#define PWM_ESC_RAW_MAX (20000)
+#define OMAP3_PWM_RAW_MIN (10000)
+#define OMAP3_PWM_RAW_MAX (20000)
 
-#define PWM_ESC_FLOAT_MIN (0.0f)
-#define PWM_ESC_FLOAT_MAX (1.0f)
+#define OMAP3_PWM_FLOAT_MIN (0.0f)
+#define OMAP3_PWM_FLOAT_MAX (1.0f)
 
 
 typedef struct
 {
    int file;
 }
-pwm_esc_t;
+omap3_pwm_t;
 
 
-int pwm_esc_init(pwm_esc_t *esc, char *dev);
+int omap3_pwm_init(omap3_pwm_t *pwm, char *dev);
 
-int pwm_esc_write_raw(pwm_esc_t *esc, int val);
+int omap3_pwm_write_raw(omap3_pwm_t *pwm, int val);
 
-int pwm_esc_write_float(pwm_esc_t *esc, float val);
+int omap3_pwm_write_float(omap3_pwm_t *pwm, float val);
 
 
-#endif /* __PWM_ESC_H__ */
+#endif /* __OMAP3_PWM_H__ */
 
