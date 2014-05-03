@@ -59,12 +59,12 @@ autopilot:
 
 twl4030_madc:
   binary: 'twl4030_madc/service/twl4030_madc.py'
-  platforms: [gumstix_quad]
+  platforms: [overo_quad]
   depends: [opcd]
 
 display:
   binary: 'display/service/display.py'
-  platforms: [gumstix_quad]
+  platforms: [overo_quad]
   depends: [gpsp, powerman]
 
 blackbox:
@@ -79,7 +79,7 @@ heartbeat:
 
 remote:
   binary: 'remote/service/remote'
-  platforms: [gumstix_quad, pi_quad]
+  platforms: [overo_quad, pi_quad]
   depends: [opcd]
 
 wifi_loc:

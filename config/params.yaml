@@ -24,7 +24,7 @@
 # GNU General Public License for more details.
 
 
-gumstix_quad:
+overo_quad:
    voltage_channel: 7
    current_channel: 2
    adc_to_voltage: 'lambda x: (x + 27.0951) / 117.1319'
@@ -81,11 +81,6 @@ icarus:
 
 
 autopilot:
-   # hardware-specific stuff:
-   gumstix_quad:
-      dsl_serial_port: "/dev/ttyO0"
-   pi_quad:
-      dsl_serial_port: "/dev/ttyAMA0"
 
    logger:
       level: 3
