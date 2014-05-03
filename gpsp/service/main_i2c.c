@@ -123,12 +123,9 @@ void main_i2c(void)
    }
    int64_t hwm = 1;
    zmq_setsockopt(gps_socket, ZMQ_SNDHWM, &hwm, sizeof(hwm));
-
    int time_set = 0;
-   int smask = 0; /* global smask collects all sentences and is never reset,
-                     in contrast to info.smask */
 
-   if(i2c_bus_open(&bus, "/dev/i2c-1"))
+   if (i2c_bus_open(&bus, "/dev/i2c-1"))
    {
       syslog(LOG_CRIT, "could not open i2c device");   
       exit(EXIT_FAILURE);
@@ -137,131 +134,131 @@ void main_i2c(void)
 
    while (1)
    {
-		msleep(200);
-		GpsData gps_data = GPS_DATA__INIT;
+      msleep(200);
+      GpsData gps_data = GPS_DATA__INIT;
 
-		/*  GPS STATUS  */
-		data_w[0] = I2C_GPS_STATUS;
+      /*  GPS STATUS  */
+      data_w[0] = I2C_GPS_STATUS;
 
-		if(i2c_xfer(&device,1,data_w,1,data_r))
-		{
-			syslog(LOG_CRIT, "could not get gps status data");
-		}else
-		{
-			i2c_gps_data.fix = data_r[0];
-			//printf("\n\ngps status: %x\n",i2c_gps_data.fix);
-		}
+      if(i2c_xfer(&device,1,data_w,1,data_r))
+      {
+         syslog(LOG_CRIT, "could not get gps status data");
+      }else
+      {
+         i2c_gps_data.fix = data_r[0];
+         //printf("\n\ngps status: %x\n",i2c_gps_data.fix);
+      }
 
-		if(((i2c_gps_data.fix & I2C_GPS_STATUS_2DFIX)==0x2) || ((i2c_gps_data.fix & I2C_GPS_STATUS_3DFIX)==0x4))
-		{
+      if(((i2c_gps_data.fix & I2C_GPS_STATUS_2DFIX)==0x2) || ((i2c_gps_data.fix & I2C_GPS_STATUS_3DFIX)==0x4))
+      {
 
-			/*  TIME  */
-			data_w[0] = I2C_GPS_TIME;
-			if(i2c_xfer(&device,1,data_w,4,data_r))
-			{
-				syslog(LOG_CRIT, "could not get gps time");
-			}
-			else
-			{
+         /*  TIME  */
+         data_w[0] = I2C_GPS_TIME;
+         if(i2c_xfer(&device,1,data_w,4,data_r))
+         {
+            syslog(LOG_CRIT, "could not get gps time");
+         }
+         else
+         {
 
-				//printf("gps time: %ld\n", ((((long) data_r[3])<<24) | (((long) data_r[2])<<16) | (((long) data_r[1])<<8) | (data_r[0])));
-			 }
+            //printf("gps time: %ld\n", ((((long) data_r[3])<<24) | (((long) data_r[2])<<16) | (((long) data_r[1])<<8) | (data_r[0])));
+          }
 
-			/*  LOCATION  */
-			data_w[0] = I2C_GPS_LOCATION;
+         /*  LOCATION  */
+         data_w[0] = I2C_GPS_LOCATION;
 
-			if(i2c_xfer(&device,1,data_w,8,data_r))
-			{
-				syslog(LOG_CRIT, "could not get gps location");
-			}
-			else
-			{
-				i2c_gps_data.lat = ((((long) data_r[3])<<24) | (((long) data_r[2])<<16) | (((long) data_r[1])<<8) | (data_r[0])) / 10000000.0;
-				i2c_gps_data.lon = ((((long) data_r[7])<<24) | (((long) data_r[6])<<16) | (((long) data_r[5])<<8) | (data_r[4])) / 10000000.0;
-				//printf("[long]\t gps lat: %ld\n\t gps lon: %ld\n", ((((long) data_r[3])<<24) | (((long) data_r[2])<<16) | (((long) data_r[1])<<8) | (data_r[0])), ((((long) data_r[7])<<24) | (((long) data_r[6])<<16) | (((long) data_r[5])<<8) | (data_r[4])));
-				//printf("[double] gps lat: %f\n\t gps lon: %f\n", i2c_gps_data.lat, i2c_gps_data.lon);
-			 }
+         if(i2c_xfer(&device,1,data_w,8,data_r))
+         {
+            syslog(LOG_CRIT, "could not get gps location");
+         }
+         else
+         {
+            i2c_gps_data.lat = ((((long) data_r[3])<<24) | (((long) data_r[2])<<16) | (((long) data_r[1])<<8) | (data_r[0])) / 10000000.0;
+            i2c_gps_data.lon = ((((long) data_r[7])<<24) | (((long) data_r[6])<<16) | (((long) data_r[5])<<8) | (data_r[4])) / 10000000.0;
+            //printf("[long]\t gps lat: %ld\n\t gps lon: %ld\n", ((((long) data_r[3])<<24) | (((long) data_r[2])<<16) | (((long) data_r[1])<<8) | (data_r[0])), ((((long) data_r[7])<<24) | (((long) data_r[6])<<16) | (((long) data_r[5])<<8) | (data_r[4])));
+            //printf("[double] gps lat: %f\n\t gps lon: %f\n", i2c_gps_data.lat, i2c_gps_data.lon);
+          }
 
-			/*  ALTITUDE  */
-			if((i2c_gps_data.fix & I2C_GPS_STATUS_3DFIX)==0x4)
-			{
-				data_w[0] = I2C_GPS_ALTITUDE;
+         /*  ALTITUDE  */
+         if((i2c_gps_data.fix & I2C_GPS_STATUS_3DFIX)==0x4)
+         {
+            data_w[0] = I2C_GPS_ALTITUDE;
 
-				if(i2c_xfer(&device,1,data_w,2,data_r))
-				{
-					syslog(LOG_CRIT, "could not get gps altitude");
-				}
-				else
-				{
-					i2c_gps_data.alt = (double) (((data_r[1]) << 8) | (data_r[0]));
-					//printf("alt: %f",i2c_gps_data.alt);
-				}
-			}
-				
-			/* set general data: * /
-			char time_str[TIME_STR_LEN];
-			generate_time_str(time_str, &info.utc);
-			gps_data.fix = 0;
-			gps_data.time = time_str;
+            if(i2c_xfer(&device,1,data_w,2,data_r))
+            {
+               syslog(LOG_CRIT, "could not get gps altitude");
+            }
+            else
+            {
+               i2c_gps_data.alt = (double) (((data_r[1]) << 8) | (data_r[0]));
+               //printf("alt: %f",i2c_gps_data.alt);
+            }
+         }
+            
+         /* set general data: * /
+         char time_str[TIME_STR_LEN];
+         generate_time_str(time_str, &info.utc);
+         gps_data.fix = 0;
+         gps_data.time = time_str;
 
-			/ * set system time to gps time once: /
-			if (!time_set && info.fix >= 2)
-			{
-			   char shell_date_cmd[TIME_STR_LEN + 8];
-			   linux_sys_set_timezone(convert(info.lat), convert(info.lon));
-			   sprintf(shell_date_cmd, "date -s \"%s\"", time_str);
-			   time_set = system(shell_date_cmd) == 0;
-			}*/
+         / * set system time to gps time once: /
+         if (!time_set && info.fix >= 2)
+         {
+            char shell_date_cmd[TIME_STR_LEN + 8];
+            linux_sys_set_timezone(convert(info.lat), convert(info.lon));
+            sprintf(shell_date_cmd, "date -s \"%s\"", time_str);
+            time_set = system(shell_date_cmd) == 0;
+         }*/
 
-			/* set position data if a minimum of satellites is seen: */
-			if(((i2c_gps_data.fix & 0x0F) == I2C_GPS_STATUS_2DFIX) | ((i2c_gps_data.fix & 0x0F) == I2C_GPS_STATUS_3DFIX))
-			{
-			   gps_data.fix = 2;
-			   //PB_SET(gps_data, hdop, info.HDOP);
-			   PB_SET(gps_data, lat, convert(i2c_gps_data.lat));
-			   PB_SET(gps_data, lon, convert(i2c_gps_data.lon));
-			   PB_SET(gps_data, sats, i2c_gps_data.fix & 0xF0);
-			   //PB_SET(gps_data, course, info.track);
-			   //PB_SET(gps_data, speed, info.speed);
-			}
-			  
-			/* set data for 3d fix: */
-			if (((i2c_gps_data.fix & 0x0F) == I2C_GPS_STATUS_3DFIX))
-			{
-			   gps_data.fix = 3;
-			   //PB_SET(gps_data, vdop, info.VDOP);
-			   PB_SET(gps_data, alt, i2c_gps_data.alt);
-			}
-			
-			/*
-			/ * add satellit info: * /
-			unsigned int i;
-			gps_data.n_satinfo = info.satinfo.inview;
-			SatInfo **satinfo = malloc(gps_data.n_satinfo * sizeof(SatInfo *));
-			for (i = 0; i < gps_data.n_satinfo; i++)
-			{
-			   / * fill SatInfo structure: * /
-			   nmeaSATELLITE *nmea_satinfo = &info.satinfo.sat[i];
-			   satinfo[i] = malloc(gps_data.n_satinfo * sizeof(SatInfo));
-			   sat_info__init(satinfo[i]);
-			   satinfo[i]->id = nmea_satinfo->id;
-			   satinfo[i]->in_use = info.satinfo.in_use[i] ? 1 : 0;
-			   satinfo[i]->elv = nmea_satinfo->elv;
-			   satinfo[i]->azimuth = nmea_satinfo->azimuth;
-			   satinfo[i]->sig = nmea_satinfo->sig;
-			}
-			gps_data.satinfo = satinfo;*/
+         /* set position data if a minimum of satellites is seen: */
+         if(((i2c_gps_data.fix & 0x0F) == I2C_GPS_STATUS_2DFIX) | ((i2c_gps_data.fix & 0x0F) == I2C_GPS_STATUS_3DFIX))
+         {
+            gps_data.fix = 2;
+            //PB_SET(gps_data, hdop, info.HDOP);
+            PB_SET(gps_data, lat, convert(i2c_gps_data.lat));
+            PB_SET(gps_data, lon, convert(i2c_gps_data.lon));
+            PB_SET(gps_data, sats, i2c_gps_data.fix & 0xF0);
+            //PB_SET(gps_data, course, info.track);
+            //PB_SET(gps_data, speed, info.speed);
+         }
+           
+         /* set data for 3d fix: */
+         if (((i2c_gps_data.fix & 0x0F) == I2C_GPS_STATUS_3DFIX))
+         {
+            gps_data.fix = 3;
+            //PB_SET(gps_data, vdop, info.VDOP);
+            PB_SET(gps_data, alt, i2c_gps_data.alt);
+         }
+         
+         /*
+         / * add satellit info: * /
+         unsigned int i;
+         gps_data.n_satinfo = info.satinfo.inview;
+         SatInfo **satinfo = malloc(gps_data.n_satinfo * sizeof(SatInfo *));
+         for (i = 0; i < gps_data.n_satinfo; i++)
+         {
+            / * fill SatInfo structure: * /
+            nmeaSATELLITE *nmea_satinfo = &info.satinfo.sat[i];
+            satinfo[i] = malloc(gps_data.n_satinfo * sizeof(SatInfo));
+            sat_info__init(satinfo[i]);
+            satinfo[i]->id = nmea_satinfo->id;
+            satinfo[i]->in_use = info.satinfo.in_use[i] ? 1 : 0;
+            satinfo[i]->elv = nmea_satinfo->elv;
+            satinfo[i]->azimuth = nmea_satinfo->azimuth;
+            satinfo[i]->sig = nmea_satinfo->sig;
+         }
+         gps_data.satinfo = satinfo;*/
 
-			/* send the data: */
-			SCL_PACK_AND_SEND_DYNAMIC(gps_socket, gps_data, gps_data);
+         /* send the data: */
+         SCL_PACK_AND_SEND_DYNAMIC(gps_socket, gps_data, gps_data);
 
-			/* free allocated memory: * /
-			for (i = 0; i < gps_data.n_satinfo; i++)
-			{
-			   free(satinfo[i]);
-			}
-			free(satinfo);*/
-		}
-	}
+         /* free allocated memory: * /
+         for (i = 0; i < gps_data.n_satinfo; i++)
+         {
+            free(satinfo[i]);
+         }
+         free(satinfo);*/
+      }
+   }
 }
 
