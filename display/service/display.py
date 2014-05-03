@@ -333,6 +333,5 @@ def main(name):
       oled.clear()
       oled.update()
 
-
 daemonize('display', main)
 

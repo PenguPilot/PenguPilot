@@ -114,13 +114,7 @@ void main_i2c(void)
    uint8_t data_w[128];
    uint8_t data_r[128];   
 
-   if (scl_init("gps") != 0)
-   {
-      syslog(LOG_CRIT, "could not init scl module");
-      exit(EXIT_FAILURE);
-   }
-
-   gps_socket = scl_get_socket("data");
+   gps_socket = scl_get_socket("gps");
    if (gps_socket == NULL)
    {
       syslog(LOG_CRIT, "could not get scl gate");   
@@ -132,7 +126,6 @@ void main_i2c(void)
    int time_set = 0;
    int smask = 0; /* global smask collects all sentences and is never reset,
                      in contrast to info.smask */
-
 
    if(i2c_bus_open(&bus, "/dev/i2c-1"))
    {

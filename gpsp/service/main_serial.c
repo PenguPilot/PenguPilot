@@ -100,9 +100,7 @@ void main_serial(void)
       {"speed", &serial_speed},
       OPCD_PARAMS_END
    };
-   
-   opcd_params_init("gpsp.serial.", 0);
-   opcd_params_apply("", params);
+   opcd_params_apply("gpsp.serial.", params);
    
    int status = serial_open(&port, serial_path, tsint_get(&serial_speed), 0, 0, 0);
    if (status < 0)
