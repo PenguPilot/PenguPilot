@@ -33,8 +33,9 @@
 
 #include <util.h>
 #include <i2c/i2c.h>
-#include "inv_coupling.h"
 #include "platform.h"
+#include "generic_platform.h"
+#include "inv_coupling.h"
 #include "freeimu_04.h"
 #include "force_to_esc.h"
 #include "../drivers/i2cxl/i2cxl_reader.h"
