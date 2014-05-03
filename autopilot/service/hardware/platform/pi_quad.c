@@ -37,11 +37,8 @@
 #include "platform.h"
 #include "freeimu_04.h"
 #include "force_to_esc.h"
-#include "../drivers/scl_gps/scl_gps.h"
 #include "../drivers/i2cxl/i2cxl_reader.h"
 #include "../drivers/ms5611/ms5611_reader.h"
-#include "../drivers/scl_rc/scl_rc.h"
-#include "../drivers/scl_power/scl_power.h"
 #include "../drivers/afroi2c_escs/afroi2c_escs.h"
 #include "../util/rc_channels.h"
 #include "../../util/logger/logger.h"
@@ -51,29 +48,8 @@
 
 
 static i2c_bus_t i2c_bus;
-static rc_channels_t rc_channels;
-static uint8_t channel_mapping[MAX_CHANNELS] =  {0, 1, 3, 2, 4, 5}; /* pitch: 0, roll: 1, yaw: 3, gas: 2, switch left: 4, switch right: 5 */
-static float channel_scale[MAX_CHANNELS] =  {1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
 static freeimu_04_t marg;
 static uint8_t motors_map[N_MOTORS] = {0, 1, 2, 3};
-
-
-static int read_rc(float channels[MAX_CHANNELS])
-{
-   float dsl_channels[SCL_MAX_CHANNELS];
-   int ret = scl_rc_read(dsl_channels);
-   
-   /* for (int i = 0; i < RC_DSL_CHANNELS; i++)
-      printf("(%d, %f) ", i, dsl_channels[i]);
-      printf("\n");
-   */
-
-   for (int c = 0; c < MAX_CHANNELS; c++)
-   {
-      channels[c] = rc_channels_get(&rc_channels, dsl_channels, c);
-   }
-   return ret;
-}
 
 
 static int read_marg(marg_data_t *marg_data)
@@ -135,7 +111,7 @@ int pi_quad_init(platform_t *plat, int override_hw)
    LOG(LL_INFO, "initializing inverse coupling matrix");
    inv_coupling_init(N_MOTORS, icmatrix);
       
-   rc_channels_init(&rc_channels, channel_mapping, channel_scale);
+   THROW_PROPAGATE(generic_platform_init(plat));
 
    if (!override_hw)
    {
@@ -159,26 +135,6 @@ int pi_quad_init(platform_t *plat, int override_hw)
       ac_init(&plat->ac, 0.1f, 0.7f, 12.0f, 17.0f, c, N_MOTORS, force_to_esc_setup3, 0.0f);
       afroi2c_init(&i2c_bus, motors_map, N_MOTORS);
       plat->write_motors = afroi2c_write;
-
-      /* set-up gps driver: */
-      scl_gps_init();
-      plat->read_gps = scl_gps_read;
-
-      /* set-up dsl reader: */
-      LOG(LL_INFO, "initializing remote control reader");
-      if (scl_rc_init() < 0)
-      {
-         LOG(LL_ERROR, "could not initialize remote control reader");
-         exit(1);
-      }
-      plat->read_rc = read_rc;
-
-      if (scl_power_init() < 0)
-      {
-         LOG(LL_ERROR, "could not initialize power reader");
-         exit(1);
-      }
-      plat->read_power = scl_power_read;
    }
 
    LOG(LL_INFO, "pi_quadro platform initialized");
