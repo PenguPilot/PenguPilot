@@ -52,6 +52,7 @@ def sched_set_prio(pid, prio):
    schedParams.sched_priority = prio
    err = libc.sched_setscheduler(pid, _SCHED_FIFO, ctypes.byref(schedParams))
    if err != 0:
+      print pid, prio
       raise OSError('could not set priority, code: %d' % err)
 
 
@@ -114,9 +115,19 @@ def start(name, prio, path, args):
             print red('[ERROR: service quit with code ' + str(ps.returncode) + ']')
          else:
             try:
-               pid = validate(name)
+               pid = None
+               for timeout in range(30):
+                  time.sleep(0.1)
+                  try:
+                     pidfile = pidfile_from_name(name)
+                     pid = int(file(pidfile).read())
+                     break
+                  except:
+                     pass
+               if not pid:
+                  raise Exception('no pidfile found')
                sched_set_prio(pid, prio)
-            except:
+            except Exception, e:
                prio_fail = True
             print green('[OK]')
          if prio_fail:
