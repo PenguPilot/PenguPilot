@@ -33,8 +33,6 @@
 
 #include <util.h>
 #include "inv_coupling.h"
-#include "quad.h"
-#include "arcade_quad.h"
 #include "platform.h"
 #include "../util/logger/logger.h"
 #include "../util/math/quat.h"
@@ -50,7 +48,11 @@
 #include "../hardware/util/rc_channels.h"
 #include "../hardware/util/gps_data.h"
 #include "../../arduino/service/ppm_common.h"
+
 #include "freeimu_04.h"
+#include "force_to_esc.h"
+
+#define N_MOTORS 4
 
 
 static i2c_bus_t i2c_4;
@@ -98,24 +100,6 @@ static int ultra_dummy_read(float *dist)
 {
 	*dist = .1f;
 	return 0;
-}
-
-
-static float force_to_esc(float force, float volt)
-{
-   if (force < 0.f)
-   {
-      return 0.f;
-   }
-
-   const float a = 1.2526e-07;
-   const float b = -3.3937e-03;
-   const float c = -1.3746e+00;
-   const float d = 1.3284e-04;
-   const float e = 2.0807e+01;
-   float pwm = ((sqrtf((b + d * volt) * (b + d * volt) - 4.0f * a * (c * volt + e - force)) - b - d * volt) / (2.0f * a));
-
-   return (pwm - 10000.0f) / 10000.0f;
 }
 
 
@@ -218,7 +202,7 @@ int exynos_quad_init(platform_t *plat, int override_hw)
 	      exit(1);
       }
       plat->write_motors = arduino_escs_write;
-      ac_init(&plat->ac, 0.1f, 0.7f, 12.0f, 17.0f, c, 4, force_to_esc, 0.0f);
+      ac_init(&plat->ac, 0.1f, 0.7f, 12.0f, 17.0f, c, 4, force_to_esc_setup3, 0.0f);
    }
 
    LOG(LL_INFO, "exynos_quadro platform initialized");

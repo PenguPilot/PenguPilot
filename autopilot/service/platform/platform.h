@@ -44,6 +44,7 @@ typedef struct
    ac_t ac;
    float max_thrust_n;
    float mass_kg;
+   float *motors_map;
    size_t n_motors;
    
    /* sensors: */

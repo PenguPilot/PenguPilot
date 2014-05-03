@@ -9,11 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- ARCADE Quadrotor Platform Interface
+ Gumstix Overo based Quad-Rotor Platform
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
- Copyright (C) 2013 Alexander Barth, Ilmenau University of Technology
- Copyright (C) 2013 Benjamin Jahn, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -33,7 +31,7 @@
 #include "platform.h"
 
 
-int arcade_quad_init(platform_t *platform, int override_hw);
+int overo_quad_init(platform_t *platform, int override_hw);
 
 
 #endif /* __ARCADE_QUAD_H__ */

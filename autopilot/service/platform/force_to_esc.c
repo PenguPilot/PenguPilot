@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- holger quad platform implementation
+ Force [N] and Voltage [V] to relative ESC Command Implementation
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -25,48 +25,50 @@
 
 
 #include <math.h>
-#include <util.h>
 
-#include "quad.h"
-#include "holger_quad.h"
-#include "../hardware/drivers/holger_blmc/holger_blmc.h"
+#include "force_to_esc.h"
 
 
-                                     /* m0    m1    m2    m3 */
-static uint8_t motor_addrs[N_MOTORS] = {0x29, 0x2a, 0x2b, 0x2c};
-
-
-static int write_motors(float *setpoints)
-{
-   uint8_t rpm[N_MOTORS];
-   uint8_t u8setp[N_MOTORS];
-   FOR_N(i, N_MOTORS)
-   {
-      u8setp[i] = round(setpoints[i]);
-   }
-   holger_blmc_write_read(u8setp, rpm);
-   return 0; // TODO implement
-}
-
-
-static float force_to_blmc(float force, float voltage)
+/*
+ * ESC:       Mikrokopter BL-CTRL 1.2
+ * Motor:     Robby Roxxy 2827-35
+ * Propeller: 10x4.5 inch
+ */
+float force_to_esc_setup1(float force, float voltage)
 {
    float a = 609.6137f;
    float b = 1.3154f;
-   return powf((force / a * powf(voltage, -1.5f)), 1.0f / b);
+   float c = -1.5f;
+   return powf((force / a * powf(voltage, c)), 1.0f / b);
 }
 
 
-int holger_quad_init(platform_t *plat, float f_c)
+/*
+ * ESC:       HobbyKing 20A UBEC SimonK
+ * Motor:     Robby Roxxy 2827-35
+ * Propeller: 10x4.5 inch
+ */
+float force_to_esc_setup2(float force, float voltage)
 {
-   ASSERT_ONCE();
+   return 1.66f * (force + 1.5f) / voltage;
+}
 
-   /* set-up actuator characteristics: */
-   ac_init(&plat->ac, HOLGER_I2C_MIN, HOLGER_I2C_MAX, 12.0, 17.0, f_c, N_MOTORS, force_to_blmc, 0);
-    
-   /* set-up motors driver: */
-   holger_blmc_init((i2c_bus_t *)plat->priv, motor_addrs, N_MOTORS);
-   plat->write_motors = write_motors;
-   return 0;
+
+/*
+ * ESC:       Flyduino HEXFET20A SimonK
+ * Motor:     Suppo A2212/13
+ * Propeller: 10x4.5 inch
+ */
+float force_to_esc_setup3(float force, float volt)
+{
+   if (force < 0)
+      return 0;
+   const float a = 1.2526e-07f;
+   const float b = -3.3937e-03f;
+   const float c = -1.3746e+00f;
+   const float d = 1.3284e-04f;
+   const float e = 2.0807e+01f;
+   float pwm = ((sqrtf((b + d * volt) * (b + d * volt) - 4.0f * a * (c * volt + e - force)) - b - d * volt) / (2.0f * a));
+   return (pwm - 10000.0f) / 10000.0f;
 }
 
