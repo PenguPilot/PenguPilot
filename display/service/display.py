@@ -36,7 +36,7 @@ from math import sin, cos, pi
 from misc import daemonize
 from os import getenv
 from msgpack import loads
-from gps import *
+from gps_msgpack import *
 
 
 WHITE = 1

@@ -34,7 +34,7 @@ from math import sin, cos, pi
 from misc import daemonize
 from msgpack import loads, dumps
 from aircomm_shared import BCAST_NOFW, HEARTBEAT
-from gps import *
+from gps_msgpack import *
 
 socket_map = None
 voltage = 17.0
