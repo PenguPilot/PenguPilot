@@ -283,11 +283,8 @@ def pol2cart(az, el, x, y, r):
 
 def draw_gps(draw):
    fix_txt = {0: '--', 2: '2D', 3: '3D'}
-   if fix(gps) == 0:
-      sats_in_use = 0
-   else:
-      sats_in_use = gps[SATS]
-   draw.text((0, 0), 'Sats: %d / %d' % (sats_in_use, len(sats)), WHITE, font = font)
+   in_use = len(filter(lambda sat : sat[USE], sats))
+   draw.text((0, 0), 'Sats: %d / %d' % (in_use, len(sats)), WHITE, font = font)
    draw.text((0, 13), 'Fix: %s' % fix_txt[fix(gps)], WHITE, font = font)
    if fix(gps) >= 2:
       draw.text((0, 13 * 2), 'HD: %.1f' % gps[HDOP], WHITE, font = font)
