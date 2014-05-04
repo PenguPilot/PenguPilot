@@ -30,7 +30,6 @@ from time import sleep, time
 from psutil import cpu_percent
 from threading import Thread, Lock
 from scl import generate_map
-from gps_data_pb2 import GpsData
 from math import sin, cos, pi
 from misc import daemonize
 from msgpack import loads
@@ -53,8 +52,7 @@ def gps():
       if i == 5:
          i = 0
          with gps_lock:
-            gps_data = GpsData()
-            gps_data.ParseFromString(data)
+            gps_data = loads(data)
       i += 1
 
 
@@ -116,8 +114,8 @@ def main(name):
          data = [BCAST_NOFW, HEARTBEAT, int(voltage * 10), int(current * 10), int(load), mem_used(), critical]
          with gps_lock:
             try:
-               if gps_data.fix >= 2:
-                  data += [gps_data.lon, gps_data.lat]
+               _, _, lat, lon, _, _, _ = gps_data[0 : 7]
+               data += [lon, lat]
             except:
                pass
          socket.send(packer.pack(data))
