@@ -149,6 +149,7 @@
    - gps: sub
    - powerman: sub
    - remote: sub
+   - sats: sub
 
 - name: heartbeat
   sockets:
