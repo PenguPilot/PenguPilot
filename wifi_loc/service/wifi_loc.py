@@ -5,7 +5,7 @@ from threading import Thread
 from scl import generate_map
 from misc import daemonize
 from msgpack import loads
-from gps import *
+from gps_msgpack import *
 
 
 class GPS_Reader(Thread):

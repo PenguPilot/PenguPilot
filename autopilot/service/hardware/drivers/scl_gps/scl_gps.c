@@ -26,9 +26,10 @@
 
 #include <util.h>
 #include <simple_thread.h>
-#include <gps_data.pb-c.h>
 #include <scl.h>
 #include <interval.h>
+#include <gps_msgpack.h>
+#include <msgpack.h>
 
 #include "scl_gps.h"
 
@@ -60,24 +61,34 @@ SIMPLE_THREAD_BEGIN(thread_func)
 {
    SIMPLE_THREAD_LOOP_BEGIN
    {
-      GpsData *_gps_data;
-      SCL_RECV_AND_UNPACK_DYNAMIC(_gps_data, scl_socket, gps_data);
-      if (_gps_data != NULL)
+      char buffer[128];
+      int ret = scl_recv_static(scl_socket, buffer, sizeof(buffer));
+      if (ret > 0)
       {
-         if (_gps_data->fix >= 2)
+         msgpack_unpacked msg;
+         msgpack_unpacked_init(&msg);
+         if (msgpack_unpack_next(&msg, buffer, ret, NULL))
          {
+            msgpack_object root = msg.data;
+            assert (root.type == MSGPACK_OBJECT_ARRAY);
+            int asize = root.via.array.size;
             pthread_mutex_lock(&mutex);
-            timer = 0.0f; /* reset timer */
-            gps_data.fix = _gps_data->fix;
-            gps_data.sats = _gps_data->sats;
-            gps_data.lat = _gps_data->lat;
-            gps_data.lon = _gps_data->lon;
-            gps_data.alt = _gps_data->alt;
-            gps_data.course = _gps_data->course;
-            gps_data.speed = _gps_data->speed;
+            gps_data.fix = fix(asize);
+            if (gps_data.fix >= 2)
+            {
+               timer = 0.0f; /* reset timer */
+               gps_data.sats = root.via.array.ptr[SATS].via.i64;
+               gps_data.lat = root.via.array.ptr[LAT].via.dec;
+               gps_data.lon = root.via.array.ptr[LON].via.dec;
+               gps_data.alt = root.via.array.ptr[ALT].via.dec;
+               gps_data.course = root.via.array.ptr[COURSE].via.dec;
+               gps_data.speed = root.via.array.ptr[SPEED].via.dec;
+               if (gps_data.fix == 3)
+                  gps_data.alt = root.via.array.ptr[ALT].via.dec;
+            }
             pthread_mutex_unlock(&mutex);
          }
-         SCL_FREE(gps_data, _gps_data);
+         msgpack_unpacked_destroy(&msg);
       }
    }
    SIMPLE_THREAD_LOOP_END
