@@ -142,16 +142,16 @@ int main_serial(void)
 
             msgpack_sbuffer_clear(msgpack_buf);
             if (info.fix == 2)
-               msgpack_pack_array(pk, 7);
+               msgpack_pack_array(pk, 7); /* 2d fix */
             else if (info.fix == 3)
-               msgpack_pack_array(pk, 9);
+               msgpack_pack_array(pk, 9); /* 3d fix */
             else
-               msgpack_pack_array(pk, 1);
+               msgpack_pack_array(pk, 1); /* no fix */
             
             char time_str[TIME_STR_LEN];
             size_t len = generate_time_str(time_str, &info.utc);
             msgpack_pack_raw(pk, len);
-            msgpack_pack_raw_body(pk, time_str, len);
+            msgpack_pack_raw_body(pk, time_str, len); /* gps array index 0 */
 
             /* set system time to gps time once: */
             if (!time_set && info.fix >= 2)
@@ -161,33 +161,37 @@ int main_serial(void)
                sprintf(shell_date_cmd, "date -s \"%s\"", time_str);
                time_set = system(shell_date_cmd) == 0;
             }
+
             if (info.fix >= 2)
             {
-               PACKF(convert(info.lat));
-               PACKF(convert(info.lon));
-               PACKI(info.satinfo.inuse);
-               PACKF(info.speed);
-               PACKF(info.track);
-               PACKF(info.HDOP);
+               PACKF(convert(info.lat));  /* gps array index 1 */
+               PACKF(convert(info.lon));  /* gps array index 2 */
+               PACKI(info.satinfo.inuse); /* gps array index 3 */
+               PACKF(info.speed);         /* gps array index 4 */
+               PACKF(info.track);         /* gps array index 5 */
+               PACKF(info.HDOP);          /* gps array index 6 */
             } 
+
             if (info.fix == 3)
             {
-               PACKF(info.elv);
-               PACKF(info.VDOP);
+               PACKF(info.elv);  /* gps array index 7 */
+               PACKF(info.VDOP); /* gps array index 8 */
             }
+
             scl_copy_send_dynamic(gps_socket, msgpack_buf->data, msgpack_buf->size);
+
 
             msgpack_sbuffer_clear(msgpack_buf);
             msgpack_pack_array(pk, info.satinfo.inview);
-            FOR_N (i, info.satinfo.inview)
+            FOR_N(i, info.satinfo.inview)
             {
-               msgpack_pack_array(pk, 5); /* [0, 1, 2, 3, 4] */
+               msgpack_pack_array(pk, 5); /* sat = [0, 1, 2, 3, 4] */
                nmeaSATELLITE *nmea_satinfo = &info.satinfo.sat[i];
-               PACKI(nmea_satinfo->id);       /* 0 */
-               PACKB(info.satinfo.in_use[i]); /* 1 */
-               PACKI(nmea_satinfo->elv);      /* 2 */
-               PACKI(nmea_satinfo->azimuth);  /* 3 */
-               PACKI(nmea_satinfo->sig);      /* 4 */
+               PACKI(nmea_satinfo->id);       /* sat array index 0 */
+               PACKB(info.satinfo.in_use[i]); /* sat array index 1 */
+               PACKI(nmea_satinfo->elv);      /* sat array index 2 */
+               PACKI(nmea_satinfo->azimuth);  /* sat array index 3 */
+               PACKI(nmea_satinfo->sig);      /* sat array index 4 */
             }
 
             scl_copy_send_dynamic(sats_socket, msgpack_buf->data, msgpack_buf->size);

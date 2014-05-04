@@ -32,10 +32,9 @@ from threading import Thread, Lock
 from scl import generate_map
 from math import sin, cos, pi
 from misc import daemonize
-from msgpack import loads
-from msgpack import Packer
+from msgpack import loads, dumps
 from aircomm_shared import BCAST_NOFW, HEARTBEAT
-
+from gps import *
 
 socket_map = None
 voltage = 17.0
@@ -43,20 +42,19 @@ current = 0.4
 critical = False
 
 
-def gps():
-   global gps_data, socket_map
+def gps_reader():
+   global gps
    socket = socket_map['gps']
    i = 0
    while True:
       data = socket.recv()
       if i == 5:
          i = 0
-         with gps_lock:
-            gps_data = loads(data)
+         gps = loads(data)
       i += 1
 
 
-def cpuavg():
+def cpu_reader():
    global load
    load = None
    while True:
@@ -67,7 +65,7 @@ def cpuavg():
       sleep(0.1)
 
 
-def pmreader():
+def pm_reader():
    s = socket_map['powerman']
    global voltage, current, critical
    while True:
@@ -91,37 +89,33 @@ def mem_used():
 
 
 def main(name):
-   global socket_map, gps_lock, font, caution_written
+   global socket_map, font, caution_written
    socket_map = generate_map(name)
-   gps_lock = Lock()
-
-   t1 = Thread(target = cpuavg)
+   t1 = Thread(target = cpu_reader)
    t1.daemon = True
    t1.start()
 
-   t2 = Thread(target = pmreader)
+   t2 = Thread(target = pm_reader)
    t2.daemon = True
    t2.start()
 
-   t3 = Thread(target = gps)
+   t3 = Thread(target = gps_reader)
    t3.daemon = True
    t3.start()
 
    socket = generate_map('aircomm_app')['aircomm_in']
-   packer = Packer(use_single_float = True)
    while True:
       try:
          data = [BCAST_NOFW, HEARTBEAT, int(voltage * 10), int(current * 10), int(load), mem_used(), critical]
-         with gps_lock:
-            try:
-               _, _, lat, lon, _, _, _ = gps_data[0 : 7]
-               data += [lon, lat]
-            except:
-               pass
-         socket.send(packer.pack(data))
+         try:
+            data += [gps[LAT], gps[LON]]
+         except:
+            pass
+         socket.send(dumps(data))
       except Exception, e:
          print e
       sleep(1.0)
+
 
 daemonize('heartbeat', main)
 

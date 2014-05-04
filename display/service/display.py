@@ -58,7 +58,7 @@ def spinning_reader():
 
 
 def gps_reader():
-   global spinning, gps, socket_map
+   global gps
    socket = socket_map['gps']
    i = 0
    while True:
@@ -72,7 +72,7 @@ def gps_reader():
 
 
 def sats_reader():
-   global spinning, sats, socket_map
+   global sats
    socket = socket_map['sats']
    i = 0
    while True:
@@ -283,8 +283,12 @@ def pol2cart(az, el, x, y, r):
 
 def draw_gps(draw):
    fix_txt = {0: '--', 2: '2D', 3: '3D'}
-   draw.text((0, 0), 'Sats: %d / %d' % (gps[SATS], len(sats)), WHITE, font = font)
-   draw.text((0, 13), 'Fix: %s' % fix(gps), WHITE, font = font)
+   if fix(gps) == 0:
+      sats_in_use = 0
+   else:
+      sats_in_use = gps[SATS]
+   draw.text((0, 0), 'Sats: %d / %d' % (sats_in_use, len(sats)), WHITE, font = font)
+   draw.text((0, 13), 'Fix: %s' % fix_txt[fix(gps)], WHITE, font = font)
    if fix(gps) >= 2:
       draw.text((0, 13 * 2), 'HD: %.1f' % gps[HDOP], WHITE, font = font)
       if fix(gps) == 3:
@@ -302,7 +306,7 @@ def draw_gps(draw):
       if sat[SIG] > sig:
          sig = sat[SIG]
       x, y = pol2cart(sat[AZI], sat[ELV], x_pos, y_pos, outer_rad)
-      if sat.in_use:
+      if sat[USE]:
          circle(draw, x, y, 3, WHITE, WHITE)
       else:
          circle(draw, x, y, 3, BLACK, WHITE)
