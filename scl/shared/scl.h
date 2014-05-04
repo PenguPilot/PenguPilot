@@ -56,12 +56,19 @@ do { \
 } while (0)
 
 
-#define PACKB(val) msgpack_pack_bool(pk, val) /* pack bool */
 #define PACKI(val) msgpack_pack_int(pk, val) /* pack integer */
 #define PACKF(val) msgpack_pack_float(pk, val) /* pack float */
 #define PACKD(val) msgpack_pack_double(pk, val) /* pack double */
 #define PACKFV(ptr, n) FOR_N(i, n) PACKF(ptr[i]) /* pack float vector */
-
+#define PACKB(val) /* pack boolean */ \
+   do \
+   { \
+      if (val) \
+         msgpack_pack_true(pk); \
+      else \
+         msgpack_pack_false(pk); \
+   } \
+   while (0)
 
 /*
  * send data to a zmq socket and

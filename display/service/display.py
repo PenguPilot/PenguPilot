@@ -30,13 +30,14 @@ from PIL import Image, ImageDraw, ImageFont
 import pyssd1306 as oled
 from time import sleep, time
 from psutil import cpu_percent
-from threading import Thread, Lock
+from threading import Thread
 from scl import generate_map
-from gps_data_pb2 import GpsData
 from math import sin, cos, pi
 from misc import daemonize
 from os import getenv
 from msgpack import loads
+from gps import *
+
 
 WHITE = 1
 BLACK = 0
@@ -44,6 +45,7 @@ W = 128
 H = 64
 spinning = False
 socket_map = None
+
 
 def spinning_reader():
    global spinning, socket_map
@@ -55,25 +57,35 @@ def spinning_reader():
          spinning = False
 
 
-def gps():
-   global spinning, gps_data, socket_map
-   gps_data = None
+def gps_reader():
+   global spinning, gps, socket_map
    socket = socket_map['gps']
    i = 0
    while True:
-      data = socket.recv()
+      raw = socket.recv()
       if spinning:
          continue
-      with gps_lock:
-         if i == 5:
-            i = 0
-            gps_data = GpsData()
-            gps_data.ParseFromString(data)
-         i += 1
+      if i == 5:
+         i = 0
+         gps = loads(raw)
+      i += 1
 
 
+def sats_reader():
+   global spinning, sats, socket_map
+   socket = socket_map['sats']
+   i = 0
+   while True:
+      raw = socket.recv()
+      if spinning:
+         continue
+      if i == 5:
+         i = 0
+         sats = loads(raw)
+      i += 1
 
-def cpuavg():
+
+def cpu_reader():
    global spinning, load
    load = None
    while True:
@@ -102,7 +114,7 @@ def remote_reader():
          i += 1
 
 
-def pmreader():
+def pm_reader():
    s = socket_map['powerman']
    global spinning, voltage, estimate, critical
    critical = False
@@ -270,71 +282,74 @@ def pol2cart(az, el, x, y, r):
 
 
 def draw_gps(draw):
-   with gps_lock:
-      fix_txt = {0: '--', 2: '2D', 3: '3D'}
-      draw.text((0, 0), 'Sats: %d / %d' % (gps_data.sats, len(gps_data.satinfo)), WHITE, font = font)
-      draw.text((0, 13), 'Fix: %s' % fix_txt[gps_data.fix], WHITE, font = font)
-      if gps_data.fix >= 2:
-         draw.text((0, 13 * 2), 'HD: %.1f' % gps_data.hdop, WHITE, font = font)
-         if gps_data.fix == 3:
-            draw.text((0, 13 * 3), 'VD: %.1f' % gps_data.vdop, WHITE, font = font)
-         else:
-            draw.text((0, 13 * 3), '-------', WHITE, font = font)
-      outer_rad = 31
-      x_pos = 64 + outer_rad
-      y_pos = outer_rad
-      circle(draw, x_pos, y_pos, outer_rad, BLACK, WHITE)
-      draw.line([(x_pos, y_pos - outer_rad), (x_pos, y_pos + outer_rad)], WHITE)
-      draw.line([(x_pos - outer_rad, y_pos), (x_pos + outer_rad, y_pos)], WHITE)
-      sig = 0.0
-      for sat in gps_data.satinfo:
-         if sat.sig > sig:
-            sig = sat.sig
-         x, y = pol2cart(sat.azimuth, sat.elv, x_pos, y_pos, outer_rad)
-         if sat.in_use:
-            circle(draw, x, y, 3, WHITE, WHITE)
-         else:
-            circle(draw, x, y, 3, BLACK, WHITE)
-      draw.text((0, 13 * 4), 'Sig: %.1f' % sig, WHITE, font = font)
+   fix_txt = {0: '--', 2: '2D', 3: '3D'}
+   draw.text((0, 0), 'Sats: %d / %d' % (gps[SATS], len(sats)), WHITE, font = font)
+   draw.text((0, 13), 'Fix: %s' % fix(gps), WHITE, font = font)
+   if fix(gps) >= 2:
+      draw.text((0, 13 * 2), 'HD: %.1f' % gps[HDOP], WHITE, font = font)
+      if fix(gps) == 3:
+         draw.text((0, 13 * 3), 'VD: %.1f' % gps[VDOP], WHITE, font = font)
+      else:
+         draw.text((0, 13 * 3), '-------', WHITE, font = font)
+   outer_rad = 31
+   x_pos = 64 + outer_rad
+   y_pos = outer_rad
+   circle(draw, x_pos, y_pos, outer_rad, BLACK, WHITE)
+   draw.line([(x_pos, y_pos - outer_rad), (x_pos, y_pos + outer_rad)], WHITE)
+   draw.line([(x_pos - outer_rad, y_pos), (x_pos + outer_rad, y_pos)], WHITE)
+   sig = 0.0
+   for sat in sats:
+      if sat[SIG] > sig:
+         sig = sat[SIG]
+      x, y = pol2cart(sat[AZI], sat[ELV], x_pos, y_pos, outer_rad)
+      if sat.in_use:
+         circle(draw, x, y, 3, WHITE, WHITE)
+      else:
+         circle(draw, x, y, 3, BLACK, WHITE)
+   draw.text((0, 13 * 4), 'Sig: %.1f' % sig, WHITE, font = font)
 
 
 def draw_gps2(draw):
-   with gps_lock:
-      if gps_data.fix >= 2:
-         draw.text((0, 13 * 0), 'Lon: %f' % gps_data.lon, WHITE, font = font)
-         draw.text((0, 13 * 1), 'Lat: %f' % gps_data.lat, WHITE, font = font)
-         if gps_data.fix == 3:
-            draw.text((0, 13 * 2), 'Alt: %.1f' % gps_data.alt, WHITE, font = font)
-      else:
-         raise Exception
+   try:
+      draw.text((0, 13 * 0), 'Lat: %f' % gps[LAT], WHITE, font = font)
+      draw.text((0, 13 * 1), 'Lon: %f' % gps[LON], WHITE, font = font)
+      try:
+         draw.text((0, 13 * 2), 'Alt: %.1f' % gps[ALT], WHITE, font = font)
+      except:
+         pass
+   except:
+      raise Exception
 
 
 def main(name):
-   global socket_map, gps_lock, font, spinning, caution_written
+   global socket_map, font, spinning, caution_written
    socket_map = generate_map(name)
 
-   gps_lock = Lock()
    font = ImageFont.truetype(getenv('PENGUPILOT_PATH') + '/display/service/verdana.ttf', 11)
    
    t = Thread(target = spinning_reader)
    t.daemon = True
    t.start()
 
-   t1 = Thread(target = cpuavg)
+   t1 = Thread(target = cpu_reader)
    t1.daemon = True
    t1.start()
 
-   t2 = Thread(target = pmreader)
+   t2 = Thread(target = pm_reader)
    t2.daemon = True
    t2.start()
 
-   t3 = Thread(target = gps)
+   t3 = Thread(target = gps_reader)
    t3.daemon = True
    t3.start()
    
-   t4 = Thread(target = remote_reader)
+   t4 = Thread(target = sats_reader)
    t4.daemon = True
    t4.start()
+   
+   t5 = Thread(target = remote_reader)
+   t5.daemon = True
+   t5.start()
 
 
    screens = [(draw_health, 10),

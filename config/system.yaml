@@ -33,6 +33,7 @@
   sockets:
    - opcd_ctrl: req
    - gps: pub
+   - sats: pub
 
 - name: svctrl
   sockets:

@@ -31,12 +31,13 @@
 #include <syslog.h>
 #include <math.h>
 
+#include <util.h>
 #include <threadsafe_types.h>
 #include <opcd_interface.h>
 #include <serial.h>
-#include <gps_data.pb-c.h>
 #include <scl.h>
 #include <daemon.h>
+#include <msgpack.h>
 
 #include "linux_sys.h"
 #include "nmealib/nmea/info.h"
@@ -47,13 +48,9 @@
 
 
 static char running = 1;
-static char *serial_path = NULL;
-static tsint_t serial_speed;
-static void *gps_socket;
-static serialport_t port;
  
 
-static void generate_time_str(char str[TIME_STR_LEN], nmeaTIME *time)
+static size_t generate_time_str(char str[TIME_STR_LEN], nmeaTIME *time)
 {
    struct tm tm_time;
    tm_time.tm_year = time->year;
@@ -72,6 +69,7 @@ static void generate_time_str(char str[TIME_STR_LEN], nmeaTIME *time)
    {
       strftime(str, TIME_STR_LEN, "%Y-%m-%d %H:%M:%S", &tm_time);
    }
+   return strlen(str);
 }
 
 
@@ -83,17 +81,20 @@ static double convert(double val)
 }
 
 
-void main_serial(void)
+int main_serial(void)
 {
-   gps_socket = scl_get_socket("gps");
-   if (gps_socket == NULL)
-   {
-      syslog(LOG_CRIT, "could not get gps socket");   
-      exit(EXIT_FAILURE);
-   }
+   THROW_BEGIN();
+
+   void *gps_socket = scl_get_socket("gps");
+   THROW_IF(gps_socket == NULL, -EIO);
    int64_t hwm = 1;
    zmq_setsockopt(gps_socket, ZMQ_SNDHWM, &hwm, sizeof(hwm));
-  
+
+   void *sats_socket = scl_get_socket("sats");
+   THROW_IF(sats_socket == NULL, -EIO);
+ 
+   char *serial_path = NULL;
+   tsint_t serial_speed;
    opcd_param_t params[] =
    {
       {"path", &serial_path},
@@ -101,13 +102,8 @@ void main_serial(void)
       OPCD_PARAMS_END
    };
    opcd_params_apply("gpsp.serial.", params);
-   printf("%s %d\n", serial_path, tsint_get(&serial_speed));
-   int status = serial_open(&port, serial_path, tsint_get(&serial_speed), 0, 0, 0);
-   if (status < 0)
-   {
-      syslog(LOG_CRIT, "could not open serial port: %s", serial_path);
-      exit(EXIT_FAILURE);
-   }
+   serialport_t port;
+   THROW_ON_ERR(serial_open(&port, serial_path, tsint_get(&serial_speed), 0, 0, 0));
 
    nmeaPARSER parser;
    nmea_parser_init(&parser);
@@ -120,7 +116,12 @@ void main_serial(void)
    double lat_prev = 0.0;
    double lon_prev = 0.0;
    unsigned int count = 0;
-   
+   msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new();
+   THROW_IF(msgpack_buf == NULL, -ENOMEM);
+   msgpack_packer *pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
+   THROW_IF(pk == NULL, -ENOMEM);
+
+  
    while (running)
    {
       int c = serial_read_char(&port);
@@ -139,14 +140,19 @@ void main_serial(void)
             if (((count++ % 50) != 0) && convert(info.lat) == lat_prev && convert(info.lon) == lon_prev)
                continue;
 
-            GpsData gps_data = GPS_DATA__INIT;
+            msgpack_sbuffer_clear(msgpack_buf);
+            if (info.fix == 2)
+               msgpack_pack_array(pk, 7);
+            else if (info.fix == 3)
+               msgpack_pack_array(pk, 9);
+            else
+               msgpack_pack_array(pk, 1);
             
-            /* set general data: */
             char time_str[TIME_STR_LEN];
-            generate_time_str(time_str, &info.utc);
-            gps_data.fix = 0;
-            gps_data.time = time_str;
- 
+            size_t len = generate_time_str(time_str, &info.utc);
+            msgpack_pack_raw(pk, len);
+            msgpack_pack_raw_body(pk, time_str, len);
+
             /* set system time to gps time once: */
             if (!time_set && info.fix >= 2)
             {
@@ -155,58 +161,40 @@ void main_serial(void)
                sprintf(shell_date_cmd, "date -s \"%s\"", time_str);
                time_set = system(shell_date_cmd) == 0;
             }
-            
-            /* set position data if a minimum of satellites is seen: */
             if (info.fix >= 2)
             {
-               gps_data.fix = 2;
-               PB_SET(gps_data, hdop, info.HDOP);
-               PB_SET(gps_data, lat, convert(info.lat));
-               PB_SET(gps_data, lon, convert(info.lon));
-               PB_SET(gps_data, sats, info.satinfo.inuse);
-               PB_SET(gps_data, course, info.track);
-               PB_SET(gps_data, speed, info.speed);
-               lat_prev = gps_data.lat;
-               lon_prev = gps_data.lon;
-            }
-              
-            /* set data for 3d fix: */
+               PACKF(convert(info.lat));
+               PACKF(convert(info.lon));
+               PACKI(info.satinfo.inuse);
+               PACKF(info.speed);
+               PACKF(info.track);
+               PACKF(info.HDOP);
+            } 
             if (info.fix == 3)
             {
-               gps_data.fix = 3;
-               PB_SET(gps_data, vdop, info.VDOP);
-               PB_SET(gps_data, alt, info.elv);
+               PACKF(info.elv);
+               PACKF(info.VDOP);
             }
+            scl_copy_send_dynamic(gps_socket, msgpack_buf->data, msgpack_buf->size);
 
-            /* add satellit info: */
-            unsigned int i;
-            gps_data.n_satinfo = info.satinfo.inview;
-            SatInfo **satinfo = malloc(gps_data.n_satinfo * sizeof(SatInfo *));
-            for (i = 0; i < gps_data.n_satinfo; i++)
+            msgpack_sbuffer_clear(msgpack_buf);
+            msgpack_pack_array(pk, info.satinfo.inview);
+            FOR_N (i, info.satinfo.inview)
             {
-               /* fill SatInfo structure: */
+               msgpack_pack_array(pk, 5); /* [0, 1, 2, 3, 4] */
                nmeaSATELLITE *nmea_satinfo = &info.satinfo.sat[i];
-               satinfo[i] = malloc(gps_data.n_satinfo * sizeof(SatInfo));
-               sat_info__init(satinfo[i]);
-               satinfo[i]->id = nmea_satinfo->id;
-               satinfo[i]->in_use = info.satinfo.in_use[i] ? 1 : 0;
-               satinfo[i]->elv = nmea_satinfo->elv;
-               satinfo[i]->azimuth = nmea_satinfo->azimuth;
-               satinfo[i]->sig = nmea_satinfo->sig;
+               PACKI(nmea_satinfo->id);       /* 0 */
+               PACKB(info.satinfo.in_use[i]); /* 1 */
+               PACKI(nmea_satinfo->elv);      /* 2 */
+               PACKI(nmea_satinfo->azimuth);  /* 3 */
+               PACKI(nmea_satinfo->sig);      /* 4 */
             }
-            gps_data.satinfo = satinfo;
 
-            /* send the data: */
-            SCL_PACK_AND_SEND_DYNAMIC(gps_socket, gps_data, gps_data);
-            
-            /* free allocated memory: */
-            for (i = 0; i < gps_data.n_satinfo; i++)
-            {
-               free(satinfo[i]);
-            }
-            free(satinfo);
+            scl_copy_send_dynamic(sats_socket, msgpack_buf->data, msgpack_buf->size);
          }
       }
    }
+
+   THROW_END();
 }
 
