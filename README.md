@@ -27,7 +27,7 @@ Flight Infrastructure:
 - blackbox: black box service for logging every sensor input of the autopilot to harddisk/sdcard
 - powerman: power management and monitoring service
 - gpsp: gps publisher, similar to gpsd but more efficient and much simpler using nmeablib
-- icarus: high-level control service for complex commands
+- hlfm: high-level flight manager service
 
 Supporting Infrastructures:
 - scl: signaling and communication link (IPC framework), see config/system.yaml
@@ -35,7 +35,6 @@ Supporting Infrastructures:
 - svctrl: service management and control utility, see config/services.yaml
 - shared: shared Libraries for threading and other common tasks
 - config: configuration files
-- setup: config file creation scripts (EXPERIMENTAL)
 
 Additional Features:
 - aircomm: encrypted aerial communication daemon, using NRF24L01+
