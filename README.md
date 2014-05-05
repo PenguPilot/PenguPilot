@@ -61,3 +61,10 @@ Here's an example of a Gumstix Overo Air based PenguCopter with GPS receiver and
 
 [Flying Penguins from BBC :)](https://www.youtube.com/watch?v=9dfWzp7rYR4)
 
+
+Service Depndencies
+-------------------
+
+![Services Dependency Graph](https://raw.github.com/PenguPilot/PenguPilot/master/doc/ServicesGraph.jpg)
+
+
