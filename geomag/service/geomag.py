@@ -28,7 +28,6 @@
 
 from geomag.geomag import GeoMag
 from scl import generate_map
-from gps_data_pb2 import GpsData
 from misc import daemonize
 import os
 from time import time
@@ -43,16 +42,17 @@ def main(name):
    decl_socket = socket_map['decl']
    i = 0
    while True:
-      data = gps_socket.recv()
+      raw = gps_socket.recv()
       if i == 20:
          i = 0
-         gps_data = GpsData()
-         gps_data.ParseFromString(data)
-         if gps_data.time and gps_data.fix >= 2:
-            date = datetime.strptime(gps_data.time, '%Y-%m-%d %H:%M:%S').date()
-            decl = gm.GeoMag(gps_data.lat, gps_data.lon, time = date).dec
-            print time(), decl
+         gps = loads(raw)
+         try:
+            date = datetime.strptime(gps[0], '%Y-%m-%d %H:%M:%S').date()
+            decl = gm.GeoMag(gps[1], gps[2], time = date).dec
             decl_socket.send('%f' % decl)
+         except:
+            pass
       i += 1
+
 
 daemonize('geomag', main)
