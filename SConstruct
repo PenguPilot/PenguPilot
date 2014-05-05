@@ -112,9 +112,9 @@ common_libs = opcd_lib + opcd_pb_lib + scl_lib + shared_lib
 # GPS Publisher:
 append_inc_lib('gpsp/service/nmealib')
 gpsp_dir = 'gpsp/'
-gpsp_pb_dir = gpsp_dir + 'shared/'
-gpsp_pb_lib = make_proto_lib(gpsp_pb_dir, 'gpsp_pb')
-gpsp_bin = env.Program('gpsp/service/gpsp', collect_files(gpsp_dir + 'service', re_cc), LIBS = common_libs + gpsp_pb_lib + ['m', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
+append_inc_lib(gpsp_dir + 'shared')
+gpsp_bin = env.Program('gpsp/service/gpsp', collect_files(gpsp_dir + 'service', re_cc), LIBS = common_libs + ['m', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
+Requires(gpsp_bin, common_libs)
 
 # Arduino RC / Power Publisher:
 arduino_dir = 'arduino/'
@@ -126,7 +126,7 @@ ap_dir = 'autopilot/'
 ap_pb_dir = ap_dir + 'shared/'
 ap_src = collect_files(ap_dir + 'service', re_cc)
 ap_pb_lib = make_proto_lib(ap_pb_dir, 'autopilot_pb')
-ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = common_libs + [gpsp_pb_lib, ap_pb_lib] + ['m', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
+ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = common_libs + [ap_pb_lib] + ['m', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
 
 # Display:
 display_src = map(lambda x: 'display/shared/' + x, ['pyssd1306.c', 'pyssd1306.i', 'ssd1306.c']) + ['shared/i2c/i2c.c']
