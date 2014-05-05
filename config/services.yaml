@@ -28,7 +28,7 @@
 
 autopilot:
    binary: 'autopilot/service/autopilot'
-   depends: [opcd, gpsp, powerman]
+   depends: [opcd, gpsp, powerman, arduino, remote]
    priority: sys_high
 
 
