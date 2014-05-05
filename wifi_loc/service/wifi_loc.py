@@ -1,10 +1,11 @@
 #!/bin/env python
 
-from gps_data_pb2 import GpsData
 from msgpack import loads, dumps
 from threading import Thread
 from scl import generate_map
 from misc import daemonize
+from msgpack import loads
+from gps_msgpack import *
 
 
 class GPS_Reader(Thread):
@@ -17,12 +18,10 @@ class GPS_Reader(Thread):
    def run(self):
       i = 0
       while True:
-         data = self.socket.recv()
+         raw = self.socket.recv()
          if i == 5:
             i = 0
-            gps = GpsData()
-            gps.ParseFromString(data)
-            self.data = gps
+            self.data = loads(raw)
          i += 1
 
 
@@ -36,7 +35,7 @@ def main(name):
       try:
          measure = loads(wifi_socket.recv())
          gps = gps_reader.data
-         f.write('%f %f %s %d\n' % (gps.lat, gps.lon, measure[0], measure[1]))
+         f.write('%f %f %s %d\n' % (gps[LAT], gps[LON], measure[0], measure[1]))
          f.flush()
       except:
          pass
