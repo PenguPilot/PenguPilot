@@ -28,11 +28,16 @@
 
 autopilot:
    binary: 'autopilot/service/autopilot'
-   depends: [opcd, gpsp, powerman, arduino, remote]
+   depends: [opcd, gpsp, geomag, powerman, arduino, remote]
    priority: sys_high
 
 
 # medium-priority system services:
+
+hlfm:
+   binary: 'hlfm/service/hlfm.py'
+   depends: [opcd, autopilot, powerman]
+   priority: sys_medium
 
 arduino:
    binary: 'arduino/service/arduino'
