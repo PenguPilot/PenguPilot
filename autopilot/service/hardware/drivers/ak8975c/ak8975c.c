@@ -113,15 +113,15 @@ static int self_test(ak8975c_dev_t *dev)
    /* check values */
    if (dev->raw.x < -100. || dev->raw.x > 100.)
    {
-      THROW(-EAGAIN);
+      THROW(-ENODEV);
    }
    if (dev->raw.y < -100. || dev->raw.y > 100.)
    {
-      THROW(-EAGAIN);
+      THROW(-ENODEV);
    }
    if (dev->raw.z < -1000. || dev->raw.z > -300.)
    {
-      THROW(-EAGAIN);
+      THROW(-ENODEV);
    }
 
    THROW_END();
