@@ -129,7 +129,7 @@ int exynos_quad_init(platform_t *plat, int override_hw)
    LOG(LL_INFO, "initializing inverse coupling matrix");
    inv_coupling_init(N_MOTORS, icmatrix);
 
-   THROW_PROPAGATE(generic_platform_init(plat));
+   THROW_ON_ERR(generic_platform_init(plat));
 
    if (!override_hw)
    {

@@ -65,7 +65,7 @@ int _main(void)
    int dev_speed;
    opcd_param_get(buffer_speed, &dev_speed);
    serialport_t port;
-   THROW_ON_ERR(serial_open(&port, dev_path, dev_speed, 0, 0, 0));
+   THROW_ON_ERR(serial_open(&port, dev_path, dev_speed, O_RDONLY));
    rc_dsl_t rc_dsl;
    rc_dsl_init(&rc_dsl);
 

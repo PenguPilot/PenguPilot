@@ -1,4 +1,6 @@
-/*___________________________________________________
+#!/usr/bin/env python
+"""
+  ___________________________________________________
  |  _____                       _____ _ _       _    |
  | |  __ \                     |  __ (_) |     | |   |
  | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
@@ -8,8 +10,8 @@
  |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
- 
- Message Format for GPS Data
+  
+ Services YAML FILE to Graphviz DOT File Converter
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -21,32 +23,27 @@
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. */
+ GNU General Public License for more details. """
 
 
-
-message SatInfo
-{
-   required int32 id = 1;   
-   required bool in_use = 2;
-   required int32 elv = 3;
-   required int32 azimuth = 4;
-   required int32 sig = 5;
-}
+from yaml import load
+from sys import stdin
 
 
-message GpsData
-{
-   required uint32 fix =  1; // fix type (0,1,2,3)
-   required string time = 2; // time stamp in ISO8601 format, UTC
-   optional double lat =  3; // lat in degrees: +/- signifies west/east
-   optional double lon =  4; // lon in degrees: +/- signifies north/south
-   optional double alt =  5; // altitude above sea level in meters
-   optional float hdop =  6; // horizontal dilution of precision
-   optional float vdop =  7; // vertical dilution of precision
-   optional float speed = 8; // speed over ground
-   optional float course = 9; // course in degrees
-   optional uint32 sats = 10; // satellites in use
-   repeated SatInfo satinfo = 11; // satellite info
-}
+svs = load(stdin.read())
+
+print 'digraph {'
+print 'rankdir = BT;'
+for comp in svs:
+   try:
+      svs[comp]['platforms']
+      print comp, '[fillcolor="yellow", style="filled"];'
+   except:
+      pass
+   try:
+      for dep in svs[comp]['depends']:
+         print comp, '->', dep
+   except:
+      pass
+print '}'
 

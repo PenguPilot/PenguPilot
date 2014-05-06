@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
  
- GPS Publisher and System Time Update Service
+ Serial NMEA GPS Publisher and System Time Update Service
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -36,7 +36,6 @@
 #include <opcd_interface.h>
 #include <serial.h>
 #include <scl.h>
-#include <daemon.h>
 #include <msgpack.h>
 
 #include "linux_sys.h"
@@ -103,7 +102,7 @@ int main_serial(void)
    };
    opcd_params_apply("gpsp.serial.", params);
    serialport_t port;
-   THROW_ON_ERR(serial_open(&port, serial_path, tsint_get(&serial_speed), 0, 0, 0));
+   THROW_ON_ERR(serial_open(&port, serial_path, tsint_get(&serial_speed), O_RDONLY));
 
    nmeaPARSER parser;
    nmea_parser_init(&parser);
