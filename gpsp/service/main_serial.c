@@ -137,7 +137,7 @@ int main_serial(void)
              && (smask & (GPGSA | GPRMC))) /* go sure that we collect all sentences for first output*/
          {
             /* limit sending data rate: */
-            if (((count++ % 50) != 0) && convert(info.lat) == lat_prev && convert(info.lon) == lon_prev)
+            if (((count++ % 100) != 0) && convert(info.lat) == lat_prev && convert(info.lon) == lon_prev)
                continue;
 
             msgpack_sbuffer_clear(msgpack_buf);

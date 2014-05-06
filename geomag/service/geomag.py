@@ -32,6 +32,8 @@ from misc import daemonize
 import os
 from time import time
 from datetime import datetime
+from gps_msgpack import *
+from msgpack import loads
 
 
 def main(name):
@@ -47,8 +49,8 @@ def main(name):
          i = 0
          gps = loads(raw)
          try:
-            date = datetime.strptime(gps[0], '%Y-%m-%d %H:%M:%S').date()
-            decl = gm.GeoMag(gps[1], gps[2], time = date).dec
+            date = datetime.strptime(gps[TIME], '%Y-%m-%d %H:%M:%S').date()
+            decl = gm.GeoMag(gps[LAT], gps[LON], time = date).dec
             decl_socket.send('%f' % decl)
          except:
             pass
