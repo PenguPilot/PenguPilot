@@ -25,7 +25,6 @@
 
 
 #include <stdio.h>
-#include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
 #include <pthread.h>
@@ -140,11 +139,11 @@ int map_baudrate(int baudrate)
    return baudr;
 }
 
-int serial_open(serialport_t *port, const char *path, int baudrate, unsigned int iflag, unsigned int lflag, unsigned int cflag)
+int serial_open(serialport_t *port, const char *path, int baudrate, int rw_mode)
 {
    struct termios new_options;
    port->path = path;
-   port->handle = open(path, O_RDWR | O_EXCL | O_NOCTTY);
+   port->handle = open(path, rw_mode | O_NOCTTY);
    if (port->handle == -1)
    {
       return -1;
@@ -153,19 +152,19 @@ int serial_open(serialport_t *port, const char *path, int baudrate, unsigned int
    {
       (void)tcgetattr(port->handle, &port->orig_options);
 
-      new_options.c_cflag = CREAD | CLOCAL | CS8 | cflag;
+      new_options.c_cflag = CREAD | CLOCAL | CS8;
       int baudr = map_baudrate(baudrate);
       cfsetospeed(&new_options, baudr);
       cfsetispeed(&new_options, baudr);
       new_options.c_oflag = 0;
-      new_options.c_iflag = iflag;
-      new_options.c_lflag = lflag;
+      new_options.c_iflag = 0;
+      new_options.c_lflag = 0;
 
       new_options.c_cc[VINTR]    = 0;     /* Ctrl-c */
       new_options.c_cc[VQUIT]    = 0;     /* Ctrl-\ */
       new_options.c_cc[VERASE]   = 0;     /* del */
       new_options.c_cc[VKILL]    = 0;     /* @ */
-      new_options.c_cc[VEOF]     = (iflag == 0) ? 0 : 4;     /* Ctrl-d */
+      new_options.c_cc[VEOF]     = 0;     /* Ctrl-d */
       new_options.c_cc[VTIME]    = 0;     /* inter-character timer unused */
       new_options.c_cc[VMIN]     = 1;     /* blocking read until 1 character arrives */
       new_options.c_cc[VSWTC]    = 0;     /* '\0' */
