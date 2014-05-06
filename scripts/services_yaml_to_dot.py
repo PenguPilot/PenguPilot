@@ -36,6 +36,11 @@ print 'digraph {'
 print 'rankdir = BT;'
 for comp in svs:
    try:
+      svs[comp]['platforms']
+      print comp, '[fillcolor="yellow", style="filled"];'
+   except:
+      pass
+   try:
       for dep in svs[comp]['depends']:
          print comp, '->', dep
    except:
