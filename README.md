@@ -64,8 +64,8 @@ Here's an example of a Gumstix Overo Air based PenguCopter with GPS receiver and
 
 Service Dependencies
 --------------------
-The services dependencies of PenguPilot are depicted in the figure below:
+The service dependencies of PenguPilot are depicted in the figure below:
 
 ![Services Dependency Graph](https://raw.github.com/PenguPilot/PenguPilot/master/doc/ServicesGraph.png)
 
-The services indicated in yellow are platform-specific, as specified in file config/services.yaml.
+Services indicated in yellow are platform-specific, as specified in file config/services.yaml.
