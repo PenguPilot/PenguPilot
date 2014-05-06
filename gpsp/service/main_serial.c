@@ -102,7 +102,7 @@ int main_serial(void)
    };
    opcd_params_apply("gpsp.serial.", params);
    serialport_t port;
-   THROW_ON_ERR(serial_open(&port, serial_path, tsint_get(&serial_speed), 0, 0, 0));
+   THROW_ON_ERR(serial_open(&port, serial_path, tsint_get(&serial_speed), O_RDONLY));
 
    nmeaPARSER parser;
    nmea_parser_init(&parser);
