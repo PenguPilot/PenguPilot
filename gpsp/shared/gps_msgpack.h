@@ -1,6 +1,6 @@
 
-#ifndef __GPS_H__
-#define __GPS_H__
+#ifndef __GPS_MSGPACK_H__
+#define __GPS_MSGPACK_H__
 
 
 /* satellite info elements: */
@@ -21,15 +21,6 @@
 #define ALT    7 /* 3d fix ... */
 #define VDOP   8
 
-inline int fix(size_t array_len)
-{
-   if (array_len == 1)
-      return 0;
-   else if (array_len >= 7)
-      return 2;
-   else
-      return 3;
-}
 
-#endif /* __GPS_H__ */
+#endif /* __GPS_MSGPACK_H__ */
 

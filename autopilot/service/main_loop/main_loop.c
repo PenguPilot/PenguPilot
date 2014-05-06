@@ -265,7 +265,6 @@ void main_step(const float dt,
    pos_in.dt = dt;
    pos_in.ultra_u = ultra;
    pos_in.baro_u = baro;
-   
    if (!(sensor_status & MARG_VALID))
    {
       marg_err += 1;
@@ -462,6 +461,9 @@ void main_step(const float dt,
    /* enables motors, if flight logic requests it: */
    motors_state_update(flying, dt, motors_enabled);
    
+   printf("%.2f %.2f %.2f\n",
+      euler.pitch, euler.roll, euler.yaw);
+
    /* reset controllers, if motors are not controllable: */
    if (!motors_controllable())
    {

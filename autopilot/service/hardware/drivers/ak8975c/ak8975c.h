@@ -9,8 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Simple Threads Interface
- 
+ AK8975C Driver Interface
+
+ Copyright (C) 2014 Jan Roemisch, Ilmenau University of Technology
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
@@ -24,38 +25,27 @@
  GNU General Public License for more details. */
 
 
-#include <stdio.h>
-#include <limits.h>
 
-#include "util.h"
-#include "simple_thread.h"
+#ifndef __AK8975C_H__
+#define __AK8975C_H__
 
 
-void simple_thread_start(simple_thread_t *thread, void *(*func)(void *),
-                         char *name, int priority, void *private)
+#include <i2c/i2c.h>
+#include "../../../util/math/vec3.h"
+
+
+typedef struct
 {
-   ASSERT_NOT_NULL(thread);
-   ASSERT_NOT_NULL(func);
-   ASSERT_NOT_NULL(name);
-   ASSERT_FALSE(thread->running);
+   /* i2c device: */
+   i2c_dev_t i2c_dev;
 
-   pthread_attr_t attr;
-   pthread_attr_init(&attr);
-   pthread_attr_setstacksize(&attr, 4096 * 16);
-   thread->name = name;
-   thread->private = private;
-   thread->running = 1;
-   pthread_create(&thread->handle, &attr, func, thread);
-   thread->sched_param.sched_priority = priority;
-   pthread_setschedparam(thread->handle, SCHED_FIFO, &thread->sched_param);
+   vec3_t raw;
 }
+ak8975c_dev_t;
 
 
-void simple_thread_stop(simple_thread_t *thread)
-{
-   ASSERT_NOT_NULL(thread);
-   ASSERT_TRUE(thread->running);
+int ak8975c_init(ak8975c_dev_t *dev, i2c_bus_t *bus);
 
-   thread->running = 0;
-   (void)pthread_join(thread->handle, NULL);
-}
+int ak8975c_read(ak8975c_dev_t *dev);
+
+#endif

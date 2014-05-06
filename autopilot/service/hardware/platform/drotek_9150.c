@@ -9,8 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Simple Threads Interface
- 
+ Drotek MPU9150 + MS5611 Driver Implementation
+
+ Copyright (C) 2014 Jan Roemisch, Ilmenau University of Technology
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
@@ -24,38 +25,28 @@
  GNU General Public License for more details. */
 
 
-#include <stdio.h>
-#include <limits.h>
+#include <util.h>
 
-#include "util.h"
-#include "simple_thread.h"
+#include "drotek_9150.h"
+#include "../drivers/ak8975c/ak8975c_reader.h"
 
 
-void simple_thread_start(simple_thread_t *thread, void *(*func)(void *),
-                         char *name, int priority, void *private)
+int drotek_9150_init(drotek_9150_t *drotek, i2c_bus_t *bus)
 {
-   ASSERT_NOT_NULL(thread);
-   ASSERT_NOT_NULL(func);
-   ASSERT_NOT_NULL(name);
-   ASSERT_FALSE(thread->running);
-
-   pthread_attr_t attr;
-   pthread_attr_init(&attr);
-   pthread_attr_setstacksize(&attr, 4096 * 16);
-   thread->name = name;
-   thread->private = private;
-   thread->running = 1;
-   pthread_create(&thread->handle, &attr, func, thread);
-   thread->sched_param.sched_priority = priority;
-   pthread_setschedparam(thread->handle, SCHED_FIFO, &thread->sched_param);
+   THROW_BEGIN();
+   THROW_ON_ERR(mpu6050_init(&drotek->mpu, bus, 0x69,
+      MPU6050_DLPF_CFG_94_98Hz, MPU6050_FS_SEL_2000, MPU6050_AFS_SEL_8G));
+   THROW_ON_ERR(ak8975c_reader_init(bus));
+   THROW_END();
 }
 
 
-void simple_thread_stop(simple_thread_t *thread)
+int drotek_9150_read(marg_data_t *data, drotek_9150_t *drotek)
 {
-   ASSERT_NOT_NULL(thread);
-   ASSERT_TRUE(thread->running);
-
-   thread->running = 0;
-   (void)pthread_join(thread->handle, NULL);
+   THROW_BEGIN();
+   THROW_ON_ERR(mpu6050_read(&drotek->mpu, &data->gyro, &data->acc, NULL));
+   THROW_ON_ERR(ak8975c_reader_get(&data->mag));
+   THROW_END();
 }
+
+

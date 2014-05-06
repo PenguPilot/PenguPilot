@@ -103,7 +103,7 @@ int _main(void)
                chan_in = PPM_VALUE_MIN;
             channels[i] = (float)(chan_in - PPM_VALUE_MIN) / (PPM_VALUE_MAX - PPM_VALUE_MIN) * 2.f - 1.f;
          }
-         sig_valid = (invalid_count < (PPM_CHAN_MAX / 2));
+         sig_valid = (invalid_count < (PPM_CHAN_MAX / 3));
          
          /* send channels: */
          msgpack_sbuffer_clear(msgpack_buf);
