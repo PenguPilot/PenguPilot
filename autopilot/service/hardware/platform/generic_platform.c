@@ -53,16 +53,16 @@ int generic_platform_init(platform_t *plat)
 {
    ASSERT_ONCE();
    THROW_BEGIN();
+   LOG(LL_INFO, "initializing power reader");
    
    LOG(LL_INFO, "initializing remote control reader");
    rc_channels_init(&rc_channels, channel_mapping, channel_scale);
    THROW_ON_ERR(scl_rc_init());
-   plat->read_rc = read_rc;
-
-   LOG(LL_INFO, "initializing power reader");
+/*   plat->read_rc = read_rc;
+*/
    THROW_ON_ERR(scl_power_init());
    plat->read_power = scl_power_read;
-   
+  
    LOG(LL_INFO, "initializing GPS reader");
    THROW_ON_ERR(scl_gps_init());
    plat->read_gps = scl_gps_read;

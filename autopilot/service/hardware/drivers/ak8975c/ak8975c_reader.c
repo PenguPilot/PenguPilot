@@ -9,8 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- RC DSL Reader Implementation
+ AK8975C Reader Implementation
 
+ Copyright (C) 2014 Jan Roemisch, Ilmenau University of Technology
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
@@ -24,71 +25,37 @@
  GNU General Public License for more details. */
 
 
-#include <string.h>
-
+#include <errno.h>
 
 #include <util.h>
 #include <simple_thread.h>
-#include <opcd_interface.h>
-#include <pthread.h>
-#include <scl.h>
-#include <msgpack.h>
+#include <threadsafe_types.h>
 
-#include "scl_rc.h"
-#include "../../util/rc_channels.h"
+#include "ak8975c_reader.h"
+#include "ak8975c.h"
 
 
-#define THREAD_NAME       "scl_rc_reader"
-#define THREAD_PRIORITY   96
-
-
-#define RSSI_MIN RSSI_SCALE(7)
+#define THREAD_NAME       "ak8975c_reader"
+#define THREAD_PRIORITY   98
 
 
 static simple_thread_t thread;
 static pthread_mutexattr_t mutexattr;   
 static pthread_mutex_t mutex;
-static float channels[SCL_MAX_CHANNELS];
-static void *scl_socket;
-static int sig_valid;
-
-
-static void scl_read_channels(int *valid, float *_channels)
-{
-   char buffer[128];
-   int ret = scl_recv_static(scl_socket, buffer, sizeof(buffer));
-   if (ret > 0)
-   {
-      msgpack_unpacked msg;
-      msgpack_unpacked_init(&msg);
-      if (msgpack_unpack_next(&msg, buffer, ret, NULL))
-      {
-         msgpack_object root = msg.data;
-         assert (root.type == MSGPACK_OBJECT_ARRAY);
-         int n_channels = root.via.array.size - 1;
-         *valid = root.via.array.ptr[0].via.i64;
-         FOR_N(i, n_channels)
-            if (i < SCL_MAX_CHANNELS)
-               _channels[i] = root.via.array.ptr[1 + i].via.dec;
-      }
-      msgpack_unpacked_destroy(&msg);
-   }
-   else
-   {
-      msleep(1);
-   }
-}
+static ak8975c_dev_t ak8975c;
+static vec3_t val;
+static vec3_t null_val;
+static int status = -EAGAIN;
 
 
 SIMPLE_THREAD_BEGIN(thread_func)
 {
-   float _channels[SCL_MAX_CHANNELS];
    SIMPLE_THREAD_LOOP_BEGIN
    {
-      scl_read_channels(&sig_valid, _channels);
+      int ret = ak8975c_read(&ak8975c);
       pthread_mutex_lock(&mutex);
-      if (sig_valid)
-         memcpy(channels, _channels, sizeof(channels));   
+      status = ret;
+      vec_copy(&val, &ak8975c.raw);
       pthread_mutex_unlock(&mutex);
    }
    SIMPLE_THREAD_LOOP_END
@@ -96,27 +63,33 @@ SIMPLE_THREAD_BEGIN(thread_func)
 SIMPLE_THREAD_END
 
 
-
-int scl_rc_init(void)
+int ak8975c_reader_init(i2c_bus_t *bus)
 {
    ASSERT_ONCE();
    THROW_BEGIN();
-   memset(channels, 0, sizeof(channels));
-   scl_socket = scl_get_socket("remote");
-   THROW_IF(scl_socket == NULL, -ENODEV);
+
+   vec3_init(&val);
+   vec3_init(&null_val);
+   
    pthread_mutexattr_init(&mutexattr); 
    pthread_mutexattr_setprotocol(&mutexattr, PTHREAD_PRIO_INHERIT); 
    pthread_mutex_init(&mutex, &mutexattr);
+   
+   THROW_ON_ERR(ak8975c_init(&ak8975c, bus));
+   
    simple_thread_start(&thread, thread_func, THREAD_NAME, THREAD_PRIORITY, NULL);
    THROW_END();
 }
 
 
-int scl_rc_read(float channels_out[MAX_CHANNELS])
+int ak8975c_reader_get(vec3_t *mag)
 {
    pthread_mutex_lock(&mutex);
-   memcpy(channels_out, channels, sizeof(float) * MAX_CHANNELS);
-   int ret = sig_valid ? 0 : -EAGAIN;
+   if (status < 0)
+      vec_copy(mag, &null_val);
+   else
+      vec_copy(mag, &val);
+   int ret = status;
    pthread_mutex_unlock(&mutex);
    return ret;
 }

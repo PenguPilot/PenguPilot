@@ -57,6 +57,17 @@ static interval_t interval;
 static float timer = 0.0f;
 
 
+static int gps_msgpack_fix(size_t array_len)
+{
+   if (array_len == 1)
+      return 0;
+   else if (array_len >= 7)
+      return 2;
+   else
+      return 3;
+}
+
+
 SIMPLE_THREAD_BEGIN(thread_func)
 {
    SIMPLE_THREAD_LOOP_BEGIN
@@ -73,7 +84,7 @@ SIMPLE_THREAD_BEGIN(thread_func)
             assert (root.type == MSGPACK_OBJECT_ARRAY);
             int asize = root.via.array.size;
             pthread_mutex_lock(&mutex);
-            gps_data.fix = fix(asize);
+            gps_data.fix = gps_msgpack_fix(asize);
             if (gps_data.fix >= 2)
             {
                timer = 0.0f; /* reset timer */

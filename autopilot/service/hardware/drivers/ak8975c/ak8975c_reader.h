@@ -9,8 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Simple Threads Interface
- 
+ AK8975C Reader Interface
+
+ Copyright (C) 2014 Jan Roemisch, Ilmenau University of Technology
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
@@ -24,38 +25,18 @@
  GNU General Public License for more details. */
 
 
-#include <stdio.h>
-#include <limits.h>
-
-#include "util.h"
-#include "simple_thread.h"
+#ifndef __AK8975C_READER_H__
+#define __AK8975C_READER_H__
 
 
-void simple_thread_start(simple_thread_t *thread, void *(*func)(void *),
-                         char *name, int priority, void *private)
-{
-   ASSERT_NOT_NULL(thread);
-   ASSERT_NOT_NULL(func);
-   ASSERT_NOT_NULL(name);
-   ASSERT_FALSE(thread->running);
-
-   pthread_attr_t attr;
-   pthread_attr_init(&attr);
-   pthread_attr_setstacksize(&attr, 4096 * 16);
-   thread->name = name;
-   thread->private = private;
-   thread->running = 1;
-   pthread_create(&thread->handle, &attr, func, thread);
-   thread->sched_param.sched_priority = priority;
-   pthread_setschedparam(thread->handle, SCHED_FIFO, &thread->sched_param);
-}
+#include <i2c/i2c.h>
+#include "../../../util/math/vec3.h"
 
 
-void simple_thread_stop(simple_thread_t *thread)
-{
-   ASSERT_NOT_NULL(thread);
-   ASSERT_TRUE(thread->running);
+int ak8975c_reader_init(i2c_bus_t *bus);
 
-   thread->running = 0;
-   (void)pthread_join(thread->handle, NULL);
-}
+int ak8975c_reader_get(vec3_t *mag);
+
+
+#endif /* __AK8975C_READER_H__ */
+
