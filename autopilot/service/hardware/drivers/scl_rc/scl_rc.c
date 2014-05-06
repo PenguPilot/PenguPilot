@@ -25,7 +25,7 @@
 
 
 #include <string.h>
-
+#include <stdbool.h>
 
 #include <util.h>
 #include <simple_thread.h>
@@ -33,6 +33,9 @@
 #include <pthread.h>
 #include <scl.h>
 #include <msgpack.h>
+#include <interval.h>
+
+#include "../../../util/logger/logger.h"
 
 #include "scl_rc.h"
 
@@ -41,15 +44,18 @@
 #define THREAD_PRIORITY   96
 
 
-#define RSSI_MIN RSSI_SCALE(7)
+#define RC_TIMEOUT 1.0
 
 
 static simple_thread_t thread;
 static pthread_mutexattr_t mutexattr;   
 static pthread_mutex_t mutex;
 static float channels[SCL_MAX_CHANNELS];
-static void *scl_socket;
-static int sig_valid;
+static void *scl_socket = NULL;
+static int sig_valid = 0;
+static interval_t interval;
+static float timer = 0.0f;
+static bool first_time = true;
 
 
 static void scl_read_channels(int *valid, float *_channels)
@@ -85,9 +91,12 @@ SIMPLE_THREAD_BEGIN(thread_func)
    SIMPLE_THREAD_LOOP_BEGIN
    {
       scl_read_channels(&sig_valid, _channels);
+      timer = 0.0f; /* reset timer */
       pthread_mutex_lock(&mutex);
       if (sig_valid)
+      {
          memcpy(channels, _channels, sizeof(channels));   
+      }
       pthread_mutex_unlock(&mutex);
    }
    SIMPLE_THREAD_LOOP_END
@@ -107,6 +116,7 @@ int scl_rc_init(void)
    pthread_mutexattr_init(&mutexattr); 
    pthread_mutexattr_setprotocol(&mutexattr, PTHREAD_PRIO_INHERIT); 
    pthread_mutex_init(&mutex, &mutexattr);
+   interval_init(&interval);
    simple_thread_start(&thread, thread_func, THREAD_NAME, THREAD_PRIORITY, NULL);
    THROW_END();
 }
@@ -114,10 +124,23 @@ int scl_rc_init(void)
 
 int scl_rc_read(float channels_out[SCL_MAX_CHANNELS])
 {
+   int ret_code = -ENODEV;
    pthread_mutex_lock(&mutex);
-   memcpy(channels_out, channels, sizeof(channels));
-   int ret = sig_valid ? 0 : -EAGAIN;
+   timer += interval_measure(&interval);
+   if (!first_time && timer > RC_TIMEOUT)
+   {
+      if (!first_time)
+      {
+         EVERY_N_TIMES(100, LOG(LL_ERROR, "RC signal timeout"));
+      }
+      first_time = false;
+   }
+   else
+   {
+      memcpy(channels_out, channels, sizeof(channels));
+      ret_code = sig_valid ? 0 : -EAGAIN;
+   }
    pthread_mutex_unlock(&mutex);
-   return ret;
+   return ret_code;
 }
 
