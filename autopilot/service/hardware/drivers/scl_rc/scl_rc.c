@@ -41,7 +41,7 @@
 
 
 #define THREAD_NAME       "scl_rc_reader"
-#define THREAD_PRIORITY   96
+#define THREAD_PRIORITY   98
 
 
 #define RC_TIMEOUT 1.0
