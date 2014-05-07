@@ -38,6 +38,7 @@
 #include "../../../util/logger/logger.h"
 
 #include "scl_rc.h"
+#include "../../util/rc_channels.h"
 
 
 #define THREAD_NAME       "scl_rc_reader"
@@ -55,7 +56,6 @@ static void *scl_socket = NULL;
 static int sig_valid = 0;
 static interval_t interval;
 static float timer = 0.0f;
-static bool first_time = true;
 
 
 static void scl_read_channels(int *valid, float *_channels)
@@ -112,7 +112,6 @@ int scl_rc_init(void)
    memset(channels, 0, sizeof(channels));
    scl_socket = scl_get_socket("remote");
    THROW_IF(scl_socket == NULL, -ENODEV);
-   ASSERT_NOT_NULL(scl_socket);
    pthread_mutexattr_init(&mutexattr); 
    pthread_mutexattr_setprotocol(&mutexattr, PTHREAD_PRIO_INHERIT); 
    pthread_mutex_init(&mutex, &mutexattr);
@@ -122,22 +121,18 @@ int scl_rc_init(void)
 }
 
 
-int scl_rc_read(float channels_out[SCL_MAX_CHANNELS])
+int scl_rc_read(float channels_out[MAX_CHANNELS])
 {
    int ret_code = -ENODEV;
    pthread_mutex_lock(&mutex);
    timer += interval_measure(&interval);
-   if (!first_time && timer > RC_TIMEOUT)
+   if (timer > RC_TIMEOUT)
    {
-      if (!first_time)
-      {
-         EVERY_N_TIMES(100, LOG(LL_ERROR, "RC signal timeout"));
-      }
-      first_time = false;
+      EVERY_N_TIMES(100, LOG(LL_ERROR, "RC signal timeout"));
    }
    else
    {
-      memcpy(channels_out, channels, sizeof(channels));
+      memcpy(channels_out, channels, sizeof(float) * MAX_CHANNELS);
       ret_code = sig_valid ? 0 : -EAGAIN;
    }
    pthread_mutex_unlock(&mutex);

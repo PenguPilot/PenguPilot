@@ -36,7 +36,7 @@
 #include "platform.h"
 #include "generic_platform.h"
 #include "inv_coupling.h"
-#include "freeimu_04.h"
+#include "drotek_9150.h"
 #include "force_to_esc.h"
 #include "../drivers/i2cxl/i2cxl_reader.h"
 #include "../drivers/ms5611/ms5611_reader.h"
@@ -50,12 +50,12 @@
 
 
 static i2c_bus_t i2c_4;
-static freeimu_04_t marg;
+static drotek_9150_t marg;
 
 
 static int read_marg(marg_data_t *marg_data)
 {
-   int ret = freeimu_04_read(marg_data, &marg);
+   int ret = drotek_9150_read(marg_data, &marg);
    quat_t q;
    quat_init_axis(&q, 0, 1, 0, M_PI);
    quat_rot_vec(&marg_data->acc, &marg_data->acc, &q);
@@ -138,7 +138,7 @@ int exynos_quad_init(platform_t *plat, int override_hw)
       plat->priv = &i2c_4;
 
       LOG(LL_INFO, "initializing MARG sensor cluster");
-      THROW_ON_ERR(freeimu_04_init(&marg, &i2c_4));
+      THROW_ON_ERR(drotek_9150_init(&marg, &i2c_4));
       plat->read_marg = read_marg;
      
       plat->read_ultra = ultra_dummy_read;
