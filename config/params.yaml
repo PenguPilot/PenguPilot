@@ -151,7 +151,7 @@ autopilot:
          d: 0.0
          i: 0.0
          i_max: 0.2
-         p: 2.0
+         p: 1.0
          pitch_bias: 2.0
          roll_bias: 2.75
 

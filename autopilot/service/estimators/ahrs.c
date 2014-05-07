@@ -42,7 +42,6 @@ void ahrs_init(ahrs_t *ahrs, ahrs_type_t type, real_t beta_start, real_t beta_st
    ahrs->beta_step = beta_step;
    ahrs->beta_end = beta_end;
    quat_init(&ahrs->quat);
-   adams5_init(&ahrs->adams5, 4);
 }
 
 
