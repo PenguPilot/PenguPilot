@@ -204,7 +204,7 @@ int binsearch(int x, const int v[], int n);
 
 #define THROW_ON_ERR(err) \
    ___return_code = err; \
-   if (___return_code < 0) \
+   if (___return_code < 0 && ___return_code != -EAGAIN) \
    { \
       fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, ___return_code, errno); \
       goto __catch_label; \
@@ -224,8 +224,9 @@ int binsearch(int x, const int v[], int n);
 #define THROW_IF(cond, code) \
    if (cond) \
    { \
-      fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, code, errno); \
       ___return_code = code; \
+      if ((___return_code < 0) && (___return_code != -EAGAIN)) \
+         fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, code, errno); \
       goto __catch_label; \
    }
 
@@ -241,5 +242,7 @@ int binsearch(int x, const int v[], int n);
    cmd; \
    return ___return_code;
 
+#define THROW(code) \
+   THROW_IF(1, code)
 
 #endif /* __UTIL_H__ */

@@ -265,7 +265,6 @@ void main_step(const float dt,
    pos_in.dt = dt;
    pos_in.ultra_u = ultra;
    pos_in.baro_u = baro;
-   
    if (!(sensor_status & MARG_VALID))
    {
       marg_err += 1;
@@ -425,7 +424,7 @@ void main_step(const float dt,
    vec2_set(&pr_pos, -euler.pitch, euler.roll);
    vec2_init(&pr_pos_ctrl);
    att_ctrl_step(&pr_pos_ctrl, &att_err, dt, &pr_pos, &pr_spd, &pr_pos_sp);
- 
+
    float piid_sp[3] = {0.0f, 0.0f, 0.0f};
    piid_sp[PIID_PITCH] = pr_pos_ctrl.ve[0];
    piid_sp[PIID_ROLL] = pr_pos_ctrl.ve[1];
