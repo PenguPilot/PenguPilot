@@ -34,12 +34,12 @@
  * Motor:     Robby Roxxy 2827-35
  * Propeller: 10x4.5 inch
  */
-float force_to_esc_setup1(float force, float voltage)
+float force_to_esc_setup1(float force, float volt)
 {
    float a = 609.6137f;
    float b = 1.3154f;
    float c = -1.5f;
-   return powf((force / a * powf(voltage, c)), 1.0f / b);
+   return powf((force / a * powf(volt, c)), 1.0f / b);
 }
 
 
@@ -48,9 +48,17 @@ float force_to_esc_setup1(float force, float voltage)
  * Motor:     Robby Roxxy 2827-35
  * Propeller: 10x4.5 inch
  */
-float force_to_esc_setup2(float force, float voltage)
+float force_to_esc_setup2(float force, float volt)
 {
-   return 1.66f * (force + 1.5f) / voltage;
+   if (force < 0)
+      return 0;
+   const float a = 1.4618e-07;
+   const float b = -5.1569e-03;
+   const float c = -2.1677e+00;
+   const float d = 1.7561e-04;
+   const float e = 4.1540e+01;
+   float pwm = ((sqrtf((b + d * volt) * (b + d * volt) - 4.0f * a * (c * volt + e - force)) - b - d * volt) / (2.0f * a));
+   return (pwm - 10000.0f) / 10000.0f;
 }
 
 
