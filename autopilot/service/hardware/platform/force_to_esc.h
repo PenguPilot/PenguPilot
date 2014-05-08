@@ -33,21 +33,21 @@
  * Motor:     Robby Roxxy 2827-35
  * Propeller: 10x4.5 inch
  */
-float force_to_esc_setup1(float force, float voltage);
+float force_to_esc_setup1(float force, float volt);
 
 /*
  * ESC:       HobbyKing 20A UBEC SimonK
  * Motor:     Robby Roxxy 2827-35
  * Propeller: 10x4.5 inch
  */
-float force_to_esc_setup2(float force, float voltage);
+float force_to_esc_setup2(float force, float volt);
 
 /*
  * ESC:       Flyduino HEXFET20A SimonK
  * Motor:     Suppo A2212/13
  * Propeller: 10x4.5 inch
  */
-float force_to_esc_setup3(float force, float voltage);
+float force_to_esc_setup3(float force, float volt);
 
 
 #endif /* __FORCE_TO_ESC_H__ */
