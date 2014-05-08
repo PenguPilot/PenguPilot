@@ -460,9 +460,6 @@ void main_step(const float dt,
 
    /* enables motors, if flight logic requests it: */
    motors_state_update(flying, dt, motors_enabled);
-   
-   printf("%.2f %.2f %.2f\n",
-      euler.pitch, euler.roll, euler.yaw);
 
    /* reset controllers, if motors are not controllable: */
    if (!motors_controllable())
