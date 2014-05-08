@@ -57,14 +57,16 @@ static int read_marg(marg_data_t *marg_data)
 {
    int ret = drotek_9150_read(marg_data, &marg);
    quat_t q;
-   quat_init_axis(&q, 0, 1, 0, M_PI);
+/*   quat_init_axis(&q, 0, 1, 0, M_PI);
+   quat_rot_vec(&marg_data->acc, &marg_data->acc, &q);
+   quat_rot_vec(&marg_data->gyro, &marg_data->gyro, &q);
+   quat_rot_vec(&marg_data->mag, &marg_data->mag, &q); */
+
+   quat_init_axis(&q, 0, 0, 1, -3.0 * M_PI / 4.0f);
    quat_rot_vec(&marg_data->acc, &marg_data->acc, &q);
    quat_rot_vec(&marg_data->gyro, &marg_data->gyro, &q);
    quat_rot_vec(&marg_data->mag, &marg_data->mag, &q);
-   quat_init_axis(&q, 0, 0, 1, -M_PI / 4.0f);
-   quat_rot_vec(&marg_data->acc, &marg_data->acc, &q);
-   quat_rot_vec(&marg_data->gyro, &marg_data->gyro, &q);
-   quat_rot_vec(&marg_data->mag, &marg_data->mag, &q);
+   
    return ret;
 }
 
