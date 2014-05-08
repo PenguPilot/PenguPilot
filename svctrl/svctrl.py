@@ -161,18 +161,6 @@ def calc_reverse_deps(name):
    return order
 
 
-def calc_repair_deps():
-   deps = []
-   for name in running_processes():
-      deps.extend(calc_reverse_deps(name))
-   topo = toposort()
-   ordered = []
-   deps = set(all_deps)
-   for level in [x for x in toposort()]:
-      ordered.extend(deps & level)
-   return ordered
-
-
 def toposort():
    """ stolen from: http://code.activestate.com/recipes/578272-topological-sort """
    _data = config
@@ -204,7 +192,7 @@ def restart_order(name):
    return ordered
 
 
-def calc_deps_reverse_bfs(name):
+def calc_deps(name):
    list = []
    queue = []
    queue.append(name)
@@ -219,10 +207,16 @@ def calc_deps_reverse_bfs(name):
       if not _name in list:
          list.append(_name)
       queue.extend(config[_name][1])    
-   list.reverse()
    return list
 
 
+def start_order(name):
+   topo = toposort()
+   ordered = []
+   deps = set(calc_deps(name))
+   for level in [x for x in toposort()]:
+      ordered.extend(deps & level)
+   return ordered
 
 plat_file_name = user_data_dir + '/config/platform'
 try:
@@ -265,7 +259,7 @@ try:
          name = args[1]
          data = config[name]
          if args[0] == 'start':
-            names = calc_deps_reverse_bfs(name)
+            names = start_order(name)
             if len(names) > 1:
                print 'dependency resolution order:', names
             for name in names:

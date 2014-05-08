@@ -394,13 +394,13 @@ void main_step(const float dt,
    vec2_t a_ne;
    vec2_init(&a_ne);
    ne_speed_ctrl_run(&a_ne, &ne_spd_err, &ne_speed_sp, dt, &pos_est.ne_speed);
-   
+ 
    vec3_t a_neu;
    vec3_set(&a_neu, a_ne.x, a_ne.y, a_u);
    vec3_t f_neu;
    vec3_init(&f_neu);
    vec_scalar_mul(&f_neu, &a_neu, platform.mass_kg); /* f[i] = a[i] * m, makes ctrl device-independent */
-   
+
    float hover_force = platform.mass_kg * G_CONSTANT;
    f_neu.z += hover_force;
 
@@ -424,7 +424,7 @@ void main_step(const float dt,
    vec2_set(&pr_pos, -euler.pitch, euler.roll);
    vec2_init(&pr_pos_ctrl);
    att_ctrl_step(&pr_pos_ctrl, &att_err, dt, &pr_pos, &pr_spd, &pr_pos_sp);
- 
+
    float piid_sp[3] = {0.0f, 0.0f, 0.0f};
    piid_sp[PIID_PITCH] = pr_pos_ctrl.ve[0];
    piid_sp[PIID_ROLL] = pr_pos_ctrl.ve[1];
@@ -432,6 +432,7 @@ void main_step(const float dt,
    /* execute direct attitude rate control, if requested:*/
    if (cm_att_is_rates())
    {
+      thrust = a_u + platform.mass_kg * G_CONSTANT;
       vec2_t rates_sp;
       vec2_init(&rates_sp);
       cm_att_sp(&rates_sp);
@@ -476,7 +477,6 @@ void main_step(const float dt,
       FOR_N(i, platform.n_motors) setpoints[i] = platform.ac.min;
    if (hard_off || motors_stopping())
       FOR_N(i, platform.n_motors) setpoints[i] = platform.ac.off_val;
-   
    
    /* write motors: */
    if (!override_hw)
