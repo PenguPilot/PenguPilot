@@ -40,9 +40,6 @@ static tsfloat_t angle_i;
 static tsfloat_t angle_i_max;
 static tsfloat_t angle_d;
 static tsfloat_t biases[2];
-static tsfloat_t filt_fg;
-
-static Filter1 filter;
 static pid_controller_t controllers[2];
 
 
@@ -57,42 +54,31 @@ void att_ctrl_init(void)
       {"i", &angle_i.value},
       {"i_max", &angle_i_max.value},
       {"d", &angle_d.value},
-      {"filt_fg", &filt_fg},
       {"pitch_bias", &biases[0]},
       {"roll_bias", &biases[1]},
       OPCD_PARAMS_END
    };
    opcd_params_apply("controllers.attitude.", params);
    
-   /* initialize filter: */
-   filter1_lp_init(&filter, tsfloat_get(&filt_fg), 0.0033333, 2);
-   
    /* initialize controllers: */
    FOR_EACH(i, controllers)
-   {
       pid_init(&controllers[i], &angle_p, &angle_i, &angle_d, &angle_i_max);
-   }
 }
 
 
 void att_ctrl_reset(void)
 {
    FOR_EACH(i, controllers)
-   {
       pid_reset(&controllers[i]);
-   }
 }
 
 
 void att_ctrl_step(vec2_t *ctrl, vec2_t *err, const float dt, const vec2_t *pos, const vec2_t *speed, const vec2_t *setp)
 {
-   float err_in[2];
-   FOR_EACH(i, err_in)
-      err_in[i] = setp->ve[i] + deg2rad(tsfloat_get(&biases[i])) - pos->ve[i];
-
-   filter1_run(&filter, err_in, &err->ve[0]);
-   
    FOR_EACH(i, controllers)
+   {
+      err->ve[i] = setp->ve[i] + deg2rad(tsfloat_get(&biases[i])) - pos->ve[i];
       ctrl->ve[i] = pid_control(&controllers[i], err->ve[i], speed->ve[i], dt);
+   }
 }
 

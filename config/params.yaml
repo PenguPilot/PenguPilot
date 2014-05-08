@@ -58,17 +58,12 @@ gpsp:
       speed: 115200
 
 powerman:
-   beeper_enabled: False
-   gpio_i2c_bus: 3
-   gpio_i2c_address: 0x11
-   gpio_power_pin: 0
    battery_cells: 4
    battery_low_cell_voltage_idle: 3.5 # [V]
    battery_low_cell_voltage_load: 3.3 # [V]
    battery_current_treshold: 3.0 # [A]
    low_voltage_hysteresis: 10.0 # [s], battery needs to go below battery_low_cell_voltage for this time period in order to trigger a low power event
    battery_capacity: 3.0
-   power_save_timeout: 60.0
  
 icarus:
    takeoff:
@@ -89,7 +84,7 @@ autopilot:
       acc_fg: 0.1
    
    ahrs:
-      beta: 0.1
+      beta: 0.03
       beta_start: 50.0
       beta_step: 5.0
    
@@ -154,10 +149,9 @@ autopilot:
 
       attitude:
          d: 0.0
-         filt_fg: 150.0
          i: 0.0
          i_max: 0.2
-         p: 2.0
+         p: 1.0
          pitch_bias: 2.0
          roll_bias: 2.75
 

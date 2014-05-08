@@ -34,12 +34,12 @@
  * Motor:     Robby Roxxy 2827-35
  * Propeller: 10x4.5 inch
  */
-float force_to_esc_setup1(float force, float voltage)
+float force_to_esc_setup1(float force, float volt)
 {
    float a = 609.6137f;
    float b = 1.3154f;
    float c = -1.5f;
-   return powf((force / a * powf(voltage, c)), 1.0f / b);
+   return powf((force / a * powf(volt, c)), 1.0f / b);
 }
 
 
@@ -48,9 +48,17 @@ float force_to_esc_setup1(float force, float voltage)
  * Motor:     Robby Roxxy 2827-35
  * Propeller: 10x4.5 inch
  */
-float force_to_esc_setup2(float force, float voltage)
+float force_to_esc_setup2(float force, float volt)
 {
-   return 1.66f * (force + 1.5f) / voltage;
+   if (force < 0.0f)
+      return 0.0f;
+   const float a = 8.2883e-08f;
+   const float b = -3.0011e-03f;
+   const float c = -1.7386e+00f;
+   const float d = 1.4519e-04f;
+   const float e = 2.3716e+01f;
+   float pwm = ((sqrtf((b + d * volt) * (b + d * volt) - 4.0f * a * (c * volt + e - force)) - b - d * volt) / (2.0f * a));
+   return (pwm - 10000.0f) / 10000.0f;
 }
 
 
@@ -61,13 +69,13 @@ float force_to_esc_setup2(float force, float voltage)
  */
 float force_to_esc_setup3(float force, float volt)
 {
-   if (force < 0)
-      return 0;
-   const float a = 1.2526e-07f;
-   const float b = -3.3937e-03f;
-   const float c = -1.3746e+00f;
-   const float d = 1.3284e-04f;
-   const float e = 2.0807e+01f;
+   if (force < 0.0f)
+      return 0.0f;
+   const float a = 5.5888e-08f;
+   const float b = -1.2335e-03f;
+   const float c = -9.7898e-01f;
+   const float d = 1.0264e-04f;
+   const float e = 4.3441e+00f;
    float pwm = ((sqrtf((b + d * volt) * (b + d * volt) - 4.0f * a * (c * volt + e - force)) - b - d * volt) / (2.0f * a));
    return (pwm - 10000.0f) / 10000.0f;
 }

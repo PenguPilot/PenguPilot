@@ -286,7 +286,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
    handle_mode_update(man_mode);
    
 
-   if (ultra_u_pos < 0.3)
+   if (1) //ultra_u_pos < 0.3)
    {
       /* reset yaw setpoint if we are too low: */
       yaw_pos_sp = yaw;
@@ -315,7 +315,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       {
          set_att_angles(pitch, roll);
          cm_u_set_acc(tsfloat_get(&gas_acc_max) * (gas_stick - 0.5));
-         set_vertical_spd_or_pos(gas_stick - 0.5, baro_u_pos, ultra_u_pos);
+         //set_vertical_spd_or_pos(gas_stick - 0.5, baro_u_pos, ultra_u_pos);
          break;
       }
 

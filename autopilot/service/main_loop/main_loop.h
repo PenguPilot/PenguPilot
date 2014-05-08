@@ -32,7 +32,7 @@
 #include "../hardware/platform/platform.h"
 
 
-#define REALTIME_PERIOD (1.0f / 200.0f)
+#define REALTIME_PERIOD (0.005)
 
 
 #define DATA_DEFINITION() \
