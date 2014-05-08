@@ -104,14 +104,13 @@ def remote_reader():
    global channels
    i = 0
    while True:
+      raw = s.recv()
       if spinning:
-         sleep(1)
-      else:
-         raw = s.recv()
-         if i == 10:
-            i = 0
-            channels = loads(raw)
-         i += 1
+         continue
+      if i == 5:
+         i = 0
+         channels = loads(raw)
+      i += 1
 
 
 def pm_reader():
@@ -121,15 +120,15 @@ def pm_reader():
    voltage = None
    estimate = None
    while True:
+      raw = s.recv()
       if spinning:
-         sleep(1)
+         continue
+      _voltage, current, remaining, critical = loads(raw)
+      estimate = remaining / current
+      if voltage is None:
+         voltage = _voltage
       else:
-         _voltage, current, remaining, critical = loads(s.recv())
-         estimate = remaining / current
-         if voltage is None:
-            voltage = _voltage
-         else:
-            voltage = 0.9 * voltage + 0.1 * _voltage
+         voltage = 0.9 * voltage + 0.1 * _voltage
 
 def show_image(image):
    data = ''.join(map(chr, image.getdata()))
@@ -174,10 +173,9 @@ def batt_low():
    show_image(image) 
 
 
-blink_state = True
 caution_written = False
 def caution():
-   global caution_written, blink_state
+   global caution_written
    if not caution_written:
       caution_written = True
       image = Image.new("1", (W, H), BLACK)
@@ -188,12 +186,6 @@ def caution():
       draw.text(((W - dim[0]) / 2, (H - dim[1]) / 2), txt, WHITE, font = font)
       decorations(draw)
       show_image(image)
-   else:
-      oled.invert(blink_state)
-      if blink_state:
-         blink_state = False
-      else:
-         blink_state = True
 
 
 class Alert(Thread):

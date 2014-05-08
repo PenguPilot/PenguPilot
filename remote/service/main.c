@@ -34,12 +34,8 @@
 #include <scl.h>
 #include <opcd_interface.h>
 #include <serial.h>
-#include <interval.h>
 
 #include "rc_dsl.h"
-
-
-#define SEND_TIMEOUT 0.1
 
 
 static int running = 1;
@@ -70,16 +66,12 @@ int _main(void)
    rc_dsl_init(&rc_dsl);
 
    void *rc_socket = scl_get_socket("remote");
-   THROW_IF(rc_socket == NULL, -1);
+   THROW_IF(rc_socket == NULL, -EIO);
    
    msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new();
-   THROW_IF(!msgpack_buf, -ENOMEM);
+   THROW_IF(msgpack_buf == NULL, -ENOMEM);
    msgpack_packer *pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
-   THROW_IF(!pk, -ENOMEM);
-
-   float timer = 0.0f;
-   interval_t interval;
-   interval_init(&interval);
+   THROW_IF(pk == NULL, -ENOMEM);
 
    while (running)
    {
@@ -92,16 +84,11 @@ int _main(void)
       int status = rc_dsl_parse_dsl_data(&rc_dsl, (uint8_t)b);
       if (status == 1)
       {
-         timer += interval_measure(&interval);
-         if (timer > SEND_TIMEOUT)
-         {
-            msgpack_sbuffer_clear(msgpack_buf);
-            msgpack_pack_array(pk, RC_DSL_CHANNELS + 1);
-            PACKI(RC_DSL_RSSI_VALID(rc_dsl.RSSI));    /* index 0: valid */
-            PACKFV(rc_dsl.channels, RC_DSL_CHANNELS); /* index 1, .. : channels */
-            scl_copy_send_dynamic(rc_socket, msgpack_buf->data, msgpack_buf->size);
-            timer = SEND_TIMEOUT - timer;
-         }
+         msgpack_sbuffer_clear(msgpack_buf);
+         msgpack_pack_array(pk, RC_DSL_CHANNELS + 1);
+         PACKI(RC_DSL_RSSI_VALID(rc_dsl.RSSI));    /* index 0: valid */
+         PACKFV(rc_dsl.channels, RC_DSL_CHANNELS); /* index 1, .. : channels */
+         scl_copy_send_dynamic(rc_socket, msgpack_buf->data, msgpack_buf->size);
       }
    }
    THROW_END();

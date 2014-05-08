@@ -218,7 +218,7 @@ void piid_run(float u_ctrl[4], float gyro[3], float rc[3], float dt)
    FOR_N(i, 3)
    {
       error[i] = ringbuf[ringbuf_idx + i] - gyro[i];
-      ringbuf[ringbuf_idx + i] = rc[i];
+      ringbuf[ringbuf_idx + i] = rc_filt[i];
    }
 
    ringbuf_idx += 3;
