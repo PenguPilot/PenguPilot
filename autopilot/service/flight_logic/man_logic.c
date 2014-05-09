@@ -286,7 +286,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
    handle_mode_update(man_mode);
    
 
-   if (ultra_u_pos < 0.3)
+   if (1) //ultra_u_pos < 0.3)
    {
       /* reset yaw setpoint if we are too low: */
       yaw_pos_sp = yaw;

@@ -85,17 +85,21 @@ class ACIReader(Thread):
 
 def main(name):
    sm = generate_map(name)
-   opcd = OPCD_Interface(sm['opcd_ctrl'], name)
+   
+   opcd = OPCD_Interface(sm['opcd_ctrl'])
+   platform = opcd.get('platform')
+   device = opcd.get(platform + '.nrf_serial')
+   
    global THIS_SYS_ID
-   THIS_SYS_ID = opcd.get('id')
-   key = opcd.get('psk')
+   THIS_SYS_ID = opcd.get('aircomm.id')
+   key = opcd.get('aircomm.psk')
    crypt.init(key)
    mhist = MessageHistory(60)
 
    out_socket = sm['aircomm_out']
    in_socket = sm['aircomm_in']
 
-   aci = Interface('/dev/ttyACM0')
+   aci = Interface(device)
    acr = ACIReader(aci, out_socket, mhist)
    acr.start()
 

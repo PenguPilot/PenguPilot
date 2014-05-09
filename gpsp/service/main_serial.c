@@ -92,17 +92,22 @@ int main_serial(void)
    void *sats_socket = scl_get_socket("sats");
    THROW_IF(sats_socket == NULL, -EIO);
  
-   char *serial_path = NULL;
-   tsint_t serial_speed;
-   opcd_param_t params[] =
-   {
-      {"path", &serial_path},
-      {"speed", &serial_speed},
-      OPCD_PARAMS_END
-   };
-   opcd_params_apply("gpsp.serial.", params);
+   char *platform = NULL;
+   opcd_param_get("platform", &platform);
+   char buffer_path[128];
+   char buffer_speed[128];
+   strcpy(buffer_path, platform);
+   strcpy(buffer_speed, platform);
+   strcat(buffer_path, ".gpsp_serial.path");
+   strcat(buffer_speed, ".gpsp_serial.speed");
+   char *dev_path;
+   opcd_param_get(buffer_path, &dev_path);
+   int dev_speed;
+   opcd_param_get(buffer_speed, &dev_speed);
+   printf("%s %d\n", dev_path, dev_speed);
+ 
    serialport_t port;
-   THROW_ON_ERR(serial_open(&port, serial_path, tsint_get(&serial_speed), O_RDONLY));
+   THROW_ON_ERR(serial_open(&port, dev_path, dev_speed, O_RDONLY));
 
    nmeaPARSER parser;
    nmea_parser_init(&parser);
