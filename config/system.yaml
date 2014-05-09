@@ -67,6 +67,11 @@
    - remote: pub
    - opcd_ctrl: req
 
+- name: ads1x15
+  sockets:
+   - power: pub
+   - opcd_ctrl: req
+
 - name: ferry
   sockets:
    - hlfm_state: sub
