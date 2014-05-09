@@ -94,9 +94,7 @@ SIMPLE_THREAD_BEGIN(thread_func)
       timer = 0.0f; /* reset timer */
       pthread_mutex_lock(&mutex);
       if (sig_valid)
-      {
          memcpy(channels, _channels, sizeof(channels));   
-      }
       pthread_mutex_unlock(&mutex);
    }
    SIMPLE_THREAD_LOOP_END

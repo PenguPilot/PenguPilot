@@ -43,9 +43,18 @@ int drotek_9150_init(drotek_9150_t *drotek, i2c_bus_t *bus)
 
 int drotek_9150_read(marg_data_t *data, drotek_9150_t *drotek)
 {
+   float tmp;
+
    THROW_BEGIN();
+   
    THROW_ON_ERR(mpu6050_read(&drotek->mpu, &data->gyro, &data->acc, NULL));
    THROW_ON_ERR(ak8975c_reader_get(&data->mag));
+
+   data->mag.z = -data->mag.z;
+   tmp = data->mag.x;
+   data->mag.x = data->mag.y;
+   data->mag.y = tmp;
+   
    THROW_END();
 }
 
