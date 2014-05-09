@@ -62,5 +62,6 @@ def main(name):
                0.4]      # 1 [A]
       socket.send(dumps(state))
 
-daemonize('ads1x15_adc', main)
+
+daemonize('ads1x15', main)
 
