@@ -27,7 +27,6 @@
 
 
 import copy
-from scl import generate_map
 from misc import user_data_dir
 import sys
 from termcolor import red, blue, green
