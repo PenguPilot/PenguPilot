@@ -67,18 +67,18 @@
    - remote: pub
    - opcd_ctrl: req
 
-- name: ferry_ctrl
+- name: ferry
   sockets:
    - hlfm_state: sub
    - hlfm_ctrl: req
 
-- name: hlfm # high-level flight manager
+- name: hlfm
   sockets:
-   - mon: sub
    - hlfm_state: pub
-   - pilot_ctrl: req
-   - hlfm_ctrl: rep
+   - ap_ctrl: req
+   - ap_mon: sub
    - powerman: sub
+   - hlfm_ctrl: rep
 
 - name: wifi_sensor
   sockets:
@@ -90,17 +90,17 @@
 
 - name: autopilot
   sockets:
-   - ap_log: pub        # logs useful human-readable data at different verbosity levels
-   - blackbox: pub   # publishes data produced in every step of the main loop
-   - gps: sub        # subscribes to GPS data provider
-   - decl: sub       # magnetic declination
-   - remote: sub         # experimental remote control input
-   - ap_ctrl: rep       # control interface
-   - ap_mon: pub        # controller error monitoring publisher
-   - power: sub      # power data subscriber
-   - motors_spinning: pub # "true", "false" depending on motors state
-   - opcd_ctrl: req  # OPCD request/reply interface
-   - opcd_event: sub # OPCD parameter update
+   - ap_log: pub
+   - blackbox: pub
+   - gps: sub
+   - decl: sub
+   - remote: sub
+   - ap_ctrl: rep
+   - ap_mon: pub
+   - power: sub
+   - motors_spinning: pub
+   - opcd_ctrl: req
+   - opcd_event: sub
 
 - name: optimizer
   sockets:
@@ -109,17 +109,8 @@
 
 - name: pilot_shell
   sockets:
-   - ctrl: req
-   - mon: sub
-
-- name: mavlink
-  sockets:
-   - pilot_mon: sub
-   - power_mon: sub
-   - opcd_ctrl: req # opcd
-   - gps: sub
-   - icarus_ctrl: req
-   - state: sub
+   - ap_ctrl: req
+   - ap_mon: sub
 
 - name: powerman
   sockets:
