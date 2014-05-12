@@ -30,7 +30,7 @@ from sys import stdin
 from scl import generate_map
 from opcd_interface import OPCD_Interface
 
-opcd = OPCD_Interface(generate_map('opcd_shell')['ctrl'])
+opcd = OPCD_Interface(generate_map('opcd_shell')['opcd_ctrl'])
 
 try:
    while True:
@@ -39,7 +39,7 @@ try:
          break
       key, val = line.split(' ')
       val = float(val)
-      opcd.set('pilot.cal.' + key, val)
+      opcd.set('autopilot.cal.' + key, val)
    opcd.persist()
 except:
    print 'calibration invalid; please collect better data'
