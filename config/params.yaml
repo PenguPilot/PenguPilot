@@ -65,7 +65,7 @@ powerman:
    low_voltage_hysteresis: 10.0 # [s], battery needs to go below battery_low_cell_voltage for this time period in order to trigger a low power event
    battery_capacity: 3.0
  
-icarus:
+hlfm:
    takeoff:
       standard_rel_z: 4.0
 
