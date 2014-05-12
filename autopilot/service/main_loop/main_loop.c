@@ -461,7 +461,7 @@ void main_step(const float dt,
 
    /* enables motors, if flight logic requests it: */
    motors_state_update(flying, dt, motors_enabled);
-   
+
    /* reset controllers, if motors are not controllable: */
    if (!motors_controllable())
    {
