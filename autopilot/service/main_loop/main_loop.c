@@ -80,7 +80,7 @@ static calibration_t gyro_cal;
 static interval_t gyro_move_interval;
 static int init = 0;
 static Filter1 lp_filter;
-static float acc_vec[3] = {0.0f, 0.0f, -G_CONSTANT};
+static float acc_vec[3];
 
 
 typedef union
@@ -222,7 +222,8 @@ void main_init(int argc, char *argv[])
       OPCD_PARAMS_END
    };
    opcd_params_apply("main.", params);
-   filter1_lp_init(&lp_filter, tsfloat_get(&acc_fg), 0.06, 3);
+   filter1_lp_init(&lp_filter, tsfloat_get(&acc_fg), 0.005, 3);
+   lp_filter.z[2] = G_CONSTANT;
 
    cm_init();
    mon_init();
@@ -350,10 +351,12 @@ void main_step(const float dt,
    vec3_init(&world_acc);
    body_to_neu(&world_acc, &euler, &cal_marg_data.acc);
    
+
    /* center global ACC readings: */
    filter1_run(&lp_filter, &world_acc.ve[0], &acc_vec[0]);
    FOR_N(i, 3)
       pos_in.acc.ve[i] = world_acc.ve[i] - acc_vec[i];
+   //EVERY_N_TIMES(10, printf("%f %f %f\n", world_acc.x, world_acc.y, world_acc.z));
 
    /* compute next 3d position estimate using Kalman filters: */
    pos_t pos_est;
