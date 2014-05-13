@@ -32,6 +32,10 @@ overo_quad:
    dsl_serial:
       path: '/dev/ttyO0'
       speed: 38400
+   gpsp_serial:
+      path: "/dev/ttyO2"
+      speed: 115200
+   nrf_serial: "/dev/ttyACM0"
 
 pi_quad:
    voltage_channel: 0 # currently ignored
@@ -41,21 +45,22 @@ pi_quad:
    dsl_serial:
       path: '/dev/ttyAMA0'
       speed: 38400
+   nrf_serial: "/dev/ttyACM0"
+
 
 exynos_quad:
    arduino_serial:
       path: '/dev/ttySAC0'
       speed: 115200
+   gpsp_serial:
+      path: "/dev/gps0" # created by udev rule
+      speed: 115200
+   nrf_serial: "/dev/nrf0" # created by udev rule
 
 
 aircomm:
    id: 1
    psk: "This is the PenguPilot Standard Pre-Shared Key for NRF24L01+ Communication"
-
-gpsp:
-   serial:
-      path: "/dev/ttyO2"
-      speed: 115200
 
 powerman:
    battery_cells: 4
