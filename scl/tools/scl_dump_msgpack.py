@@ -38,6 +38,10 @@ socket.setsockopt(SUBSCRIBE, '')
 
 try:
    while True:
-      print loads(socket.recv())
+      raw = socket.recv()
+      try:
+         print loads(raw)
+      except:
+         print raw
 except:
    print 'canceled by user'
