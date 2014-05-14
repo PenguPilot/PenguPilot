@@ -146,6 +146,7 @@
    - powerman: sub
    - remote: sub
    - sats: sub
+   - decl: sub
 
 - name: heartbeat
   sockets:

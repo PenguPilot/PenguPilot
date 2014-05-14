@@ -113,6 +113,14 @@ def remote_reader():
       i += 1
 
 
+decl = 0.0
+def decl_reader():
+   s = socket_map['decl']
+   global decl
+   while True:
+      decl = float(s.recv())
+
+
 def pm_reader():
    s = socket_map['powerman']
    global spinning, voltage, estimate, critical
@@ -306,8 +314,9 @@ def draw_gps2(draw):
    try:
       draw.text((0, 13 * 0), 'Lat: %f' % gps[LAT], WHITE, font = font)
       draw.text((0, 13 * 1), 'Lon: %f' % gps[LON], WHITE, font = font)
+      draw.text((0, 13 * 2), 'Declination: %.1f' % decl, WHITE, font = font)
       try:
-         draw.text((0, 13 * 2), 'Alt: %.1f' % gps[ALT], WHITE, font = font)
+         draw.text((0, 13 * 3), 'Altitude: %.1f' % gps[ALT], WHITE, font = font)
       except:
          pass
    except:
@@ -343,6 +352,10 @@ def main(name):
    t5 = Thread(target = remote_reader)
    t5.daemon = True
    t5.start()
+
+   t6 = Thread(target = decl_reader)
+   t6.daemon = True
+   t6.start()
 
 
    screens = [(draw_health, 10),

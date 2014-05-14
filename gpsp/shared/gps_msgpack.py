@@ -18,10 +18,10 @@ ALT =    7 # 3d fix ...
 VDOP =   8
 
 def fix(gps):
-   if len(gps) == 1:
-      return 0
-   elif len(gps) >= 7:
+   if len(gps) > 7:
+      return 3
+   elif len(gps) > 1:
       return 2
    else:
-      return 3
+      return 0
 

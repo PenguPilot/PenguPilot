@@ -48,6 +48,7 @@ def main(name):
       if i == 20:
          i = 0
          gps = loads(raw)
+         print gps
          try:
             date = datetime.strptime(gps[TIME], '%Y-%m-%d %H:%M:%S').date()
             decl = gm.GeoMag(gps[LAT], gps[LON], time = date).dec
