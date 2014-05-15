@@ -46,30 +46,14 @@ static tsfloat_t d;
 static tsfloat_t pid_lim;
 
 
-static float circle_err(float pos, float dest)
+static float angles_diff(float a, float b)
 {
-   float err;
-   if ((dest < pos) && (pos - dest < M_PI))
-   {
-      err = pos - dest;
-   }
-   else if ((dest < pos) && (pos - dest >= M_PI))
-   {
-      err = -(2.0f * (float)M_PI - (pos - dest));
-   }
-   else if ((dest > pos) && (dest - pos < M_PI))
-   {
-      err = -(dest - pos);
-   }
-   else if ((dest > pos) && (dest - pos >= M_PI))
-   {
-      err = 2.0f * (float)M_PI - (dest - pos);
-   }
-   else
-   {
-      err = 0.0f;
-   }
-   return err;
+  float d = b - a;
+  if (d <= -M_PI)
+     d += 2.0f * M_PI;
+  if (d >= M_PI)
+     d -= 2.0f * M_PI;
+  return d;
 }
 
 
@@ -94,7 +78,7 @@ float yaw_ctrl_step(float *err_out, float setpoint, float yaw, float _speed, flo
 {
    float err;
    float yaw_ctrl;
-   err = circle_err(setpoint, yaw);
+   err = angles_diff(setpoint, yaw);
    yaw_ctrl = pid_control(&controller, err, _speed, dt);
    *err_out = err;
    return sym_limit(yaw_ctrl, tsfloat_get(&pid_lim));
