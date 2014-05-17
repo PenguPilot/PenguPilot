@@ -59,12 +59,12 @@ static float timer = 0.0f;
 
 static int gps_msgpack_fix(size_t array_len)
 {
-   if (array_len == 1)
-      return 0;
-   else if (array_len >= 7)
+   if (array_len > 7)
+      return 3;
+   else if (array_len > 1)
       return 2;
    else
-      return 3;
+      return 0;
 }
 
 

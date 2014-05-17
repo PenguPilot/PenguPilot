@@ -329,10 +329,10 @@ void main_step(const float dt,
    vec_copy(&mag_normal, &cal_marg_data.mag);
 
    /* apply current magnetometer compensation: */
-   static float _c = 0.0;
-   float x = 0.003;
-   _c = _c * (1-x) + current * x;
-   cmc_apply(&cal_marg_data.mag, _c);
+   //static float _c = 0.0;
+   //float x = 0.003;
+   //_c = _c * (1-x) + current * x;
+   cmc_apply(&cal_marg_data.mag, current);
 
    /* determine flight state: */
    bool flying = flight_state_update(&cal_marg_data.acc.ve[0]);
@@ -350,13 +350,19 @@ void main_step(const float dt,
    vec3_t world_acc;
    vec3_init(&world_acc);
    body_to_neu(&world_acc, &euler, &cal_marg_data.acc);
+   //EVERY_N_TIMES(10, printf("%f %f %f %f\n", euler.yaw, world_acc.x, world_acc.y, world_acc.z));
    
+/*
+   ^ N+
+   |
+   |
+   +----> E+
+*/
 
    /* center global ACC readings: */
    filter1_run(&lp_filter, &world_acc.ve[0], &acc_vec[0]);
    FOR_N(i, 3)
       pos_in.acc.ve[i] = world_acc.ve[i] - acc_vec[i];
-   //EVERY_N_TIMES(10, printf("%f %f %f\n", world_acc.x, world_acc.y, world_acc.z));
 
    /* compute next 3d position estimate using Kalman filters: */
    pos_t pos_est;
@@ -484,6 +490,7 @@ void main_step(const float dt,
    /* write motors: */
    if (!override_hw)
    {
+      //EVERY_N_TIMES(10, printf("%f %f %f %f %f %f\n", pos_in.pos_e, pos_in.pos_n, pos_est.ne_pos.y, pos_est.ne_pos.x, pos_est.ne_speed.y, pos_est.ne_speed.x));
       platform_write_motors(setpoints);
    }
 

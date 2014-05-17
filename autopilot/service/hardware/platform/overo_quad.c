@@ -154,7 +154,7 @@ int overo_quad_init(platform_t *plat, int override_hw)
       LOG(LL_INFO, "initializing motors via omap3-pwm interface");
       THROW_ON_ERR(omap3_pwms_init(motor_addrs, N_MOTORS));
       plat->write_motors = omap3_pwms_write;
-      ac_init(&plat->ac, 0.1f, 0.7f, 12.0f, 17.0f, c, N_MOTORS, force_to_esc_setup2, 0.0f);
+      ac_init(&plat->ac, 0.1f, 1.0f, 12.0f, 17.0f, c, N_MOTORS, force_to_esc_setup2, 0.0f);
    }
 
    LOG(LL_INFO, "overo_quadro platform initialized");
