@@ -329,9 +329,6 @@ void main_step(const float dt,
    vec_copy(&mag_normal, &cal_marg_data.mag);
 
    /* apply current magnetometer compensation: */
-   //static float _c = 0.0;
-   //float x = 0.003;
-   //_c = _c * (1-x) + current * x;
    cmc_apply(&cal_marg_data.mag, current);
 
    /* determine flight state: */
@@ -350,14 +347,6 @@ void main_step(const float dt,
    vec3_t world_acc;
    vec3_init(&world_acc);
    body_to_neu(&world_acc, &euler, &cal_marg_data.acc);
-   //EVERY_N_TIMES(10, printf("%f %f %f %f\n", euler.yaw, world_acc.x, world_acc.y, world_acc.z));
-   
-/*
-   ^ N+
-   |
-   |
-   +----> E+
-*/
 
    /* center global ACC readings: */
    filter1_run(&lp_filter, &world_acc.ve[0], &acc_vec[0]);
@@ -487,7 +476,6 @@ void main_step(const float dt,
    if (hard_off || motors_stopping())
       FOR_N(i, platform.n_motors) setpoints[i] = platform.ac.off_val;
    
-   EVERY_N_TIMES(10, printf("%f %f %f %f %f %f %f %f\n", pos_in.pos_e, pos_in.pos_n, pos_est.ne_pos.y, pos_est.ne_pos.x, pos_est.ne_speed.y, pos_est.ne_speed.x, gps_rel_data.speed_e, gps_rel_data.speed_n));
    /* write motors: */
    if (!override_hw)
    {
