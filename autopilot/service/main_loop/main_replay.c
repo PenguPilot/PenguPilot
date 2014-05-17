@@ -51,7 +51,7 @@ static int get_index(char *name)
 
 
 static int index_table[1024];
-static float double_data[INPUT_VARIABLES];
+static double double_data[INPUT_VARIABLES];
 static int int_data[INPUT_VARIABLES];
 
 
