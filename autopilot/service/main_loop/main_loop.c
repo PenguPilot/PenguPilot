@@ -487,10 +487,10 @@ void main_step(const float dt,
    if (hard_off || motors_stopping())
       FOR_N(i, platform.n_motors) setpoints[i] = platform.ac.off_val;
    
+   EVERY_N_TIMES(10, printf("%f %f %f %f %f %f %f %f\n", pos_in.pos_e, pos_in.pos_n, pos_est.ne_pos.y, pos_est.ne_pos.x, pos_est.ne_speed.y, pos_est.ne_speed.x, gps_rel_data.speed_e, gps_rel_data.speed_n));
    /* write motors: */
    if (!override_hw)
    {
-      //EVERY_N_TIMES(10, printf("%f %f %f %f %f %f\n", pos_in.pos_e, pos_in.pos_n, pos_est.ne_pos.y, pos_est.ne_pos.x, pos_est.ne_speed.y, pos_est.ne_speed.x));
       platform_write_motors(setpoints);
    }
 
