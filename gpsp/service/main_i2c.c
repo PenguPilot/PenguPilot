@@ -101,6 +101,7 @@ int main_i2c(void)
                 | (((long) data_r[2]) << 16) 
                 | (((long) data_r[1]) << 8) 
                 | (data_r[0]);
+      time /= 1000;
       char *time_str = ctime(&time);
       size_t len = strlen(time_str);
       msgpack_pack_raw(pk, len);
