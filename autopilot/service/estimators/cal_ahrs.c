@@ -31,7 +31,7 @@
 
 #include "cal_ahrs.h"
 #include "ahrs.h"
-
+#include "../util/math/conv.h"
 
 static ahrs_t ahrs;
 
@@ -62,7 +62,7 @@ int cal_ahrs_update(euler_t *euler, const marg_data_t *marg_data,
    int status = ahrs_update(&ahrs, marg_data, dt);
    euler_t _euler;
    quat_to_euler(&_euler, &ahrs.quat);
-   euler->yaw = _euler.yaw + mag_decl;
+   euler->yaw = _euler.yaw + deg2rad(mag_decl);
    euler->pitch = _euler.pitch;
    euler->roll = _euler.roll;
    euler_normalize(euler);

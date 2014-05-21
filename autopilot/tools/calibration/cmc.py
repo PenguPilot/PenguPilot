@@ -50,7 +50,7 @@ indices = []
 for name in ['current', 'mag_cal_x', 'mag_cal_y', 'mag_cal_z']:
    indices.append(header.index(name))
 
-opcd = OPCD_Interface(generate_map('opcd_shell')['ctrl'])
+opcd = OPCD_Interface(generate_map('opcd_shell')['opcd_ctrl'])
 
  
 data = np.loadtxt(stdin, usecols = indices)
@@ -65,8 +65,8 @@ a1, b1 = np.linalg.lstsq(A, mag_x)[0]
 a2, b2 = np.linalg.lstsq(A, mag_y)[0]
 a3, b3 = np.linalg.lstsq(A, mag_z)[0]
 
-opcd.set('pilot.cmc.scale_x', float(a1))
-opcd.set('pilot.cmc.scale_y', float(a2))
-opcd.set('pilot.cmc.scale_z', float(a3))
-opcd.set('pilot.cmc.bias', float(min(current)))
+opcd.set('autopilot.cmc.scale_x', float(a1))
+opcd.set('autopilot.cmc.scale_y', float(a2))
+opcd.set('autopilot.cmc.scale_z', float(a3))
+opcd.set('autopilot.cmc.bias', float(min(current)))
 opcd.persist()
