@@ -86,7 +86,7 @@ autopilot:
       details: 2
 
    main:
-      acc_fg: 0.001
+      acc_fg: 0.1
 
    ahrs:
       beta: 0.001
@@ -122,8 +122,8 @@ autopilot:
       pitch_roll_speed_max: 50.0 # [deg/s]
       pitch_roll_angle_max: 40.0 # [deg]
       yaw_speed_max: 90.0 # maximum yaw rotation speed [deg/s]
-      vert_speed_max: 3.0
-      horiz_speed_max: 5.0 # maximal horizontal speed
+      vert_speed_max: 1.0
+      horiz_speed_max: 2.0 # maximal horizontal speed
       gps_deadzone: 0.05 # if magnitude of gps speed sticks are lower than this value, gps position is locked
       gas_deadzone: 0.07 # if magnitude of centered gas stick is lower than this value, altitude is locked
       gas_acc_max: 20.0 # maximum positive/negative acceleration in m/s^2
@@ -150,15 +150,15 @@ autopilot:
          filt_d: 0.95
          i: 0.1
          i_max: 0.1
-         p: 3.0
-
-      attitude:
-         d: 0.2
-         i: 0.1
-         i_max: 0.4
          p: 2.0
-         pitch_bias: 2.0
-         roll_bias: 2.75
+   
+      attitude:
+         p: 1.0
+         i: 0.0
+         d: 0.1
+         i_max: 0.0
+         pitch_bias: 0.0
+         roll_bias: 0.0
 
       u_speed:
          i: 0.15
@@ -172,11 +172,11 @@ autopilot:
          p: 10.0
 
       yaw:
-         d: 0.0
-         i: 0.0
-         i_max: 0.0
-         p: 3.0
-         pid_lim: 5.0
+         d: 0.1
+         i: 0.01
+         i_max: 0.5
+         p: 2.0
+         pid_lim: 1.0
 
       navigation:
          speed_min: 0.5
@@ -194,5 +194,7 @@ autopilot:
       ultra_noise: 0.02
       process_noise: 1.0e-6
       gps_noise: 0.01
-      spd_scale: 1.0
+      gps_speed_noise: 0.1
+      xy_acc_noise: 0.01
+      z_acc_noise: 0.02
       use_gps_speed: 0
