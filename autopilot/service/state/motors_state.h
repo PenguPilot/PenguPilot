@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Motors State Tracking
+ Timer-based Motors State Tracking
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -39,8 +39,8 @@ void motors_state_init(void);
 bool motors_starting(void);
 
 
-/* indicates if the motors are stopping */
-bool motors_stopping(void);
+/* indicates if the motor outputs should be disabled */
+bool motors_output_is_disabled(void);
 
 
 /* indicates if the motors are spinning */
