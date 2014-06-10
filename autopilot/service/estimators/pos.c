@@ -37,42 +37,41 @@
 #include "../util/math/mat.h"
 
 
-MAT_DECL(3, 3);
-MAT_DECL(2, 2);
-MAT_DECL(3, 1);
-
-
 /* configuration parameters: */
 static tsfloat_t process_noise;
 static tsfloat_t ultra_noise;
 static tsfloat_t baro_noise;
-static tsfloat_t xy_acc_noise;
-static tsfloat_t z_acc_noise;
 static tsfloat_t gps_noise;
-static tsfloat_t gps_speed_noise;
 static tsint_t use_gps_speed;
 
+VEC_DECL(1);
 
-typedef struct
+MAT_DECL(2, 2);
+MAT_DECL(2, 1);
+
+
+typedef struct kalman
 {
    /* configuration and constant matrices: */
-   mat3x3_t Q; /* process noise */
-   mat3x3_t R; /* measurement noise */
-   mat3x3_t I; /* identity matrix */
+   mat2x2_t Q; /* process noise */
+   mat2x2_t R; /* measurement noise */
+   mat2x2_t I; /* identity matrix */
 
    /* state and transition vectors/matrices: */
-   vec3_t x; /* state (location and velocity) */
-   vec3_t z; /* measurement (location) */
-   mat3x3_t P; /* error covariance */
-   mat3x3_t A; /* system matrix */
-   mat3x3_t H; /* observer matrix */
-   mat3x3_t K; /* kalman gain */
+   vec2_t x; /* state (location and velocity) */
+   vec2_t z; /* measurement (location) */
+   vec1_t u; /* control (acceleration) */
+   mat2x2_t P; /* error covariance */
+   mat2x2_t A; /* system matrix */
+   mat2x1_t B; /* control matrix */
+   mat2x2_t H; /* observer matrix */
+   mat2x2_t K; /* kalman gain */
 
    /*  vectors and matrices for calculations: */
-   vec3_t t0;
-   vec3_t t1;
-   mat3x3_t T0;
-   mat3x3_t T1;
+   vec2_t t0;
+   vec2_t t1;
+   mat2x2_t T0;
+   mat2x2_t T1;
 
    bool use_speed;
 }
@@ -80,8 +79,7 @@ kalman_t;
 
 
 /* static function prototypes: */
-static void kalman_init(kalman_t *kf, float q, 
-                        float r_pos, float r_speed, float r_acc,
+static void kalman_init(kalman_t *kf, float q, float r,
                         float pos, float speed, bool use_speed);
 
 static void kalman_run(kalman_t *kf, float *est_pos, float *est_speed,
@@ -107,9 +105,6 @@ void pos_init(void)
       {"process_noise", &process_noise},
       {"ultra_noise", &ultra_noise},
       {"baro_noise", &baro_noise},
-      {"z_acc_noise", &z_acc_noise},
-      {"xy_acc_noise", &xy_acc_noise},
-      {"gps_speed_noise", &gps_speed_noise},
       {"gps_noise", &gps_noise},
       {"use_gps_speed", &use_gps_speed},
       OPCD_PARAMS_END
@@ -122,21 +117,10 @@ void pos_init(void)
        tsfloat_get(&gps_noise));
 
    /* set-up kalman filters: */
-   kalman_init(&e_kalman, tsfloat_get(&process_noise),
-              tsfloat_get(&gps_noise), tsfloat_get(&gps_speed_noise), tsfloat_get(&xy_acc_noise),
-              0, 0, tsint_get(&use_gps_speed));
-   
-   kalman_init(&n_kalman, tsfloat_get(&process_noise),
-              tsfloat_get(&gps_noise), tsfloat_get(&gps_speed_noise), tsfloat_get(&xy_acc_noise),
-              0, 0, tsint_get(&use_gps_speed));
-   
-   kalman_init(&baro_u_kalman, tsfloat_get(&process_noise), 1.0, tsfloat_get(&z_acc_noise),
-              tsfloat_get(&baro_noise), 
-              0, 0, false);
-   
-   kalman_init(&ultra_u_kalman, tsfloat_get(&process_noise),
-              tsfloat_get(&ultra_noise), 1.0, tsfloat_get(&z_acc_noise),
-              0, 0, false);
+   kalman_init(&e_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, tsint_get(&use_gps_speed));
+   kalman_init(&n_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, tsint_get(&use_gps_speed));
+   kalman_init(&baro_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&baro_noise), 0, 0, false);
+   kalman_init(&ultra_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&ultra_noise), 0, 0, false);
 }
 
 
@@ -158,64 +142,65 @@ void pos_update(pos_t *out, pos_in_t *in)
 }
 
 
-static void kalman_init(kalman_t *kf, float q, 
-                        float r_pos, float r_speed, float r_acc,
-                        float pos, float speed, bool use_speed)
+void kalman_init(kalman_t *kf, float q, float r, float pos, float speed, bool use_speed)
 {
    kf->use_speed = use_speed;
    /* set up temporary vectors and matrices: */
-   vec3_init(&kf->t0);
-   vec3_init(&kf->t1);
-   mat3x3_init(&kf->T0);
-   mat3x3_init(&kf->T1);
+   vec2_init(&kf->t0);
+   vec2_init(&kf->t1);
+   mat2x2_init(&kf->T0);
+   mat2x2_init(&kf->T1);
    
-   mat3x3_init(&kf->I);
+   mat2x2_init(&kf->I);
    mat_ident(&kf->I);
 
    /* set initial state: */
-   vec3_init(&kf->x);
+   vec2_init(&kf->x);
    kf->x.ve[0] = pos;
    kf->x.ve[1] = speed;
 
    /* no measurement or control yet: */
-   vec3_init(&kf->z);
+   vec2_init(&kf->z);
+   vec1_init(&kf->u);
 
-   mat3x3_init(&kf->P);
+   mat2x2_init(&kf->P);
    mat_ident(&kf->P);
    
    /* set up noise: */
-   mat3x3_init(&kf->Q);
+   mat2x2_init(&kf->Q);
    mat_scalar_mul(&kf->Q, &kf->I, q);
-   mat3x3_init(&kf->R);
-   kf->R.me[0][0] = r_pos; //0.001;
-   kf->R.me[1][1] = r_speed; //0.01;
-   kf->R.me[2][2] = r_acc; //1000.0;
+   mat2x2_init(&kf->R);
+   mat_scalar_mul(&kf->R, &kf->I, r);
    
-   mat3x3_init(&kf->K);
+   mat2x2_init(&kf->K);
 
-   /* H = | 1.0   0.0   0.0 |
-          | 0.0   0.0   1.0 | */
-   mat3x3_init(&kf->H);
+   /* H = | 1.0   0.0       |
+          | 0.0   use_speed | */
+   mat2x2_init(&kf->H);
    kf->H.me[0][0] = 1.0f;
    kf->H.me[1][1] = 1.0f * use_speed;
-   kf->H.me[2][2] = 1.0f;
 
-   /* A = | 1.0  run  run  run |
-          | 0.0  1.0  run  run |
-          | 0.0  0.0  1.0  run |
-          | 0.0  0.0  0.0  1.0 |
-      note: run values are set in kalman_run */
-   mat3x3_init(&kf->A);
+   /* A = | 1.0   dt  |
+          | 0.0   1.0 |
+      note: dt value is set in kalman_run */
+   mat2x2_init(&kf->A);
    kf->A.me[0][0] = 1.0f;
    kf->A.me[1][1] = 1.0f;
-   kf->A.me[2][2] = 1.0f;
+
+   /* B = | 0.5 * dt ^ 2 |
+          |     dt       |
+      values are set in in kalman_run */
+   mat2x1_init(&kf->B);
 }
 
 
-static void kalman_predict(kalman_t *kf)
+static void kalman_predict(kalman_t *kf, float a)
 {
-   /* x = A * x */
-   mat_vec_mul(&kf->x, &kf->A, &kf->x);
+   /* x = A * x + B * u */
+   kf->u.ve[0] = a;
+   mat_vec_mul(&kf->t0, &kf->A, &kf->x); /* t0 = A * x */
+   mat_vec_mul(&kf->t1, &kf->B, &kf->u); /* t1 = B * u */
+   vec_add(&kf->x, &kf->t0, &kf->t1);    /* x = t0 + t1 */
 
    /* P = A * P * AT + Q */
    mat_mul(&kf->T0, &kf->A, &kf->P);   /* T0 = A * P */
@@ -224,11 +209,13 @@ static void kalman_predict(kalman_t *kf)
 }
 
 
-static void kalman_correct(kalman_t *kf, float pos, float acc, float speed)
+
+static void kalman_correct(kalman_t *kf, float pos, float speed)
 {
+   /* update H matrix: */
+   kf->H.me[1][1] = 1.0f * (kf->use_speed && speed != 0.0f);
    kf->z.ve[0] = pos;
    kf->z.ve[1] = speed;
-   kf->z.ve[2] = acc;
 
    /* K = P * HT * inv(H * P * HT + R) */
    mat_mul(&kf->T0, &kf->H, &kf->P);   // T0 = H * P
@@ -257,15 +244,17 @@ static void kalman_correct(kalman_t *kf, float pos, float acc, float speed)
  */
 static void kalman_run(kalman_t *kf, float *est_pos, float *est_speed, float pos, float speed, float acc, float dt)
 {
-   /* A = | init    dt   dt^2 / 2.0 |
-          | init   init  dt         |
-          | init   init  init       | */
+   /* A = | init   dt  |
+          | init  init | */
    kf->A.me[0][1] = dt;
-   kf->A.me[0][2] = dt * dt / 2.0;
-   kf->A.me[1][2] = dt;
 
-   kalman_predict(kf);
-   kalman_correct(kf, pos, acc, speed);
+   /* B = | 0.5 * dt ^ 2 |
+          |     dt       | */
+   kf->B.me[0][0] = 0.5f * dt * dt;
+   kf->B.me[1][0] = dt;
+
+   kalman_predict(kf, acc);
+   kalman_correct(kf, pos, speed);
    *est_pos = kf->x.ve[0];
    *est_speed = kf->x.ve[1];
 }
