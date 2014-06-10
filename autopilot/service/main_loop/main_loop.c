@@ -427,10 +427,13 @@ void main_step(const float dt,
    piid_sp[PIID_PITCH] = pr_pos_ctrl.ve[0];
    piid_sp[PIID_ROLL] = pr_pos_ctrl.ve[1];
  
-   /* execute direct attitude rate control, if requested:*/
+   /* no optimization of thrust in attitude and rate control mode: */
+   if (cm_att_is_rates() || cm_att_is_angles())
+      thrust = a_u + platform.mass_kg * G_CONSTANT;
+
+   /* direct rate control, if selected: */
    if (cm_att_is_rates())
    {
-      thrust = a_u + platform.mass_kg * G_CONSTANT;
       vec2_t rates_sp;
       vec2_init(&rates_sp);
       cm_att_sp(&rates_sp);
