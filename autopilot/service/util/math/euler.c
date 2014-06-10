@@ -84,8 +84,8 @@ void body_to_neu(vec3_t *world, const euler_t *euler, const vec3_t *body)
     * multiply resulting matrix with input vector:
     */
    mat_vec_mul(world, &dcm, body);
-   world->x *= -1.0;
-   world->y *= -1.0;
+   //world->x *= -1.0;
+   //world->y *= -1.0;
    world->z *= -1.0;
 }
 
