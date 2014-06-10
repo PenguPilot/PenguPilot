@@ -120,7 +120,7 @@ autopilot:
 
    manual_control:
       pitch_roll_speed_max: 50.0 # [deg/s]
-      pitch_roll_angle_max: 40.0 # [deg]
+      pitch_roll_angle_max: 15.0 # [deg]
       yaw_speed_max: 90.0 # maximum yaw rotation speed [deg/s]
       vert_speed_max: 1.0
       horiz_speed_max: 2.0 # maximal horizontal speed
@@ -157,6 +157,7 @@ autopilot:
          p: 8.0
          pitch_bias: 0.0
          roll_bias: 0.0
+         angles_max: 20.0 # maximal angle allowed in attitude control
 
       u_speed:
          i: 0.15
@@ -165,8 +166,8 @@ autopilot:
       
       u_pos:
          d: 5.0
-         i: 0.5
-         imax: 10.0
+         i: 0.1
+         imax: 1.0
          p: 10.0
 
       yaw:

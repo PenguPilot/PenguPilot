@@ -158,9 +158,9 @@ static void set_vertical_spd_or_pos(float gas_stick, float baro_u_pos, float ult
 {
    float dz = tsfloat_get(&gas_deadzone);
    float vmax = tsfloat_get(&vert_speed_max);
-   float inc = stick_dz(gas_stick, dz) * vmax * 0.00333333;
+   float inc = stick_dz(gas_stick, dz) * vmax * 0.005;
    if (!(pos - baro_u_pos < -2.0f && inc < 0.0f))
-      pos += stick_dz(gas_stick, dz) * vmax * 0.00333333;
+      pos += stick_dz(gas_stick, dz) * vmax * 0.005;
    cm_u_set_baro_pos(pos);
    EVERY_N_TIMES(100, LOG(LL_INFO, "u_pos_sp: %f, u_pos: %f", pos, baro_u_pos));
 }
@@ -314,8 +314,8 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       case MAN_RELAXED:
       {
          set_att_angles(pitch, roll);
-         //set_vertical_spd_or_pos(gas_stick - 0.5, baro_u_pos, ultra_u_pos);
-         cm_u_set_acc(tsfloat_get(&gas_acc_max) * (gas_stick - 0.5));
+         set_vertical_spd_or_pos(gas_stick - 0.5, baro_u_pos, ultra_u_pos);
+         //cm_u_set_acc(tsfloat_get(&gas_acc_max) * (gas_stick - 0.5));
          break;
       }
 
