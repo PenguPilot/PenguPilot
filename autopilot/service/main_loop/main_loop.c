@@ -317,8 +317,8 @@ void main_step(const float dt,
    }
    else
    {
-      pos_in.pos_n = 0.0f;   
-      pos_in.pos_e = 0.0f; 
+      pos_in.pos_n = 0.0f;
+      pos_in.pos_e = 0.0f;
       pos_in.speed_n = 0.0f;
       pos_in.speed_e = 0.0f;
       mag_decl = 0.0f;
@@ -407,6 +407,7 @@ void main_step(const float dt,
    vec2_t pr_pos_sp;
    vec2_init(&pr_pos_sp);
    att_thrust_calc(&pr_pos_sp, &thrust, &f_neu, euler.yaw, platform.max_thrust_n, 0);
+   thrust = a_u + platform.mass_kg * G_CONSTANT;
 
    /* execute direct attitude angle control, if requested: */
    if (cm_att_is_angles())
@@ -427,9 +428,6 @@ void main_step(const float dt,
    piid_sp[PIID_PITCH] = pr_pos_ctrl.ve[0];
    piid_sp[PIID_ROLL] = pr_pos_ctrl.ve[1];
  
-   /* no optimization of thrust in attitude and rate control mode: */
-   if (cm_att_is_rates() || cm_att_is_angles())
-      thrust = a_u + platform.mass_kg * G_CONSTANT;
 
    /* direct rate control, if selected: */
    if (cm_att_is_rates())
@@ -485,6 +483,7 @@ void main_step(const float dt,
    if (!override_hw)
    {
       platform_write_motors(setpoints);
+      //EVERY_N_TIMES(10, printf("%f %f\n", pos_est.ne_speed.x, pos_est.ne_speed.y));
    }
 
    /* set monitoring data: */
