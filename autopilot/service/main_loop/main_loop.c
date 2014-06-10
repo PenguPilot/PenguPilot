@@ -476,6 +476,8 @@ void main_step(const float dt,
    if (hard_off || motors_output_is_disabled())
       FOR_N(i, platform.n_motors) setpoints[i] = platform.ac.off_val;
    
+   printf("%f %f %f %f %f %f %f\n", pos_in.speed_n, pos_in.speed_e, pos_est.ne_speed.x, pos_est.ne_speed.y, euler.yaw, euler.pitch, euler.roll);
+   
    /* write motors: */
    if (!override_hw)
    {

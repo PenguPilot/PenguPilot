@@ -52,7 +52,7 @@ void cal_ahrs_init(void)
       OPCD_PARAMS_END
    };
    opcd_params_apply("ahrs.", params);
-   ahrs_init(&ahrs, AHRS_ACC_MAG, tsfloat_get(&beta_start), tsfloat_get(&beta_step), 1.0);
+   ahrs_init(&ahrs, AHRS_ACC_MAG, tsfloat_get(&beta_start), tsfloat_get(&beta_step), tsfloat_get(&beta));
 }
 
 

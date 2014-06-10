@@ -86,10 +86,10 @@ autopilot:
       details: 2
 
    main:
-      acc_fg: 0.1
+      acc_fg: 0.01
 
    ahrs:
-      beta: 0.001
+      beta: 0.1
       beta_start: 50.0
       beta_step: 15.0
 
@@ -193,8 +193,8 @@ autopilot:
       baro_noise: 0.1
       ultra_noise: 0.02
       process_noise: 1.0e-6
-      gps_noise: 0.01
+      gps_noise: 0.001
       gps_speed_noise: 0.1
       xy_acc_noise: 0.01
       z_acc_noise: 0.02
-      use_gps_speed: 0
+      use_gps_speed: 1
