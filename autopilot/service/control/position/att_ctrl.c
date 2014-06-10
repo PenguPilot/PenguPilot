@@ -40,6 +40,7 @@ static tsfloat_t angle_i;
 static tsfloat_t angle_i_max;
 static tsfloat_t angle_d;
 static tsfloat_t biases[2];
+static tsfloat_t angles_max;
 static pid_controller_t controllers[2];
 
 
@@ -56,6 +57,7 @@ void att_ctrl_init(void)
       {"d", &angle_d.value},
       {"pitch_bias", &biases[0]},
       {"roll_bias", &biases[1]},
+      {"angles_max", &angles_max},
       OPCD_PARAMS_END
    };
    opcd_params_apply("controllers.attitude.", params);
@@ -77,7 +79,8 @@ void att_ctrl_step(vec2_t *ctrl, vec2_t *err, const float dt, const vec2_t *pos,
 {
    FOR_EACH(i, controllers)
    {
-      err->ve[i] = setp->ve[i] + deg2rad(tsfloat_get(&biases[i])) - pos->ve[i];
+      err->ve[i] =   sym_limit(setp->ve[i], deg2rad(tsfloat_get(&angles_max))) 
+                   + deg2rad(tsfloat_get(&biases[i])) - pos->ve[i];
       ctrl->ve[i] = pid_control(&controllers[i], err->ve[i], speed->ve[i], dt);
    }
 }
