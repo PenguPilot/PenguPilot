@@ -427,7 +427,6 @@ void main_step(const float dt,
    float piid_sp[3] = {0.0f, 0.0f, 0.0f};
    piid_sp[PIID_PITCH] = pr_pos_ctrl.ve[0];
    piid_sp[PIID_ROLL] = pr_pos_ctrl.ve[1];
- 
 
    /* direct rate control, if selected: */
    if (cm_att_is_rates())
@@ -477,13 +476,10 @@ void main_step(const float dt,
    if (hard_off || motors_output_is_disabled())
       FOR_N(i, platform.n_motors) setpoints[i] = platform.ac.off_val;
    
-   //printf("%f %f %f %f %f %f %f\n", pos_in.speed_n, pos_in.speed_e, pos_est.ne_speed.x, pos_est.ne_speed.y, euler.yaw, euler.pitch, euler.roll);
-   
    /* write motors: */
    if (!override_hw)
    {
       platform_write_motors(setpoints);
-      //EVERY_N_TIMES(10, printf("%f %f\n", pos_est.ne_speed.x, pos_est.ne_speed.y));
    }
 
    /* set monitoring data: */

@@ -70,7 +70,7 @@ static bool vert_pos_locked = false;
 static bool horiz_pos_locked = true;
 static int rc_inval_count = 0;
 static float yaw_pos_sp = 0.0f;
-static float pos = -2.0;
+static float pos = -1.0;
 
 
 void man_logic_init(void)
@@ -159,10 +159,13 @@ static void set_vertical_spd_or_pos(float gas_stick, float baro_u_pos, float ult
    float dz = tsfloat_get(&gas_deadzone);
    float vmax = tsfloat_get(&vert_speed_max);
    float inc = stick_dz(gas_stick, dz) * vmax * 0.005;
-   if (!(pos - baro_u_pos < -2.0f && inc < 0.0f))
+   if (   !(pos < -1.0f && inc < 0.0f)
+       && !(pos > 5.0f && inc > 0.0f))
+   {
       pos += stick_dz(gas_stick, dz) * vmax * 0.005;
-   cm_u_set_baro_pos(pos);
-   EVERY_N_TIMES(100, LOG(LL_INFO, "u_pos_sp: %f, u_pos: %f", pos, baro_u_pos));
+   }
+   cm_u_set_ultra_pos(pos);
+   EVERY_N_TIMES(100, LOG(LL_INFO, "u_pos_sp: %f, u_pos: %f", pos, ultra_u_pos));
 }
 
 
