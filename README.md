@@ -20,34 +20,40 @@ Currently, components are implemented in C and Python, communicating efficiently
 
 Contents
 --------
+
 Flight Infrastructure:
-- autopilot: real-time control running at 200Hz
-- blackbox: receives logging data containing every sensor input of the autopilot to sdcard
-- powerman: power management and monitoring service; warns the user if the battery is low
-- gpsp: gps publisher, similar to gpsd but much simpler; uses nmeablib
-- hlfm: high-level flight management service
-- remote: remote control data parser and publisher
-- ads1x15 (Raspberry PI)
-- arduino (ODROID U3)
-- twl4030_madc (Gumstix Overo)
+
+- __autopilot__: real-time control running at 200Hz
+- __blackbox__: receives logging data containing every sensor input of the autopilot to sdcard
+- __powerman__: power management and monitoring service; warns the user if the battery is low
+- __gpsp__: gps publisher, similar to gpsd but much simpler; uses nmeablib
+- __hlfm__: high-level flight management service
+- __remote__: remote control data parser and publisher
+- __ads1x15__: (Raspberry PI)
+- __arduino__: (ODROID U3)
+- __twl4030_madc__: (Gumstix Overo)
+- __config__: configuration file(s)
 
 Supporting Infrastructures:
-- scl: signaling and communication link (IPC framework), see config/system.yaml
-- opcd: online parameter configuration daemon, see config/params.yaml
-- svctrl: service management and control utility, see config/services.yaml
-- shared: shared Libraries for threading and other common tasks
-- config: configuration files
+
+- __scl__: signaling and communication link (IPC framework), see [config/system.yaml](config/system.yaml)
+- __opcd__: online parameter configuration daemon, see [config/params.yaml](config/params.yaml)
+- __svctrl__: service management and control utility, see [config/services.yaml](config/services.yaml)
+- __shared__: shared Libraries for threading and other common tasks
+- __config__: configuration files
 
 Additional Features:
-- aircomm: encrypted aerial communication daemon, using NRF24L01+
-- display: shows battery, mem, cpu, satellite status via I2C SSD1307 128x64 display from Adafruit
-- wifi_sensor: published wireless network data acquired via iwlist
-- wifi_loc: combines gps measurements and wifi scan results and publishes it
+
+- __aircomm__: encrypted aerial communication daemon, using NRF24L01+
+- __display__: shows battery, mem, cpu, satellite status via I2C SSD1307 128x64 display from Adafruit
+- __wifi_sensor__: published wireless network data acquired via iwlist
+- __wifi_loc__: combines gps measurements and wifi scan results and publishes it
 
 Build System and Environment:
-- site_scons: related to build system
-- SConstruct: scons build file
-- scripts: various scripts, e.g. bashrc
+
+- __site_scons__: related to build system
+- __SConstruct__: scons build file
+- __scripts__: various scripts, e.g. bashrc
 
 Software Dependencies:
 - Gentoo: app-admin/sudo app-misc/screen dev-lang/python dev-lang/swig dev-libs/glib dev-libs/libyaml dev-libs/msgpack dev-libs/protobuf dev-libs/protobuf-c dev-python/imaging dev-python/msgpack dev-python/numpy dev-python/psutil dev-python/python-daemon dev-python/pyyaml dev-python/pyzmq dev-util/scons sys-power/cpufrequtils
