@@ -22,31 +22,32 @@ Contents
 --------
 
 Flight Infrastructure:
-
 - __autopilot__: real-time control running at 200Hz
-- __blackbox__: receives logging data containing every sensor input of the autopilot to sdcard
-- __powerman__: power management and monitoring service; warns the user if the battery is low
-- __gpsp__: gps publisher, similar to gpsd but much simpler; uses nmeablib
 - __hlfm__: high-level flight management service
+- __blackbox__: receives logging data containing every sensor input of the autopilot to sd card
+- __powerman__: power management and monitoring service; warns the user if the battery is low
+- __gpsp__: gps publisher, similar to gpsd but much simpler; uses [NMEALib](https://github.com/AHR-Project/nmealib)
 - __remote__: remote control data parser and publisher
+- __geomag__: reads gps position and date; publishes magnetic declination in degrees
 - __ads1x15__: (Raspberry PI)
 - __arduino__: (ODROID U3)
 - __twl4030_madc__: (Gumstix Overo)
 - __config__: configuration file(s)
 
+
 Supporting Infrastructures:
 
+- __config__: configuration files
 - __scl__: signaling and communication link (IPC framework), see [config/system.yaml](config/system.yaml)
 - __opcd__: online parameter configuration daemon, see [config/params.yaml](config/params.yaml)
 - __svctrl__: service management and control utility, see [config/services.yaml](config/services.yaml)
 - __shared__: shared Libraries for threading and other common tasks
-- __config__: configuration files
 
 Additional Features:
 
 - __aircomm__: encrypted aerial communication daemon, using NRF24L01+
 - __display__: shows battery, mem, cpu, satellite status via I2C SSD1307 128x64 display from Adafruit
-- __wifi_sensor__: published wireless network data acquired via iwlist
+- __wifi_sensor__: publishes wireless network data acquired via iwlist
 - __wifi_loc__: combines gps measurements and wifi scan results and publishes it
 
 Build System and Environment:
