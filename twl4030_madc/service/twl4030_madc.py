@@ -51,12 +51,15 @@ def main(name):
    voltage_lambda = eval(opcd.get('adc_to_voltage'))
    current_lambda = eval(opcd.get('adc_to_current'))
    while True:
-      sleep(0.2)
-      voltage = voltage_lambda(voltage_adc.read())  
-      current = current_lambda(current_adc.read())
-      state = [voltage,  # 0 [V]
-               current]  # 1 [A]
-      socket.send(dumps(state))
+      try:
+         sleep(0.2)
+         voltage = voltage_lambda(voltage_adc.read())  
+         current = current_lambda(current_adc.read())
+         state = [voltage,  # 0 [V]
+                  current]  # 1 [A]
+         socket.send(dumps(state))
+      except:
+         pass
 
 daemonize('twl4030_madc', main)
 
