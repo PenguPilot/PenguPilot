@@ -45,8 +45,8 @@ Additional Features:
 
 - [aircomm](aircomm): encrypted aerial communication daemon, using NRF24L01+
 - [display](display): shows battery, mem, cpu, satellite status via I2C SSD1307 128x64 display from Adafruit
-- [wifi_sensor]: publishes wireless network data acquired via iwlist
-- [wifi_loc]: combines gps measurements and wifi scan results and publishes it
+- [wifi_sensor](wifi_sensor): publishes wireless network data acquired via iwlist
+- [wifi_loc](wifi_loc): combines gps measurements and wifi scan results and publishes it
 
 Build System and Environment:
 
