@@ -73,13 +73,17 @@ typedef struct kalman
    mat2x2_t T0;
    mat2x2_t T1;
 
+   /* online adaptable parameters: */
+   tsfloat_t *q;
+   tsfloat_t *r;
+
    bool use_speed;
 }
 kalman_t;
 
 
 /* static function prototypes: */
-static void kalman_init(kalman_t *kf, float q, float r,
+static void kalman_init(kalman_t *kf, tsfloat_t *q, tsfloat_t *r,
                         float pos, float speed, bool use_speed);
 
 static void kalman_run(kalman_t *kf, float *est_pos, float *est_speed,
@@ -117,10 +121,10 @@ void pos_init(void)
        tsfloat_get(&gps_noise));
 
    /* set-up kalman filters: */
-   kalman_init(&e_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, tsint_get(&use_gps_speed));
-   kalman_init(&n_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, tsint_get(&use_gps_speed));
-   kalman_init(&baro_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&baro_noise), 0, 0, false);
-   kalman_init(&ultra_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&ultra_noise), 0, 0, false);
+   kalman_init(&e_kalman, &process_noise, &gps_noise, 0, 0, tsint_get(&use_gps_speed));
+   kalman_init(&n_kalman, &process_noise, &gps_noise, 0, 0, tsint_get(&use_gps_speed));
+   kalman_init(&baro_u_kalman, &process_noise, &baro_noise, 0, 0, false);
+   kalman_init(&ultra_u_kalman, &process_noise, &ultra_noise, 0, 0, false);
 }
 
 
@@ -142,9 +146,12 @@ void pos_update(pos_t *out, pos_in_t *in)
 }
 
 
-void kalman_init(kalman_t *kf, float q, float r, float pos, float speed, bool use_speed)
+void kalman_init(kalman_t *kf, tsfloat_t *q, tsfloat_t *r, float pos, float speed, bool use_speed)
 {
    kf->use_speed = use_speed;
+   kf->q = q;
+   kf->r = r;
+
    /* set up temporary vectors and matrices: */
    vec2_init(&kf->t0);
    vec2_init(&kf->t1);
@@ -168,9 +175,7 @@ void kalman_init(kalman_t *kf, float q, float r, float pos, float speed, bool us
    
    /* set up noise: */
    mat2x2_init(&kf->Q);
-   mat_scalar_mul(&kf->Q, &kf->I, q);
    mat2x2_init(&kf->R);
-   mat_scalar_mul(&kf->R, &kf->I, r);
    
    mat2x2_init(&kf->K);
 
@@ -252,7 +257,11 @@ static void kalman_run(kalman_t *kf, float *est_pos, float *est_speed, float pos
           |     dt       | */
    kf->B.me[0][0] = 0.5f * dt * dt;
    kf->B.me[1][0] = dt;
-
+   
+   /* Q, R: */
+   mat_scalar_mul(&kf->Q, &kf->I, tsfloat_get(kf->q));
+   mat_scalar_mul(&kf->R, &kf->I, tsfloat_get(kf->r));
+ 
    kalman_predict(kf, acc);
    kalman_correct(kf, pos, speed);
    *est_pos = kf->x.ve[0];

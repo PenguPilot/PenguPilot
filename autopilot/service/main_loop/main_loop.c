@@ -249,6 +249,10 @@ void main_step(const float dt,
    vec2_init(&ne_spd_err);
    vec3_t mag_normal;
    vec3_init(&mag_normal);
+   vec3_t pry_err;
+   vec3_init(&pry_err);
+   vec3_t pry_speed_err;
+   vec3_init(&pry_speed_err);
 
    float u_pos_err = 0.0f;
    float u_spd_err = 0.0f;
@@ -378,11 +382,13 @@ void main_step(const float dt,
       a_u = cm_u_sp();
  
    /* execute north/east navigation and/or read speed vector input: */
-   if (cm_att_is_gps_pos())
+   if (1) //cm_att_is_gps_pos())
    {
       vec2_t pos_sp;
       vec2_init(&pos_sp);
       cm_att_sp(&pos_sp);
+      pos_sp.x = 0;
+      pos_sp.y = 0;
       navi_run(&ne_speed_sp, &ne_pos_err, &pos_sp, &pos_est.ne_pos, dt);
    }
    else if (cm_att_is_gps_spd())
@@ -423,6 +429,8 @@ void main_step(const float dt,
    vec2_set(&pr_pos, -euler.pitch, euler.roll);
    vec2_init(&pr_pos_ctrl);
    att_ctrl_step(&pr_pos_ctrl, &att_err, dt, &pr_pos, &pr_spd, &pr_pos_sp);
+   pry_err.x = att_err.x;
+   pry_err.y = att_err.y;
 
    float piid_sp[3] = {0.0f, 0.0f, 0.0f};
    piid_sp[PIID_PITCH] = pr_pos_ctrl.ve[0];
@@ -450,6 +458,9 @@ void main_step(const float dt,
    f_local_t f_local = {{thrust, 0.0f, 0.0f, 0.0f}};
    float piid_gyros[3] = {cal_marg_data.gyro.x, -cal_marg_data.gyro.y, cal_marg_data.gyro.z};
    piid_run(&f_local.ve[1], piid_gyros, piid_sp, dt);
+   pry_speed_err.x = piid_gyros[PIID_PITCH] - piid_sp[PIID_PITCH];
+   pry_speed_err.y = piid_gyros[PIID_ROLL] - piid_sp[PIID_ROLL];
+   pry_speed_err.z = piid_gyros[PIID_YAW] - piid_sp[PIID_YAW];
 
    /* computate rpm ^ 2 out of the desired forces: */
    inv_coupling_calc(rpm_square, f_local.ve);
@@ -489,6 +500,8 @@ out:
    EVERY_N_TIMES(bb_rate, blackbox_record(dt, marg_data, gps_data, ultra, baro, voltage, current, channels, sensor_status, /* sensor inputs */
                           &ne_pos_err, u_pos_err, /* position errors */
                           &ne_spd_err, u_spd_err /* speed errors */,
-                          &mag_normal));
+                          &mag_normal,
+                          &pry_err, /* attitude errors */
+                          &pry_speed_err /* attitude rate errors */));
 }
 

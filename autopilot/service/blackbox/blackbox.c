@@ -38,21 +38,48 @@ static msgpack_packer *pk = NULL;
 
 
 char *blackbox_spec[BLACKBOX_ITEMS] =
-{
-   "dt", /* time delta */
-   "gyro_x", "gyro_y", "gyro_z", /* gyro */
-   "acc_x", "acc_y", "acc_z", /* acc */
-   "mag_x", "mag_y", "mag_z", /* mag */
-   "lat", "lon", "alt", /* gps */
-   "gps_course", "gps_speed", /* gps */
-   "ultra", "baro", /* ultra / baro */
-   "voltage", /* voltage */
-   "current", /* current */
-   "rc_pitch", "rc_roll", "rc_yaw", "rc_gas", "rc_sw_l", "rc_sw_r", /* rc */
-   "sensor_status", /* sensors */
-   "n_err", "e_err", "u_err", /* 3d position error */
-   "n_spd_err", "e_spd_err", "u_spd_err", /* 3d speed error */
-   "mag_cal_x", "mag_cal_y", "mag_cal_z" /* calibrated mag vector */
+ {
+   "dt",             /*  0 */
+   "gyro_x",         /*  1 */
+   "gyro_y",         /*  2 */
+   "gyro_z",         /*  3 */
+   "acc_x",          /*  4 */
+   "acc_y",          /*  5 */
+   "acc_z",          /*  6 */
+   "mag_x",          /*  7 */
+   "mag_y",          /*  8 */
+   "mag_z",          /*  9 */
+   "lat",            /* 10 */
+   "lon",            /* 11 */
+   "alt",            /* 12 */
+   "gps_course",     /* 13 */
+   "gps_speed",      /* 14 */
+   "ultra",          /* 15 */
+   "baro",           /* 16 */
+   "voltage",        /* 17 */
+   "current",        /* 18 */
+   "rc_pitch",       /* 19 */
+   "rc_roll",        /* 20 */
+   "rc_yaw",         /* 21 */
+   "rc_gas",         /* 22 */
+   "rc_sw_l",        /* 23 */
+   "rc_sw_r",        /* 24 */
+   "sensor_status",  /* 25 */
+   "n_err",          /* 26 */
+   "e_err",          /* 27 */
+   "u_err",          /* 28 */
+   "n_spd_err",      /* 29 */
+   "e_spd_err",      /* 30 */
+   "u_spd_err",      /* 31 */
+   "mag_cal_x",      /* 32 */
+   "mag_cal_y",      /* 33 */
+   "mag_cal_z",      /* 34 */
+   "pitch_err",      /* 35 */
+   "roll_err",       /* 36 */
+   "yaw_err",        /* 37 */
+   "pitch_rate_err", /* 38 */
+   "roll_rate_err",  /* 39 */
+   "yaw_rate_err"    /* 40 */
 };
 
 
@@ -72,8 +99,6 @@ void blackbox_init(void)
    pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
    ASSERT_NOT_NULL(pk);
    msgpack_pack_array(pk, ARRAY_SIZE(blackbox_spec));
-   
-   ASSERT_NOT_NULL(blackbox_spec);
    FOR_EACH(i, blackbox_spec)
    {
       size_t len = strlen(blackbox_spec[i]);
@@ -97,7 +122,9 @@ void blackbox_record(const float dt, /* sensor inputs ... */
                const float u_pos_err,
                const vec2_t *ne_spd_err, /* NEU speed errors ... */
                const float u_spd_err,
-               const vec3_t *mag_normal)
+               const vec3_t *mag_normal,
+               const vec3_t *pry_err,
+               const vec3_t *pry_rate_err)
 {
    msgpack_sbuffer_clear(msgpack_buf);
    msgpack_pack_array(pk, ARRAY_SIZE(blackbox_spec));
@@ -117,6 +144,8 @@ void blackbox_record(const float dt, /* sensor inputs ... */
    PACKFV(ne_spd_err->ve, 2);
    PACKF(u_spd_err);
    PACKFV(mag_normal->ve, 3);
+   PACKFV(pry_err->ve, 3);
+   PACKFV(pry_rate_err->ve, 3);
    scl_copy_send_dynamic(blackbox_socket, msgpack_buf->data, msgpack_buf->size);
 }
 
