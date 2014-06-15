@@ -29,28 +29,52 @@
 #include <scl.h>
 #include <pilot.pb-c.h>
 #include <periodic_thread.h>
+#include <msgpack.h>
 
-#include "mon.h"
 
 #define THREAD_PRIORITY 96
 
+
 static pthread_mutexattr_t mutexattr;
 static pthread_mutex_t mutex;
+static float n = 0.0f;
+static float e = 0.0f;
+static float u_ground = 0.0f;
+static float u = 0.0f;
+static float y = 0.0f;
+static float n_err = 0.0f;
+static float e_err = 0.0f;
+static float u_err = 0.0f;
+static float y_err = 0.0f;
 static void *mon_socket = NULL;
-static MonData mon_data = MON_DATA__INIT;
 static periodic_thread_t emitter_thread;
+static msgpack_sbuffer *msgpack_buf = NULL;
+static msgpack_packer *pk = NULL;
 
 
 PERIODIC_THREAD_BEGIN(mon_emitter)
 {
    PERIODIC_THREAD_LOOP_BEGIN
    {
-      MonData _mon_data;
-      pthread_mutex_lock(&mutex);
-      memcpy(&_mon_data, &mon_data, sizeof(MonData));
-      pthread_mutex_unlock(&mutex);
+      msgpack_sbuffer_clear(msgpack_buf);
+      msgpack_pack_array(pk, 9);
 
-      SCL_PACK_AND_SEND_DYNAMIC(mon_socket, mon_data, _mon_data);
+      pthread_mutex_lock(&mutex);
+      PACKF(n); /* 0 */
+      PACKF(e); /* 1 */
+      PACKF(u_ground); /* 2 */
+      PACKF(u); /* 3 */
+      PACKF(y); /* 4 */
+      PACKF(n_err); /* 5 */
+      PACKF(e_err); /* 6 */
+      PACKF(u_err); /* 7 */
+      PACKF(y_err); /* 8 */
+      pthread_mutex_unlock(&mutex);
+      
+      //if (n != 0.0f && e != 0.0f)
+      {
+         scl_copy_send_dynamic(mon_socket, msgpack_buf->data, msgpack_buf->size);
+      }
    }
    PERIODIC_THREAD_LOOP_END
 }
@@ -59,6 +83,8 @@ PERIODIC_THREAD_END
 
 void mon_init(void)
 {
+   ASSERT_ONCE();
+
    /* open monitoring socket: */
    mon_socket = scl_get_socket("ap_mon");
    ASSERT_NOT_NULL(mon_socket);
@@ -70,17 +96,31 @@ void mon_init(void)
    pthread_mutexattr_init(&mutexattr);
    pthread_mutexattr_setprotocol(&mutexattr, PTHREAD_PRIO_INHERIT);
    pthread_mutex_init(&mutex, &mutexattr);
+
+   /* init msgpack buffer: */
+   ASSERT_NULL(msgpack_buf);
+   msgpack_buf = msgpack_sbuffer_new();
+   ASSERT_NOT_NULL(msgpack_buf);
+   ASSERT_NULL(pk);
+   pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
+
    periodic_thread_start(&emitter_thread, mon_emitter, "mon_thread", THREAD_PRIORITY, period, NULL);
 }
 
 
-void mon_data_set(float x_err, float y_err, float z_err, float yaw_err)
+void mon_data_set(float _n, float _e, float _u_ground, float _u, float _y,
+                  float _n_err, float _e_err, float _u_err, float _y_err)
 {
    pthread_mutex_lock(&mutex);
-   mon_data.x_err = x_err;
-   mon_data.y_err = y_err;
-   mon_data.z_err = z_err;
-   mon_data.yaw_err = yaw_err;
+   n = _n;
+   e = _e;
+   u_ground = _u_ground;
+   u = _u;
+   y = _y;
+   n_err = _n_err;
+   e_err = _e_err;
+   u_err = _u_err;
+   y_err = _y_err;
    pthread_mutex_unlock(&mutex);
 }
 

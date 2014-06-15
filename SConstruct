@@ -138,7 +138,7 @@ remote_bin = env.Program(remote_dir + 'service/remote', remote_src, LIBS = ['m',
 Requires(remote_bin, common_libs)
 
 # HLFM:
-hlfm_dir = 'hlfm/'
-hlfm_pb_dir = hlfm_dir + 'shared/'
-hlfm_pb_lib = make_proto_lib(hlfm_pb_dir, 'hlfm_pb')
+icarus_dir = 'icarus/'
+icarus_pb_dir = icarus_dir + 'shared/'
+icarus_pb_lib = make_proto_lib(icarus_pb_dir, 'icarus_pb')
 

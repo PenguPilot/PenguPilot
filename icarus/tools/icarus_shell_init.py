@@ -22,7 +22,7 @@ atexit.register(_save_history)
 
 
 # define
-_socket = generate_map('icarus_shell')['ctrl']
+_socket = generate_map('mission')['icarus_ctrl']
 _client = ICARUS_Client(_socket)
 i = ICARUS_MissionFactory()
 

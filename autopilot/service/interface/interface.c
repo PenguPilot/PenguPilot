@@ -37,7 +37,7 @@
 #include "interface.h"
 #include "../util/logger/logger.h"
 #include "../flight_logic/auto_logic.h"
-#include "../control/position/navi.h"
+#include "../control/control.h"
 #include "../main_loop/main_loop.h"
 
 #define THREAD_NAME     "interface"
@@ -186,6 +186,7 @@ SIMPLE_THREAD_BEGIN(thread_func)
 
             case REQUEST_TYPE__RESET_CTRL:
                LOG(LL_DEBUG, "RESET_CTRL");
+               control_reset();
                break;
             
             case REQUEST_TYPE__GET_PARAMS:

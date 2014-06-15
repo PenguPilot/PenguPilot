@@ -56,6 +56,7 @@
 #include "../hardware/util/calibration.h"
 #include "../hardware/util/gps_util.h"
 #include "../hardware/util/mag_decl.h"
+#include "../control/control.h"
 #include "../control/position/navi.h"
 #include "../control/position/att_ctrl.h"
 #include "../control/position/u_ctrl.h"
@@ -473,14 +474,8 @@ void main_step(const float dt,
 
    /* reset controllers, if motors are not controllable: */
    if (!motors_controllable())
-   {
-      navi_reset();
-      ne_speed_ctrl_reset();
-      u_ctrl_reset();
-      att_ctrl_reset();
-      piid_reset();
-   }
- 
+      control_reset();
+
    /* handle special cases for motor setpoints: */
    if (motors_starting())
       FOR_N(i, platform.n_motors) setpoints[i] = platform.ac.min;
@@ -493,8 +488,12 @@ void main_step(const float dt,
       platform_write_motors(setpoints);
    }
 
-   /* set monitoring data: */
-   mon_data_set(ne_pos_err.x, ne_pos_err.y, u_pos_err, yaw_err);
+   /* set monitoring data, if we have a valid fix: */
+   if (sensor_status & GPS_VALID)
+   {
+      mon_data_set(pos_est.ne_pos.x, pos_est.ne_pos.y, pos_est.ultra_u.pos, pos_est.baro_u.pos, euler.yaw,
+                ne_pos_err.x, ne_pos_err.y, u_pos_err, yaw_err);
+   }
 
 out:
    EVERY_N_TIMES(bb_rate, blackbox_record(dt, marg_data, gps_data, ultra, baro, voltage, current, channels, sensor_status, /* sensor inputs */

@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Monitoring Publisher Interface
+ Combined Control Implementation
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -24,17 +24,21 @@
  GNU General Public License for more details. */
 
 
-#ifndef __MON_H__
-#define __MON_H__
+#include "control.h"
+
+#include "position/navi.h"
+#include "speed/ne_speed.h"
+#include "position/u_ctrl.h"
+#include "position/att_ctrl.h"
+#include "speed/piid.h"
 
 
-/* initialize monitor */
-void mon_init(void);
-
-/* set monitor data */
-void mon_data_set(float n, float e, float u_ground, float u, float y,
-                  float n_err, float e_err, float u_err, float y_err);
-
-
-#endif /* __MON_H__ */
+void control_reset()
+{
+   navi_reset();
+   ne_speed_ctrl_reset();
+   u_ctrl_reset();
+   att_ctrl_reset();
+   piid_reset();
+}
 
