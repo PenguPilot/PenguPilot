@@ -60,6 +60,7 @@ static tsfloat_t pitch_roll_angle_max;
 static tsfloat_t vert_speed_max;
 static tsfloat_t horiz_speed_max;
 static tsfloat_t gps_deadzone;
+static tsfloat_t rates_deadzone;
 static tsfloat_t gas_deadzone;
 static tsfloat_t yaw_speed_max;
 static tsfloat_t gas_acc_max;
@@ -82,6 +83,7 @@ void man_logic_init(void)
       {"vert_speed_max", &vert_speed_max},
       {"horiz_speed_max", &horiz_speed_max},
       {"gps_deadzone", &gps_deadzone},
+      {"rates_deadzone", &rates_deadzone},
       {"gas_deadzone", &gas_deadzone},
       {"yaw_speed_max", &yaw_speed_max},
       {"gas_acc_max", &gas_acc_max},
@@ -207,7 +209,7 @@ static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t
 
 void set_att_angles(float pitch, float roll)
 {
-   float dz = tsfloat_get(&gps_deadzone);
+   float dz = tsfloat_get(&rates_deadzone);
    float angle_max = deg2rad(tsfloat_get(&pitch_roll_angle_max));
    vec2_t pr_sp;
    vec2_set(&pr_sp, angle_max * pitch, angle_max * roll);
