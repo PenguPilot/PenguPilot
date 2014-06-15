@@ -52,7 +52,6 @@ static tsfloat_t ortho_p;
 
 /* vectors for use in navigation algorithm: */
 static vec2_t pos_err_sum;
-static vec2_t dest_pos;
 static vec2_t prev_dest_pos;
 
 
@@ -109,7 +108,6 @@ void navi_init(void)
    opcd_params_apply("controllers.navigation.", params);
    
    vec2_init(&pos_err_sum);
-   vec2_init(&dest_pos);
    vec2_init(&prev_dest_pos);
 
    tsfloat_init(&travel_speed, 0.0f);
@@ -144,21 +142,18 @@ int navi_set_travel_speed(float speed)
 /*
  * executes navigation control subsystem
  */
-void navi_run(vec2_t *speed_setpoint, vec2_t *err, const vec2_t *pos_sp, const vec2_t *pos, const float dt)
+void navi_run(vec2_t *speed_setpoint, vec2_t *err, const vec2_t *dest_pos, const vec2_t *pos, const float dt)
 {
    /* set-up input vectors: */
-   if (!vec_equal(&dest_pos, &prev_dest_pos))
-   {
-      vec_copy(&prev_dest_pos, &dest_pos);
-      vec_copy(&dest_pos, pos_sp);
-   }
-   vec2_sub(err, &dest_pos, pos);
+   if (!vec_equal(dest_pos, &prev_dest_pos))
+      vec_copy(&prev_dest_pos, dest_pos);
+   vec2_sub(err, dest_pos, pos);
 
    /* add correction for inter-setpoint trajectory */
    vec2_t ortho_thrust;
    vec2_init(&ortho_thrust);
-   if ((prev_dest_pos.e == dest_pos.e)
-       && (prev_dest_pos.n == dest_pos.n))
+   if ((prev_dest_pos.e == dest_pos->e)
+       && (prev_dest_pos.n == dest_pos->n))
    {
       vec2_set(&ortho_thrust, 0.0, 0.0);
    }
@@ -166,7 +161,7 @@ void navi_run(vec2_t *speed_setpoint, vec2_t *err, const vec2_t *pos_sp, const v
    {
       vec2_t setpoints_dir;
       vec2_init(&setpoints_dir);
-      vec2_sub(&setpoints_dir, &dest_pos, &prev_dest_pos);
+      vec2_sub(&setpoints_dir, dest_pos, &prev_dest_pos);
       vec2_t ortho_vec;
       vec2_init(&ortho_vec);
       vec2_ortho_right(&ortho_vec, &setpoints_dir);
@@ -178,8 +173,8 @@ void navi_run(vec2_t *speed_setpoint, vec2_t *err, const vec2_t *pos_sp, const v
 
    /* calculate speed setpoint vector: */
    vec2_t virt_dest_pos;
-   vec2_set(&virt_dest_pos, dest_pos.x, dest_pos.y);
-   vec2_add(&virt_dest_pos, &dest_pos, &pos_err_sum);
+   vec2_set(&virt_dest_pos, dest_pos->x, dest_pos->y);
+   vec2_add(&virt_dest_pos, dest_pos, &pos_err_sum);
    vec2_add(&virt_dest_pos, &virt_dest_pos, &ortho_thrust);
    vec2_t virt_pos_err;
    vec2_init(&virt_pos_err);

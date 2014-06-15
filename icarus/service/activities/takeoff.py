@@ -27,7 +27,7 @@
 
 from pilot_pb2 import *
 from activity import Activity, StabMixIn
-
+from time import sleep
 from logging import debug as log_debug, info as log_info, warning as log_warn, error as log_err
 
 
@@ -81,6 +81,5 @@ class TakeoffActivity(Activity, StabMixIn):
          sleep(0.1)
       pilot.set_ctrl_param(POS_U_GROUND, u_setpoint)
       self.stabilize()
-      print 'done'
       self.fsm.handle('done')
 

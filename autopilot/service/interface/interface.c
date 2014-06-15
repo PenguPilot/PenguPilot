@@ -62,8 +62,6 @@ void interface_lock(bool val)
 }
 
 
-
-
 int set_ctrl_param(CtrlParam param, float val)
 {
    int status = 0;
