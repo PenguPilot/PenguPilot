@@ -206,7 +206,7 @@ void main_init(int argc, char *argv[])
    cal_init(&gyro_cal, 3, 1000);
 
    cal_ahrs_init();
-   flight_state_init(50, 150, 4.0);
+   flight_state_init(1024, 150, 6.0);
    
    piid_init(REALTIME_PERIOD);
 
@@ -483,11 +483,11 @@ void main_step(const float dt,
    /* write motors: */
    if (!override_hw)
    {
-      //platform_write_motors(setpoints);
+      platform_write_motors(setpoints);
    }
 
    /* set monitoring data, if we have a valid fix: */
-   //if (sensor_status & GPS_VALID)
+   if (sensor_status & GPS_VALID)
    {
       mon_data_set(pos_est.ne_pos.x, pos_est.ne_pos.y, pos_est.ultra_u.pos, pos_est.baro_u.pos, euler.yaw,
                 ne_pos_err.x, ne_pos_err.y, u_pos_err, yaw_err);
