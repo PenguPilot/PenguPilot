@@ -34,9 +34,6 @@ from logging import debug as log_debug, info as log_info, warning as log_warn, e
 
 class TakeoffActivity(Activity, StabMixIn):
 
-   LOW_ALT_SETPOINT = -10.0
-   STD_HOVERING_ALT = 3.0
-
 
    def __init__(self, fsm, icarus):
       Activity.__init__(self, icarus)
@@ -51,26 +48,17 @@ class TakeoffActivity(Activity, StabMixIn):
    def run(self):
       arg = self.icarus.arg
       pilot = self.icarus.pilot
-      mon_data = self.icarus.mon_data
-      params = self.icarus.pilot.params
 
       if arg.HasField('move_data'):
-         z_setpoint = arg.move_data.z
-         if arg.HasField('rel'):
-            log_warn('rel field ignored for take-off')
-         if arg.HasField('glob'):
-            if not arg.glob:
-               if z_setpoint < pilot.params.start_alt + mon_data.z + 3.0:
-                  msg = 'absolute z setpoint %f is below current altitude' % z_setpoint
-                  log_err(msg)
-                  raise ValueError(msg)
-               log_info('taking off to absolute altitude %f' % z_setpoint)
-            else:
-               z_setpoint = mon_data.z + z_setpoint
-               log_info('taking off to relative altitude %f' % z_setpoint)
+         u_max = 3.5
+         if arg.move_data.z > u_max:
+            u_setpoint = u_max
+         else:
+            u_setpoint = arg.move_data.z
       else:
-         z_setpoint = self.STD_HOVERING_ALT
+         u_setpoint = 1.0
 
+      u_setpoint = 1.0
       pilot.start_motors()
 
       if self.canceled:
@@ -80,13 +68,19 @@ class TakeoffActivity(Activity, StabMixIn):
 
       # "point of no return":
       # reset controllers:
-      pilot.set_ctrl_param(POS_YAW, mon_data.yaw)
-      pilot.set_ctrl_param(POS_E, mon_data.e)
-      pilot.set_ctrl_param(POS_N, mon_data.n)
+      pilot.set_ctrl_param(POS_N, pilot.mon[0])
+      pilot.set_ctrl_param(POS_E, pilot.mon[1])
+      pilot.set_ctrl_param(POS_YAW, pilot.mon[4])
       pilot.reset_ctrl()
 
       # set new altitude setpoint and stabilize:
-      pilot.set_ctrl_param(POS_U, u_setpoint)
+      u_setp = -1.0
+      while u_setp < u_setpoint:
+         pilot.set_ctrl_param(POS_U_GROUND, u_setp)
+         u_setp += 0.05
+         sleep(0.1)
+      pilot.set_ctrl_param(POS_U_GROUND, u_setpoint)
       self.stabilize()
+      print 'done'
       self.fsm.handle('done')
 

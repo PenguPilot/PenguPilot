@@ -1,5 +1,4 @@
-"""
-  ___________________________________________________
+/*___________________________________________________
  |  _____                       _____ _ _       _    |
  | |  __ \                     |  __ (_) |     | |   |
  | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
@@ -9,10 +8,8 @@
  |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
- 
- ICARUS State Emitter
- - translates flight_sm states to icarus StateUpdate messages
- - sends icarus StateUpdate messages using the given socket
+  
+ Combined Control Interface
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -24,24 +21,16 @@
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. """
+ GNU General Public License for more details. */
 
 
-from icarus_pb2 import StateUpdate
+#ifndef __CONTROL_H__
+#define __CONTROL_H__
 
 
-class StateEmitter:
+/* resets all integrative controller components */
+void control_reset(void);
 
-   def __init__(self, socket):
-      self._socket = socket
 
-   def send(self, state):
-      sm = StateUpdate()
-      sm.state = {'standing': STANDING,
-                  'taking_off': TAKING_OFF,
-                  'hovering': HOVERING,
-                  'landing': LANDING,
-                  'moving': MOVING,
-                  'stopping': STOPPING}[state]
-      self._socket.send(sm.SerializeToString())
+#endif /* __CONTROL_H__ */
 

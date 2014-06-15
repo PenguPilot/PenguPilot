@@ -49,15 +49,14 @@ class Activity(Thread):
 
 class StabMixIn:
    
-   LAT_STAB_EPSILON = 3.0
-   ALT_STAB_EPSILON = 10.4
-   YAW_STAB_EPSILON = 100.3 # TODO: revert
+   LAT_STAB_EPSILON = 0.5
+   ALT_STAB_EPSILON = 0.5
+   YAW_STAB_EPSILON = 0.3 # TODO: revert
    POLLING_TIMEOUT = 0.1
    STAB_COUNT = 20
 
    def stabilize(self):
       pilot = self.icarus.pilot
-      mon_data = self.icarus.mon_data
       count = 0
       while True:
          sleep(self.POLLING_TIMEOUT)
@@ -67,9 +66,9 @@ class StabMixIn:
          if self.canceled:
             return
          # read error values from pilot:
-         x_err, y_err = mon_data.x_err, mon_data.y_err
-         alt_err = mon_data.z_err
-         yaw_err = mon_data.yaw_err
+         x_err, y_err = pilot.mon[5], pilot.mon[6]
+         alt_err = pilot.mon[7]
+         yaw_err = pilot.mon[8]
          # reset counter if one of the errors becomes too huge:
          if abs(alt_err) > self.ALT_STAB_EPSILON:
             print 'alt instable', alt_err, count
