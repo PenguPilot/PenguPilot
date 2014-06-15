@@ -62,7 +62,7 @@ void gps_util_update(gps_rel_data_t *out, const gps_data_t *in)
       gps_to_meters(&out->de, &out->dn, start_lat, start_lon, in->lat, in->lon);
    }
 
-   float speed_m = in->speed * 0.51444444444f; /* knots to meter/s */
+   float speed_m = in->speed / 3.6; /* km/h to m/s */
    float alpha = deg2rad(in->course);
    out->speed_n = speed_m * cos(alpha);
    out->speed_e = speed_m * sin(alpha);
