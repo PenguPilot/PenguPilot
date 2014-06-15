@@ -125,6 +125,7 @@ autopilot:
       vert_speed_max: 1.0
       horiz_speed_max: 2.0 # maximal horizontal speed
       gps_deadzone: 0.05 # if magnitude of gps speed sticks are lower than this value, gps position is locked
+      rates_deadzone: 0.01 # desired rate is 0 in the deadzone
       gas_deadzone: 0.15 # if magnitude of centered gas stick is lower than this value, altitude is locked
       gas_acc_max: 20.0 # maximum positive/negative acceleration in m/s^2
       sticks_rotation: 0.0 # 0 = "+" mode, 90 = "x mode"
