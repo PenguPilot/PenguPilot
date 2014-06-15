@@ -10,6 +10,8 @@
 
 
 from icarus_pb2 import *
+from threading import Thread, Event
+from time import sleep
 
 
 class ICARUS_MissionFactory:
@@ -330,7 +332,7 @@ class ICARUS_MissionFactory:
 
 
 
-# ICARUS client interface
+# CARUS client interface
 # sends ICARUS commands and reads status
 
 
@@ -359,4 +361,66 @@ class ICARUS_Client:
       if rep.status != 0:
          raise ICARUS_ClientError(rep.status, rep.message)
       return rep
+
+
+
+
+class StateEventMap(Thread):
+
+   '''
+   reads state updates and
+   publishes them using the "events" dictionary.
+   clients can use emitter.event[name].clear/wait in order
+   to wait for an event
+   '''
+
+   def __init__(self, socket):
+      Thread.__init__(self)
+      self._socket = socket
+      self.daemon = True
+      self.events = {}
+      states = ['standing', 'stopping', 'taking_off', 'moving', 'hovering', 'landing']
+      for state in states:
+         self.events[state] = Event()
+
+   def run(self):
+      while True:
+         try:
+            state = self._socket.recv()
+            self.events[state].set()
+         except:
+            sleep(1)
+
+
+
+class ICARUS_SynClient:
+
+   '''
+   synchronous icarus command interface client
+   sends commands to icarus and waits until completion
+   '''
+
+   def __init__(self, ctrl_socket, state_socket):
+      self.interface = ICARUS_Client(ctrl_socket)
+      self.map = StateEventMap(state_socket)
+      self.map.start()
+
+   def execute(self, req):
+      type = req.type
+      if type == TAKEOFF:
+         self.map.events['hovering'].clear()
+         self.interface.execute(req)
+         self.map.events['hovering'].wait()
+      elif type == LAND:
+         self.map.events['standing'].clear()
+         self.interface.execute(req)
+         self.map.events['standing'].wait()
+      elif type == MOVE:
+         self.map.events['hovering'].clear()
+         self.interface.execute(req)
+         self.map.events['hovering'].wait()
+      elif type == ROT:
+         self.interface.execute(req)
+      else:
+         print 'unknown req type', type
 

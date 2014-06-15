@@ -383,13 +383,11 @@ void main_step(const float dt,
       a_u = cm_u_sp();
  
    /* execute north/east navigation and/or read speed vector input: */
-   if (1) //cm_att_is_gps_pos())
+   if (cm_att_is_gps_pos())
    {
       vec2_t pos_sp;
       vec2_init(&pos_sp);
       cm_att_sp(&pos_sp);
-      pos_sp.x = 0;
-      pos_sp.y = 0;
       navi_run(&ne_speed_sp, &ne_pos_err, &pos_sp, &pos_est.ne_pos, dt);
    }
    else if (cm_att_is_gps_spd())
@@ -485,11 +483,11 @@ void main_step(const float dt,
    /* write motors: */
    if (!override_hw)
    {
-      platform_write_motors(setpoints);
+      //platform_write_motors(setpoints);
    }
 
    /* set monitoring data, if we have a valid fix: */
-   if (sensor_status & GPS_VALID)
+   //if (sensor_status & GPS_VALID)
    {
       mon_data_set(pos_est.ne_pos.x, pos_est.ne_pos.y, pos_est.ultra_u.pos, pos_est.baro_u.pos, euler.yaw,
                 ne_pos_err.x, ne_pos_err.y, u_pos_err, yaw_err);

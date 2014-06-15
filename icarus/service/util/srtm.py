@@ -36,8 +36,8 @@ import os
 
 class SrtmElevMap:
 
-   def __init__(self, path):
-      self.path = path
+   def __init__(self):
+      self.path = os.path.join(os.path.dirname(__file__), '')
       self.cache = {}
 
 
@@ -80,11 +80,4 @@ class SrtmElevMap:
 
       # return elevation:
       return ds.ReadAsArray(int(pixel[0]), int(pixel[1]), 1, 1).ravel()[0]
-
-
-from time import sleep
-m = SrtmElevMap('./')
-while True:
-   sleep(0.01)
-   print m.lookup((10.9142, 50.6872))
 

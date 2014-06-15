@@ -98,31 +98,28 @@ class MoveActivity(Activity, StabMixIn):
             else:
                coord[2] = prev_setp_rel[2]
       else:
-         print 'local'
          # local position update:
          for i in xrange(3):
             name = 'p%d' % i
             if move_data.HasField(name):
                if arg.rel:
+                  print 'local, rel'
                   # relative local coordinate:
                   coord[i] = prev_setp_rel[i] + getattr(move_data, name)
                else:
+                  print 'local, abs'
                   # absolute local coordinate:
                   coord[i] = getattr(move_data, name)
             else:
                coord[i] = prev_setp_rel[i]
       
-      if arg.HasField('speed'):
-         pilot.set_ctrl_param(SPEED_XY, arg.speed)
-         #pilot.set_ctrl_param(SPEED_Z, self.Z_SPEED_MAX)
-      
-
       print 'coord output:', coord
       self.icarus.setpoints = coord
       # set position
       pilot.set_ctrl_param(POS_E, coord[0])
       pilot.set_ctrl_param(POS_N, coord[1])
       
+      """
       # did the altitude change?:
       if coord[2] != prev_setp_rel[2]:
          # set up linear z interpolation between start and destination points:
@@ -144,7 +141,8 @@ class MoveActivity(Activity, StabMixIn):
             if z < srtm_alt + self.SRTM_SAFETY_ALT:
                z = srtm_alt + self.SRTM_SAFETY_ALT
             pilot.set_ctrl_param(POS_Z, z)
-      
+      """
+
       self.stabilize()
       if not self.canceled:
          fsm.handle('done')
