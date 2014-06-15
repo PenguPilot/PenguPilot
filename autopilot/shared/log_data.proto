@@ -32,5 +32,5 @@ message log_data
    required uint32 details = 2;
    required string file = 3;
    required uint32 line = 4;
-   required string message = 5;
+   required string msg = 5;
 }
