@@ -71,7 +71,7 @@ static bool vert_pos_locked = false;
 static bool horiz_pos_locked = true;
 static int rc_inval_count = 0;
 static float yaw_pos_sp = 0.0f;
-static float pos = -1.0;
+static float u_pos_sp = -1.0;
 
 
 void man_logic_init(void)
@@ -111,11 +111,13 @@ static man_mode_t channel_to_man_mode(float sw)
 }
 
 
-static void handle_mode_update(man_mode_t mode)
+static void handle_mode_update(man_mode_t mode, float baro_u_pos)
 {
    if (last_mode != mode)
    {
       LOG(LL_INFO, "switching manual mode to: %d", mode);
+      u_ctrl_reset();
+      u_pos_sp = baro_u_pos;
       last_mode = mode;   
    }
 }
@@ -155,25 +157,23 @@ static float stick_dz(float g, float d)
 }
 
 
-
-static void set_vertical_spd_or_pos(float gas_stick, float baro_u_pos, float ultra_u_pos)
+static void set_vertical_spd_or_pos(float gas_stick, float baro_u_pos, float ultra_u_pos, float dt)
 {
    float dz = tsfloat_get(&gas_deadzone);
    float vmax = tsfloat_get(&vert_speed_max);
-   float inc = stick_dz(gas_stick, dz) * vmax * 0.005;
-   if (   !(pos < -1.0f && inc < 0.0f)
-       && !(pos > 3.5f && inc > 0.0f))
+   float inc = stick_dz(gas_stick, dz) * vmax * dt;
+   if (   !(u_pos_sp < -1.0f && inc < 0.0f)
+       && !(u_pos_sp > 3.5f && inc > 0.0f))
    {
-      pos += stick_dz(gas_stick, dz) * vmax * 0.005;
+      u_pos_sp += stick_dz(gas_stick, dz) * vmax * dt;
    }
-   cm_u_set_ultra_pos(pos);
-   EVERY_N_TIMES(100, LOG(LL_INFO, "u_pos_sp: %f, u_pos: %f", pos, ultra_u_pos));
+   cm_u_set_ultra_pos(u_pos_sp);
+   EVERY_N_TIMES(100, LOG(LL_INFO, "u_pos_sp: %f, u_pos: %f", u_pos_sp, ultra_u_pos));
 }
 
 
 static void set_pitch_roll_rates(float pitch, float roll)
 {
-   float dz = tsfloat_get(&gps_deadzone);
    float rate_max = deg2rad(tsfloat_get(&pitch_roll_speed_max));
    vec2_t pr_sp;
    vec2_set(&pr_sp, rate_max * pitch, rate_max * roll);
@@ -198,7 +198,6 @@ static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t
    }
    else if (!horiz_pos_locked)
    {
-      LOG(LL_INFO, "horizontal position lock at relative N: %fm, E: %fm", ne_gps_pos->x, ne_gps_pos->y);
       /* lock GPS position until next sticks activity: */
       navi_reset();
       horiz_pos_locked = true;
@@ -209,7 +208,6 @@ static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t
 
 void set_att_angles(float pitch, float roll)
 {
-   float dz = tsfloat_get(&rates_deadzone);
    float angle_max = deg2rad(tsfloat_get(&pitch_roll_angle_max));
    vec2_t pr_sp;
    vec2_set(&pr_sp, angle_max * pitch, angle_max * roll);
@@ -288,7 +286,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       /* lost gps fix: switch to attitude control */
       man_mode = MAN_RELAXED;
    }
-   handle_mode_update(man_mode);
+   handle_mode_update(man_mode, ultra_u_pos);
 
    if (ultra_u_pos < 0.3)
    {
@@ -317,14 +315,14 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       case MAN_RELAXED:
       {
          set_att_angles(pitch, roll);
-         set_vertical_spd_or_pos(gas_stick - 0.5, baro_u_pos, ultra_u_pos);
+         set_vertical_spd_or_pos(gas_stick - 0.5, baro_u_pos, ultra_u_pos, dt);
          break;
       }
 
       case MAN_NOVICE:
       {
          set_horizontal_spd_or_pos(pitch, roll, yaw, ne_gps_pos, ultra_u_pos);
-         set_vertical_spd_or_pos(gas_stick - 0.5, baro_u_pos, ultra_u_pos);
+         set_vertical_spd_or_pos(gas_stick - 0.5, baro_u_pos, ultra_u_pos, dt);
          break;
       }
    }
