@@ -30,6 +30,7 @@
 
 #include "u_ctrl.h"
 #include "../util/pid.h"
+#include "../../filters/filter.h"
 
 
 static pid_controller_t ctrl;
@@ -39,16 +40,22 @@ static tsfloat_t pos_p;
 static tsfloat_t pos_d;
 static tsfloat_t pos_i;
 static tsfloat_t pos_imax;
+static tsfloat_t lpfg;
+static Filter1 filter;
 
 
 float u_ctrl_step(float *err, const float setpoint, const float pos, const float speed, const float dt)
-{   
+{
+   filter1_lp_update_coeff(&filter, tsfloat_get(&lpfg), dt);
    *err = setpoint - pos;
-   return pid_control(&ctrl, *err, speed, dt);
+   float raw_ctrl = pid_control(&ctrl, *err, speed, dt);
+   float filt_ctrl = 0.0f;
+   filter1_run(&filter, &raw_ctrl, &filt_ctrl);
+   return filt_ctrl;
 }
 
 
-void u_ctrl_init(void)
+void u_ctrl_init(const float dt)
 {
    ASSERT_ONCE();
    
@@ -58,11 +65,13 @@ void u_ctrl_init(void)
       {"d", &pos_d},
       {"i", &pos_i},
       {"imax", &pos_imax},
+      {"lpfg", &lpfg},
       OPCD_PARAMS_END
    };
    opcd_params_apply("controllers.u_pos.", params);
 
    pid_init(&ctrl, &pos_p, &pos_i, &pos_d, &pos_imax);
+   filter1_lp_init(&filter, tsfloat_get(&lpfg), dt, 1);
 }
 
 

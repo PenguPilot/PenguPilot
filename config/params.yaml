@@ -169,6 +169,7 @@ autopilot:
          i: 0.1
          imax: 5.0
          p: 10.0
+         lpfg: 10.0
 
       yaw:
          d: 0.1

@@ -42,7 +42,7 @@ static tsfloat_t setp_e;
 
 /* up direction in meters: */
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-static float setp_u = -10.0;
+static float setp_u = -1.0;
 static bool mode_is_ground = true;
 static tsint_t motors_enabled;
 
@@ -96,7 +96,7 @@ bool auto_logic_run(bool *hard_off, bool is_full_auto, uint16_t sensor_status, b
    float pitch = channels[CH_PITCH];
    float roll = channels[CH_ROLL];
    float sw_l = channels[CH_SWITCH_L];
-   if (!is_full_auto && rc_valid && !is_full_auto && sqrt(pitch * pitch + roll * roll) > 0.1)
+   if (!is_full_auto && rc_valid && sqrt(pitch * pitch + roll * roll) > 0.1)
       hyst_gps_override = 1.0;
    hyst_gps_override -= 0.006;   
 

@@ -56,15 +56,8 @@ static drotek_9150_t marg;
 
 static int read_marg(marg_data_t *marg_data)
 {
-   int ret = drotek_9150_read(marg_data, &marg);
-   /*quat_t q;
-   quat_init_axis(&q, 0, 0, 1, -M_PI / 2.0f);
-   quat_rot_vec(&marg_data->acc, &marg_data->acc, &q);
-   quat_rot_vec(&marg_data->gyro, &marg_data->gyro, &q);
-   quat_rot_vec(&marg_data->mag, &marg_data->mag, &q);*/
-   return ret;
+   return drotek_9150_read(marg_data, &marg);
 }
-
 
 
 int pi_quad_init(platform_t *plat, int override_hw)
@@ -143,7 +136,7 @@ int pi_quad_init(platform_t *plat, int override_hw)
       LOG(LL_INFO, "initializing motors via afroi2c bridge");
       THROW_ON_ERR(afroi2c_pwms_init(&i2c_bus, motors_map, N_MOTORS));
       plat->write_motors = afroi2c_pwms_write;
-      ac_init(&plat->ac, 0.1f, 0.7f, 12.0f, 17.0f, c, N_MOTORS, force_to_esc_setup3, 0.0f);
+      ac_init(&plat->ac, 0.1f, 1.0f, 12.0f, 17.0f, c, N_MOTORS, force_to_esc_setup3, 0.0f);
    }
 
    LOG(LL_INFO, "pi_quadro platform initialized");

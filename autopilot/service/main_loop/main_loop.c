@@ -188,7 +188,7 @@ void main_init(int argc, char *argv[])
    ne_speed_ctrl_init(REALTIME_PERIOD);
    att_ctrl_init();
    yaw_ctrl_init();
-   u_ctrl_init();
+   u_ctrl_init(REALTIME_PERIOD);
    u_speed_init();
    navi_init();
 

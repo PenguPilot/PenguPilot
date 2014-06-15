@@ -32,8 +32,8 @@
 int freeimu_04_init(freeimu_04_t *freeimu, i2c_bus_t *bus)
 {
    THROW_BEGIN();
-   THROW_ON_ERR(mpu6050_init(&freeimu->mpu, bus, 0x68, MPU6050_DLPF_CFG_94_98Hz, MPU6050_FS_SEL_2000, MPU6050_AFS_SEL_8G));
-   //THROW_ON_ERR(hmc5883_init(&freeimu->hmc, bus));
+   THROW_ON_ERR(mpu6050_init(&freeimu->mpu, bus, 0x68, MPU6050_DLPF_CFG_94_98Hz, MPU6050_FS_SEL_1000, MPU6050_AFS_SEL_4G));
+   THROW_ON_ERR(hmc5883_init(&freeimu->hmc, bus));
    THROW_END();
 }
 
@@ -42,7 +42,7 @@ int freeimu_04_read(marg_data_t *data, freeimu_04_t *freeimu)
 {
    THROW_BEGIN();
    THROW_ON_ERR(mpu6050_read(&freeimu->mpu, &data->gyro, &data->acc, NULL));
-   //THROW_ON_ERR(hmc5883_read_mag(&data->mag, &freeimu->hmc));
+   THROW_ON_ERR(hmc5883_read_mag(&data->mag, &freeimu->hmc));
    THROW_END();
 }
 

@@ -146,7 +146,7 @@ int exynos_quad_init(platform_t *plat, int override_hw)
       LOG(LL_INFO, "initializing arduino bridge to motor drivers");
       THROW_ON_ERR(arduino_pwms_init());
       plat->write_motors = arduino_pwms_write;
-      ac_init(&plat->ac, 0.1f, 0.7f, 12.0f, 17.0f, c, 4, force_to_esc_setup3, 0.0f);
+      ac_init(&plat->ac, 0.1f, 1.0f, 12.0f, 17.0f, c, 4, force_to_esc_setup3, 0.0f);
    }
 
    LOG(LL_INFO, "exynos_quadro platform initialized");

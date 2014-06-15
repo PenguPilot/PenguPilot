@@ -36,7 +36,7 @@ static enum
    MODE_SAFE_AUTO,
    MODE_FULL_AUTO
 }
-flight_mode = MODE_MANUAL;
+flight_mode = MODE_FULL_AUTO;
 
 
 void flight_logic_init(void)
