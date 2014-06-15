@@ -94,24 +94,24 @@ autopilot:
       beta_step: 15.0
 
    cal:
-      acc_bias_x: 0.313252937548
-      acc_bias_y: 0.168026474259
-      acc_bias_z: 0.218608441262
-      acc_scale_x: 9.87794649866
-      acc_scale_y: 9.83300152686
-      acc_scale_z: 10.0003835985
-      mag_bias_x: 0.0498902542405
-      mag_bias_y: -0.0437473939547
-      mag_bias_z: 0.0159657398081
-      mag_scale_x: 0.361097461536
-      mag_scale_y: 0.40723533953
-      mag_scale_z: 0.428943700944
+      acc_bias_x: 0.0
+      acc_bias_y: 0.0
+      acc_bias_z: 0.0
+      acc_scale_x: 1.0
+      acc_scale_y: 1.0
+      acc_scale_z: 1.0
+      mag_bias_x: 0.0
+      mag_bias_y: 0.0
+      mag_bias_z: 0.0
+      mag_scale_x: 1.0
+      mag_scale_y: 1.0
+      mag_scale_z: 1.0
 
    cmc:
-      bias: 0.40000000596
-      scale_x: -0.03445416109912508
-      scale_y: 0.007504328769427603
-      scale_z: 0.02975504812236219
+      bias: 0.0
+      scale_x: 0.0
+      scale_y: 0.0
+      scale_z: 0.0
 
    inv_coupling:
       pitch_enabled: 1
@@ -152,11 +152,11 @@ autopilot:
          p: 3.0
 
       attitude:
-         d: 0.5
-         i: 0.0
-         i_max: 0.3
-         p: 8.0
-         pitch_bias: 0.0
+         p: 5.624432790068787
+         i: 0.009785412472046494
+         i_max: 1.0
+         d: 0.40432184982361397
+         pitch_bias: 2.0
          roll_bias: 0.0
          angles_max: 20.0 # maximal angle allowed in attitude control
 
@@ -166,18 +166,18 @@ autopilot:
          p: 2.0
       
       u_pos:
-         d: 5.0
-         i: 0.1
-         imax: 5.0
-         p: 10.0
+         d: 10.0
+         i: 0.5
+         imax: 10.0
+         p: 20.0
          lpfg: 10.0
 
       yaw:
-         d: 0.1
+         pid_lim: 5.0
+         p: 30.0
+         d: 0.0
          i: 0.01
          i_max: 0.5
-         p: 2.0
-         pid_lim: 1.0
 
       navigation:
          speed_min: 0.5
@@ -189,10 +189,10 @@ autopilot:
          pos_i: 0.015
          pos_i_max: 5.0
          ortho_p: 0.0
-   
+
    kalman_pos:
       baro_noise: 0.01
-      ultra_noise: 0.02
+      ultra_noise: 0.001
       process_noise: 1.0e-6
       gps_noise: 0.001
       gps_speed_noise: 0.1

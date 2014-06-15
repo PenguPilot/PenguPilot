@@ -64,7 +64,7 @@ class ICARUS:
       log_config(filename = logfile, level = DEBUG,
                  format = '%(asctime)s - %(levelname)s: %(message)s')
       log_info('icarus starting up')
-      self.setpoints = [0.0, 0.0, 2.0] # x, y, z
+      self.setpoints = [0.0, 0.0, 1.0] # x, y, z
       self.flight_time = 0
       self.icarus_takeover = False
       self.emergency_land = False
