@@ -49,9 +49,7 @@ class Activity(Thread):
 
 class StabMixIn:
    
-   LAT_STAB_EPSILON = 0.5
-   ALT_STAB_EPSILON = 0.5
-   YAW_STAB_EPSILON = 0.3 # TODO: revert
+   STAB_EPSILON = 0.25
    POLLING_TIMEOUT = 0.1
    STAB_COUNT = 20
 
@@ -64,20 +62,17 @@ class StabMixIn:
          if count == self.STAB_COUNT:
             break
          if self.canceled:
+            print 'canceled'
             return
          # read error values from pilot:
-         x_err, y_err = pilot.mon[5], pilot.mon[6]
-         alt_err = pilot.mon[7]
-         yaw_err = pilot.mon[8]
+         n_err, e_err, u_err = pilot.mon[5], pilot.mon[6], pilot.mon[7]
+         print 'X:', n_err, e_err, u_err
          # reset counter if one of the errors becomes too huge:
-         if abs(alt_err) > self.ALT_STAB_EPSILON:
-            print 'alt instable', alt_err, count
+         if abs(u_err) > self.STAB_EPSILON:
+            print 'u instable', u_err, count
             count = 0
-         elif hypot(x_err, y_err) > self.LAT_STAB_EPSILON:
-            print 'gps instable', x_err, y_err, count
-            count = 0
-         elif abs(yaw_err) > self.YAW_STAB_EPSILON:
-            print 'yaw instable', yaw_err, count
+         if hypot(n_err, e_err) > self.STAB_EPSILON:
+            print 'n/e instable', n_err, e_err, count
             count = 0
       print 'stabilized'
 

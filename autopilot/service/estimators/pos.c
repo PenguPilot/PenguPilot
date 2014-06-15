@@ -176,6 +176,9 @@ void kalman_init(kalman_t *kf, tsfloat_t *q, tsfloat_t *r, float pos, float spee
    /* set up noise: */
    mat2x2_init(&kf->Q);
    mat2x2_init(&kf->R);
+   mat_scalar_mul(&kf->Q, &kf->I, tsfloat_get(kf->q));
+   mat_scalar_mul(&kf->R, &kf->I, tsfloat_get(kf->r));
+ 
    
    mat2x2_init(&kf->K);
 
