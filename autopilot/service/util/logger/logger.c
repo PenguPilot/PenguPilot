@@ -82,7 +82,7 @@ void logger_write(char *file, loglevel_t level, unsigned int line, char *format,
 
       /* set-up buffer for varg-message: */
       char message_buffer[1024];
-      log_data.message = message_buffer;
+      log_data.msg = message_buffer;
 
       /* fill log_data scalars #2: */
       va_list ap;
