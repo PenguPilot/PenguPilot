@@ -35,7 +35,7 @@ int drotek_9150_init(drotek_9150_t *drotek, i2c_bus_t *bus)
 {
    THROW_BEGIN();
    THROW_ON_ERR(mpu6050_init(&drotek->mpu, bus, 0x69,
-      MPU6050_DLPF_CFG_94_98Hz, MPU6050_FS_SEL_2000, MPU6050_AFS_SEL_8G));
+      MPU6050_DLPF_CFG_94_98Hz, MPU6050_FS_SEL_1000, MPU6050_AFS_SEL_4G));
    THROW_ON_ERR(ak8975c_reader_init(bus));
    THROW_END();
 }

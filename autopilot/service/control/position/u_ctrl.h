@@ -30,7 +30,7 @@
 
 float u_ctrl_step(float *err, const float setpoint, const float pos, const float speed, const float dt);
 
-void u_ctrl_init(void);
+void u_ctrl_init(const float dt);
 
 void u_ctrl_reset(void);
 

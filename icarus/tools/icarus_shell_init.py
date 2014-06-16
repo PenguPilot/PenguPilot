@@ -6,7 +6,7 @@ import readline
 import rlcompleter
 
 from scl import generate_map
-from icarus_interface import ICARUS_Client, ICARUS_MissionFactory
+from icarus_interface import ICARUS_SynClient, ICARUS_MissionFactory
 from misc import user_data_dir
 
 
@@ -22,8 +22,8 @@ atexit.register(_save_history)
 
 
 # define
-_socket = generate_map('icarus_shell')['ctrl']
-_client = ICARUS_Client(_socket)
+_map = generate_map('mission')
+_client = ICARUS_SynClient(_map['icarus_ctrl'], _map['icarus_state'])
 i = ICARUS_MissionFactory()
 
 def request(item):

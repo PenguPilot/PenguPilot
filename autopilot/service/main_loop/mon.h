@@ -31,8 +31,9 @@
 /* initialize monitor */
 void mon_init(void);
 
-/* set monitor data (thread-safe and non-blocking) */
-void mon_data_set(float x_err, float y_err, float z_err, float yaw_err);
+/* set monitor data */
+void mon_data_set(float n, float e, float u_ground, float u, float y,
+                  float n_err, float e_err, float u_err, float y_err);
 
 
 #endif /* __MON_H__ */

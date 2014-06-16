@@ -57,16 +57,10 @@ static int read_marg(marg_data_t *marg_data)
 {
    int ret = drotek_9150_read(marg_data, &marg);
    quat_t q;
-/*   quat_init_axis(&q, 0, 1, 0, M_PI);
-   quat_rot_vec(&marg_data->acc, &marg_data->acc, &q);
-   quat_rot_vec(&marg_data->gyro, &marg_data->gyro, &q);
-   quat_rot_vec(&marg_data->mag, &marg_data->mag, &q); */
-
    quat_init_axis(&q, 0, 0, 1, -3.0 * M_PI / 4.0f);
    quat_rot_vec(&marg_data->acc, &marg_data->acc, &q);
    quat_rot_vec(&marg_data->gyro, &marg_data->gyro, &q);
    quat_rot_vec(&marg_data->mag, &marg_data->mag, &q);
-   
    return ret;
 }
 
@@ -152,7 +146,7 @@ int exynos_quad_init(platform_t *plat, int override_hw)
       LOG(LL_INFO, "initializing arduino bridge to motor drivers");
       THROW_ON_ERR(arduino_pwms_init());
       plat->write_motors = arduino_pwms_write;
-      ac_init(&plat->ac, 0.1f, 0.7f, 12.0f, 17.0f, c, 4, force_to_esc_setup3, 0.0f);
+      ac_init(&plat->ac, 0.1f, 1.0f, 12.0f, 17.0f, c, 4, force_to_esc_setup3, 0.0f);
    }
 
    LOG(LL_INFO, "exynos_quadro platform initialized");

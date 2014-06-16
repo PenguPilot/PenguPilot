@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- FreeIMU V0.4 Driver Implementation
+ Combined Control Implementation
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -24,26 +24,21 @@
  GNU General Public License for more details. */
 
 
-#include <util.h>
+#include "control.h"
 
-#include "freeimu_04.h"
+#include "position/navi.h"
+#include "speed/ne_speed.h"
+#include "position/u_ctrl.h"
+#include "position/att_ctrl.h"
+#include "speed/piid.h"
 
 
-int freeimu_04_init(freeimu_04_t *freeimu, i2c_bus_t *bus)
+void control_reset()
 {
-   THROW_BEGIN();
-   THROW_ON_ERR(mpu6050_init(&freeimu->mpu, bus, 0x68, MPU6050_DLPF_CFG_94_98Hz, MPU6050_FS_SEL_1000, MPU6050_AFS_SEL_4G));
-   THROW_ON_ERR(hmc5883_init(&freeimu->hmc, bus));
-   THROW_END();
+   navi_reset();
+   ne_speed_ctrl_reset();
+   u_ctrl_reset();
+   att_ctrl_reset();
+   piid_reset();
 }
-
-
-int freeimu_04_read(marg_data_t *data, freeimu_04_t *freeimu)
-{
-   THROW_BEGIN();
-   THROW_ON_ERR(mpu6050_read(&freeimu->mpu, &data->gyro, &data->acc, NULL));
-   THROW_ON_ERR(hmc5883_read_mag(&data->mag, &freeimu->hmc));
-   THROW_END();
-}
-
 

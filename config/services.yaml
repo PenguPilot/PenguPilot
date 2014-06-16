@@ -34,9 +34,9 @@ autopilot:
 
 # medium-priority system services:
 
-hlfm:
-   binary: 'hlfm/service/hlfm.py'
-   depends: [opcd, autopilot, powerman]
+icarus:
+   binary: 'icarus/service/icarus.py'
+   depends: [autopilot]
    priority: sys_medium
 
 arduino:
@@ -83,7 +83,7 @@ powerman:
 display:
   binary: 'display/service/display.py'
   platforms: [overo_quad]
-  depends: [gpsp, powerman]
+  depends: [powerman, geomag]
   priority: sys_low
 
 emerg_kill:
@@ -123,5 +123,6 @@ wifi_loc:
 
 ferry:
   binary: 'ferry/service/ferry.py'
-  depends: [hlfm]
+  depends: [icarus]
   priority: app
+

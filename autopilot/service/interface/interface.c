@@ -37,7 +37,7 @@
 #include "interface.h"
 #include "../util/logger/logger.h"
 #include "../flight_logic/auto_logic.h"
-#include "../control/position/navi.h"
+#include "../control/control.h"
 #include "../main_loop/main_loop.h"
 
 #define THREAD_NAME     "interface"
@@ -60,8 +60,6 @@ void interface_lock(bool val)
 {
    locked = val;
 }
-
-
 
 
 int set_ctrl_param(CtrlParam param, float val)
@@ -103,25 +101,6 @@ int set_ctrl_param(CtrlParam param, float val)
          auto_logic_set_yaw(val);
          break;
       }
-      
-      case CTRL_PARAM__SPEED_NE:
-      {
-         LOG(LL_DEBUG, "ne speed update: %f", val);
-         status = navi_set_travel_speed(val);
-         break;
-      }
-
-      case CTRL_PARAM__SPEED_U:
-      {
-         LOG(LL_ERROR, "[not implemented] z speed update: %f", val);
-         break;
-      }
-
-      case CTRL_PARAM__SPEED_YAW:
-      {
-         LOG(LL_DEBUG, "[not implemented] yaw speed update: %f", val);
-         break;
-      }
    }
    return status;
 }
@@ -160,20 +139,6 @@ static void get_state(Params *params)
    params->start_lon = gps_start.lon;
    params->start_lat = gps_start.lat;
    params->start_alt = gps_start.alt;
-   /*
-   params->setp_x = navi_get_dest_e();
-   params->setp_y = navi_get_dest_n();
-   float setp_u = u_ctrl_get_setpoint();
-   if (u_ctrl_mode_is_ground())
-   {
-      params->setp_u_ground = setp_u;
-   }
-   else
-   {
-      params->setp_u = setp_u;
-   }
-   params->setp_yaw = 0.0;
-   */
 }
 
 
@@ -192,7 +157,6 @@ SIMPLE_THREAD_BEGIN(thread_func)
          continue;
       }
       PilotReq *request = pilot_req__unpack(NULL, raw_data_size, raw_data);
-      Params params = PARAMS__INIT;
       if (request == NULL)
       {
          reply.status = STATUS__E_SYNTAX;
@@ -210,13 +174,26 @@ SIMPLE_THREAD_BEGIN(thread_func)
 
             case REQUEST_TYPE__STOP_MOTORS:
                LOG(LL_DEBUG, "STOP_MOTORS");
-               reply.params = &params;
                auto_logic_enable_motors(false);
                break;
 
             case REQUEST_TYPE__SET_CTRL_PARAM:
                LOG(LL_DEBUG, "SET_CTRL_PARAM");
                check_and_set_ctrl_param(&reply, request);
+               break;
+
+            case REQUEST_TYPE__RESET_CTRL:
+               LOG(LL_DEBUG, "RESET_CTRL");
+               control_reset();
+               break;
+            
+            case REQUEST_TYPE__GET_PARAMS:
+               LOG(LL_DEBUG, "GET_PARAMS");
+               {
+                  Params params = PARAMS__INIT;
+                  get_state(&params);
+                  reply.params = &params;
+               }
                break;
 
             default:
@@ -234,7 +211,7 @@ SIMPLE_THREAD_END
 int cmd_init(void)
 {
    ASSERT_ONCE();
-   cmd_socket = scl_get_socket("ctrl");
+   cmd_socket = scl_get_socket("ap_ctrl");
    if (cmd_socket == NULL)
    {
       return -1;

@@ -10,10 +10,12 @@
  |___________________________________________________|
   
  Kalman Filter based Position/Speed Estimate
-   
+
+ System Model:
+
  | 1 dt | * | p | + | 0.5 * dt ^ 2 | * | a | = | p |
- | 0  1 | * | v |   |     dt       |           | v |
- 
+ | 0  1 | * | v |   |     dt       |   | v |
+
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
  Copyright (C) 2013 Jan Roemisch, Ilmenau University of Technology
 
@@ -40,21 +42,20 @@
 #include "../util/math/mat.h"
 
 
-VEC_DECL(1);
-MAT_DECL(2, 2);
-MAT_DECL(2, 1);
-
-
 /* configuration parameters: */
 static tsfloat_t process_noise;
 static tsfloat_t ultra_noise;
 static tsfloat_t baro_noise;
 static tsfloat_t gps_noise;
 static tsint_t use_gps_speed;
-static tsfloat_t spd_scale;
+
+VEC_DECL(1);
+
+MAT_DECL(2, 2);
+MAT_DECL(2, 1);
 
 
-typedef struct
+typedef struct kalman
 {
    /* configuration and constant matrices: */
    mat2x2_t Q; /* process noise */
@@ -77,14 +78,21 @@ typedef struct
    mat2x2_t T0;
    mat2x2_t T1;
 
+   /* online adaptable parameters: */
+   tsfloat_t *q;
+   tsfloat_t *r;
+
    bool use_speed;
 }
 kalman_t;
 
 
 /* static function prototypes: */
-static void kalman_init(kalman_t *kf, float q, float r, float pos, float speed, bool use_speed);
-static void kalman_run(kalman_t *kf, float *est_pos, float *est_speed, float pos, float speed, float acc, float dt);
+static void kalman_init(kalman_t *kf, tsfloat_t *q, tsfloat_t *r,
+                        float pos, float speed, bool use_speed);
+
+static void kalman_run(kalman_t *kf, float *est_pos, float *est_speed,
+                       float pos, float speed, float acc, float dt);
 
 
 /* kalman filters: */
@@ -94,6 +102,7 @@ static kalman_t baro_u_kalman;
 static kalman_t ultra_u_kalman;
 static float ultra_prev = 0.0f;
 static float baro_prev = 0.0f;
+
 
 void pos_init(void)
 {
@@ -107,7 +116,6 @@ void pos_init(void)
       {"baro_noise", &baro_noise},
       {"gps_noise", &gps_noise},
       {"use_gps_speed", &use_gps_speed},
-      {"spd_scale", &spd_scale},
       OPCD_PARAMS_END
    };
    opcd_params_apply("kalman_pos.", params);
@@ -118,11 +126,12 @@ void pos_init(void)
        tsfloat_get(&gps_noise));
 
    /* set-up kalman filters: */
-   kalman_init(&n_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, tsint_get(&use_gps_speed));
-   kalman_init(&e_kalman, tsfloat_get(&process_noise), tsfloat_get(&gps_noise), 0, 0, tsint_get(&use_gps_speed));
-   kalman_init(&baro_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&baro_noise), 0, 0, false);
-   kalman_init(&ultra_u_kalman, tsfloat_get(&process_noise), tsfloat_get(&ultra_noise), 0, 0, false);
+   kalman_init(&e_kalman, &process_noise, &gps_noise, 0, 0, tsint_get(&use_gps_speed));
+   kalman_init(&n_kalman, &process_noise, &gps_noise, 0, 0, tsint_get(&use_gps_speed));
+   kalman_init(&baro_u_kalman, &process_noise, &baro_noise, 0, 0, false);
+   kalman_init(&ultra_u_kalman, &process_noise, &ultra_noise, 0, 0, false);
 }
+
 
 void pos_update(pos_t *out, pos_in_t *in)
 {
@@ -130,8 +139,8 @@ void pos_update(pos_t *out, pos_in_t *in)
    ASSERT_NOT_NULL(in);
 
    /* run kalman filters: */
-   kalman_run(&n_kalman,       &out->ne_pos.n,    &out->ne_speed.n,    in->pos_n,   in->speed_n * tsfloat_get(&spd_scale), in->acc.n, in->dt);
-   kalman_run(&e_kalman,       &out->ne_pos.e,    &out->ne_speed.e,    in->pos_e,   in->speed_e * tsfloat_get(&spd_scale), in->acc.e, in->dt);
+   kalman_run(&n_kalman,       &out->ne_pos.n,    &out->ne_speed.n,    in->pos_n,   in->speed_n, in->acc.n, in->dt);
+   kalman_run(&e_kalman,       &out->ne_pos.e,    &out->ne_speed.e,    in->pos_e,   in->speed_e, in->acc.e, in->dt);
    kalman_run(&baro_u_kalman,  &out->baro_u.pos,  &out->baro_u.speed,  in->baro_u,  0.0f, in->acc.u, in->dt);
    if (fabs(in->ultra_u - ultra_prev) > 10.0 * fabs(in->baro_u - baro_prev))
       kalman_run(&ultra_u_kalman, &out->ultra_u.pos, &out->ultra_u.speed, ultra_prev + in->baro_u - baro_prev, 0.0f, in->acc.u, in->dt);
@@ -142,9 +151,12 @@ void pos_update(pos_t *out, pos_in_t *in)
 }
 
 
-static void kalman_init(kalman_t *kf, float q, float r, float pos, float speed, bool use_speed)
+void kalman_init(kalman_t *kf, tsfloat_t *q, tsfloat_t *r, float pos, float speed, bool use_speed)
 {
    kf->use_speed = use_speed;
+   kf->q = q;
+   kf->r = r;
+
    /* set up temporary vectors and matrices: */
    vec2_init(&kf->t0);
    vec2_init(&kf->t1);
@@ -168,10 +180,9 @@ static void kalman_init(kalman_t *kf, float q, float r, float pos, float speed, 
    
    /* set up noise: */
    mat2x2_init(&kf->Q);
-   mat_scalar_mul(&kf->Q, &kf->I, q);
    mat2x2_init(&kf->R);
-   mat_scalar_mul(&kf->R, &kf->I, r);
    
+   /* initialize kalman gain: */
    mat2x2_init(&kf->K);
 
    /* H = | 1.0   0.0       |
@@ -207,6 +218,7 @@ static void kalman_predict(kalman_t *kf, float a)
    mmtr_mul(&kf->T1, &kf->T0, &kf->A); /* T1 = T0 * AT */
    mat_add(&kf->P, &kf->T1, &kf->Q);   /* P = T1 * Q */
 }
+
 
 
 static void kalman_correct(kalman_t *kf, float pos, float speed)
@@ -251,7 +263,11 @@ static void kalman_run(kalman_t *kf, float *est_pos, float *est_speed, float pos
           |     dt       | */
    kf->B.me[0][0] = 0.5f * dt * dt;
    kf->B.me[1][0] = dt;
-
+   
+   /* Q, R: */
+   mat_scalar_mul(&kf->Q, &kf->I, tsfloat_get(kf->q));
+   mat_scalar_mul(&kf->R, &kf->I, tsfloat_get(kf->r));
+ 
    kalman_predict(kf, acc);
    kalman_correct(kf, pos, speed);
    *est_pos = kf->x.ve[0];

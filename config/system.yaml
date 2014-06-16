@@ -72,18 +72,18 @@
    - power: pub
    - opcd_ctrl: req
 
-- name: ferry
+- name: mission
   sockets:
-   - hlfm_state: sub
-   - hlfm_ctrl: req
+   - icarus_ctrl: req
+   - icarus_state: sub
 
-- name: hlfm
+- name: icarus
   sockets:
-   - hlfm_state: pub
+   - icarus_ctrl: rep
+   - icarus_state: pub
    - ap_ctrl: req
    - ap_mon: sub
    - powerman: sub
-   - hlfm_ctrl: rep
 
 - name: wifi_sensor
   sockets:
@@ -146,6 +146,7 @@
    - powerman: sub
    - remote: sub
    - sats: sub
+   - decl: sub
 
 - name: heartbeat
   sockets:

@@ -35,7 +35,7 @@
 from pilot_pb2 import *
 from math import atan2
 from time import sleep, time
-from icarus_pb2 import TAKEOFF, LAND, MOVE, STOP, ROT
+from icarus_pb2 import *
 from interface.icarus_server import ICARUS_Server, ICARUS_Exception
 from activities.takeoff import TakeoffActivity
 from activities.land import LandActivity
@@ -48,8 +48,6 @@ from misc import *
 from misc import daemonize
 from scl import generate_map
 from pilot_interface import PilotInterface
-from interface.state_emitter import StateEmitter
-from powerman import PowerMan
 from logging import basicConfig as log_config, debug as log_debug
 from logging import info as log_info, warning as log_warn, error as log_err
 from logging import DEBUG
@@ -66,39 +64,32 @@ class ICARUS:
       log_config(filename = logfile, level = DEBUG,
                  format = '%(asctime)s - %(levelname)s: %(message)s')
       log_info('icarus starting up')
-      self.setpoints = [0.0, 0.0, 2.0] # x, y, z
+      self.setpoints = [0.0, 0.0, 1.0] # x, y, z
       self.flight_time = 0
       self.icarus_takeover = False
       self.emergency_land = False
       self.factory = ICARUS_MissionFactory
       self.fsm = FlightSM(self.error, self.broadcast, self.takeoff, self.land, self.move, self.stop)
       self.landing_spots = LandingSpots(3.0)
-      self.pilot = PilotInterface(sockets['pilot'], sockets['mon'])
+      self.pilot = PilotInterface(sockets['ap_ctrl'], sockets['ap_mon'])
       #self.gps_shifter = GPS_Shifter()
-      self.state_emitter = StateEmitter(sockets['state'])
-      self.powerman = PowerMan(sockets['power_ctrl'], sockets['power_mon'])
-      start_daemon_thread(self.power_state_monitor)
+      self.state_socket = sockets['icarus_state']
+      #start_daemon_thread(self.power_state_monitor)
       start_daemon_thread(self.state_time_monitor)
       start_daemon_thread(self.pilot_monitor)
       self.activity = DummyActivity()
       self.activity.start()
-      self.icarus_srv = ICARUS_Server(sockets['ctrl'], self)
+      self.icarus_srv = ICARUS_Server(sockets['icarus_ctrl'], self)
       self.icarus_srv.start()
       log_info('icarus up and running')
 
 
    def state_time_monitor(self):
+      # count the time for "in-the-air-states":
       log_info('starting state time monitor')
       while True:
          if self.fsm.state != 'standing':
-            # count the time for "in-the-air-states":
             self.flight_time += 1
-         else:
-            # use system uptime here:
-            up_file = open("/proc/uptime", "r")
-            up_list = up_file.read().split()
-            self.uptime = int(up_list[0])
-            up_file.close()
          sleep(1)
 
 
@@ -106,20 +97,19 @@ class ICARUS:
       log_info('starting pilot state monitor')
       rc_timeout = 1.0
       return_when_signal_lost = False
-      self.mon_data = MonData()
       last_valid = time()
       while True:
-         self.pilot.mon_read(self.mon_data)
-         self.kalman_lat, self.kalman_lon = gps_add_meters((self.pilot.params.start_lat,
-                                                           self.pilot.params.start_lon),
-                                                           self.setpoints[0 : 2])
-         if self.mon_data.signal_valid:
-            last_valid = time()
-         else:
-            if time() - rc_timeout < last_valid and return_when_signal_lost:
-               if not self.icarus_takeover:
-                  self.icarus_takeover = True
-                  log_err('invalid RC signal, disabling mission interface')
+         self.pilot.mon_read()
+         #self.kalman_lat, self.kalman_lon = gps_add_meters((self.pilot.params.start_lat,
+         #                                                  self.pilot.params.start_lon),
+         #                                                  self.setpoints[0 : 2])
+         #if self.mon_data.signal_valid:
+         #   last_valid = time()
+         #else:
+         #   if time() - rc_timeout < last_valid and return_when_signal_lost:
+         #      if not self.icarus_takeover:
+         #         self.icarus_takeover = True
+         #         log_err('invalid RC signal, disabling mission interface')
 
 
    def power_state_monitor(self):
@@ -190,7 +180,7 @@ class ICARUS:
          # when landing: setting a new rotation setpoint is not allowed:
          if self.fsm.state is 'landing':
             continue
-         if self.mon_data.z_ground < self.min_rot_z_ground:
+         if self.pilot.mon[2] < self.min_rot_z_ground:
             print 'system is able to rotate'
             try:
                if isinstance(self.yaw_target, float):
@@ -200,7 +190,7 @@ class ICARUS:
                   poi_x = self.yaw_target[0]
                   poi_y = self.yaw_target[1]
                   print 'POI mode, x =', poi_x, ' y =', poi_y
-                  yaw = atan2(self.mon_data.y - poi_y, self.mon_data.x - poi_x)
+                  yaw = atan2(self.pilot.mon[1] - poi_y, self.pilot.mon[0] - poi_x)
                if prev_yaw != yaw:
                   print 'setting yaw to:', yaw
                   self.pilot.set_ctrl_param(POS_YAW, yaw)
@@ -211,6 +201,8 @@ class ICARUS:
 
    # called by ICARUS command interface:
    def handle(self, req, local = False):
+      while not hasattr(self.pilot, 'mon'):
+         raise ICARUS_Exception('autopilot has no GPS fix')
       if not local and self.icarus_takeover:
          msg = 'request rejected due to emergency take-over'
          log_err(msg)
@@ -239,15 +231,14 @@ class ICARUS:
 
    def broadcast(self, state):
       log_info('new state: %s' % state)
-      self.state_emitter.send(state)
+      self.state_socket.send(state)
 
 
    def takeoff(self):
       log_info('taking off')
-      self.landing_spots.add((self.mon_data.x, self.mon_data.y))
+      self.landing_spots.add((self.pilot.mon[0], self.pilot.mon[1]))
       self.activity.cancel_and_join()
-      self.powerman.flight_power()
-      self.yaw_setpoint = self.mon_data.yaw
+      self.yaw_setpoint = self.pilot.mon[4]
       self.activity = TakeoffActivity(self.fsm, self)
       self.activity.start()
 

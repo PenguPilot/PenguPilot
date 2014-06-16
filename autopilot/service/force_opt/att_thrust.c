@@ -45,9 +45,9 @@ int att_thrust_calc(vec2_t *pr_angles, float *thrust, /* output: pitch/roll angl
    float u = f_neu->ve[2];
    assert(thrust_max >= 0);
 
-   if (u < 0.0)
+   if (u < 3.0)
    {
-      u = 0.0;
+      u = 3.0;
       constrained = 1;
    }
 

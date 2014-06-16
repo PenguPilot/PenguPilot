@@ -33,7 +33,7 @@
 #include "../util/math/vec2.h"
 
 
-#define BLACKBOX_ITEMS 35
+#define BLACKBOX_ITEMS 41
 
 
 extern char *blackbox_spec[BLACKBOX_ITEMS];
@@ -57,7 +57,9 @@ void blackbox_record(const float dt, /* sensor inputs ... */
                const float u_pos_err,
                const vec2_t *ne_spd_err, /* NEU speed errors ... */
                const float u_spd_err,
-               const vec3_t *mag_normal);
+               const vec3_t *mag_normal,
+               const vec3_t *pry_err,
+               const vec3_t *pry_rate_err);
 
 
 #endif /* __BLACKBOX_H__ */

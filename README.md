@@ -20,37 +20,43 @@ Currently, components are implemented in C and Python, communicating efficiently
 
 Contents
 --------
+
 Flight Infrastructure:
-- autopilot:
-  - service: the autopilot service
-  - tools: calibration and other useful utilities
-- blackbox: black box service for logging every sensor input of the autopilot to harddisk/sdcard
-- powerman: power management and monitoring service
-- gpsp: gps publisher, similar to gpsd but more efficient and much simpler using nmeablib
-- hlfm: high-level flight manager service
+- [autopilot](autopilot): real-time control running at 200Hz
+- [icarus](icarus): high-level flight management service
+- [blackbox](blackbox): receives logging data containing every sensor input of the autopilot to sd card
+- [powerman](powerman): power management and monitoring service; warns the user if the battery is low
+- [gpsp](gpsp): gps publisher, similar to gpsd but much simpler; uses [NMEALib](https://github.com/AHR-Project/nmealib)
+- [remote](remote): remote control data parser and publisher
+- [geomag](geomag): reads gps position and date; publishes magnetic declination in degrees
+- [ads1x15](ads1x15): (I2C ADC driver for Raspberry PI)
+- [arduino](arduino): (ODROID U3)
+- [twl4030_madc](twl4030_madc): (Gumstix Overo)
 
 Supporting Infrastructures:
-- scl: signaling and communication link (IPC framework), see config/system.yaml
-- opcd: online parameter configuration daemon, see config/params.yaml
-- svctrl: service management and control utility, see config/services.yaml
-- shared: shared Libraries for threading and other common tasks
-- config: configuration files
+
+- [config](config): configuration files
+- [scl](scl): signaling and communication link (IPC framework), see [config/system.yaml](config/system.yaml)
+- [opcd](opcd): online parameter configuration daemon, see [config/params.yaml](config/params.yaml)
+- [svctrl](svctrl): service management and control utility, see [config/services.yaml](config/services.yaml)
+- [shared](shared): shared Libraries for threading and other common tasks
 
 Additional Features:
-- aircomm: encrypted aerial communication daemon, using NRF24L01+
-- display: shows battery, mem, cpu, sattelite status via I2C SSD1307 128x64 display from Adafruit
-- wifi_sensor: published wireless network data acquired via iwlist
-- wifi_loc: combines gps measurements and wifi scan results and publishes it
+
+- [aircomm](aircomm): encrypted aerial communication daemon, using NRF24L01+
+- [display](display): shows battery, mem, cpu, satellite status via I2C SSD1307 128x64 display from Adafruit
+- [wifi_sensor](wifi_sensor): publishes wireless network data acquired via iwlist
+- [wifi_loc](wifi_loc): combines gps measurements and wifi scan results and publishes it
 
 Build System and Environment:
-- site_scons: related to build system
-- SConstruct: scons build file
-- scripts: various scripts, e.g. bashrc
 
-Library dependencies:
-- C: msgpack, protobuf-c, yaml, zeromq, glib
-- Python: psutil, pyyaml, protobuf, msgpack, pyzmq, swig, python-daemon, numpy
-- System recommended: sudo, git, i2c-tools, screen...
+- [site_scons](site_scons): related to build system
+- [SConstruct](SConstruct): scons build file
+- [scripts](scripts): various scripts, e.g. bashrc
+
+Software Dependencies:
+- Gentoo: app-admin/sudo app-misc/screen dev-lang/python dev-lang/swig dev-libs/glib dev-libs/libyaml dev-libs/msgpack dev-libs/protobuf dev-libs/protobuf-c dev-python/imaging dev-python/msgpack dev-python/numpy dev-python/psutil dev-python/python-daemon dev-python/pyyaml dev-python/pyzmq dev-util/scons sys-power/cpufrequtils dev-python/pyproj sci-libs/gdal
+- Ubuntu: realpath scons swig protobuf-compiler python-protobuf libmsgpack-dev libprotobuf-dev python-yaml protobuf-c-compiler libprotobuf-c0-dev libzmq-dev python-zmq libyaml-dev libglib2.0-dev python-daemon python-termcolor libpython-dev
 
 Example UAV System
 ------------------

@@ -12,10 +12,23 @@
 
 OPCD Subsystem
 --------------
-The PenguPilot Online Parameter Configuration Daemon (OPCD) 
-service is located in the folder "service".
-OPCD reads a parameters configuration file and provides
-these parameters using a request-reply and using a publish interface.
-Folder "shell" provides an interactive Python-based command shell
-for retrieving/setting configuration parameters.
-The bindings for C and Python are located in the "bindings" folder.
+
+The Online Parameter Configuration Service (OPCD) is a low-priority service managing various configuration parameters stored in a YAML based configuration format.
+The configuration consists of two files, a standard file and a override file, in which parameter updates to the standard file are written.
+The override file is only valid if the structure matches the standard file.
+Whenever new configuration parameters need to be added, these first have to be added to the standard file.
+Three types of parameters are currently supported:
+
+* __floats__ (controller gains, filter coefficients, ...),
+
+* __integers__ (bus id's, debug levels, ...), 
+
+* __strings__ (device paths, ...)
+
+OPCD allows to request parameters using a request-reply interface and publishes parameter
+updates via a publish socket in order to inform subscribers about parameter updates.
+The request interface is also used by a command-line shell named __pp_opcd_shell___.
+This shell is used for retrieving and updating configuration parameters. Main functions of this shell are get(key_or_regex), set(key, value) and persist() for saving the parameters.
+Here, regex stands for a regular expression.
+The shell is GNU readline compatible and features a history stored among invocations.
+
