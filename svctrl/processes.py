@@ -93,9 +93,9 @@ def validate(name):
 
 def start(name, prio, path, args):
    prio_map = {'sys_high': 99,
-               'sys_medium': 98, 
-               'sys_low': 97, 
-               'app': 96}
+               'sys_medium': 93, 
+               'sys_low': 92, 
+               'app': 91}
    prio = prio_map[prio]
    if args:
       path += ' ' + args

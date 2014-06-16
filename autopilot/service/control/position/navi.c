@@ -52,7 +52,6 @@ static tsfloat_t ortho_p;
 
 /* vectors for use in navigation algorithm: */
 static vec2_t pos_err_sum;
-static vec2_t dest_pos;
 static vec2_t prev_dest_pos;
 
 
@@ -108,9 +107,8 @@ void navi_init(void)
    };
    opcd_params_apply("controllers.navigation.", params);
    
-   vec2_set(&pos_err_sum, 0.0, 0.0);
-   vec2_set(&dest_pos, 0.0, 0.0);
-   vec2_set(&prev_dest_pos, 0.0, 0.0);
+   vec2_init(&pos_err_sum);
+   vec2_init(&prev_dest_pos);
 
    tsfloat_init(&travel_speed, 0.0f);
 
@@ -144,40 +142,42 @@ int navi_set_travel_speed(float speed)
 /*
  * executes navigation control subsystem
  */
-void navi_run(vec2_t *speed_setpoint, vec2_t *err, const vec2_t *pos_sp, const vec2_t *pos, const float dt)
+void navi_run(vec2_t *speed_setpoint, vec2_t *err, const vec2_t *dest_pos, const vec2_t *pos, const float dt)
 {
    /* set-up input vectors: */
-   if (!vec_equal(&dest_pos, &prev_dest_pos))
-   {
-      vec_copy(&prev_dest_pos, &dest_pos);
-      vec_copy(&dest_pos, pos_sp);
-   }
-   vec2_sub(err, &dest_pos, pos);
+   if (!vec_equal(dest_pos, &prev_dest_pos))
+      vec_copy(&prev_dest_pos, dest_pos);
+   vec2_sub(err, dest_pos, pos);
 
    /* add correction for inter-setpoint trajectory */
    vec2_t ortho_thrust;
-   if ((prev_dest_pos.e == dest_pos.e)
-       && (prev_dest_pos.n == dest_pos.n))
+   vec2_init(&ortho_thrust);
+   if ((prev_dest_pos.e == dest_pos->e)
+       && (prev_dest_pos.n == dest_pos->n))
    {
       vec2_set(&ortho_thrust, 0.0, 0.0);
    }
    else
    {
       vec2_t setpoints_dir;
-      vec2_sub(&setpoints_dir, &dest_pos, &prev_dest_pos);
+      vec2_init(&setpoints_dir);
+      vec2_sub(&setpoints_dir, dest_pos, &prev_dest_pos);
       vec2_t ortho_vec;
+      vec2_init(&ortho_vec);
       vec2_ortho_right(&ortho_vec, &setpoints_dir);
       vec2_t ortho_pos_err;
+      vec2_init(&ortho_pos_err);
       vec2_project(&ortho_pos_err, err, &ortho_vec);
       vec2_scale(&ortho_thrust, &ortho_pos_err, tsfloat_get(&ortho_p));
    }
 
    /* calculate speed setpoint vector: */
    vec2_t virt_dest_pos;
-   virt_dest_pos = dest_pos;
-   vec2_add(&virt_dest_pos, &dest_pos, &pos_err_sum);
+   vec2_set(&virt_dest_pos, dest_pos->x, dest_pos->y);
+   vec2_add(&virt_dest_pos, dest_pos, &pos_err_sum);
    vec2_add(&virt_dest_pos, &virt_dest_pos, &ortho_thrust);
    vec2_t virt_pos_err;
+   vec2_init(&virt_pos_err);
    vec2_sub(&virt_pos_err, &virt_dest_pos, pos);
    vec2_sub(speed_setpoint, &virt_dest_pos, pos);
    float target_dist = vec2_norm(speed_setpoint);
@@ -190,12 +190,14 @@ void navi_run(vec2_t *speed_setpoint, vec2_t *err, const vec2_t *pos_sp, const v
       float _speed_max = tsfloat_get(&speed_max);
       float i_weight = (_speed_max - desired_speed(target_dist)) / _speed_max;
       vec2_t pos_err_addend;
+      vec2_init(&pos_err_addend);
       vec2_scale(&pos_err_addend, err, dt * tsfloat_get(&pos_i) * i_weight);
       vec2_add(&pos_err_sum, &pos_err_sum, &pos_err_addend);
    }
 
    float speed_val = desired_speed(target_dist) * tsfloat_get(&travel_speed);
    vec2_t dest_dir;
+   vec2_init(&dest_dir);
    vec2_normalize(&dest_dir, &virt_pos_err);
    vec2_scale(speed_setpoint, &dest_dir, speed_val);
 }

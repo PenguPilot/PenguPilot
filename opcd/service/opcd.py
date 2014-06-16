@@ -32,6 +32,7 @@ from scl import generate_map
 from misc import daemonize
 from sys import argv
 from re import match
+from time import sleep
 
 
 class OPCD:
@@ -62,54 +63,59 @@ class OPCD:
       while True:
          # read and parse request:
          req = CtrlReq()
-         req.ParseFromString(self.ctrl_socket.recv())
-
+         try:
+            req.ParseFromString(self.ctrl_socket.recv())
+         except:
+            sleep(1)
+            continue
          # process request and prepare reply:
          rep = CtrlRep()
          rep.status = CtrlRep.OK
 
-         # GET REQUEST:
-         if req.type == CtrlReq.GET:
-            all_keys = self.conf.get_all_keys(self.conf.base) + ['platform']
-            if req.id in all_keys:
-               # exact match:
-               self._pairs_add(req.id, rep)
-            else:
-               # try regex matches:
-               found = False
-               for key in all_keys:
-                  try:
-                     if match(req.id, key):
-                        self._pairs_add(key, rep)
-                        found = True
-                  except:
-                     pass
-               if not found:
+         try:
+            # GET REQUEST:
+            if req.type == CtrlReq.GET:
+               all_keys = self.conf.get_all_keys(self.conf.base) + ['platform']
+               if req.id in all_keys:
+                  # exact match:
+                  self._pairs_add(req.id, rep)
+               else:
+                  # try regex matches:
+                  found = False
+                  for key in all_keys:
+                     try:
+                        if match(req.id, key):
+                           self._pairs_add(key, rep)
+                           found = True
+                     except:
+                        pass
+                  if not found:
+                     rep.status = CtrlRep.PARAM_UNKNOWN
+
+            # SET REQUEST:
+            elif req.type == CtrlReq.SET:
+               try:
+                  for type, attr in self.map.items():
+                     if req.val.HasField(attr):
+                        val = getattr(req.val, attr)
+                        self.conf.set(req.id.encode('ascii'), type(val))
+                        break
+                  pair = Pair(id = req.id, val = req.val)
+                  self.event_socket.send(pair.SerializeToString())
+               except ConfigError, e:
                   rep.status = CtrlRep.PARAM_UNKNOWN
 
-         # SET REQUEST:
-         elif req.type == CtrlReq.SET:
-            try:
-               for type, attr in self.map.items():
-                  if req.val.HasField(attr):
-                     val = getattr(req.val, attr)
-                     self.conf.set(req.id.encode('ascii'), type(val))
-                     break
-               pair = Pair(id = req.id, val = req.val)
-               self.event_socket.send(pair.SerializeToString())
-            except ConfigError, e:
-               rep.status = CtrlRep.PARAM_UNKNOWN
-
-         # PERSIST REQUEST:
-         else:
-            assert req.type == CtrlReq.PERSIST
-            try:
-               self.conf.persist()
-               rep.status = CtrlRep.OK
-            except Exception, e:
-               print str(e)
-               rep.status = CtrlRep.IO_ERROR
-
+            # PERSIST REQUEST:
+            else:
+               assert req.type == CtrlReq.PERSIST
+               try:
+                  self.conf.persist()
+                  rep.status = CtrlRep.OK
+               except Exception, e:
+                  print str(e)
+                  rep.status = CtrlRep.IO_ERROR
+         except:
+            rep.status = CtrlRep.PARAM_UNKNOWN
          # send reply:
          self.ctrl_socket.send(rep.SerializeToString())
 

@@ -35,8 +35,9 @@ enum RequestType
    START_MOTORS =   1;
    STOP_MOTORS =    2;
    GET_PARAMS =     3;
+   RESET_CTRL =     4;
    // request with parameters:
-   SET_CTRL_PARAM = 4; // requires CtrlData */
+   SET_CTRL_PARAM = 5; // requires CtrlData */
 }
 
 
@@ -48,11 +49,6 @@ enum CtrlParam
    POS_U_GROUND = 3; // altitude above ground
    POS_U =        4; // altitude above msl
    POS_YAW =      5; // absolute yaw position, north = 0.0
-
-   // speed setpoints:
-   SPEED_NE =  6; // ne speed */
-   SPEED_U =   7; // u speed */
-   SPEED_YAW = 8; // yaw speed */
 }
 
 
@@ -65,22 +61,9 @@ message CtrlData
 
 message Params
 {
-   // initial position reported by GPS:
    required double start_lon = 1;
    required double start_lat = 2;
    required double start_alt = 3;
-
-   // position setpoints:
-   required float setp_x =        4;
-   required float setp_y =        5;
-   required float setp_u =        6;
-   optional float setp_u_ground = 7; // one of them is required, ...
-   optional float setp_yaw =      8; // ... but not both!
-
-   // speed control setpoints:
-   required float setp_speed_xy =   9;
-   required float setp_speed_u =   10;
-   required float setp_speed_yaw = 11;
 };
 
 
@@ -105,19 +88,5 @@ message PilotRep
    required Status status =  1;
    optional string err_msg = 2;
    optional Params params =  3; // required if type == GET_PARAMS
-}
-
-
-//////////////////////
-// MONITORING DATA: //
-//////////////////////
-
-
-message MonData
-{
-   required float x_err =   1; // x error in m
-   required float y_err =   2; // y error in m
-   required float z_err =   3; // z error in m
-   required float yaw_err = 4; // yaw error in rad
 }
 

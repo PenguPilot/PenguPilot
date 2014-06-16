@@ -36,26 +36,27 @@
 #include "platform.h"
 #include "generic_platform.h"
 #include "inv_coupling.h"
-#include "freeimu_04.h"
+#include "drotek_9150.h"
 #include "force_to_esc.h"
 #include "../drivers/i2cxl/i2cxl_reader.h"
 #include "../drivers/ms5611/ms5611_reader.h"
 #include "../drivers/afroi2c_pwms/afroi2c_pwms.h"
 #include "../util/rc_channels.h"
 #include "../../util/logger/logger.h"
+#include "../../util/math/quat.h"
 
 
 #define N_MOTORS 4
 
 
 static i2c_bus_t i2c_bus;
-static freeimu_04_t marg;
 static uint8_t motors_map[N_MOTORS] = {0, 1, 2, 3};
+static drotek_9150_t marg;
 
 
 static int read_marg(marg_data_t *marg_data)
 {
-   return freeimu_04_read(marg_data, &marg);   
+   return drotek_9150_read(marg_data, &marg);
 }
 
 
@@ -121,9 +122,9 @@ int pi_quad_init(platform_t *plat, int override_hw)
       plat->priv = &i2c_bus;
 
       LOG(LL_INFO, "initializing MARG sensor cluster");
-      THROW_ON_ERR(freeimu_04_init(&marg, &i2c_bus));
+      THROW_ON_ERR(drotek_9150_init(&marg, &i2c_bus));
       plat->read_marg = read_marg;
-
+ 
       LOG(LL_INFO, "initializing i2cxl sonar sensor");
       THROW_ON_ERR(i2cxl_reader_init(&i2c_bus));
       plat->read_ultra = i2cxl_reader_get_alt;
@@ -135,7 +136,7 @@ int pi_quad_init(platform_t *plat, int override_hw)
       LOG(LL_INFO, "initializing motors via afroi2c bridge");
       THROW_ON_ERR(afroi2c_pwms_init(&i2c_bus, motors_map, N_MOTORS));
       plat->write_motors = afroi2c_pwms_write;
-      ac_init(&plat->ac, 0.1f, 0.7f, 12.0f, 17.0f, c, N_MOTORS, force_to_esc_setup3, 0.0f);
+      ac_init(&plat->ac, 0.1f, 1.0f, 12.0f, 17.0f, c, N_MOTORS, force_to_esc_setup3, 0.0f);
    }
 
    LOG(LL_INFO, "pi_quadro platform initialized");

@@ -101,6 +101,7 @@ int main_i2c(void)
                 | (((long) data_r[2]) << 16) 
                 | (((long) data_r[1]) << 8) 
                 | (data_r[0]);
+      time /= 1000;
       char *time_str = ctime(&time);
       size_t len = strlen(time_str);
       msgpack_pack_raw(pk, len);
@@ -110,12 +111,12 @@ int main_i2c(void)
       {
          data_w[0] = I2C_GPS_LOCATION;
          i2c_xfer(&device, 1, data_w, 8, data_r);
-         PACKF(( (((long) data_r[3]) << 24) 
+         PACKD(( (((long) data_r[3]) << 24) 
                | (((long) data_r[2]) << 16) 
                | (((long) data_r[1]) << 8) 
                | (data_r[0])) / 10000000.0); /* latitude, gps array index 1 */
 
-         PACKF(( (((long) data_r[7]) << 24) 
+         PACKD(( (((long) data_r[7]) << 24) 
                | (((long) data_r[6]) << 16) 
                | (((long) data_r[5]) << 8) 
                | (data_r[4])) / 10000000.0); /* logitude, gps array index 2 */

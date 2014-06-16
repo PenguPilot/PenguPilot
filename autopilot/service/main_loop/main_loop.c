@@ -56,6 +56,7 @@
 #include "../hardware/util/calibration.h"
 #include "../hardware/util/gps_util.h"
 #include "../hardware/util/mag_decl.h"
+#include "../control/control.h"
 #include "../control/position/navi.h"
 #include "../control/position/att_ctrl.h"
 #include "../control/position/u_ctrl.h"
@@ -80,7 +81,7 @@ static calibration_t gyro_cal;
 static interval_t gyro_move_interval;
 static int init = 0;
 static Filter1 lp_filter;
-static float acc_vec[3] = {0.0f, 0.0f, -G_CONSTANT};
+static float acc_vec[3];
 
 
 typedef union
@@ -188,7 +189,7 @@ void main_init(int argc, char *argv[])
    ne_speed_ctrl_init(REALTIME_PERIOD);
    att_ctrl_init();
    yaw_ctrl_init();
-   u_ctrl_init();
+   u_ctrl_init(REALTIME_PERIOD);
    u_speed_init();
    navi_init();
 
@@ -205,7 +206,7 @@ void main_init(int argc, char *argv[])
    cal_init(&gyro_cal, 3, 1000);
 
    cal_ahrs_init();
-   flight_state_init(50, 150, 4.0);
+   flight_state_init(1024, 150, 6.0);
    
    piid_init(REALTIME_PERIOD);
 
@@ -222,7 +223,8 @@ void main_init(int argc, char *argv[])
       OPCD_PARAMS_END
    };
    opcd_params_apply("main.", params);
-   filter1_lp_init(&lp_filter, tsfloat_get(&acc_fg), 0.06, 3);
+   filter1_lp_init(&lp_filter, tsfloat_get(&acc_fg), 0.005, 3);
+   lp_filter.z[2] = G_CONSTANT;
 
    cm_init();
    mon_init();
@@ -248,6 +250,10 @@ void main_step(const float dt,
    vec2_init(&ne_spd_err);
    vec3_t mag_normal;
    vec3_init(&mag_normal);
+   vec3_t pry_err;
+   vec3_init(&pry_err);
+   vec3_t pry_speed_err;
+   vec3_init(&pry_speed_err);
 
    float u_pos_err = 0.0f;
    float u_spd_err = 0.0f;
@@ -316,8 +322,8 @@ void main_step(const float dt,
    }
    else
    {
-      pos_in.pos_n = 0.0f;   
-      pos_in.pos_e = 0.0f; 
+      pos_in.pos_n = 0.0f;
+      pos_in.pos_e = 0.0f;
       pos_in.speed_n = 0.0f;
       pos_in.speed_e = 0.0f;
       mag_decl = 0.0f;
@@ -328,10 +334,7 @@ void main_step(const float dt,
    vec_copy(&mag_normal, &cal_marg_data.mag);
 
    /* apply current magnetometer compensation: */
-   static float _c = 0.0;
-   float x = 0.003;
-   _c = _c * (1-x) + current * x;
-   cmc_apply(&cal_marg_data.mag, _c);
+   cmc_apply(&cal_marg_data.mag, current);
 
    /* determine flight state: */
    bool flying = flight_state_update(&cal_marg_data.acc.ve[0]);
@@ -349,7 +352,7 @@ void main_step(const float dt,
    vec3_t world_acc;
    vec3_init(&world_acc);
    body_to_neu(&world_acc, &euler, &cal_marg_data.acc);
-   
+
    /* center global ACC readings: */
    filter1_run(&lp_filter, &world_acc.ve[0], &acc_vec[0]);
    FOR_N(i, 3)
@@ -409,6 +412,7 @@ void main_step(const float dt,
    vec2_t pr_pos_sp;
    vec2_init(&pr_pos_sp);
    att_thrust_calc(&pr_pos_sp, &thrust, &f_neu, euler.yaw, platform.max_thrust_n, 0);
+   thrust = a_u + platform.mass_kg * G_CONSTANT;
 
    /* execute direct attitude angle control, if requested: */
    if (cm_att_is_angles())
@@ -424,15 +428,16 @@ void main_step(const float dt,
    vec2_set(&pr_pos, -euler.pitch, euler.roll);
    vec2_init(&pr_pos_ctrl);
    att_ctrl_step(&pr_pos_ctrl, &att_err, dt, &pr_pos, &pr_spd, &pr_pos_sp);
+   pry_err.x = att_err.x;
+   pry_err.y = att_err.y;
 
    float piid_sp[3] = {0.0f, 0.0f, 0.0f};
    piid_sp[PIID_PITCH] = pr_pos_ctrl.ve[0];
    piid_sp[PIID_ROLL] = pr_pos_ctrl.ve[1];
- 
-   /* execute direct attitude rate control, if requested:*/
+
+   /* direct rate control, if selected: */
    if (cm_att_is_rates())
    {
-      thrust = a_u + platform.mass_kg * G_CONSTANT;
       vec2_t rates_sp;
       vec2_init(&rates_sp);
       cm_att_sp(&rates_sp);
@@ -452,6 +457,9 @@ void main_step(const float dt,
    f_local_t f_local = {{thrust, 0.0f, 0.0f, 0.0f}};
    float piid_gyros[3] = {cal_marg_data.gyro.x, -cal_marg_data.gyro.y, cal_marg_data.gyro.z};
    piid_run(&f_local.ve[1], piid_gyros, piid_sp, dt);
+   pry_speed_err.x = piid_gyros[PIID_PITCH] - piid_sp[PIID_PITCH];
+   pry_speed_err.y = piid_gyros[PIID_ROLL] - piid_sp[PIID_ROLL];
+   pry_speed_err.z = piid_gyros[PIID_YAW] - piid_sp[PIID_YAW];
 
    /* computate rpm ^ 2 out of the desired forces: */
    inv_coupling_calc(rpm_square, f_local.ve);
@@ -464,18 +472,12 @@ void main_step(const float dt,
 
    /* reset controllers, if motors are not controllable: */
    if (!motors_controllable())
-   {
-      navi_reset();
-      ne_speed_ctrl_reset();
-      u_ctrl_reset();
-      att_ctrl_reset();
-      piid_reset();
-   }
- 
+      control_reset();
+
    /* handle special cases for motor setpoints: */
    if (motors_starting())
       FOR_N(i, platform.n_motors) setpoints[i] = platform.ac.min;
-   if (hard_off || motors_stopping())
+   if (hard_off || motors_output_is_disabled())
       FOR_N(i, platform.n_motors) setpoints[i] = platform.ac.off_val;
    
    /* write motors: */
@@ -484,13 +486,19 @@ void main_step(const float dt,
       platform_write_motors(setpoints);
    }
 
-   /* set monitoring data: */
-   mon_data_set(ne_pos_err.x, ne_pos_err.y, u_pos_err, yaw_err);
+   /* set monitoring data, if we have a valid fix: */
+   if (sensor_status & GPS_VALID)
+   {
+      mon_data_set(pos_est.ne_pos.x, pos_est.ne_pos.y, pos_est.ultra_u.pos, pos_est.baro_u.pos, euler.yaw,
+                ne_pos_err.x, ne_pos_err.y, u_pos_err, yaw_err);
+   }
 
 out:
    EVERY_N_TIMES(bb_rate, blackbox_record(dt, marg_data, gps_data, ultra, baro, voltage, current, channels, sensor_status, /* sensor inputs */
                           &ne_pos_err, u_pos_err, /* position errors */
                           &ne_spd_err, u_spd_err /* speed errors */,
-                          &mag_normal));
+                          &mag_normal,
+                          &pry_err, /* attitude errors */
+                          &pry_speed_err /* attitude rate errors */));
 }
 

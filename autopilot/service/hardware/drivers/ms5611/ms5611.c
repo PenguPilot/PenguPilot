@@ -181,6 +181,7 @@ static void ms5611_compensate(ms5611_t *ms5611)
    int64_t sens = ((uint32_t)C1 <<15) + (((int64_t)dT * C3) >> 8);
    temperature  = 2000 + (((int64_t)dT * C6) / (float) (1 << 23));
    
+   #if 0
    if (temperature < 2000) { // temperature lower than 20st.C 
      delt = temperature - 2000;
      delt  = delt * delt;
@@ -192,13 +193,14 @@ static void ms5611_compensate(ms5611_t *ms5611)
        off2  += 7 * delt; 
        sens2 += (11 * delt) / 2; 
      }
-   } 
+   }
+   #endif
    off  -= off2; 
    sens -= sens2;
    double pressure = (( (D1 * sens ) >> 21) - off) / (float) (1 << 15);
    ms5611->c_p = pressure / 100.0;
    ms5611->c_t = temperature / 100.0;
-   ms5611->c_a = ((273.15 + 15.0) / 0.0065 * (1.0 - pow(ms5611->c_p / 101325.0, 1.0 / 5.255)));
+   ms5611->c_a = ((273.15 + 15.0) / 0.0065 * (1.0 - pow(ms5611->c_p / 1013.25, 1.0 / 5.255)));
 }
 
 

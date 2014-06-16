@@ -86,32 +86,32 @@ autopilot:
       details: 2
 
    main:
-      acc_fg: 0.1
-   
+      acc_fg: 0.01
+
    ahrs:
-      beta: 0.03
+      beta: 0.1
       beta_start: 50.0
-      beta_step: 5.0
-   
+      beta_step: 15.0
+
    cal:
-      acc_bias_x: 0.313252937548
-      acc_bias_y: 0.168026474259
-      acc_bias_z: 0.218608441262
-      acc_scale_x: 9.87794649866
-      acc_scale_y: 9.83300152686
-      acc_scale_z: 10.0003835985
-      mag_bias_x: 0.0498902542405
-      mag_bias_y: -0.0437473939547
-      mag_bias_z: 0.0159657398081
-      mag_scale_x: 0.361097461536
-      mag_scale_y: 0.40723533953
-      mag_scale_z: 0.428943700944
+      acc_bias_x: 0.0
+      acc_bias_y: 0.0
+      acc_bias_z: 0.0
+      acc_scale_x: 1.0
+      acc_scale_y: 1.0
+      acc_scale_z: 1.0
+      mag_bias_x: 0.0
+      mag_bias_y: 0.0
+      mag_bias_z: 0.0
+      mag_scale_x: 1.0
+      mag_scale_y: 1.0
+      mag_scale_z: 1.0
 
    cmc:
-      bias: 0.40000000596
-      scale_x: -0.03445416109912508
-      scale_y: 0.007504328769427603
-      scale_z: 0.02975504812236219
+      bias: 0.0
+      scale_x: 0.0
+      scale_y: 0.0
+      scale_z: 0.0
 
    inv_coupling:
       pitch_enabled: 1
@@ -119,14 +119,15 @@ autopilot:
       yaw_enabled: 1
 
    manual_control:
-      pitch_roll_speed_max: 60.0 # [deg/s]
-      pitch_roll_angle_max: 40.0 # [deg]
+      pitch_roll_speed_max: 50.0 # [deg/s]
+      pitch_roll_angle_max: 15.0 # [deg]
       yaw_speed_max: 90.0 # maximum yaw rotation speed [deg/s]
-      vert_speed_max: 5.0
-      horiz_speed_max: 5.0 # maximal horizontal speed
+      vert_speed_max: 1.0
+      horiz_speed_max: 2.0 # maximal horizontal speed
       gps_deadzone: 0.05 # if magnitude of gps speed sticks are lower than this value, gps position is locked
-      gas_deadzone: 0.07 # if magnitude of centered gas stick is lower than this value, altitude is locked
-      gas_acc_max: 10.0 # maximum positive/negative acceleration in m/s^2
+      rates_deadzone: 0.01 # desired rate is 0 in the deadzone
+      gas_deadzone: 0.15 # if magnitude of centered gas stick is lower than this value, altitude is locked
+      gas_acc_max: 20.0 # maximum positive/negative acceleration in m/s^2
       sticks_rotation: 0.0 # 0 = "+" mode, 90 = "x mode"
 
    controllers:
@@ -145,38 +146,38 @@ autopilot:
          tmc: 0.005
       
       ne_speed:
-         d: 0.1
-         filt_fg: 10.0
-         filt_d: 0.95
-         i: 0.1
-         i_max: 0.1
+         d: 0.2
+         i: 0.01
+         i_max: 0.5
          p: 3.0
 
       attitude:
-         d: 0.0
-         i: 0.0
-         i_max: 0.2
-         p: 1.0
+         p: 5.624432790068787
+         i: 0.009785412472046494
+         i_max: 1.0
+         d: 0.40432184982361397
          pitch_bias: 2.0
-         roll_bias: 2.75
+         roll_bias: 0.0
+         angles_max: 20.0 # maximal angle allowed in attitude control
 
       u_speed:
          i: 0.15
          imax: 1.0
          p: 2.0
-
-      u_pos:
-         p: 4.0
-         i: 0.1
-         imax: 2.0
-         d: 0.5
       
+      u_pos:
+         d: 10.0
+         i: 0.5
+         imax: 10.0
+         p: 20.0
+         lpfg: 10.0
+
       yaw:
-         d: 0.0
-         i: 0.0
-         i_max: 0.0
-         p: 3.0
          pid_lim: 5.0
+         p: 30.0
+         d: 0.0
+         i: 0.01
+         i_max: 0.5
 
       navigation:
          speed_min: 0.5
@@ -184,15 +185,17 @@ autopilot:
          speed_max: 3.5
          sqrt_shift: 3.0
          sqrt_scale: 0.25
-         square_shift: 0.1
+         square_shift: 0.5
          pos_i: 0.015
          pos_i_max: 5.0
          ortho_p: 0.0
 
    kalman_pos:
-      process_noise: 1.0e-6
       baro_noise: 0.01
-      gps_noise: 0.01
-      spd_scale: 0.5554474258271733
       ultra_noise: 0.001
-      use_gps_speed: 1
+      process_noise: 1.0e-6
+      gps_noise: 0.001
+      gps_speed_noise: 0.1
+      xy_acc_noise: 0.01
+      z_acc_noise: 0.02
+      use_gps_speed: 0

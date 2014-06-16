@@ -104,8 +104,7 @@ int main_serial(void)
    opcd_param_get(buffer_path, &dev_path);
    int dev_speed;
    opcd_param_get(buffer_speed, &dev_speed);
-   printf("%s %d\n", dev_path, dev_speed);
- 
+
    serialport_t port;
    THROW_ON_ERR(serial_open(&port, dev_path, dev_speed, O_RDONLY));
 
@@ -132,7 +131,7 @@ int main_serial(void)
       if (c < 0)
          continue;
       char b = c;
-
+      printf("%c", b);
       /* parse NMEA frame: */
       if (nmea_parse(&parser, &b, 1, &info) == 1)
       {
@@ -168,8 +167,8 @@ int main_serial(void)
 
             if (info.fix >= 2)
             {
-               PACKF(convert(info.lat));  /* gps array index 1 */
-               PACKF(convert(info.lon));  /* gps array index 2 */
+               PACKD(convert(info.lat));  /* gps array index 1 */
+               PACKD(convert(info.lon));  /* gps array index 2 */
                PACKI(info.satinfo.inuse); /* gps array index 3 */
                PACKF(info.speed);         /* gps array index 4 */
                PACKF(info.track);         /* gps array index 5 */

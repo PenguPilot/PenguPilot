@@ -37,11 +37,11 @@ def logdata_2_string(log_data):
    level_name = LOG_LEVEL_NAMES[log_data.level]
    file = basename(log_data.file)
    if log_data.details == 1:
-      return "[%s] %s: %s" % (level_name, file, log_data.message)
+      return "[%s] %s: %s" % (level_name, file, log_data.msg)
    elif log_data.details == 2:
-      return "[%s] %s,%d: %s" % (level_name, file, log_data.line, log_data.message)
+      return "[%s] %s,%d: %s" % (level_name, file, log_data.line, log_data.msg)
    else:
-      return "[%s] %s" % (level_name, log_data.message)
+      return "[%s] %s" % (level_name, log_data.msg)
 
 
 

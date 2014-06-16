@@ -27,6 +27,7 @@
 
 
 from pilot_pb2 import *
+from msgpack import loads
 
 
 class PilotError(Exception):
@@ -46,7 +47,6 @@ class PilotInterface:
       self.ctrl_socket = ctrl_socket
       self.params = self.get_params()
       self.mon_socket = mon_socket
-      self.mon = MonData()
 
    def _exec(self, req):
       self.ctrl_socket.send(req.SerializeToString())
@@ -94,7 +94,6 @@ class PilotInterface:
       rep = self._exec(req)
       return rep.params
 
-   def mon_read(self, mon):
-      data = self.mon_socket.recv()
-      mon.ParseFromString(data)
+   def mon_read(self):
+      self.mon = loads(self.mon_socket.recv())
 

@@ -57,8 +57,8 @@ def monitor():
       pass
 
 _map = generate_map('pilot_shell')
-_ctrl_socket = _map['ctrl']
-_mon_socket = _map['mon']
+_ctrl_socket = _map['ap_ctrl']
+_mon_socket = _map['ap_mon']
 i = PilotInterface(_ctrl_socket, _mon_socket)
 
 
