@@ -137,8 +137,8 @@ autopilot:
          att_ki: 3.13780298778e+00
          att_kii: 3.45789342669e+00
          att_kd: 2.94830266817e-02
-         yaw_kp: 0.3
-         yaw_ki: 0.05
+         yaw_kp: 1.0
+         yaw_ki: 1.0
          filt_fg: 10.0
          filt_d: 0.95
          jxx_jyy: 0.0097
@@ -166,15 +166,15 @@ autopilot:
          p: 2.0
       
       u_pos:
-         d: 10.0
-         i: 0.5
-         imax: 10.0
-         p: 20.0
-         lpfg: 10.0
+         d: 30.0
+         i: 2.0
+         imax: 5.0
+         p: 60.0
+         lpfg: 100.0
 
       yaw:
-         pid_lim: 5.0
-         p: 30.0
+         pid_lim: 2.0
+         p: 10.0
          d: 0.0
          i: 0.01
          i_max: 0.5
@@ -191,8 +191,8 @@ autopilot:
          ortho_p: 0.0
 
    kalman_pos:
-      baro_noise: 0.01
-      ultra_noise: 0.001
+      baro_noise: 0.1
+      ultra_noise: 0.1
       process_noise: 1.0e-6
       gps_noise: 0.001
       gps_speed_noise: 0.1

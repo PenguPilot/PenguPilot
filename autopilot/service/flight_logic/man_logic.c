@@ -111,13 +111,14 @@ static man_mode_t channel_to_man_mode(float sw)
 }
 
 
-static void handle_mode_update(man_mode_t mode, float baro_u_pos)
+static void handle_mode_update(man_mode_t mode, float ultra_u_pos)
 {
    if (last_mode != mode)
    {
       LOG(LL_INFO, "switching manual mode to: %d", mode);
       u_ctrl_reset();
-      u_pos_sp = baro_u_pos;
+      if (last_mode != -1)
+         u_pos_sp = ultra_u_pos;
       last_mode = mode;   
    }
 }
