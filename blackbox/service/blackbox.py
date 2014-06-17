@@ -25,14 +25,18 @@
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details. """
 
-
+import zmq
 from os import sep, symlink, unlink
 from scl import generate_map
 from misc import daemonize, user_data_dir
 from datetime import datetime
 from sys import argv
 
+
 def main(name):
+   context = zmq.Context()
+   zmq_socket = context.socket(zmq.PUB)
+   zmq_socket.bind('tcp://*:5555')
    socket = generate_map(name)['blackbox']
    prefix = user_data_dir + sep + 'log' + sep
    try:
@@ -48,8 +52,12 @@ def main(name):
          new_file = prefix + 'blackbox_%s.msgpack' % now
       symlink(new_file, symlink_file)
       f = open(new_file, "wb")
+      i = 0
       while True:
-         f.write(socket.recv())
+         data = socket.recv()
+         f.write(data)
+         if (i % 10) == 0:
+            zmq_socket.send(data)
    finally:
       try:
          f.close()
