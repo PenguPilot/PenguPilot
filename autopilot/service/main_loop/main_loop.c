@@ -206,7 +206,7 @@ void main_init(int argc, char *argv[])
    cal_init(&gyro_cal, 3, 1000);
 
    cal_ahrs_init();
-   flight_state_init(1024, 150, 6.0);
+   flight_state_init(1024, 150, 5.0);
    
    piid_init(REALTIME_PERIOD);
 
@@ -499,6 +499,7 @@ out:
                           &ne_spd_err, u_spd_err /* speed errors */,
                           &mag_normal,
                           &pry_err, /* attitude errors */
-                          &pry_speed_err /* attitude rate errors */));
+                          &pry_speed_err /* attitude rate errors */,
+                          &euler));
 }
 

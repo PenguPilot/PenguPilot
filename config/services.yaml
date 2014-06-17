@@ -83,7 +83,7 @@ powerman:
 display:
   binary: 'display/service/display.py'
   platforms: [overo_quad]
-  depends: [powerman, geomag]
+  depends: [powerman, geomag, remote]
   priority: sys_low
 
 emerg_kill:

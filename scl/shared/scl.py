@@ -30,7 +30,7 @@
 
 
 import os, yaml, zmq, subprocess
-
+from time import sleep
 
 class ZSEx(Exception):
    """
@@ -73,6 +73,7 @@ def generate_map(component_name):
    
    # generate the map:
    context = zmq.Context()
+   sleep(1)
    socket_map = {}
    for entry in zmq_spec[component_name]:
       socket_name = entry['socket_name']
