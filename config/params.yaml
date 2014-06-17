@@ -89,6 +89,7 @@ autopilot:
       acc_fg: 0.01
 
    ahrs:
+      cfp: 0.001
       beta: 0.1
       beta_start: 50.0
       beta_step: 15.0

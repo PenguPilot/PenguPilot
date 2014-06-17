@@ -175,9 +175,10 @@ static void set_vertical_spd_or_pos(float gas_stick, float baro_u_pos, float ult
 
 static void set_pitch_roll_rates(float pitch, float roll)
 {
+   float dz = tsfloat_get(&rates_deadzone);
    float rate_max = deg2rad(tsfloat_get(&pitch_roll_speed_max));
    vec2_t pr_sp;
-   vec2_set(&pr_sp, rate_max * pitch, rate_max * roll);
+   vec2_set(&pr_sp, rate_max * stick_dz(pitch, dz), rate_max * stick_dz(roll, dz));
    cm_att_set_rates(&pr_sp);
 }
 
@@ -209,9 +210,10 @@ static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t
 
 void set_att_angles(float pitch, float roll)
 {
+   float dz = tsfloat_get(&rates_deadzone);
    float angle_max = deg2rad(tsfloat_get(&pitch_roll_angle_max));
    vec2_t pr_sp;
-   vec2_set(&pr_sp, angle_max * pitch, angle_max * roll);
+   vec2_set(&pr_sp, angle_max * stick_dz(pitch, dz), angle_max * stick_dz(roll, dz));
    cm_att_set_angles(&pr_sp);
 }
 
@@ -317,6 +319,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       {
          set_att_angles(pitch, roll);
          set_vertical_spd_or_pos(gas_stick - 0.5, baro_u_pos, ultra_u_pos, dt);
+         cm_u_set_acc(tsfloat_get(&gas_acc_max) * (gas_stick - 0.5));
          break;
       }
 

@@ -32,27 +32,36 @@
 #include "cal_ahrs.h"
 #include "ahrs.h"
 #include "../util/math/conv.h"
+#include "../util/math/adams5.h"
+
 
 static ahrs_t ahrs;
+static tsfloat_t beta;
+static tsfloat_t beta_start;
+static tsfloat_t beta_step;
+static tsfloat_t cfp;
+
+static float pitch_roll[2] = {0.0, 0.0};
+static adams5_t adams;
+
 
 
 void cal_ahrs_init(void)
 {
    ASSERT_ONCE();
-   tsfloat_t beta;
-   tsfloat_t beta_start;
-   tsfloat_t beta_step;
 
    /* read configuration: */
    opcd_param_t params[] =
    {
       {"beta", &beta},
+      {"cfp", &cfp},
       {"beta_start", &beta_start},
       {"beta_step", &beta_step},
       OPCD_PARAMS_END
    };
    opcd_params_apply("ahrs.", params);
    ahrs_init(&ahrs, AHRS_ACC_MAG, tsfloat_get(&beta_start), tsfloat_get(&beta_step), tsfloat_get(&beta));
+   adams5_init(&adams, 2);
 }
 
 
@@ -63,8 +72,19 @@ int cal_ahrs_update(euler_t *euler, const marg_data_t *marg_data,
    euler_t _euler;
    quat_to_euler(&_euler, &ahrs.quat);
    euler->yaw = _euler.yaw + deg2rad(mag_decl);
-   euler->pitch = _euler.pitch;
-   euler->roll = _euler.roll;
+
+
+   float in[2] = {marg_data->gyro.y, -marg_data->gyro.x};
+   adams5_run(&adams, pitch_roll, in, dt, 1);
+   
+   float a = tsfloat_get(&cfp);
+   float pitch_ref = atan2(marg_data->acc.x, -marg_data->acc.z);
+   pitch_roll[0] = pitch_roll[0] * (1.0 - a) + pitch_ref * a;
+   float roll_ref = atan2(marg_data->acc.y, -marg_data->acc.z);
+   pitch_roll[1] = pitch_roll[1] * (1.0 - a) + roll_ref * a;
+
+   euler->pitch = pitch_roll[0];
+   euler->roll = -pitch_roll[1];
    euler_normalize(euler);
    return status;
 }

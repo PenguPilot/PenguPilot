@@ -79,7 +79,10 @@ char *blackbox_spec[BLACKBOX_ITEMS] =
    "yaw_err",        /* 37 */
    "pitch_rate_err", /* 38 */
    "roll_rate_err",  /* 39 */
-   "yaw_rate_err"    /* 40 */
+   "yaw_rate_err",   /* 40 */
+   "pitch",          /* 41 */
+   "roll",           /* 42 */
+   "yaw"             /* 43 */
 };
 
 
@@ -124,7 +127,8 @@ void blackbox_record(const float dt, /* sensor inputs ... */
                const float u_spd_err,
                const vec3_t *mag_normal,
                const vec3_t *pry_err,
-               const vec3_t *pry_rate_err)
+               const vec3_t *pry_rate_err,
+               const euler_t *euler)
 {
    msgpack_sbuffer_clear(msgpack_buf);
    msgpack_pack_array(pk, ARRAY_SIZE(blackbox_spec));
@@ -146,6 +150,9 @@ void blackbox_record(const float dt, /* sensor inputs ... */
    PACKFV(mag_normal->ve, 3);
    PACKFV(pry_err->ve, 3);
    PACKFV(pry_rate_err->ve, 3);
+   PACKF(euler->pitch);
+   PACKF(euler->roll);
+   PACKF(euler->yaw);
    scl_copy_send_dynamic(blackbox_socket, msgpack_buf->data, msgpack_buf->size);
 }
 
