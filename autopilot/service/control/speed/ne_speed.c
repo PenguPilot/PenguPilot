@@ -31,6 +31,7 @@
 #include <util.h>
 
 #include "../util/pid.h"
+#include "../../filters/filter.h"
 #include "../../util/math/conv.h"
 
 
@@ -39,12 +40,14 @@ static tsfloat_t speed_p;
 static tsfloat_t speed_i;
 static tsfloat_t speed_i_max;
 static tsfloat_t speed_d;
+static tsfloat_t lpfg;
+static Filter1 filter;
 
 /* controllers: */
 static pid_controller_t controllers[2];
 
 
-void ne_speed_ctrl_init(float Ts)
+void ne_speed_ctrl_init(float dt)
 {
    ASSERT_ONCE();
 
@@ -55,9 +58,11 @@ void ne_speed_ctrl_init(float Ts)
       {"i", &speed_i.value},
       {"i_max", &speed_i_max.value},
       {"d", &speed_d.value},
+      {"lpfg", &lpfg},
       OPCD_PARAMS_END
    };
    opcd_params_apply("controllers.ne_speed.", params);
+   filter1_lp_init(&filter, tsfloat_get(&lpfg), dt, 2);
    
    /* initialize controllers: */
    FOR_EACH(i, controllers)
@@ -82,6 +87,8 @@ void ne_speed_ctrl_run(vec2_t *forces, vec2_t *err, const vec2_t *setp, const fl
    {
       err->ve[i] = setp->ve[i] - speed->ve[i];
       forces->ve[i] = pid_control(&controllers[i], err->ve[i], 0.0, dt);
+      filter1_lp_update_coeff(&filter, tsfloat_get(&lpfg), dt);
+      filter1_run(&filter, forces->ve, forces->ve);
    }
 }
 
