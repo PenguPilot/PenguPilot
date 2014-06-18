@@ -318,7 +318,7 @@ void main_step(const float dt,
       pos_in.speed_n = gps_rel_data.speed_n;
       pos_in.speed_e = gps_rel_data.speed_e;
       ONCE(gps_start_set(gps_data));
-      mag_decl = mag_decl_get();
+      mag_decl = 2.4; //mag_decl_get();
    }
    else
    {
@@ -480,6 +480,12 @@ void main_step(const float dt,
    if (hard_off || motors_output_is_disabled())
       FOR_N(i, platform.n_motors) setpoints[i] = platform.ac.off_val;
    
+   
+   printf("%f %f %f %f %f %f %f %f %f %f %f %f\n", euler.pitch, euler.roll, euler.yaw,
+                      pos_est.ne_pos.x, pos_est.ne_speed.x,
+                      pos_est.ne_pos.y, pos_est.ne_speed.y,
+                      pos_est.ultra_u.pos, pos_est.ultra_u.speed,
+                      voltage, current, (hard_off || !motors_enabled) ? 0 : thrust);
    /* write motors: */
    if (!override_hw)
    {
