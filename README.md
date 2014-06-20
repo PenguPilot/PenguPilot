@@ -65,7 +65,7 @@ Here's an example of a Gumstix Overo Air based PenguCopter with GPS receiver and
 
 ![PenguCopter](https://raw.github.com/PenguPilot/PenguPilot/master/doc/GumstixCopter.jpg)
 
-![PenguCopter](http://vimeo.com/98649107)
+[PenguCopter Video](http://vimeo.com/98649107)
 
 
 
