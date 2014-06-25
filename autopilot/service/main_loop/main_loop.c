@@ -481,11 +481,13 @@ void main_step(const float dt,
       FOR_N(i, platform.n_motors) setpoints[i] = platform.ac.off_val;
    
    
-   printf("%f %f %f %f %f %f %f %f %f %f %f %f\n", euler.pitch, euler.roll, euler.yaw,
+   printf("%f %f %f %f %f %f %f %f %f %f %f %f %f\n", euler.pitch, euler.roll, euler.yaw,
                       pos_est.ne_pos.x, pos_est.ne_speed.x,
                       pos_est.ne_pos.y, pos_est.ne_speed.y,
                       pos_est.ultra_u.pos, pos_est.ultra_u.speed,
-                      voltage, current, (hard_off || !motors_enabled) ? 0 : thrust);
+                      voltage, current, (hard_off || !motors_enabled) ? 0 : thrust, baro);
+   
+   
    /* write motors: */
    if (!override_hw)
    {
