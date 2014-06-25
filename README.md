@@ -5,14 +5,48 @@
 [![Build Status](https://travis-ci.org/PenguPilot/PenguPilot.svg?branch=master)](https://travis-ci.org/PenguPilot/PenguPilot)
 
 Overview
---------
-PenguPilot is a Free and Open Source Multi-Rotor UAV autopilot for Linux-capable computer modules like the Gumstix Overo, Raspberry Pi or the Odroid-U3.
-Sensor data acquisition, state estimation and feed-back control runs as a high-priority Linux user-space task, which is ideal for prototyping and experimentation.
-PenguPilot's architecture allows to distribute the control code among several processes (e.g. high-level control in Python and low-level control in C).
-Currently, components are implemented in C and Python, communicating efficiently via ZeroMQ and Protobuf/MessagePack.
+========
+PenguPilot is a Free and Open Source Multi-Rotor UAV autopilot for Linux-capable computer modules. Currently, the following platforms are supported:
+- Gumstix Overo (custom Gentoo Linux)
+- Raspberry Pi (Respbian)
+- Odroid U3 (custom Gentoo Linux)
 
-Contents
--------
+In contrast to other platforms, PenguPilot does not require a dedicated low-level microcontroller for real-time sensor data acquisition and motor control. The whole control process is implemented in a high-priority user-space task, which is ideal for prototyping and experimentation.
+
+What's different compared to other Autopilots?
+----------------------------------------------
+
+The two main factors that make PenguPilot different are the
+  * **Linux operating system**, and the
+  * powerful underlying **computer-on-module** (COM).
+
+These factors generate a lot of possibilities and benefits, and influence the way how software development is conducted on a UAV:
+
+* **Advanced programming and rich system interfaces**:
+  - no microcontroller-like flash/RAM memory restrictions
+  - high-level programming languages and libraries (Bash, Python/numpy)
+  - flexible networking functionality (WLAN, UMTS)
+  - file system abstractions instead of raw memory access
+  - debugging via GDB and code profiling without extra effort
+  - high memory bandwidth allows to log every sensor value per control step
+
+* **Memory protection among software components**:
+  - high-priority, safety critical components (control and flight management)
+  - low-priority, non safety critical components (parameter management, communication)
+  - coexistence of open source and closed source software
+
+* **Advanced in-field software development and management**:
+  - software development on the UAV via SSH from virtually any device
+  - native source code compilation (no cross-compiler required)
+  - computation-intensive compilation via QEMU (e.g. Linux updates)
+  - on-device software version control via Git
+
+To make full use of these benefits, it is important to choose the right tools for development.
+Thus, PenguPilot's architecture allows to distribute control code among several processes (e.g. high-level control in Python and low-level control in C). Currently, components are implemented in C and Python, communicating efficiently via ZeroMQ and Protobuf/MessagePack.
+
+
+Filesystem Contents
+-------------------
 
 Flight Infrastructure:
 - [autopilot](autopilot): real-time control running at 200Hz
@@ -51,6 +85,17 @@ Software Dependencies:
 - Gentoo: app-admin/sudo app-misc/screen dev-lang/python dev-lang/swig dev-libs/glib dev-libs/libyaml dev-libs/msgpack dev-libs/protobuf dev-libs/protobuf-c dev-python/imaging dev-python/msgpack dev-python/numpy dev-python/psutil dev-python/python-daemon dev-python/pyyaml dev-python/pyzmq dev-util/scons sys-power/cpufrequtils dev-python/pyproj sci-libs/gdal
 - Ubuntu: realpath scons swig protobuf-compiler python-protobuf libmsgpack-dev libprotobuf-dev python-yaml protobuf-c-compiler libprotobuf-c0-dev libzmq-dev python-zmq libyaml-dev libglib2.0-dev python-daemon python-termcolor libpython-dev
 
+
+Service Dependencies
+--------------------
+The service dependencies of PenguPilot are depicted in the figure below:
+
+![Services Dependency Graph](https://raw.github.com/PenguPilot/PenguPilot/master/doc/ServicesGraph.png)
+
+Services indicated in yellow are platform-specific, as specified in file config/services.yaml.
+
+
+
 Example UAV System
 ------------------
 
@@ -61,14 +106,4 @@ Here's an example of a Gumstix Overo Air based PenguCopter with GPS receiver and
 [PenguCopter Video](http://vimeo.com/98649107)
 
 
-
 [Flying Penguins from BBC :)](https://www.youtube.com/watch?v=9dfWzp7rYR4)
-
-
-Service Dependencies
---------------------
-The service dependencies of PenguPilot are depicted in the figure below:
-
-![Services Dependency Graph](https://raw.github.com/PenguPilot/PenguPilot/master/doc/ServicesGraph.png)
-
-Services indicated in yellow are platform-specific, as specified in file config/services.yaml.
