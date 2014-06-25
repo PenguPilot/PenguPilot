@@ -1,13 +1,6 @@
-     ___________________________________________________
-    |  _____                       _____ _ _       _    |
-    | |  __ \                     |  __ (_) |     | |   |
-    | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
-    | |  ___/ _ \ '_ \ / _` | | | |  ___/ | |/ _ \| __| |
-    | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
-    | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
-    |                   __/ |                           |
-    |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
-    |___________________________________________________|
+
+![PenguPilot](https://raw.github.com/PenguPilot/PenguPilot/master/doc/PenguPilot.png)
+
 
 [![Build Status](https://travis-ci.org/PenguPilot/PenguPilot.svg?branch=master)](https://travis-ci.org/PenguPilot/PenguPilot)
 
@@ -19,7 +12,7 @@ PenguPilot's architecture allows to distribute the control code among several pr
 Currently, components are implemented in C and Python, communicating efficiently via ZeroMQ and Protobuf/MessagePack.
 
 Contents
---------
+-------
 
 Flight Infrastructure:
 - [autopilot](autopilot): real-time control running at 200Hz
@@ -64,6 +57,10 @@ Example UAV System
 Here's an example of a Gumstix Overo Air based PenguCopter with GPS receiver and I2C OLED display:
 
 ![PenguCopter](https://raw.github.com/PenguPilot/PenguPilot/master/doc/GumstixCopter.jpg)
+
+[PenguCopter Video](http://vimeo.com/98649107)
+
+
 
 [Flying Penguins from BBC :)](https://www.youtube.com/watch?v=9dfWzp7rYR4)
 
