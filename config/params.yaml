@@ -94,7 +94,7 @@ autopilot:
       beta_start: 50.0
       beta_step: 15.0
 
-   cal:
+   cal: # accelerometer and magnetometer calibration
       acc_bias_x: 0.0
       acc_bias_y: 0.0
       acc_bias_z: 0.0
@@ -108,13 +108,13 @@ autopilot:
       mag_scale_y: 1.0
       mag_scale_z: 1.0
 
-   cmc:
+   cmc: # current magnetometer calibration
       bias: 0.0
       scale_x: 0.0
       scale_y: 0.0
       scale_z: 0.0
 
-   inv_coupling:
+   inv_coupling: # enables different parts of the coupling matrix
       pitch_enabled: 1
       roll_enabled: 1
       yaw_enabled: 1
@@ -133,7 +133,7 @@ autopilot:
 
    controllers:
 
-      stabilizing:
+      stabilizing: # basic stabilizing controller:
          att_kp: 4.19227650348e-01
          att_ki: 3.13780298778e+00
          att_kii: 3.45789342669e+00
@@ -146,8 +146,8 @@ autopilot:
          jzz: 0.0057292965
          tmc: 0.06
       
-      ne_speed:
-         d: 0.2
+      ne_speed: # north-east speed controller
+         d: 0.0
          i: 0.01
          i_max: 0.5
          p: 3.0
@@ -161,26 +161,26 @@ autopilot:
          roll_bias: 0.0
          angles_max: 20.0 # maximal angle allowed in attitude control
 
-      u_speed:
+      u_speed: # up speed controller (barometer)
          i: 0.15
          imax: 1.0
          p: 2.0
       
-      u_pos:
+      u_pos: # ups position controller (barometer, ultrasonic)
          d: 30.0
          i: 2.0
          imax: 5.0
          p: 60.0
          lpfg: 100.0
 
-      yaw:
+      yaw: # yaw position controller
          pid_lim: 2.0
          p: 10.0
          d: 0.0
          i: 0.01
          i_max: 0.5
 
-      navigation:
+      navigation: # north-east position controller
          speed_min: 0.5
          speed_std: 2.0
          speed_max: 3.5
@@ -191,12 +191,9 @@ autopilot:
          pos_i_max: 5.0
          ortho_p: 0.0
 
-   kalman_pos:
+   kalman_pos: # NEU position estimate kalman filter
+      process_noise: 1.0e-6
       baro_noise: 0.1
       ultra_noise: 0.1
-      process_noise: 1.0e-6
       gps_noise: 0.001
-      gps_speed_noise: 0.1
-      xy_acc_noise: 0.01
-      z_acc_noise: 0.02
       use_gps_speed: 0
