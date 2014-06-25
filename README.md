@@ -1,54 +1,73 @@
-
 ![PenguPilot](https://raw.github.com/PenguPilot/PenguPilot/master/doc/PenguPilot.png)
-
 
 [![Build Status](https://travis-ci.org/PenguPilot/PenguPilot.svg?branch=master)](https://travis-ci.org/PenguPilot/PenguPilot)
 
-Overview
-========
-PenguPilot is a Free and Open Source Multi-Rotor UAV autopilot for Linux-capable computer modules. Currently, the following platforms are supported:
+What is PenguPilot?
+===================
+**PenguPilot is a GNU/Linux based Multi-Rotor UAV Autopilot.**
+
+Unlike other platforms, PenguPilot does not require a dedicated low-level microcontroller for real-time
+
+   * sensor data acquisition,
+   * data fusion / filtering, and
+   * motor control.
+
+Instead, the whole flight infrastructure is based on user-space tasks in a Linux operating system (PREEMPT or PREEMPT_RT). This means, if the control process is killed or the kernel panics, your UAV is killed as well :-) **Already scared**? If not, please read on...
+
+**Some highlights of the PenguPilot software are**:
+
+- component based software architecture
+- memory protection among critical and non-critical components (tasks)
+- message-passing among components via ZeroMQ/MessagePack/Protobuf
+- process/priority management and dependency tracking
+- online parameter configuration usable for in-flight parameter updates
+- blackbox functionality to log sensor values at each control step to sdcard
+- sensor data replay capabilitiy for offline PC-based optimization, filter tuning, ...
+- quick deployment to new hardware possible (Linux HAL)
+
+**Currently, PenguPilot supports the following computer-on-modues**:
+
 - Gumstix Overo (custom Gentoo Linux)
 - Raspberry Pi (Respbian)
 - Odroid U3 (custom Gentoo Linux)
 
-In contrast to other platforms, PenguPilot does not require a dedicated low-level microcontroller for real-time sensor data acquisition and motor control. The whole control process is implemented in a high-priority user-space task, which is ideal for prototyping and experimentation.
+What's different compared to other Approaches?
+---------------------------------------------------------------------
 
-What's different compared to other Autopilots?
-----------------------------------------------
+The three main factors that make PenguPilot based systems different, compared to microcontroller-based autopilots, are the
 
-The two main factors that make PenguPilot different are the
-  * **Linux operating system**, and the
-  * powerful underlying **computer-on-module** (COM).
+  * **Linux operating system**, the
+  * powerful underlying **computer-on-module** (COM), and
+  * PenguPilot's **component-based software architecture**.
 
-These factors generate a lot of possibilities and benefits, and influence the way how software development is conducted on a UAV:
+These factors generate a lot of possibilities and benefits for UAV software development, summarized as follows:
 
-* **Advanced programming and rich system interfaces**:
-  - no microcontroller-like flash/RAM memory restrictions
+* **Powerful Hardware and OS**:
+   - no microcontroller-like flash/RAM memory restrictions
+   - high memory bandwidth allows to log every sensor value per control step
+   - memory protection for improved task safety
+   - USB host support (Cameras, WiFi and UMTS sticks, FTDI's, ...)
+   - symmetric multi-processing (e.g. ODROID U3)
+
+* **Advanced Programming Possibilities**:
   - high-level programming languages and libraries (Bash, Python/numpy)
-  - flexible networking functionality (WLAN, UMTS)
+  - rich networking and routing functionality
   - file system abstractions instead of raw memory access
   - debugging via GDB and code profiling without extra effort
-  - high memory bandwidth allows to log every sensor value per control step
+  - myriads of open source device drivers and software libraries
 
-* **Memory protection among software components**:
-  - high-priority, safety critical components (control and flight management)
-  - low-priority, non safety critical components (parameter management, communication)
-  - coexistence of open source and closed source software
-
-* **Advanced in-field software development and management**:
+* **Advanced Field Software Development**:
   - software development on the UAV via SSH from virtually any device
   - native source code compilation (no cross-compiler required)
   - computation-intensive compilation via QEMU (e.g. Linux updates)
   - on-device software version control via Git
 
-To make full use of these benefits, it is important to choose the right tools for development.
-Thus, PenguPilot's architecture allows to distribute control code among several processes (e.g. high-level control in Python and low-level control in C). Currently, components are implemented in C and Python, communicating efficiently via ZeroMQ and Protobuf/MessagePack.
-
 
 Filesystem Contents
--------------------
+===============
 
 Flight Infrastructure:
+
 - [autopilot](autopilot): real-time control running at 200Hz
 - [icarus](icarus): high-level flight management service
 - [blackbox](blackbox): receives logging data containing every sensor input of the autopilot to sd card
@@ -107,3 +126,4 @@ Here's an example of a Gumstix Overo Air based PenguCopter with GPS receiver and
 
 
 [Flying Penguins from BBC :)](https://www.youtube.com/watch?v=9dfWzp7rYR4)
+
