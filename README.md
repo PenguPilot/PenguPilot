@@ -21,9 +21,11 @@ Instead, the whole flight infrastructure is based on user-space tasks in a Linux
 - message-passing among components via ZeroMQ/MessagePack/Protobuf
 - process/priority management and dependency tracking
 - online parameter configuration usable for in-flight parameter updates
+- SSH based user interfaces for parameters, calibration, ...
 - blackbox functionality to log sensor values at each control step to sdcard
 - sensor data replay capabilitiy for offline PC-based optimization, filter tuning, ...
 - quick deployment to new hardware possible (Linux HAL)
+
 
 **Currently, PenguPilot supports the following computer-on-modues**:
 
@@ -59,7 +61,6 @@ These factors generate a lot of possibilities and benefits for UAV software deve
 * **Advanced Field Software Development**:
   - software development on the UAV via SSH from virtually any device
   - native source code compilation (no cross-compiler required)
-  - computation-intensive compilation via QEMU (e.g. Linux updates)
   - on-device software version control via Git
 
 
