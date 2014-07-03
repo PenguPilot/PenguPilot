@@ -109,6 +109,11 @@ geomag:
   depends: [gpsp]
   priority: sys_low
 
+elevmap:
+  binary: 'elevmap/service/elevmap.py'
+  depends: [gpsp]
+  priority: sys_low
+
 
 # application-level services:
 
