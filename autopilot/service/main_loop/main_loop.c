@@ -318,7 +318,7 @@ void main_step(const float dt,
       pos_in.speed_n = gps_rel_data.speed_n;
       pos_in.speed_e = gps_rel_data.speed_e;
       ONCE(gps_start_set(gps_data));
-      mag_decl = mag_decl_get();
+      mag_decl = 2.4; //mag_decl_get();
    }
    else
    {

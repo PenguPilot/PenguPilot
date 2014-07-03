@@ -24,38 +24,38 @@
 # GNU General Public License for more details.
 
 
-overo_quad:
-   voltage_channel: 7
-   current_channel: 2
+overo_quad: # Gumstix Overo based quadrotor
+   voltage_channel: 7 # TWL4030_MADC
+   current_channel: 2 # TWL4030_MADC
    adc_to_voltage: 'lambda x: (x + 27.0951) / 117.1319'
    adc_to_current: 'lambda x: 0.0303 * (2500 - x) + 0.4'
    rx_type: 'dsl' # 'sbus' or 'dsl'
-   sbus_serial:
+   sbus_serial: # taranis sbus
       path: '/dev/ttyO0'
-   dsl_serial:
+   dsl_serial: # ACT dsl
       path: '/dev/ttyO0'
       speed: 38400
-   gpsp_serial:
+   gpsp_serial: # GPS publisher
       path: "/dev/ttyO2"
       speed: 115200
    nrf_serial: "/dev/ttyACM0"
 
-pi_quad:
+pi_quad: # Raspberry PI based quadrotor
    voltage_channel: 0 # currently ignored
    current_channel: 1 # currently ignored
    adc_to_voltage: 'lambda x : x * 0.003 * 3.6045'
    adc_to_current: 'lambda x : x'
-   dsl_serial:
+   dsl_serial: # ACT DSL
       path: '/dev/ttyAMA0'
       speed: 38400
    nrf_serial: "/dev/ttyACM0"
 
 
-exynos_quad:
-   arduino_serial:
+exynos_quad: # ODROID U3 based quadrotor
+   arduino_serial: # U3 IO shield serial interface
       path: '/dev/ttySAC0'
       speed: 115200
-   gpsp_serial:
+   gpsp_serial: # GPS publisher
       path: "/dev/gps0" # created by udev rule
       speed: 115200
    nrf_serial: "/dev/nrf0" # created by udev rule
@@ -71,9 +71,9 @@ powerman:
    battery_low_cell_voltage_load: 3.3 # [V]
    battery_current_treshold: 3.0 # [A]
    low_voltage_hysteresis: 10.0 # [s], battery needs to go below battery_low_cell_voltage for this time period in order to trigger a low power event
-   battery_capacity: 3.0
+   battery_capacity: 3.0 # [Ah]
  
-hlfm:
+icarus:
    takeoff:
       standard_rel_z: 4.0
 
@@ -89,14 +89,14 @@ autopilot:
       details: 2
 
    main:
-      acc_fg: 0.01
+      acc_fg: 0.01 # accelerometer low-pass filter
 
-   ahrs:
+   ahrs: # attitude and heading reference system
       beta: 0.01
       beta_start: 10.0
       beta_step: 1.0
 
-   cal:
+   cal: # accelerometer and magnetometer calibration
       acc_bias_x: 0.0
       acc_bias_y: 0.0
       acc_bias_z: 0.0
@@ -110,13 +110,13 @@ autopilot:
       mag_scale_y: 1.0
       mag_scale_z: 1.0
 
-   cmc:
+   cmc: # current magnetometer calibration
       bias: 0.0
       scale_x: 0.0
       scale_y: 0.0
       scale_z: 0.0
 
-   inv_coupling:
+   inv_coupling: # enables different parts of the coupling matrix
       pitch_enabled: 1
       roll_enabled: 1
       yaw_enabled: 1
@@ -133,9 +133,16 @@ autopilot:
       gas_acc_max: 20.0 # maximum positive/negative acceleration in m/s^2
       sticks_rotation: 0.0 # 0 = "+" mode, 90 = "x mode"
 
+   kalman_pos: # NEU position estimate kalman filter
+      process_noise: 1.0e-6
+      baro_noise: 0.1
+      ultra_noise: 0.1
+      gps_noise: 0.001
+      use_gps_speed: 0 # use gps speed to correct estimate?
+
    controllers:
 
-      stabilizing:
+      stabilizing: # basic stabilizing controller:
          att_kp: 4.19227650348e-01
          att_ki: 3.13780298778e+00
          att_kii: 3.45789342669e+00
@@ -148,11 +155,12 @@ autopilot:
          jzz: 0.0057292965
          tmc: 0.06
       
-      ne_speed:
-         d: 0.2
+      ne_speed: # north-east speed controller
+         d: 0.0
          i: 0.01
          i_max: 0.5
          p: 3.0
+         lpfg: 1.0
 
       attitude:
          p: 5.624432790068787
@@ -163,26 +171,26 @@ autopilot:
          roll_bias: 0.0
          angles_max: 20.0 # maximal angle allowed in attitude control
 
-      u_speed:
+      u_speed: # up speed controller (barometer)
          i: 0.15
          imax: 1.0
          p: 2.0
       
-      u_pos:
+      u_pos: # ups position controller (barometer, ultrasonic)
          d: 30.0
          i: 2.0
          imax: 5.0
          p: 60.0
          lpfg: 100.0
 
-      yaw:
+      yaw: # yaw position controller
          pid_lim: 2.0
          p: 10.0
          d: 0.0
          i: 0.01
          i_max: 0.5
 
-      navigation:
+      navigation: # north-east position controller
          speed_min: 0.5
          speed_std: 2.0
          speed_max: 3.5
@@ -193,12 +201,4 @@ autopilot:
          pos_i_max: 5.0
          ortho_p: 0.0
 
-   kalman_pos:
-      baro_noise: 0.1
-      ultra_noise: 0.1
-      process_noise: 1.0e-6
-      gps_noise: 0.001
-      gps_speed_noise: 0.1
-      xy_acc_noise: 0.01
-      z_acc_noise: 0.02
-      use_gps_speed: 0
+
