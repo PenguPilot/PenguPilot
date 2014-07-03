@@ -52,7 +52,7 @@ bool sbus_parser_process(sbus_parser_t *parser, uint8_t c)
       float min = 172.0f;
       float max = 1811.0f;
       FOR_N(i, 16)
-         parser->channels[i] = (int_rc[i] - min) / (max - min) - 0.5f;
+         parser->channels[i] = 2.0f * ((int_rc[i] - min) / (max - min) - 0.5f);
       return true;
    }
    return false;
