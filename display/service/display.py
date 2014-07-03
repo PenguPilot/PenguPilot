@@ -361,7 +361,7 @@ def main(name):
    screens = [(draw_health, 10),
               (draw_gps, 10),
               (draw_gps2, 10),
-              (draw_remote, 10)]
+              (draw_remote, 100000)]
 
    screen = 0
    oled.init('/dev/i2c-3', W, H)

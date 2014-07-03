@@ -257,6 +257,11 @@ static void init_param_simple(Value *val, void *data)
 
 void opcd_param_get(char *full_name, void *data)
 {
+   if (!full_name)
+   {
+      fprintf(stderr, "libOPCD: null pointer argument\n");
+      return;
+   }
    /* build and send request: */
    CtrlReq req = CTRL_REQ__INIT;
    req.type = CTRL_REQ__TYPE__GET;
