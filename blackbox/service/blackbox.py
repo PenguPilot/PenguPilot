@@ -58,6 +58,7 @@ def main(name):
          f.write(data)
          if (i % 10) == 0:
             zmq_socket.send(data)
+         i += 1
    finally:
       try:
          f.close()

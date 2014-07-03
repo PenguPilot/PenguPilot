@@ -29,6 +29,9 @@ overo_quad:
    current_channel: 2
    adc_to_voltage: 'lambda x: (x + 27.0951) / 117.1319'
    adc_to_current: 'lambda x: 0.0303 * (2500 - x) + 0.4'
+   rx_type: 'dsl' # 'sbus' or 'dsl'
+   sbus_serial:
+      path: '/dev/ttyO0'
    dsl_serial:
       path: '/dev/ttyO0'
       speed: 38400
