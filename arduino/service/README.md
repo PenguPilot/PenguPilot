@@ -17,6 +17,12 @@ This service interfaces to the [U3 IO Shield](http://www.hardkernel.com/main/pro
 
 File Contents:
 
-- [checksum.c]()
-- [checksum.h]()
-
+- [checksum.c](checksum.c): Arduino Protocol Checksum Implementation
+- [checksum.h](checksum.h): Arduino Protocol Checksum Interface
+- [main.c](main.c): Arduino Remote Control and ADC Bridge Service
+- [power_common.h](power_common.h): Arduino Power Protocol Common Interface
+- [power_parse.c](power_parse.c): Arduino Power Parser Implementation
+- [power_parse.h](power_parse.h): Arduino Power Parser Interface
+- [ppm_common.h](ppm_common.h): Arduino PPM Common Interface
+- [ppm_parse.c](ppm_parse.c): Arduino PPM Parser Implementation
+- [ppm_parse.h](ppm_parse.h): Arduino PPM Parser Interface
