@@ -3,7 +3,7 @@
 from msgpack import loads, dumps
 from threading import Thread
 from scl import generate_map
-from misc import daemonize
+from misc import daemonize, RateTimer
 from msgpack import loads
 from gps_msgpack import *
 
@@ -16,13 +16,11 @@ class GPS_Reader(Thread):
       self.socket = socket
 
    def run(self):
-      i = 0
+      rt = RateTimer(1)
       while True:
          raw = self.socket.recv()
-         if i == 5:
-            i = 0
+         if rt.expired():
             self.data = loads(raw)
-         i += 1
 
 
 def main(name):

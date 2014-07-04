@@ -28,7 +28,7 @@
 
 from geomag.geomag import GeoMag
 from scl import generate_map
-from misc import daemonize
+from misc import daemonize, RateTimer
 import os
 from time import time
 from datetime import datetime
@@ -42,20 +42,17 @@ def main(name):
    socket_map = generate_map(name)
    gps_socket = socket_map['gps']
    decl_socket = socket_map['decl']
-   i = 0
+   rt = RateTimer(1)
    while True:
       raw = gps_socket.recv()
-      if i == 20:
-         i = 0
+      if rt.expired():
          gps = loads(raw)
-         print gps
          try:
             date = datetime.strptime(gps[TIME], '%Y-%m-%d %H:%M:%S').date()
             decl = gm.GeoMag(gps[LAT], gps[LON], time = date).dec
             decl_socket.send('%f' % decl)
          except:
             pass
-      i += 1
 
 
 daemonize('geomag', main)

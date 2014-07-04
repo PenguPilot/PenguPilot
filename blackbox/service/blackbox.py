@@ -28,7 +28,7 @@
 import zmq
 from os import sep, symlink, unlink
 from scl import generate_map
-from misc import daemonize, user_data_dir
+from misc import daemonize, user_data_dir, RateTimer
 from datetime import datetime
 from sys import argv
 
@@ -52,13 +52,12 @@ def main(name):
          new_file = prefix + 'blackbox_%s.msgpack' % now
       symlink(new_file, symlink_file)
       f = open(new_file, "wb")
-      i = 0
+      rt = RateTimer(20)
       while True:
          data = socket.recv()
          f.write(data)
-         if (i % 10) == 0:
+         if rt.expired():
             zmq_socket.send(data)
-         i += 1
    finally:
       try:
          f.close()

@@ -29,7 +29,7 @@
 from time import sleep, time
 from psutil import cpu_percent
 from threading import Thread, Lock
-from scl import generate_map
+from scl import generate_map, RateTimer
 from math import sin, cos, pi
 from misc import daemonize
 from msgpack import loads, dumps
@@ -45,13 +45,11 @@ critical = False
 def gps_reader():
    global gps
    socket = socket_map['gps']
-   i = 0
+   rt = RateTimer(1)
    while True:
       data = socket.recv()
-      if i == 5:
-         i = 0
+      if rt.expired():
          gps = loads(data)
-      i += 1
 
 
 def cpu_reader():

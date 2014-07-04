@@ -96,3 +96,16 @@ def await_signal():
    except:
       print 'killed by user'
 
+
+class RateTimer:
+
+   def __init__(self, rate):
+      self.rate = rate
+      self.t_prev = time()
+
+   def expired(self):
+      if self.t_prev + 1.0 / self.rate < time():
+         self.t_prev = time()
+         return True
+      return False
+
