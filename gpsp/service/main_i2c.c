@@ -137,7 +137,7 @@ int main_i2c(void)
       if (fix == 3)
       {
          data_w[0] = I2C_GPS_ALTITUDE;
-         THROW_ON_ERR(i2c_xfer(&device, 1, data_w, 2, data_r));
+         i2c_xfer(&device, 1, data_w, 2, data_r);
          PACKF(((data_r[1]) << 8) | data_r[0]);  /* gps array index 7 */
          PACKF(0 /* VDOP */); /* gps array index 8 */
       }
