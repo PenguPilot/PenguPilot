@@ -27,7 +27,7 @@
 
 
 from scl import generate_map
-from misc import daemonize
+from misc import daemonize, RateTimer
 from gps_msgpack import *
 from msgpack import loads, dumps
 from srtm import SrtmElevMap
@@ -38,18 +38,16 @@ def main(name):
    socket_map = generate_map(name)
    gps_socket = socket_map['gps']
    elev_socket = socket_map['elev']
-   i = 0
+   rt = RateTimer(1)
    while True:
       raw = gps_socket.recv()
-      if i == 20:
-         i = 0
+      if rt.expired():
          gps = loads(raw)
          try:
             elev = elev_map.lookup(gps[LAT], gps[LON])
             elev_socket.send(dumps(elev))
          except:
             pass
-      i += 1
 
 
 daemonize('elevmap', main)

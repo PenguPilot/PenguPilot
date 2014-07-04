@@ -33,7 +33,7 @@ from psutil import cpu_percent
 from threading import Thread
 from scl import generate_map
 from math import sin, cos, pi
-from misc import daemonize
+from misc import daemonize, RateTimer
 from os import getenv
 from msgpack import loads
 from gps_msgpack import *
@@ -60,29 +60,25 @@ def spinning_reader():
 def gps_reader():
    global gps
    socket = socket_map['gps']
-   i = 0
+   rt = RateTimer(1)
    while True:
       raw = socket.recv()
       if spinning:
          continue
-      if i == 5:
-         i = 0
+      if rt.expired():
          gps = loads(raw)
-      i += 1
 
 
 def sats_reader():
    global sats
    socket = socket_map['sats']
-   i = 0
+   rt = RateTimer(1)
    while True:
       raw = socket.recv()
       if spinning:
          continue
-      if i == 5:
-         i = 0
+      if rt.expired():
          sats = loads(raw)
-      i += 1
 
 
 def cpu_reader():
@@ -102,15 +98,13 @@ def cpu_reader():
 def remote_reader():
    s = socket_map['remote']
    global channels
-   i = 0
+   rt = RateTimer(5)
    while True:
       raw = s.recv()
       if spinning:
          continue
-      if i == 5:
-         i = 0
+      if rt.expired():
          channels = loads(raw)
-      i += 1
 
 
 decl = 0.0
