@@ -41,6 +41,15 @@
 #include "../../util/math/adams5.h"
 
 
+/* macros: */
+#define __FF_B_SETUP(j) \
+   b[0] =  (2.0f * j * (2.0f * tsfloat_get(&tmc) + dt)) / a0; \
+   b[1] = -(8.0f * j * tsfloat_get(&tmc)) / a0; \
+   b[2] =  (2.0f * j * (2.0f * tsfloat_get(&tmc) - dt)) / a0;
+
+#define CTRL_NUM_TSTEP 7
+
+
 /* configuration parameters: */
 static tsfloat_t att_kp;
 static tsfloat_t att_ki;
@@ -70,7 +79,6 @@ static Filter2 filter_ref;
 /* working memory: */
 static float *xi_err = NULL;
 static float *xii_err = NULL;
-#define CTRL_NUM_TSTEP 7
 static float ringbuf[3 * CTRL_NUM_TSTEP];
 static int ringbuf_idx = 0;
 pid_controller_t yaw_ctrl;
@@ -80,7 +88,7 @@ pid_controller_t yaw_ctrl;
 static int int_enable = 0;
 
 
-void piid_init(float Ts)
+void piid_init(float dt)
 {
    ASSERT_ONCE();
 
@@ -102,7 +110,7 @@ void piid_init(float Ts)
    opcd_params_apply("controllers.stabilizing.", params);
    pid_init(&yaw_ctrl, &yaw_kp, &yaw_ki, NULL, NULL);
 
-   LOG(LL_INFO, "ctrl dt = %fs", Ts);
+   LOG(LL_INFO, "ctrl dt = %fs", dt);
    LOG(LL_INFO, "filter: fg = %f Hz, d = %f",
                 tsfloat_get(&filt_fg), tsfloat_get(&filt_d));
    LOG(LL_INFO, "att-ctrl: P = %f, I = %f, II = %f, D = %f",
@@ -113,38 +121,33 @@ void piid_init(float Ts)
    
    /* initialize feed-forward system: */
    float T = 1.0f / (2.0f * M_PI * tsfloat_get(&filt_fg));
-   float a0 = (4.0f * T * T + 4.0f * tsfloat_get(&filt_d) * T * Ts + Ts * Ts);
+   float a0 = (4.0f * T * T + 4.0f * tsfloat_get(&filt_d) * T * dt + dt * dt);
 
    float a[2];
-   a[0] = (2.0f * Ts * Ts - 8.0f * T * T) / a0;
-   a[1] = (4.0f * T * T   - 4.0f * tsfloat_get(&filt_d) * T * Ts + Ts * Ts) / a0;
-
+   a[0] = (2.0f * dt * dt - 8.0f * T * T) / a0;
+   a[1] = (4.0f * T * T   - 4.0f * tsfloat_get(&filt_d) * T * dt + dt * dt) / a0;
    float b[3];
-   #define __FF_B_SETUP(j) \
-      b[0] =  (2.0f * j * (2.0f * tsfloat_get(&tmc) + Ts)) / a0; \
-      b[1] = -(8.0f * j * tsfloat_get(&tmc)) / a0; \
-      b[2] =  (2.0f * j * (2.0f * tsfloat_get(&tmc) - Ts)) / a0;
-
+   
    /* x-axis: */
    __FF_B_SETUP(tsfloat_get(&jxx_jyy));
-   filter2_init(&filters[0], a, b, Ts, 1);
+   filter2_init(&filters[0], a, b, dt, 1);
 
    /* y-axis: */
    __FF_B_SETUP(tsfloat_get(&jxx_jyy));
-   filter2_init(&filters[1], a, b, Ts, 1);
+   filter2_init(&filters[1], a, b, dt, 1);
 
    /* z-axis: */
    __FF_B_SETUP(tsfloat_get(&jzz));
-   filter2_init(&filters[2], a, b, Ts, 1);
+   filter2_init(&filters[2], a, b, dt, 1);
 
    /* initialize multistep integrator: */
    adams5_init(&int_err1, 3);
    adams5_init(&int_err2, 3);
 
    /* initialize error and reference signal filters: */
-   filter1_lp_init(&filter_lp_err, tsfloat_get(&filt_fg), Ts, 3);
-   filter1_hp_init(&filter_hp_err, tsfloat_get(&filt_fg), Ts, 3);
-   filter2_lp_init(&filter_ref, tsfloat_get(&filt_fg), tsfloat_get(&filt_d), Ts, 3);
+   filter1_lp_init(&filter_lp_err, tsfloat_get(&filt_fg), dt, 3);
+   filter1_hp_init(&filter_hp_err, tsfloat_get(&filt_fg), dt, 3);
+   filter2_lp_init(&filter_ref, tsfloat_get(&filt_fg), tsfloat_get(&filt_d), dt, 3);
 
    /* allocate some working memory: */
    xi_err = calloc(3, sizeof(float));
@@ -183,11 +186,6 @@ void piid_run(float u_ctrl[4], float gyro[3], float rc[3], float dt)
    a[1] = (4.0f * T * T   - 4.0f * tsfloat_get(&filt_d) * T * dt + dt * dt) / a0;
 
    float b[3];
-   #define __FF_B_SETUP(j) \
-      b[0] =  (2.0f * j * (2.0f * tsfloat_get(&tmc) + dt)) / a0; \
-      b[1] = -(8.0f * j * tsfloat_get(&tmc)) / a0; \
-      b[2] =  (2.0f * j * (2.0f * tsfloat_get(&tmc) - dt)) / a0;
-
    /* x-axis: */
    __FF_B_SETUP(tsfloat_get(&jxx_jyy));
    filter2_update_coeff(&filters[0], a, b);
@@ -202,9 +200,7 @@ void piid_run(float u_ctrl[4], float gyro[3], float rc[3], float dt)
 
    /* run feed-forward: */
    FOR_N(i, 3)
-   {
       filter2_run(&filters[i], &rc[i], &u_ctrl[i]);
-   }
 
    /* run stabilizing controller: */
    float error[3];
@@ -223,9 +219,7 @@ void piid_run(float u_ctrl[4], float gyro[3], float rc[3], float dt)
 
    ringbuf_idx += 3;
    if (ringbuf_idx >= 3 * CTRL_NUM_TSTEP)
-   {
       ringbuf_idx = 0;
-   }
 
    /* error high/lowpass filter: */
    filter1_hp_update_coeff(&filter_hp_err, tsfloat_get(&filt_fg), dt);

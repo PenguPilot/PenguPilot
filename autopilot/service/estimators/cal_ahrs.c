@@ -37,13 +37,11 @@
 #include "../util/math/adams5.h"
 
 
-static float pry[3] = {0.0, 0.0, 0.0};
 static tsfloat_t beta_end;
 static tsfloat_t beta_start;
 static tsfloat_t beta_step;
-static adams5_t adams;
-static float beta;
 static ahrs_t ahrs;
+
 
 void cal_ahrs_init(void)
 {
