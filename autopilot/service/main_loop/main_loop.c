@@ -240,7 +240,7 @@ void main_step(const float dt,
                const float baro,
                const float voltage,
                const float current,
-               const float channels[MAX_CHANNELS],
+               const float channels[PP_MAX_CHANNELS],
                const uint16_t sensor_status,
                const bool override_hw)
 {
@@ -285,7 +285,7 @@ void main_step(const float dt,
    }
    marg_err = 0;
    
-   float cal_channels[MAX_CHANNELS];
+   float cal_channels[PP_MAX_CHANNELS];
    memcpy(cal_channels, channels, sizeof(cal_channels));
    if (sensor_status & RC_VALID)
    {

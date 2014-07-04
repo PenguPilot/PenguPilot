@@ -9,7 +9,8 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- SCL Remote Control Interface
+ S.Bus Parser Interface
+ Tested on FrSky; might work with others
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -24,17 +25,31 @@
  GNU General Public License for more details. */
 
 
-#ifndef __SCL_RC_H__
-#define __SCL_RC_H__
+#ifndef __SBUS_PARSER_H__
+#define __SBUS_PARSER_H__
 
 
-#include "../../util/rc_channels.h"
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "remote.h"
 
 
-int scl_rc_init(void);
+typedef struct
+{
+   bool valid;
+   uint8_t buffer[128];
+   float channels[MAX_CHANNELS];
+   size_t frame_idx;
+   bool zero_char_seen;
+}
+sbus_parser_t;
 
-int scl_rc_read(float channels_out[PP_MAX_CHANNELS]);
+
+void sbus_parser_init(sbus_parser_t *parser);
+
+bool sbus_parser_process(sbus_parser_t *parser, uint8_t c);
 
 
-#endif /* __SCL_RC_H__ */
+#endif /* __SBUS_PARSER_H__ */
 

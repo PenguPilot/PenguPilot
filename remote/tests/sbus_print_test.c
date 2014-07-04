@@ -26,11 +26,9 @@
 
 #include <util.h>
 
-#include "../service/sbus_parser.h"
-#include "../service/sbus_serial.h"
 
-
-#define MAX_CHANNELS 16
+#include "../shared/sbus_parser.h"
+#include "../shared/sbus_serial.h"
 
 
 int main(void)

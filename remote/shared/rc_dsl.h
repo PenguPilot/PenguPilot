@@ -30,9 +30,9 @@
 
 #include <stdint.h>
 
+#include "remote.h"
 
 #define RC_DSL_RSSI_VALID(x) (x > (7.0f / 255.0f))
-#define RC_DSL_CHANNELS     16
 
 
 
@@ -48,7 +48,7 @@ typedef struct
 
    /* RSSI and RC channels: */
    float RSSI;
-   float channels[RC_DSL_CHANNELS];
+   float channels[MAX_CHANNELS];
 
    /* parser state information: */
    uint8_t data_counter;

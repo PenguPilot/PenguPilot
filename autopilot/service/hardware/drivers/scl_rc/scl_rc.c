@@ -34,6 +34,7 @@
 #include <scl.h>
 #include <msgpack.h>
 #include <interval.h>
+#include <remote.h>
 
 #include "../../../util/logger/logger.h"
 
@@ -51,7 +52,7 @@
 static simple_thread_t thread;
 static pthread_mutexattr_t mutexattr;   
 static pthread_mutex_t mutex;
-static float channels[SCL_MAX_CHANNELS];
+static float channels[MAX_CHANNELS];
 static void *scl_socket = NULL;
 static int sig_valid = 0;
 static interval_t interval;
@@ -73,7 +74,7 @@ static void scl_read_channels(int *valid, float *_channels)
          int n_channels = root.via.array.size - 1;
          *valid = root.via.array.ptr[0].via.i64;
          FOR_N(i, n_channels)
-            if (i < SCL_MAX_CHANNELS)
+            if (i < MAX_CHANNELS)
                _channels[i] = root.via.array.ptr[1 + i].via.dec;
       }
       msgpack_unpacked_destroy(&msg);
@@ -87,7 +88,7 @@ static void scl_read_channels(int *valid, float *_channels)
 
 SIMPLE_THREAD_BEGIN(thread_func)
 {
-   float _channels[SCL_MAX_CHANNELS];
+   float _channels[MAX_CHANNELS];
    SIMPLE_THREAD_LOOP_BEGIN
    {
       scl_read_channels(&sig_valid, _channels);
@@ -119,7 +120,7 @@ int scl_rc_init(void)
 }
 
 
-int scl_rc_read(float channels_out[MAX_CHANNELS])
+int scl_rc_read(float channels_out[PP_MAX_CHANNELS])
 {
    int ret_code = -ENODEV;
    pthread_mutex_lock(&mutex);
@@ -130,7 +131,7 @@ int scl_rc_read(float channels_out[MAX_CHANNELS])
    }
    else
    {
-      memcpy(channels_out, channels, sizeof(float) * MAX_CHANNELS);
+      memcpy(channels_out, channels, sizeof(float) * PP_MAX_CHANNELS);
       ret_code = sig_valid ? 0 : -EAGAIN;
    }
    pthread_mutex_unlock(&mutex);
