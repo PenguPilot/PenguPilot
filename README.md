@@ -16,15 +16,16 @@ Instead, the whole flight infrastructure is based on user-space tasks in a Linux
 
 **Some highlights of the PenguPilot software are**:
 
-- component based software architecture
-- memory protection among critical and non-critical components (tasks)
+- component based software architecture allows to run code on demand (power savings in standby)
+- memory protection among critical and non-critical components
 - message-passing among components via ZeroMQ/MessagePack/Protobuf
 - process/priority management and dependency tracking
 - online parameter configuration usable for in-flight parameter updates
 - SSH based user interfaces for parameters, calibration, ...
 - blackbox functionality to log sensor values at each control step to sdcard
 - sensor data replay capabilitiy for offline PC-based optimization, filter tuning, ...
-- quick deployment to new hardware possible (Linux HAL)
+- quick integration of new hardware through Linux HAL
+- platform-neutral code without low-level interrupt and timer programming
 
 
 **Currently, PenguPilot supports the following computer-on-modues**:
