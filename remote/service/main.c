@@ -37,7 +37,10 @@
 
 #include "rc_dsl.h"
 #include "sbus_parser.h"
-#include "taranis_serial.h"
+#include "sbus_serial.h"
+
+
+#define MAX_CHANNELS 16
 
 
 static int running = 1;
@@ -80,9 +83,9 @@ int dsl_run(void)
       if (status == 1)
       {
          msgpack_sbuffer_clear(msgpack_buf);
-         msgpack_pack_array(pk, RC_DSL_CHANNELS + 1);
+         msgpack_pack_array(pk, MAX_CHANNELS + 1);
          PACKI(RC_DSL_RSSI_VALID(rc_dsl.RSSI));    /* index 0: valid */
-         PACKFV(rc_dsl.channels, RC_DSL_CHANNELS); /* index 1, .. : channels */
+         PACKFV(rc_dsl.channels, MAX_CHANNELS); /* index 1, .. : channels */
          scl_copy_send_dynamic(rc_socket, msgpack_buf->data, msgpack_buf->size);
       }
    }
@@ -99,7 +102,7 @@ int sbus_run(void)
    strcat(buffer_path, ".sbus_serial.path");
    char *dev_path;
    opcd_param_get(buffer_path, &dev_path);
-   int fd = taranis_serial_open(dev_path);
+   int fd = sbus_serial_open(dev_path);
    THROW_IF(fd < 0, -ENODEV);
    
    /* init parser: */
@@ -108,7 +111,7 @@ int sbus_run(void)
 
    while (running)
    {
-      int b = taranis_serial_read(fd);
+      int b = sbus_serial_read(fd);
       if (b < 0)
       {
          msleep(1);
@@ -118,9 +121,9 @@ int sbus_run(void)
       if (status)
       {
          msgpack_sbuffer_clear(msgpack_buf);
-         msgpack_pack_array(pk, 18 + 1);
+         msgpack_pack_array(pk, MAX_CHANNELS + 1);
          PACKI((int)parser.valid);    /* index 0: valid */
-         PACKFV(parser.channels, 18); /* index 1, .. : channels */
+         PACKFV(parser.channels, MAX_CHANNELS); /* index 1, .. : channels */
          scl_copy_send_dynamic(rc_socket, msgpack_buf->data, msgpack_buf->size);
       }
    }

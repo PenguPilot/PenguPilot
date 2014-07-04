@@ -174,16 +174,16 @@ static void ms5611_compensate(ms5611_t *ms5611)
    int64_t D2 = ms5611->raw_t;
    
    int32_t off2 = 0,sens2 = 0;
-   float temperature, delt;
  
    int32_t dT   = D2 - ((uint32_t)C5 << 8);
    int64_t off  = ((uint32_t)C2 <<16) + (((int64_t)dT * C4) >> 7);
    int64_t sens = ((uint32_t)C1 <<15) + (((int64_t)dT * C3) >> 8);
-   temperature  = 2000 + (((int64_t)dT * C6) / (float) (1 << 23));
+   float temperature  = 2000 + (((int64_t)dT * C6) / (float) (1 << 23));
    
    #if 0
+   /* this is a bit too non-linear; might result in altitude jumps */
    if (temperature < 2000) { // temperature lower than 20st.C 
-     delt = temperature - 2000;
+     float delt = temperature - 2000;
      delt  = delt * delt;
      off2  = (5 * delt) / 2; 
      sens2 = (5 * delt) / 4; 
