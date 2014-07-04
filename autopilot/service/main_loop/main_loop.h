@@ -36,7 +36,7 @@
 
 
 #define DATA_DEFINITION() \
-   float channels[MAX_CHANNELS]; \
+   float channels[PP_MAX_CHANNELS]; \
    marg_data_t marg_data; \
    marg_data_init(&marg_data); \
    float dt; \
@@ -67,7 +67,7 @@ void main_step(const float dt,
                const float baro,
                const float voltage,
                const float current,
-               const float channels[MAX_CHANNELS],
+               const float channels[PP_MAX_CHANNELS],
                const uint16_t sensor_status,
                const bool override_hw);
 

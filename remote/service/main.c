@@ -35,12 +35,10 @@
 #include <opcd_interface.h>
 #include <serial.h>
 
-#include "rc_dsl.h"
-#include "sbus_parser.h"
-#include "sbus_serial.h"
-
-
-#define MAX_CHANNELS 16
+#include "../shared/remote.h"
+#include "../shared/rc_dsl.h"
+#include "../shared/sbus_parser.h"
+#include "../shared/sbus_serial.h"
 
 
 static int running = 1;

@@ -237,7 +237,7 @@ static bool emergency_landing(bool gps_valid, vec2_t *ne_gps_pos, float ultra_u_
 }
 
 
-bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float channels[MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float baro_u_pos, float ultra_u_pos, float f_max, float mass, float dt)
+bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float channels[PP_MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float baro_u_pos, float ultra_u_pos, float f_max, float mass, float dt)
 {
    if (always_hard_off)
    {
@@ -250,7 +250,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       if (rc_inval_count == 0)
          LOG(LL_ERROR, "rc signal invalid!");
       /* restore previous channels: */
-      memset(channels, 0, sizeof(float) * MAX_CHANNELS);
+      memset(channels, 0, sizeof(float) * PP_MAX_CHANNELS);
       channels[CH_GAS] = 0.3;
       rc_inval_count++;
       if (rc_inval_count >= RC_INVAL_MAX_COUNT)

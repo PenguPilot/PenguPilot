@@ -52,7 +52,7 @@ void blackbox_record(const float dt, /* sensor inputs ... */
                const float baro,
                const float voltage,
                const float current,
-               const float channels[MAX_CHANNELS],
+               const float channels[PP_MAX_CHANNELS],
                const uint16_t sensor_status,
                const vec2_t *ne_pos_err, /* NEU position errors ... */
                const float u_pos_err,

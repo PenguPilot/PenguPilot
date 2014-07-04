@@ -47,7 +47,7 @@ int platform_read_marg(marg_data_t *marg_data)
 }
 
 
-int platform_read_rc(float channels[MAX_CHANNELS])
+int platform_read_rc(float channels[PP_MAX_CHANNELS])
 {
    CHECK_DEV(platform.read_rc);
    return platform.read_rc(channels);
@@ -106,7 +106,7 @@ uint16_t platform_read_sensors(marg_data_t *marg_data,
                                float *baro, 
                                float *voltage, 
                                float *current, 
-                               float channels[MAX_CHANNELS])
+                               float channels[PP_MAX_CHANNELS])
 {
    uint16_t status = 0;
    if (platform_read_marg(marg_data) == 0)

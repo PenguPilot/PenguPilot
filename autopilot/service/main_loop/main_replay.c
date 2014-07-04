@@ -154,10 +154,8 @@ void main_replay(int argc, char *argv[])
       baro_z = double_data[16];
       voltage = double_data[17];
       current = double_data[18];
-      FOR_N(i, MAX_CHANNELS)
-      {
+      FOR_N(i, PP_MAX_CHANNELS)
          channels[i] = double_data[19 + i];
-      }
       sensor_status = int_data[25];
       main_step(dt, &marg_data, &gps_data, ultra_z, baro_z, voltage, current, channels, sensor_status, 1);
    }

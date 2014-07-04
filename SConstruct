@@ -131,13 +131,21 @@ ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = common_libs + 
 display_src = map(lambda x: 'display/shared/' + x, ['pyssd1306.c', 'pyssd1306.i', 'ssd1306.c']) + ['shared/i2c/i2c.c']
 env.SharedLibrary('display/shared/_pyssd1306.so', display_src)
 
-# build remote:
+# Remote Control Service:
+# Library:
 remote_dir = 'remote/'
-remote_src = collect_files(remote_dir + 'service', re_cc)
-remote_bin = env.Program(remote_dir + 'service/remote', remote_src, LIBS = ['m', 'opcd', 'opcd_pb', 'pthread', 'shared', 'scl', 'protobuf-c', 'yaml', 'zmq', 'glib-2.0'])
-Requires(remote_bin, common_libs)
-sbus_print_test_src = [remote_dir + 'tests/sbus_print_test.c', remote_dir + 'service/sbus_parser.c', remote_dir + 'service/sbus_serial.c']
-sbus_print_test_bin = env.Program(remote_dir + 'tests/sbus_print_test', sbus_print_test_src)
+remote_shared_dir = remote_dir + 'shared/'
+remote_lib = env.Library(remote_shared_dir + 'remote', collect_files(remote_shared_dir, re_cc))
+remote_sh_lib = env.SharedLibrary(remote_shared_dir + 'remote', collect_files(remote_shared_dir, re_cc))
+append_inc_lib(remote_shared_dir)
+# Service:
+remote_src = remote_dir + 'service/main.c'
+remote_bin = env.Program(remote_dir + 'service/remote', remote_src, LIBS = ['m', 'remote', 'opcd', 'opcd_pb', 'pthread', 'shared', 'scl', 'protobuf-c', 'yaml', 'zmq', 'glib-2.0'])
+Requires(remote_bin, common_libs + [remote_lib])
+# Tests:
+sbus_print_test_src = remote_dir + 'tests/sbus_print_test.c'
+sbus_print_test_bin = env.Program(remote_dir + 'tests/sbus_print_test', sbus_print_test_src, LIBS = [remote_lib])
+Requires(sbus_print_test_bin, common_libs + [remote_lib])
 
 
 # HLFM:

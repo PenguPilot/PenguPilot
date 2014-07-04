@@ -57,7 +57,7 @@ bool sbus_parser_process(sbus_parser_t *parser, uint8_t c)
          parser->valid = false;
       else
          parser->valid = true;
-      int int_rc[16];
+      int int_rc[MAX_CHANNELS];
       int_rc[ 0] = ((sbus[ 1]      | sbus[ 2] << 8                 ) & 0x07FF);
       int_rc[ 1] = ((sbus[ 2] >> 3 | sbus[ 3] << 5                 ) & 0x07FF);
       int_rc[ 2] = ((sbus[ 3] >> 6 | sbus[ 4] << 2 | sbus[ 5] << 10) & 0x07FF);
@@ -77,7 +77,7 @@ bool sbus_parser_process(sbus_parser_t *parser, uint8_t c)
 
       float min = 172.0f;
       float max = 1811.0f;
-      FOR_N(i, 16)
+      FOR_N(i, MAX_CHANNELS)
          parser->channels[i] = 2.0f * ((int_rc[i] - min) / (max - min) - 0.5f);
       return true;
    }

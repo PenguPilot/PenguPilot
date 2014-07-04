@@ -119,7 +119,7 @@ void blackbox_record(const float dt, /* sensor inputs ... */
                const float baro,
                const float voltage,
                const float current,
-               const float channels[MAX_CHANNELS],
+               const float channels[PP_MAX_CHANNELS],
                const uint16_t sensor_status,
                const vec2_t *ne_pos_err, /* NEU position errors ... */
                const float u_pos_err,
@@ -141,7 +141,7 @@ void blackbox_record(const float dt, /* sensor inputs ... */
    PACKF(ultra); PACKF(baro);
    PACKF(voltage);
    PACKF(current);
-   PACKFV(channels, 6);
+   PACKFV(channels, PP_MAX_CHANNELS);
    PACKI(sensor_status);
    PACKFV(ne_pos_err->ve, 2);
    PACKF(u_pos_err);

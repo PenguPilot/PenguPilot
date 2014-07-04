@@ -29,10 +29,10 @@
 #include "rc_channels.h"
 
 
-static int ch_is_symmetric[MAX_CHANNELS] = {1, 1, 1, 0, 0, 0};
+static int ch_is_symmetric[PP_MAX_CHANNELS] = {1, 1, 1, 0, 0, 0};
 
 
-void rc_channels_init(rc_channels_t *channels, uint8_t map[MAX_CHANNELS], float scale[MAX_CHANNELS])
+void rc_channels_init(rc_channels_t *channels, uint8_t map[PP_MAX_CHANNELS], float scale[PP_MAX_CHANNELS])
 {
    channels->map = map;
    channels->scale = scale;

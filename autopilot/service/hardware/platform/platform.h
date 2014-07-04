@@ -49,7 +49,7 @@ typedef struct
    
    /* sensors: */
    int (*read_marg)(marg_data_t *marg_data);
-   int (*read_rc)(float channels[MAX_CHANNELS]);
+   int (*read_rc)(float channels[PP_MAX_CHANNELS]);
    int (*read_gps)(gps_data_t *gps_data);
    int (*read_ultra)(float *ultra);
    int (*read_baro)(float *baro);
@@ -70,7 +70,7 @@ extern platform_t platform;
 int platform_read_marg(marg_data_t *marg_data);
 
 
-int platform_read_rc(float channels[MAX_CHANNELS]);
+int platform_read_rc(float channels[PP_MAX_CHANNELS]);
 
 
 int platform_read_gps(gps_data_t *gps_data);
@@ -106,7 +106,7 @@ uint16_t platform_read_sensors(marg_data_t *marg_data,
                                float *baro,
                                float *voltage,
                                float *current,
-                               float channels[MAX_CHANNELS]);
+                               float channels[PP_MAX_CHANNELS]);
 
 
 int platform_write_motors(float *setpoints);
