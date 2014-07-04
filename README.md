@@ -16,7 +16,7 @@ Instead, the whole flight infrastructure is based on user-space tasks in a Linux
 
 **Some highlights of the PenguPilot software are**:
 
-- component based software architecture allows to run only code that is needed (power savings in standby)
+- component based software architecture allows to run code on demand (power savings in standby)
 - memory protection among critical and non-critical components
 - message-passing among components via ZeroMQ/MessagePack/Protobuf
 - process/priority management and dependency tracking
