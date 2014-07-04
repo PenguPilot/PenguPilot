@@ -17,6 +17,12 @@ This service interfaces to the [U3 IO Shield](http://www.hardkernel.com/main/pro
 
 File Contents:
 
-- [checksum.c]()
-- [checksum.h]()
-
+- [checksum.c](checksum.c): checksum implementation
+- [checksum.h](checksum.h): checksum interface
+- [main.c](main.c): remote control and ADC bridge service
+- [power_common.h](power_common.h): power protocol common interface
+- [power_parse.c](power_parse.c): power parser implementation
+- [power_parse.h](power_parse.h): power parser interface
+- [ppm_common.h](ppm_common.h): PPM common interface
+- [ppm_parse.c](ppm_parse.c): PPM parser implementation
+- [ppm_parse.h](ppm_parse.h): PPM parser interface
