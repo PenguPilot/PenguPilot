@@ -14,3 +14,5 @@ autopilot/tools/acc_mag_cal/acc_mag_dump
 remote/service/remote
 display/shared/pyssd1306.py
 arduino/service/arduino
+arduino/firmware/build-uno/*
+!arduino/firmware/build-uno/firmware.hex
