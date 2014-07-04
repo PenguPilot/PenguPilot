@@ -23,6 +23,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+- name: elevmap
+  sockets:
+   - gps: sub
+   - elev: pub
 
 - name: geomag
   sockets:
