@@ -23,6 +23,12 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+
+- name: mavlink
+  sockets:
+   - gps: sub
+   - power: sub
+
 - name: elevmap
   sockets:
    - gps: sub
