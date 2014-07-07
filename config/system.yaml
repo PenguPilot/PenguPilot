@@ -28,6 +28,11 @@
   sockets:
   - gvfa: sub
 
+- name: mavlink
+  sockets:
+   - gps: sub
+   - power: sub
+
 - name: elevmap
   sockets:
    - gps: sub
