@@ -41,21 +41,16 @@ class Receiver(Thread):
 
    def __init__(self, socket, name):
       Thread.__init__(self)
-      self.dt = None
+      self.cnt = 0
       self.socket = socket
       self.name = name
       self.daemon = True
-      self.last = time()
       self.filt = None
 
    def run(self):
       while True:
-         try:
-            data = self.socket.recv()
-            self.dt = time() - self.last
-            self.last = time()
-         except:
-            pass
+         data = self.socket.recv()
+         self.cnt += 1
 
 for file in files:
    try:
@@ -75,14 +70,16 @@ while True:
    try:
       print '---'
       for thread in threads:
-         if thread.dt:
-            a = 0.4
+         if thread.cnt:
+            cnt = thread.cnt
+            thread.cnt = 0
+            a = 0.1
             if thread.filt == None:
-               thread.filt = 1.0 / thread.dt
+               thread.filt = float(cnt) / 5
             else:
-               thread.filt = thread.filt * (1 - a) + (1.0 / thread.dt) * a
+               thread.filt = thread.filt * (1 - a) + float(cnt) / 5 * a
             print '%s: %.1f Hz' % (thread.name, thread.filt)
-      sleep(1)
+      sleep(5)
    except:
       print 'stopping'
       break

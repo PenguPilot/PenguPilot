@@ -69,6 +69,8 @@ int platform_read_ultra(float *ultra)
 
 
 static float start = 0.0f;
+static int avg = 0.0f;
+static int cnt = 0;
 
 int platform_read_baro(float *baro)
 {
@@ -77,9 +79,10 @@ int platform_read_baro(float *baro)
    int status = platform.read_baro(&buf);
    if (status == 0)
    {
-      if (start == 0.0f)
+      avg += buf;
+      if (start == 0.0f && cnt++ > 100)
       {
-         start = buf;   
+         start = avg / cnt;
       }
    }
    *baro = buf - start;

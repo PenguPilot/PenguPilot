@@ -70,6 +70,7 @@
 #include "../flight_logic/flight_logic.h"
 #include "../blackbox/blackbox.h"
 #include "../filters/filter.h"
+#include "../filters/gvfa.h"
 
 
 static bool calibrate = false;
@@ -82,7 +83,6 @@ static interval_t gyro_move_interval;
 static int init = 0;
 static Filter1 lp_filter;
 static float acc_vec[3];
-
 
 typedef union
 {
@@ -184,6 +184,7 @@ void main_init(int argc, char *argv[])
    ASSERT_NOT_NULL(rpm_square);
    memset(rpm_square, 0, array_len);
 
+
    LOG(LL_INFO, "initializing model/controller");
    pos_init();
    ne_speed_ctrl_init(REALTIME_PERIOD);
@@ -225,12 +226,16 @@ void main_init(int argc, char *argv[])
    opcd_params_apply("main.", params);
    filter1_lp_init(&lp_filter, tsfloat_get(&acc_fg), 0.005, 3);
    lp_filter.z[2] = G_CONSTANT;
+   gvfa_init();
 
    cm_init();
    mon_init();
    LOG(LL_INFO, "entering main loop");
 }
 
+
+pthread_t thread;
+struct sched_param sched_param;
 
 
 void main_step(const float dt,
@@ -307,6 +312,7 @@ void main_step(const float dt,
          LOG(LL_ERROR, "gyro moved during calibration, retrying");
       cal_reset(&gyro_cal);
    }
+   ONCE(LOG(LL_INFO, "gyro biases: %f %f %f", gyro_cal.bias[0], gyro_cal.bias[1], gyro_cal.bias[2]));
 
    /* update relative gps position, if we have a fix: */
    float mag_decl;
@@ -318,7 +324,7 @@ void main_step(const float dt,
       pos_in.speed_n = gps_rel_data.speed_n;
       pos_in.speed_e = gps_rel_data.speed_e;
       ONCE(gps_start_set(gps_data));
-      mag_decl = 2.4; //mag_decl_get();
+      mag_decl = mag_decl_get();
    }
    else
    {
@@ -358,11 +364,16 @@ void main_step(const float dt,
    FOR_N(i, 3)
       pos_in.acc.ve[i] = world_acc.ve[i] - acc_vec[i];
 
+   //gvfa_calc(pos_in.acc.ve, world_acc.ve, euler.pitch, euler.roll, euler.yaw);
+
+   //EVERY_N_TIMES(10, printf("%f %f %f\n", pos_in.acc.x, pos_in.acc.y, pos_in.acc.z));
+   
    /* compute next 3d position estimate using Kalman filters: */
    pos_t pos_est;
    vec2_init(&pos_est.ne_pos);
    vec2_init(&pos_est.ne_speed);
    pos_update(&pos_est, &pos_in);
+   //EVERY_N_TIMES(10, printf("%f %f\n", pos_est.ne_pos.x, pos_est.ne_pos.y));
 
    /* execute flight logic (sets cm_x parameters used below): */
    bool hard_off = false;
@@ -460,7 +471,7 @@ void main_step(const float dt,
    pry_speed_err.x = piid_gyros[PIID_PITCH] - piid_sp[PIID_PITCH];
    pry_speed_err.y = piid_gyros[PIID_ROLL] - piid_sp[PIID_ROLL];
    pry_speed_err.z = piid_gyros[PIID_YAW] - piid_sp[PIID_YAW];
-
+   
    /* computate rpm ^ 2 out of the desired forces: */
    inv_coupling_calc(rpm_square, f_local.ve);
 
@@ -483,7 +494,7 @@ void main_step(const float dt,
    /* write motors: */
    if (!override_hw)
    {
-      platform_write_motors(setpoints);
+      //platform_write_motors(setpoints);
    }
 
    /* set monitoring data, if we have a valid fix: */

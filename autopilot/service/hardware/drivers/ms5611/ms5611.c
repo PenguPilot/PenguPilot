@@ -107,11 +107,11 @@ static uint16_t ms5611_crc4(uint16_t *n_prom)
    {
       if (cnt % 2 == 1)
       {
-         n_rem ^= (n_prom[cnt>>1]) & 0x00FF;
+         n_rem ^= (n_prom[cnt >> 1]) & 0x00FF;
       }
       else
       {
-         n_rem ^= n_prom[cnt>>1] >> 8;
+         n_rem ^= n_prom[cnt >> 1] >> 8;
       }
       int n_bit;
       for (n_bit = 8; n_bit > 0; n_bit--)
@@ -147,11 +147,8 @@ int ms5611_init(ms5611_t *ms5611, i2c_bus_t *bus, ms5611_osr_t p_osr, ms5611_osr
    msleep(3); /* at least 2.8ms */
    
    /* read prom including CRC */
-   int i;
-   for (i = 0; i < 8; i++)
-   {
+   FOR_N(i, 8)
       THROW_ON_ERR(ms5611_read_prom(ms5611, i));
-   }
    
    /* validate CRC: */
    uint16_t crc = ms5611_crc4(ms5611->prom);
@@ -163,7 +160,6 @@ int ms5611_init(ms5611_t *ms5611, i2c_bus_t *bus, ms5611_osr_t p_osr, ms5611_osr
 
 static void ms5611_compensate(ms5611_t *ms5611)
 {
-   /* aliases for data sheet conformity including casts: */
    int64_t C1 = ms5611->prom[1];
    int64_t C2 = ms5611->prom[2];
    int64_t C3 = ms5611->prom[3];
@@ -172,34 +168,13 @@ static void ms5611_compensate(ms5611_t *ms5611)
    int64_t C6 = ms5611->prom[6];
    int64_t D1 = ms5611->raw_p;
    int64_t D2 = ms5611->raw_t;
-   
-   int32_t off2 = 0,sens2 = 0;
- 
-   int32_t dT   = D2 - ((uint32_t)C5 << 8);
-   int64_t off  = ((uint32_t)C2 <<16) + (((int64_t)dT * C4) >> 7);
-   int64_t sens = ((uint32_t)C1 <<15) + (((int64_t)dT * C3) >> 8);
-   float temperature  = 2000 + (((int64_t)dT * C6) / (float) (1 << 23));
-   
-   #if 0
-   /* this is a bit too non-linear; might result in altitude jumps */
-   if (temperature < 2000) { // temperature lower than 20st.C 
-     float delt = temperature - 2000;
-     delt  = delt * delt;
-     off2  = (5 * delt) / 2; 
-     sens2 = (5 * delt) / 4; 
-     if (temperature < 1500) { // temperature lower than -15st.C
-       delt  = temperature + 1500;
-       delt  = delt*delt;
-       off2  += 7 * delt; 
-       sens2 += (11 * delt) / 2; 
-     }
-   }
-   #endif
-   off  -= off2; 
-   sens -= sens2;
-   double pressure = (( (D1 * sens ) >> 21) - off) / (float) (1 << 15);
-   ms5611->c_p = pressure / 100.0;
-   ms5611->c_t = temperature / 100.0;
+   int64_t dT = D2 - (C5 << 8);
+   int64_t off = (C2 << 16) + ((dT * C4) >> 7);
+   int64_t sens = (C1 << 15) + ((dT * C3) >> 8);
+   int64_t temperature  = 2000 + ((dT * C6) >> 23);
+   int64_t pressure = (((D1 * sens) >> 21) - off) >> 15;
+   ms5611->c_t = (double)temperature / 100.0;
+   ms5611->c_p = (double)pressure / 100.0;
    ms5611->c_a = ((273.15 + 15.0) / 0.0065 * (1.0 - pow(ms5611->c_p / 1013.25, 1.0 / 5.255)));
 }
 

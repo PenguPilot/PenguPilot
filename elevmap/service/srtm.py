@@ -61,7 +61,6 @@ class SrtmElevMap:
          ds = self.cache[f]
       except:
          # load file:
-         print 'loading: ' + f
          if not os.path.isfile(f):
             raise AssertionError('file does not exist: ' + f)
          ds = gdal.Open(f, GA_ReadOnly)

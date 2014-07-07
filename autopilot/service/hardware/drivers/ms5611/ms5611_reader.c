@@ -50,7 +50,6 @@ SIMPLE_THREAD_BEGIN(thread_func)
       status = ms5611_measure(&ms5611);
       if (status == 0)
       {
-         //printf("%f\n", ms5611.c_a);
          tsfloat_set(&altitude, ms5611.c_a);
       }
       msleep(10);

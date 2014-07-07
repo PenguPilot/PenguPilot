@@ -127,7 +127,7 @@ int scl_rc_read(float channels_out[PP_MAX_CHANNELS])
    timer += interval_measure(&interval);
    if (timer > RC_TIMEOUT)
    {
-      EVERY_N_TIMES(100, LOG(LL_ERROR, "RC signal timeout"));
+      EVERY_N_TIMES(1000, LOG(LL_ERROR, "RC signal timeout"));
    }
    else
    {
