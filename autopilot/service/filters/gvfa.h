@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- DROTEK MARG (MPU) Driver Implementation
+ G-Vector Filter Array Interface
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -24,26 +24,16 @@
  GNU General Public License for more details. */
 
 
-#include <util.h>
-
-#include "drotek_marg2.h"
-
-
-int drotek_marg2_init(drotek_marg2_t *marg2, i2c_bus_t *bus)
-{
-   THROW_BEGIN();
-   THROW_ON_ERR(mpu6050_init(&marg2->mpu, bus, 0x69, MPU6050_DLPF_CFG_44_42Hz, MPU6050_FS_SEL_500, MPU6050_AFS_SEL_4G));
-   THROW_ON_ERR(hmc5883_init(&marg2->hmc, bus));
-   THROW_END();
-}
+#ifndef __GVFA_H__
+#define __GVFA_H__
 
 
-int drotek_marg2_read(marg_data_t *data, drotek_marg2_t *marg2)
-{
-   THROW_BEGIN();
-   THROW_ON_ERR(mpu6050_read(&marg2->mpu, &data->gyro, &data->acc, NULL));
-   THROW_ON_ERR(hmc5883_read_mag(&data->mag, &marg2->hmc));
-   THROW_END();
-}
+void gvfa_init(void);
 
+void *gvfa_save(void *arg);
+
+void gvfa_calc(float out[3], float in[3], float p, float r, float y);
+
+
+#endif /* __GVFA_H__ */
 

@@ -11,7 +11,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Autopilot Motor Test Program
+ OMAP3-PWM Motor Test Program
 
  Copyright (C) 2014 Tobias Simon
 

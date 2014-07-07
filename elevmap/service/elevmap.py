@@ -39,15 +39,17 @@ def main(name):
    gps_socket = socket_map['gps']
    elev_socket = socket_map['elev']
    rt = RateTimer(1)
+   start_elev = None
    while True:
       raw = gps_socket.recv()
       if rt.expired():
          gps = loads(raw)
          try:
-            elev = elev_map.lookup(gps[LAT], gps[LON])
-            elev_socket.send(dumps(elev))
+            elev = int(elev_map.lookup((gps[LON], gps[LAT])))
+            if not start_elev:
+               start_elev = elev
+            elev_socket.send(dumps([elev, start_elev]))
          except:
             pass
-
 
 daemonize('elevmap', main)

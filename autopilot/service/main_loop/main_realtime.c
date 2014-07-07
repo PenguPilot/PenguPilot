@@ -60,11 +60,11 @@ static void main_realtime_init(void)
    thread->sched_param.sched_priority = 97;
    pthread_setschedparam(pthread_self(), SCHED_FIFO, &thread->sched_param);
 
-   if (mlockall(MCL_CURRENT | MCL_FUTURE) != 0)
+   /*if (mlockall(MCL_CURRENT | MCL_FUTURE) != 0)
    {
       LOG(LL_ERROR, "mlockall() failed");
       die();
-   }
+   }*/
 
    thread->name = "main_loop";
    thread->running = 1;

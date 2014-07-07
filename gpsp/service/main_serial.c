@@ -131,7 +131,6 @@ int main_serial(void)
       if (c < 0)
          continue;
       char b = c;
-      printf("%c", b);
       /* parse NMEA frame: */
       if (nmea_parse(&parser, &b, 1, &info) == 1)
       {
@@ -143,6 +142,8 @@ int main_serial(void)
             if (((count++ % 100) != 0) && convert(info.lat) == lat_prev && convert(info.lon) == lon_prev)
                continue;
 
+            lat_prev = convert(info.lat);
+            lon_prev = convert(info.lon);
             msgpack_sbuffer_clear(msgpack_buf);
             if (info.fix == 2)
                msgpack_pack_array(pk, 7); /* 2d fix */
