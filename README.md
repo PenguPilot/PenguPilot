@@ -77,6 +77,7 @@ Flight Infrastructure:
 - [gpsp](gpsp): gps publisher, similar to gpsd but much simpler; uses [NMEALib](https://github.com/AHR-Project/nmealib)
 - [remote](remote): remote control data parser and publisher
 - [geomag](geomag): reads gps position and date; publishes magnetic declination in degrees
+- [elevmap](elevmap): reads gps position; publishes SRTM elevation data
 - [ads1x15](ads1x15): (I2C ADC driver for Raspberry PI)
 - [arduino](arduino): (ODROID U3)
 - [twl4030_madc](twl4030_madc): (Gumstix Overo)
