@@ -29,7 +29,7 @@
 #include "rc_channels.h"
 
 
-static int ch_is_symmetric[PP_MAX_CHANNELS] = {1, 1, 1, 0, 0, 0};
+static int ch_is_symmetric[PP_MAX_CHANNELS] = {1, 1, 1, 1, 0, 0};
 
 
 void rc_channels_init(rc_channels_t *channels, uint8_t map[PP_MAX_CHANNELS], float scale[PP_MAX_CHANNELS])
@@ -57,7 +57,7 @@ float rc_channels_get(rc_channels_t *channels, float *raw_channels, channel_t ch
    raw *= channels->scale[channel];
    if (ch_is_symmetric[channel])
    {
-      raw =  sym_limit(raw, 1.0f);
+      raw = sym_limit(raw, 1.0f);
    }
    else
    {

@@ -44,54 +44,61 @@ static tsfloat_t vert_deadzone;
 static tsfloat_t horiz_speed_max;
 static tsfloat_t horiz_deadzone;
 static tsfloat_t yaw_speed_max;
+static tsfloat_t yaw_deadzone;
 static tsfloat_t gas_acc_max;
 static tsfloat_t rotation;
+static tsfloat_t expo;
 
 
-
-float sticks_pitch_roll_speed_max(void)
+static float sticks_pitch_roll_speed_max(void)
 {
    return deg2rad(tsfloat_get(&pitch_roll_speed_max));
 }
 
 
-float sticks_pitch_roll_angle_max(void)
+static float sticks_pitch_roll_angle_max(void)
 {
    return deg2rad(tsfloat_get(&pitch_roll_angle_max));
 }
 
 
-float sticks_vert_speed_max(void)
+static float sticks_vert_speed_max(void)
 {
    return tsfloat_get(&vert_speed_max);
 }
 
 
-float sticks_vert_deadzone(void)
+static float sticks_vert_deadzone(void)
 {
    return tsfloat_get(&vert_deadzone);
 }
 
 
-float sticks_horiz_speed_max(void)
+static float sticks_horiz_speed_max(void)
 {
    return tsfloat_get(&horiz_speed_max);
 }
 
 
-float sticks_horiz_deadzone(void)
+static float sticks_horiz_deadzone(void)
 {
    return tsfloat_get(&horiz_deadzone);
 }
 
 
-float sticks_yaw_speed_max(void)
+static float sticks_yaw_speed_max(void)
 {
    return deg2rad(tsfloat_get(&yaw_speed_max));
 }
 
 
-float sticks_gas_acc_max(void)
+static float sticks_yaw_deadzone(void)
+{
+   return tsfloat_get(&yaw_deadzone);
+}
+
+
+static float sticks_gas_acc_max(void)
 {
    return tsfloat_get(&gas_acc_max);
 }
@@ -103,35 +110,16 @@ float sticks_rotation(void)
 }
 
 
-void sticks_init(void)
+static float stick_expo(float x)
 {
-   ASSERT_ONCE();
-   LOG(LL_INFO, "initializing sticks configuration");
-
-   opcd_param_t params[] =
-   {
-      {"pitch_roll_speed_max", &pitch_roll_speed_max},
-      {"pitch_roll_angle_max", &pitch_roll_angle_max},
-      {"vert_speed_max", &vert_speed_max},
-      {"vert_deadzone", &vert_deadzone},
-      {"horiz_speed_max", &horiz_speed_max},
-      {"horiz_deadzone", &horiz_deadzone},
-      {"yaw_speed_max", &yaw_speed_max},
-      {"gas_acc_max", &gas_acc_max},
-      {"rotation", &rotation},
-      OPCD_PARAMS_END
-   };
-   opcd_params_apply("sticks.", params);
-   
-   LOG(LL_DEBUG, "pitch_roll_speed_max: %.2f deg/s", rad2deg(sticks_pitch_roll_speed_max()));
-   LOG(LL_DEBUG, "pitch_roll_angle_max: %.2f deg", rad2deg(sticks_pitch_roll_angle_max()));
-   LOG(LL_DEBUG, "vert_speed_max: %.2f m/s", sticks_vert_speed_max());
-   LOG(LL_DEBUG, "vert_deadzone: %.2f", sticks_vert_deadzone());
-   LOG(LL_DEBUG, "horiz_speed_max: %.2f m/s", sticks_horiz_speed_max());
-   LOG(LL_DEBUG, "horiz_deadzone: %.2f", sticks_horiz_deadzone());
-   LOG(LL_DEBUG, "yaw_speed_max: %.2f deg/s", rad2deg(sticks_yaw_speed_max()));
-   LOG(LL_DEBUG, "gas_acc_max: %.2f m/s^2", sticks_gas_acc_max());
-   LOG(LL_DEBUG, "rotation: %.2f deg", rad2deg(sticks_rotation()));
+   float base = tsfloat_get(&expo);
+   if (base <= 1.0f)
+      base = 1.01f;
+   float scale = 1.0f / (base - 1.0f);
+   if (x >= 0.0f)
+      return scale * (powf(base, x) - 1.0f);
+   else
+      return -scale * (powf(base, -x) - 1.0f);
 }
 
 
@@ -166,5 +154,95 @@ float stick_dz(float g, float d)
    {
      return 0.0f;
    }
+}
+
+
+void sticks_init(void)
+{
+   ASSERT_ONCE();
+   LOG(LL_INFO, "initializing sticks configuration");
+
+   opcd_param_t params[] =
+   {
+      {"pitch_roll_speed_max", &pitch_roll_speed_max},
+      {"pitch_roll_angle_max", &pitch_roll_angle_max},
+      {"vert_speed_max", &vert_speed_max},
+      {"vert_deadzone", &vert_deadzone},
+      {"horiz_speed_max", &horiz_speed_max},
+      {"horiz_deadzone", &horiz_deadzone},
+      {"yaw_speed_max", &yaw_speed_max},
+      {"yaw_deadzone", &yaw_deadzone},
+      {"gas_acc_max", &gas_acc_max},
+      {"rotation", &rotation},
+      {"expo", &expo},
+      OPCD_PARAMS_END
+   };
+   opcd_params_apply("sticks.", params);
+   
+   LOG(LL_DEBUG, "pitch_roll_speed_max: %.2f deg/s", rad2deg(sticks_pitch_roll_speed_max()));
+   LOG(LL_DEBUG, "pitch_roll_angle_max: %.2f deg", rad2deg(sticks_pitch_roll_angle_max()));
+   LOG(LL_DEBUG, "vert_speed_max: %.2f m/s", sticks_vert_speed_max());
+   LOG(LL_DEBUG, "vert_deadzone: %.2f", sticks_vert_deadzone());
+   LOG(LL_DEBUG, "horiz_speed_max: %.2f m/s", sticks_horiz_speed_max());
+   LOG(LL_DEBUG, "horiz_deadzone: %.2f", sticks_horiz_deadzone());
+   LOG(LL_DEBUG, "yaw_speed_max: %.2f deg/s", rad2deg(sticks_yaw_speed_max()));
+   LOG(LL_DEBUG, "yaw_deadzone: %.2f", sticks_yaw_deadzone());
+   LOG(LL_DEBUG, "gas_acc_max: %.2f m/s^2", sticks_gas_acc_max());
+   LOG(LL_DEBUG, "rotation: %.2f deg", rad2deg(sticks_rotation()));
+}
+
+
+float sticks_pitch_roll_speed_func(float stick)
+{
+   return sticks_pitch_roll_speed_max() * stick_expo(stick);
+}
+
+
+float sticks_pitch_roll_angle_func(float stick)
+{
+   return sticks_pitch_roll_angle_max() * stick_expo(stick);
+}
+
+
+float sticks_gas_acc_func(float stick)
+{
+   return sticks_gas_acc_max() * stick_expo(stick);
+}
+
+
+float sticks_gas_speed_func(float stick)
+{
+   return sticks_vert_speed_max() * stick_expo(stick);
+}
+
+
+float sticks_pitch_roll_gps_speed_func(float stick)
+{
+   return sqrt(sticks_horiz_speed_max()) * stick_expo(stick);
+}
+
+
+bool sticks_pitch_roll_in_deadzone(float pitch, float roll)
+{
+   return hypot(pitch, roll) < sticks_horiz_deadzone();
+}
+
+
+bool sticks_gas_in_deadzone(float gas)
+{
+   return fabs(gas) < sticks_vert_deadzone();
+}
+
+
+float sticks_gas_speed_deadzone(float gas)
+{
+   float vmax = sticks_vert_speed_max();
+   return stick_dz(gas, sticks_vert_deadzone()) * vmax;
+}
+
+
+float sticks_yaw_speed_deadzone(float yaw)
+{
+   return stick_dz(yaw, sticks_yaw_deadzone() * sticks_yaw_speed_max());
 }
 
