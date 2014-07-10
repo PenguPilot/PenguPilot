@@ -105,13 +105,11 @@ static void handle_mode_update(man_mode_t mode, float ultra_u_pos)
 
 static void set_vertical_spd_or_pos(float gas_stick, float baro_u_pos, float ultra_u_pos, float dt)
 {
-   float dz = sticks_vert_deadzone();
-   float vmax = sticks_vert_speed_max();
-   float inc = stick_dz(gas_stick, dz) * vmax * dt;
+   float inc = sticks_gas_speed_deadzone(gas_stick) * dt;
    if (   !(u_pos_sp < -1.0f && inc < 0.0f)
        && !(u_pos_sp > 3.5f && inc > 0.0f))
    {
-      u_pos_sp += stick_dz(gas_stick, dz) * vmax * dt;
+      u_pos_sp += inc;
    }
    cm_u_set_ultra_pos(u_pos_sp);
    EVERY_N_TIMES(100, LOG(LL_INFO, "u_pos_sp: %f, u_pos: %f", u_pos_sp, ultra_u_pos));
@@ -120,22 +118,19 @@ static void set_vertical_spd_or_pos(float gas_stick, float baro_u_pos, float ult
 
 static void set_pitch_roll_rates(float pitch, float roll)
 {
-   float speed_max = sticks_pitch_roll_speed_max();
    vec2_t pr_sp;
-   vec2_set(&pr_sp, speed_max * pitch, speed_max * roll);
+   vec2_set(&pr_sp, sticks_pitch_roll_gps_speed_func(pitch), sticks_pitch_roll_gps_speed_func(roll));
    cm_att_set_rates(&pr_sp);
 }
 
 
 static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t *ne_gps_pos, float ultra_u_pos)
 {
-   float dz = sticks_vert_deadzone();
-   if (sqrt(pitch * pitch + roll * roll) > dz || ultra_u_pos < 0.4)
+   if (!sticks_pitch_roll_in_deadzone(pitch, roll) || ultra_u_pos < 0.4)
    {
       /* set GPS speed based on sticks input: */
-      float vmax_sqrt = sqrt(sticks_horiz_speed_max());
       vec2_t pitch_roll_spd_sp;
-      vec2_set(&pitch_roll_spd_sp, vmax_sqrt * stick_dz(pitch, dz), vmax_sqrt * stick_dz(roll, dz));
+      vec2_set(&pitch_roll_spd_sp, sticks_pitch_roll_gps_speed_func(pitch), sticks_pitch_roll_gps_speed_func(roll));
       vec2_t ne_spd_sp;
       vec2_init(&ne_spd_sp); 
       vec2_rotate(&ne_spd_sp, &pitch_roll_spd_sp, yaw);
@@ -154,10 +149,8 @@ static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t
 
 static void set_att_angles(float pitch, float roll)
 {
-   float dz = sticks_horiz_deadzone();
-   float angle_max = sticks_pitch_roll_angle_max();
    vec2_t pr_sp;
-   vec2_set(&pr_sp, angle_max * stick_dz(pitch, dz), angle_max * stick_dz(roll, dz));
+   vec2_set(&pr_sp, sticks_pitch_roll_angle_func(pitch), sticks_pitch_roll_angle_func(roll));
    cm_att_set_angles(&pr_sp);
 }
 
@@ -222,7 +215,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
    float roll = pr.y;
 
    float yaw_stick = channels[CH_YAW];
-   float gas_stick = 2.0f * (channels[CH_GAS] - 0.5f); /* -1.0f .. 1.0f */
+   float gas_stick = channels[CH_GAS];
    float sw_l = channels[CH_SWITCH_L];
    float sw_r = channels[CH_SWITCH_R];
    bool gps_valid = (sensor_status & GPS_VALID) ? true : false;
@@ -239,13 +232,13 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
    {
       /* reset yaw setpoint if we are too low: */
       yaw_pos_sp = yaw;
-      cm_yaw_set_spd(stick_dz(yaw_stick, 0.075/* todo: config */) * sticks_yaw_speed_max());
+      cm_yaw_set_spd(sticks_yaw_speed_deadzone(yaw_stick));
    }
    else
    {
       /* if the mode request it and we are flying high enough,
        * allow fixed yaw control: */
-      yaw_pos_sp += stick_dz(yaw_stick, 0.075) * sticks_yaw_speed_max() * dt;
+      yaw_pos_sp += sticks_yaw_speed_deadzone(yaw_stick) * dt;
       yaw_pos_sp = norm_angle_0_2pi(yaw_pos_sp);
       cm_yaw_set_pos(yaw_pos_sp);
    }
@@ -255,7 +248,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       case MAN_SPORT:
       {
          set_pitch_roll_rates(pitch, roll);
-         cm_u_set_acc(sticks_gas_acc_max() * gas_stick);
+         cm_u_set_acc(sticks_gas_acc_func(gas_stick));
          break;
       }
 
@@ -263,7 +256,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       {
          set_att_angles(pitch, roll);
          set_vertical_spd_or_pos(gas_stick, baro_u_pos, ultra_u_pos, dt);
-         cm_u_set_acc(sticks_gas_acc_max() * gas_stick);
+         cm_u_set_acc(sticks_gas_acc_func(gas_stick));
          break;
       }
 
@@ -271,7 +264,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       {
          set_horizontal_spd_or_pos(pitch, roll, yaw, ne_gps_pos, ultra_u_pos);
          set_vertical_spd_or_pos(gas_stick, baro_u_pos, ultra_u_pos, dt);
-         //cm_u_set_acc(sticks_gas_acc_max() * gas_stick);
+         cm_u_set_acc(sticks_gas_acc_func(gas_stick));
          break;
       }
 

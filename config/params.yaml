@@ -129,8 +129,10 @@ autopilot:
       horiz_deadzone: 0.05 # deadzone for angle and gps control
       vert_deadzone: 0.15 # if magnitude of centered gas stick is lower than this value, altitude is locked
       yaw_speed_max: 90.0 # maximum yaw rotation speed [deg/s]
+      yaw_deadzone: 0.02 # yaw deadzone
       gas_acc_max: 20.0 # maximum positive/negative acceleration in m/s^2
       rotation: 0.0 # 0 = "+" mode, 90 = "x mode"
+      expo: 6.0
 
    kalman_pos: # NEU position estimate kalman filter
       process_noise: 1.0e-6

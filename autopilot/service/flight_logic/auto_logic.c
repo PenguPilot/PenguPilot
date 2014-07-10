@@ -67,10 +67,8 @@ void auto_logic_init(void)
 
 static void set_att_angles(float pitch, float roll)
 {
-   float dz = sticks_horiz_deadzone();
-   float angle_max = sticks_pitch_roll_angle_max();
    vec2_t pr_sp;
-   vec2_set(&pr_sp, angle_max * stick_dz(pitch, dz), angle_max * stick_dz(roll, dz));
+   vec2_set(&pr_sp, sticks_pitch_roll_angle_func(pitch), sticks_pitch_roll_angle_func(roll));
    cm_att_set_angles(&pr_sp);
 }
 
@@ -99,7 +97,7 @@ bool auto_logic_run(bool *hard_off, bool is_full_auto, uint16_t sensor_status, b
       if (sensor_status & RC_VALID)
       {
          float sw_l = channels[CH_SWITCH_L];
-         float gas_stick = 2.0f * (channels[CH_GAS] - 0.5f);
+         float gas_stick = channels[CH_GAS];
          float pitch = channels[CH_PITCH];
          float roll = channels[CH_ROLL];
 
@@ -114,9 +112,9 @@ bool auto_logic_run(bool *hard_off, bool is_full_auto, uint16_t sensor_status, b
             *hard_off = true;   
          }
 
-         cm_u_a_max_set(sticks_gas_acc_max() * gas_stick);
+         cm_u_a_max_set(sticks_gas_acc_func(gas_stick));
          
-         if (sqrt(pitch * pitch + roll * roll) > sticks_horiz_deadzone())
+         if (!sticks_pitch_roll_in_deadzone(pitch, roll))
             hyst_gps_override = 3.0f;
          hyst_gps_override -= dt;
 

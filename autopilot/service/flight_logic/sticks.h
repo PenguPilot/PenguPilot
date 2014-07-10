@@ -28,31 +28,34 @@
 #define __STICKS_H__
 
 
+#include <stdbool.h>
+
 #include <threadsafe_types.h>
 
 
 void sticks_init(void); /* reads the sticks configuration */
 
-float sticks_pitch_roll_speed_max(void); /* maximum pitch/roll angle in rad/s, configured in deg/s */
-
-float sticks_pitch_roll_angle_max(void); /* maximum pitch/roll angle in rad, configured in deg*/
-
-float sticks_vert_speed_max(void); /* maximal vertical speed (ultra/baro) in m/s */
-
-float sticks_vert_deadzone(void); /* gps, attitude, auto take-over */
-
-float sticks_horiz_speed_max(void); /* maximal horizontal speed (gps) in m/s */
-
-float sticks_horiz_deadzone(void); /* baro pos, ultra pos, speed in m/s */
-
-float sticks_yaw_speed_max(void); /* maximum yaw rotation speed in rad/s, configured in deg/s */
-
-float sticks_gas_acc_max(void); /* maximum acceleration (m/s^2) for direct gas control */
-
 float sticks_rotation(void); /* rotation of pitch/roll stick inputs with respect to device frame in rad, configured in deg/s */
 
-float stick_dz(float g, float d); /* stick deadzone computation */
+float stick_dz(float g, float d);
 
+float sticks_pitch_roll_speed_func(float stick);
+
+float sticks_pitch_roll_angle_func(float stick);
+
+float sticks_gas_acc_func(float stick);
+
+float sticks_gas_speed_func(float stick);
+
+float sticks_pitch_roll_gps_speed_func(float stick);
+
+bool sticks_pitch_roll_in_deadzone(float pitch, float roll);
+
+bool sticks_gas_in_deadzone(float gas);
+
+float sticks_gas_speed_deadzone(float gas);
+
+float sticks_yaw_speed_deadzone(float yaw);
 
 
 #endif /* __STICKS_H__ */
