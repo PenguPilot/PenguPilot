@@ -32,6 +32,10 @@
   sockets:
    - gps: sub
    - power: sub
+   - opcd_ctrl: req
+   - gps: pub
+   - sats: pub
+
 
 - name: elevmap
   sockets:

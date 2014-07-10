@@ -32,8 +32,10 @@
 #include <opcd_interface.h>
 
 #include "auto_logic.h"
+#include "sticks.h"
 #include "../main_loop/control_mode.h"
 #include "../hardware/platform/platform.h"
+#include "../util/logger/logger.h"
 
 
 /* n/e direction in meters: */
@@ -49,7 +51,9 @@ static tsint_t motors_enabled;
 /* yaw setpoint in rad: */
 static tsfloat_t setp_yaw;
 
-static float hyst_gps_override = 1.0f;
+static float hyst_gps_override = 0.0f;
+static bool kill_switch = false;
+static bool prev_kill_switch = false;
 
 
 void auto_logic_init(void)
@@ -61,7 +65,17 @@ void auto_logic_init(void)
 }
 
 
-bool auto_logic_run(bool *hard_off, bool is_full_auto, uint16_t sensor_status, bool flying, float channels[PP_MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos)
+static void set_att_angles(float pitch, float roll)
+{
+   float dz = sticks_horiz_deadzone();
+   float angle_max = sticks_pitch_roll_angle_max();
+   vec2_t pr_sp;
+   vec2_set(&pr_sp, angle_max * stick_dz(pitch, dz), angle_max * stick_dz(roll, dz));
+   cm_att_set_angles(&pr_sp);
+}
+
+
+bool auto_logic_run(bool *hard_off, bool is_full_auto, uint16_t sensor_status, bool flying, float channels[PP_MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos, float dt)
 { 
    /* set u position: */
    pthread_mutex_lock(&mutex);
@@ -75,36 +89,44 @@ bool auto_logic_run(bool *hard_off, bool is_full_auto, uint16_t sensor_status, b
    vec2_t ne_gps_setpoint;
    vec2_set(&ne_gps_setpoint, tsfloat_get(&setp_n), tsfloat_get(&setp_e));
    cm_att_set_gps_pos(&ne_gps_setpoint);
-         
+ 
    /* set yaw position: */
    cm_yaw_set_pos(tsfloat_get(&setp_yaw));
 
    /* safe_auto code: */
-   if (!is_full_auto && (sensor_status & RC_VALID))
+   if (!is_full_auto)
    {
-      printf("SAFE_AUTO\n");
-
-      float sw_l = channels[CH_SWITCH_L];
-      if (sw_l > 0.5)
+      if (sensor_status & RC_VALID)
       {
-         *hard_off = true;
+         float sw_l = channels[CH_SWITCH_L];
+         float gas_stick = 2.0f * (channels[CH_GAS] - 0.5f);
+         float pitch = channels[CH_PITCH];
+         float roll = channels[CH_ROLL];
+
+         if (sw_l > 0.5)
+            kill_switch = true;
+         
+         if (kill_switch)
+         {
+            if (!prev_kill_switch)
+               LOG(LL_DEBUG, "killed");
+            prev_kill_switch = true;
+            *hard_off = true;   
+         }
+
+         cm_u_a_max_set(sticks_gas_acc_max() * gas_stick);
+         
+         if (sqrt(pitch * pitch + roll * roll) > sticks_horiz_deadzone())
+            hyst_gps_override = 3.0f;
+         hyst_gps_override -= dt;
+
+         if (hyst_gps_override > 0.0)
+            set_att_angles(pitch, roll);
       }
-
-      float gas_stick = channels[CH_GAS];
-      if (gas_stick < 0.8)
-         cm_u_set_acc((gas_stick - 0.5) * 5.0);
-      
-      float pitch = channels[CH_PITCH];
-      float roll = channels[CH_ROLL];
-      if (sqrt(pitch * pitch + roll * roll) > 0.1)
-         hyst_gps_override = 1.0;
-      hyst_gps_override -= 0.006;   
-
-      if (hyst_gps_override > 0.0)
+      else
       {
-         vec2_t angles;
-         vec2_set(&angles, pitch, roll);
-         cm_att_set_angles(&angles);
+         kill_switch = true;
+         tsint_init(&motors_enabled, 0);
       }
    }
 
@@ -115,6 +137,7 @@ bool auto_logic_run(bool *hard_off, bool is_full_auto, uint16_t sensor_status, b
 
 int auto_logic_set_n(float val)
 {
+   LOG(LL_DEBUG, "set_n: %f", val);
    tsfloat_set(&setp_n, val);
    return 0;
 }
@@ -122,6 +145,7 @@ int auto_logic_set_n(float val)
 
 int auto_logic_set_e(float val)
 {
+   LOG(LL_DEBUG, "set_e: %f", val);
    tsfloat_set(&setp_e, val);
    return 0;
 }
@@ -129,7 +153,8 @@ int auto_logic_set_e(float val)
 
 int auto_logic_set_u_ground(float val)
 {
-   if (val > 6.0)
+   LOG(LL_DEBUG, "set_u_ground: %f", val);
+   if (val > 4.0)
       return -1;   
    pthread_mutex_lock(&mutex);
    setp_u = val;
@@ -141,6 +166,7 @@ int auto_logic_set_u_ground(float val)
 
 int auto_logic_set_u_msl(float val)
 {
+   LOG(LL_DEBUG, "set_u_msl: %f", val);
    pthread_mutex_lock(&mutex);
    setp_u = val;
    mode_is_ground = false;
@@ -158,6 +184,7 @@ int auto_logic_set_yaw(float val)
 
 int auto_logic_enable_motors(bool enable)
 {
+   LOG(LL_DEBUG, "enable_motors: %d", enable);
    tsint_set(&motors_enabled, enable); 
    return 0;
 }

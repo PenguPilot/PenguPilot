@@ -48,7 +48,7 @@ class Activity(Thread):
 
 
 class StabMixIn:
-   
+ 
    STAB_EPSILON = 0.25
    POLLING_TIMEOUT = 0.1
    STAB_COUNT = 20

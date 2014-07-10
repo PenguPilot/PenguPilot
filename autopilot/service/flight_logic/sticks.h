@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Auto Flight Logic Interface
+ R/C Sticks Config/Util Interface
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -24,47 +24,36 @@
  GNU General Public License for more details. */
 
 
-#ifndef __AUTO_LOGIC_H__
-#define __AUTO_LOGIC_H__
+#ifndef __STICKS_H__
+#define __STICKS_H__
 
 
-#include <stdbool.h>
-#include <stdint.h>
-#include "../hardware/util/rc_channels.h"
-#include "../util/math/vec2.h"
+#include <threadsafe_types.h>
 
 
-/* initialize autoflight logic */
-void auto_logic_init(void);
+void sticks_init(void); /* reads the sticks configuration */
+
+float sticks_pitch_roll_speed_max(void); /* maximum pitch/roll angle in rad/s, configured in deg/s */
+
+float sticks_pitch_roll_angle_max(void); /* maximum pitch/roll angle in rad, configured in deg*/
+
+float sticks_vert_speed_max(void); /* maximal vertical speed (ultra/baro) in m/s */
+
+float sticks_vert_deadzone(void); /* gps, attitude, auto take-over */
+
+float sticks_horiz_speed_max(void); /* maximal horizontal speed (gps) in m/s */
+
+float sticks_horiz_deadzone(void); /* baro pos, ultra pos, speed in m/s */
+
+float sticks_yaw_speed_max(void); /* maximum yaw rotation speed in rad/s, configured in deg/s */
+
+float sticks_gas_acc_max(void); /* maximum acceleration (m/s^2) for direct gas control */
+
+float sticks_rotation(void); /* rotation of pitch/roll stick inputs with respect to device frame in rad, configured in deg/s */
+
+float stick_dz(float g, float d); /* stick deadzone computation */
 
 
-/* run auto flight logic */
-bool auto_logic_run(bool *hard_off,
-                    bool is_full_auto,
-                    uint16_t sensor_status,
-                    bool flying,
-                    float channels[PP_MAX_CHANNELS],
-                    float yaw, vec2_t *ne_gps_pos,
-                    float u_baro_pos,
-                    float u_ultra_pos,
-                    float dt);
 
-
-/* setpoint update functions: */
-int auto_logic_set_n(float val);
-
-int auto_logic_set_e(float val);
-
-int auto_logic_set_u_ground(float val);
-
-int auto_logic_set_u_msl(float val);
-
-int auto_logic_set_yaw(float val);
-
-
-/* motors enable function: */
-int auto_logic_enable_motors(bool enable);
-
-
-#endif /* __AUTO_LOGIC_H__ */
+#endif /* __STICKS_H__ */
 

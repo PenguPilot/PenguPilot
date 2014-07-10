@@ -366,14 +366,11 @@ void main_step(const float dt,
 
    //gvfa_calc(pos_in.acc.ve, world_acc.ve, euler.pitch, euler.roll, euler.yaw);
 
-   //EVERY_N_TIMES(10, printf("%f %f %f\n", pos_in.acc.x, pos_in.acc.y, pos_in.acc.z));
-   
    /* compute next 3d position estimate using Kalman filters: */
    pos_t pos_est;
    vec2_init(&pos_est.ne_pos);
    vec2_init(&pos_est.ne_speed);
    pos_update(&pos_est, &pos_in);
-   //EVERY_N_TIMES(10, printf("%f %f\n", pos_est.ne_pos.x, pos_est.ne_pos.y));
 
    /* execute flight logic (sets cm_x parameters used below): */
    bool hard_off = false;
@@ -393,6 +390,11 @@ void main_step(const float dt,
    else
       a_u = cm_u_sp();
  
+   if (a_u > cm_u_a_max())
+   {
+      a_u = cm_u_a_max();
+   }
+
    /* execute north/east navigation and/or read speed vector input: */
    if (cm_att_is_gps_pos())
    {
@@ -494,15 +496,11 @@ void main_step(const float dt,
    /* write motors: */
    if (!override_hw)
    {
-      //platform_write_motors(setpoints);
+      platform_write_motors(setpoints);
    }
 
-   /* set monitoring data, if we have a valid fix: */
-   if (sensor_status & GPS_VALID)
-   {
-      mon_data_set(pos_est.ne_pos.x, pos_est.ne_pos.y, pos_est.ultra_u.pos, pos_est.baro_u.pos, euler.yaw,
+   mon_data_set(pos_est.ne_pos.x, pos_est.ne_pos.y, pos_est.ultra_u.pos, pos_est.baro_u.pos, euler.yaw,
                 ne_pos_err.x, ne_pos_err.y, u_pos_err, yaw_err);
-   }
 
 out:
    EVERY_N_TIMES(bb_rate, blackbox_record(dt, marg_data, gps_data, ultra, baro, voltage, current, channels, sensor_status, /* sensor inputs */
