@@ -13,7 +13,7 @@ class ParamHandler(Thread):
    def __init__(self, dispatcher):
       Thread.__init__(self)
       self.dispatcher = dispatcher
-      self.opcd_interface = OPCD_Interface(generate_map('mavlink')['ctrl'])
+      self.opcd_interface = OPCD_Interface(generate_map('mavlink')['opcd_ctrl'])
       self.param_map = {}
       self.param_name_map = {}
       list = self.opcd_interface.get('')

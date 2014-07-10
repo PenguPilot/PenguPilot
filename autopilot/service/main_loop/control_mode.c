@@ -67,7 +67,7 @@ static enum
 }
 u_mode = U_ACC;
 static float u_sp = 0.0;
-static float u_acc_limit = 1.0;
+static float u_a_max = 1.0;
 
 void cm_u_set_ultra_pos(float pos)
 {
@@ -92,6 +92,12 @@ void cm_u_set_acc(float acc)
    u_mode = U_ACC;
    u_sp = acc;   
 }
+
+void cm_u_a_max_set(float max)
+{
+   u_a_max = max;   
+}
+
 
 bool cm_u_is_pos(void)
 {
@@ -118,9 +124,9 @@ float cm_u_sp(void)
    return u_sp;   
 }
 
-float cm_u_acc_limit(void)
+float cm_u_a_max(void)
 {
-   return u_acc_limit;   
+   return u_a_max;   
 }
 
 

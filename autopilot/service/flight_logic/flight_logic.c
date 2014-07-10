@@ -23,10 +23,13 @@
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details. */
 
+#include <util.h>
 
 #include "flight_logic.h"
 #include "man_logic.h"
 #include "auto_logic.h"
+#include "sticks.h"
+
 #include "../main_loop/control_mode.h"
 
 
@@ -36,11 +39,15 @@ static enum
    MODE_SAFE_AUTO,
    MODE_FULL_AUTO
 }
-flight_mode = MODE_MANUAL; //FULL_AUTO;
+flight_mode = MODE_MANUAL;
 
 
 void flight_logic_init(void)
 {
+   ASSERT_ONCE();
+
+   sticks_init();
+
    switch (flight_mode)
    {
       case MODE_MANUAL:
@@ -79,11 +86,11 @@ bool flight_logic_run(bool *hard_off,
          break;
 
       case MODE_SAFE_AUTO:
-         motors_enabled = auto_logic_run(hard_off, false, sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos);
+         motors_enabled = auto_logic_run(hard_off, false, sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos, dt);
          break;
 
       case MODE_FULL_AUTO:
-         motors_enabled = auto_logic_run(hard_off, true, sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos);
+         motors_enabled = auto_logic_run(hard_off, true, sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos, dt);
          break;
 
    }

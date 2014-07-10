@@ -51,6 +51,7 @@ void cm_u_set_ultra_pos(float pos);
 void cm_u_set_baro_pos(float pos);
 void cm_u_set_spd(float spd);
 void cm_u_set_acc(float acc);
+void cm_u_a_max_set(float max);
 
 /* true, if in u pos hold mode */
 bool cm_u_is_pos(void);
@@ -68,8 +69,8 @@ bool cm_u_is_acc(void);
 /* returns the setpoint */
 float cm_u_sp(void);
 
-/* returns the acc limit */
-float cm_u_acc_limit(void);
+/* returns the u acc limit */
+float cm_u_a_max(void);
 
 
 /*********************

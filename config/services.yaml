@@ -75,6 +75,10 @@ opcd:
   binary: 'opcd/service/opcd.py'
   priority: sys_low
 
+mavlink:
+  binary: 'mavlink/service/mavlink.py'
+  priority: sys_low
+
 powerman:
   binary: 'powerman/service/powerman.py'
   depends: [opcd, arduino, twl4030_madc, ads1x15]

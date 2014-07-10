@@ -121,16 +121,16 @@ autopilot:
       roll_enabled: 1
       yaw_enabled: 1
 
-   manual_control:
+   sticks:
       pitch_roll_speed_max: 50.0 # [deg/s]
       pitch_roll_angle_max: 15.0 # [deg]
-      yaw_speed_max: 90.0 # maximum yaw rotation speed [deg/s]
       vert_speed_max: 1.0
       horiz_speed_max: 2.0 # maximal horizontal speed
       horiz_deadzone: 0.05 # deadzone for angle and gps control
-      gas_deadzone: 0.15 # if magnitude of centered gas stick is lower than this value, altitude is locked
+      vert_deadzone: 0.15 # if magnitude of centered gas stick is lower than this value, altitude is locked
+      yaw_speed_max: 90.0 # maximum yaw rotation speed [deg/s]
       gas_acc_max: 20.0 # maximum positive/negative acceleration in m/s^2
-      sticks_rotation: 0.0 # 0 = "+" mode, 90 = "x mode"
+      rotation: 0.0 # 0 = "+" mode, 90 = "x mode"
 
    kalman_pos: # NEU position estimate kalman filter
       process_noise: 1.0e-6
