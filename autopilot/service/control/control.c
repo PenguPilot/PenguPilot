@@ -28,17 +28,20 @@
 
 #include "position/navi.h"
 #include "speed/ne_speed.h"
+#include "speed/u_speed.h"
 #include "position/u_ctrl.h"
+#include "position/yaw_ctrl.h"
 #include "position/att_ctrl.h"
 #include "speed/piid.h"
 
 
-void control_reset()
+void highlevel_control_reset()
 {
    navi_reset();
    ne_speed_ctrl_reset();
+   u_speed_ctrl_reset();
    u_ctrl_reset();
    att_ctrl_reset();
-   piid_reset();
+   yaw_ctrl_reset();
 }
 

@@ -28,8 +28,7 @@
 #define __CONTROL_H__
 
 
-/* resets all integrative controller components */
-void control_reset(void);
+void highlevel_control_reset(void);
 
 
 #endif /* __CONTROL_H__ */

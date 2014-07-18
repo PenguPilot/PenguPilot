@@ -73,7 +73,7 @@ while True:
          if thread.cnt:
             cnt = thread.cnt
             thread.cnt = 0
-            a = 0.1
+            a = 0.5
             if thread.filt == None:
                thread.filt = float(cnt) / 5
             else:

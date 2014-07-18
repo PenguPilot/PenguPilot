@@ -119,7 +119,7 @@ static void set_vertical_spd_or_pos(float gas_stick, float baro_u_pos, float ult
 static void set_pitch_roll_rates(float pitch, float roll)
 {
    vec2_t pr_sp;
-   vec2_set(&pr_sp, sticks_pitch_roll_gps_speed_func(pitch), sticks_pitch_roll_gps_speed_func(roll));
+   vec2_set(&pr_sp, sticks_pitch_roll_speed_func(pitch), sticks_pitch_roll_speed_func(roll));
    cm_att_set_rates(&pr_sp);
 }
 
@@ -255,7 +255,6 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       case MAN_RELAXED:
       {
          set_att_angles(pitch, roll);
-         set_vertical_spd_or_pos(gas_stick, baro_u_pos, ultra_u_pos, dt);
          cm_u_set_acc(sticks_gas_acc_func(gas_stick));
          break;
       }
@@ -264,7 +263,6 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       {
          set_horizontal_spd_or_pos(pitch, roll, yaw, ne_gps_pos, ultra_u_pos);
          set_vertical_spd_or_pos(gas_stick, baro_u_pos, ultra_u_pos, dt);
-         cm_u_set_acc(sticks_gas_acc_func(gas_stick));
          break;
       }
 

@@ -40,14 +40,14 @@ static tsfloat_t speed_i;
 static tsfloat_t speed_imax;
 
 
-float u_speed_step(float *err, const float setpoint, const float pos, const float dt)
+float u_speed_ctrl_step(float *err, const float setpoint, const float pos, const float dt)
 {   
    *err = setpoint - pos;
    return pid_control(&ctrl, *err, 0.0f, dt);
 }
 
 
-void u_speed_init(void)
+void u_speed_ctrl_init(void)
 {
    ASSERT_ONCE();
    
@@ -59,12 +59,11 @@ void u_speed_init(void)
       OPCD_PARAMS_END
    };
    opcd_params_apply("controllers.u_speed.", params);
-
    pid_init(&ctrl, &speed_p, &speed_i, NULL, &speed_imax);
 }
 
 
-void u_speed_reset(void)
+void u_speed_ctrl_reset(void)
 {
    pid_reset(&ctrl);
 }

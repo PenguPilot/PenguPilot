@@ -29,9 +29,9 @@
 from time import sleep, time
 from psutil import cpu_percent
 from threading import Thread, Lock
-from scl import generate_map, RateTimer
+from scl import generate_map
 from math import sin, cos, pi
-from misc import daemonize
+from misc import daemonize, RateTimer
 from msgpack import loads, dumps
 from aircomm_shared import BCAST_NOFW, HEARTBEAT
 from gps_msgpack import *

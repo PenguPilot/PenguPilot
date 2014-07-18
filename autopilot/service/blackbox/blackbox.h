@@ -34,7 +34,7 @@
 #include "../util/math/euler.h"
 
 
-#define BLACKBOX_ITEMS 44
+#define BLACKBOX_ITEMS 52
 
 
 extern char *blackbox_spec[BLACKBOX_ITEMS];
@@ -61,7 +61,13 @@ void blackbox_record(const float dt, /* sensor inputs ... */
                const vec3_t *mag_normal,
                const vec3_t *pry_err,
                const vec3_t *pry_rate_err,
-               const euler_t *euler);
+               const euler_t *euler,
+               const vec2_t *ne_pos,
+               const vec2_t *ne_spd,
+               const float baro_u_pos,
+               const float baro_u_spd,
+               const float ultra_u_pos,
+               const float ultra_u_spd);
 
 
 #endif /* __BLACKBOX_H__ */

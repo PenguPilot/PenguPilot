@@ -87,8 +87,6 @@ void ne_speed_ctrl_run(vec2_t *forces, vec2_t *err, const vec2_t *setp, const fl
    {
       err->ve[i] = setp->ve[i] - speed->ve[i];
       forces->ve[i] = pid_control(&controllers[i], err->ve[i], 0.0, dt);
-      filter1_lp_update_coeff(&filter, tsfloat_get(&lpfg), dt);
-      filter1_run(&filter, forces->ve, forces->ve);
    }
 }
 

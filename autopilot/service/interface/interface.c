@@ -184,7 +184,7 @@ SIMPLE_THREAD_BEGIN(thread_func)
 
             case REQUEST_TYPE__RESET_CTRL:
                LOG(LL_DEBUG, "RESET_CTRL");
-               control_reset();
+               highlevel_control_reset();
                break;
             
             case REQUEST_TYPE__GET_PARAMS:

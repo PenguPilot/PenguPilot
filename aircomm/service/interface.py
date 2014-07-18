@@ -27,8 +27,9 @@
 
 from ed_nrf.lib.cdc import CDC_nRF
 from time import sleep
+import zmq
 
-class Interface:
+class NRF_Interface:
 
    def __init__(self, dev_path):
       self.nrf = CDC_nRF(dev_path)
@@ -36,10 +37,25 @@ class Interface:
       self.nrf.setPower(True) # enable power
       self.nrf._bus.setDTR(True) # enable transparent mode
       self.nrf._bus.timeout = 0.01 # disable read/write timeouts
-
+ 
    def send(self, data):
       self.nrf._bus.write(data)
+      self.zmq_socket.write(data)
 
    def receive(self):
       return self.nrf._bus.read(1024)
+
+
+class ZMQ_Interface:
+
+   def __init__(self):
+      context = zmq.Context()
+      self.zmq_socket = context.socket(zmq.PUB)
+      self.zmq_socket.bind('tcp://*:5556')
+ 
+   def send(self, data):
+      self.zmq_socket.send(data)
+
+   def receive(self):
+      return self.zmq_socket.recv()
 

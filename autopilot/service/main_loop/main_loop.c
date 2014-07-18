@@ -70,7 +70,6 @@
 #include "../flight_logic/flight_logic.h"
 #include "../blackbox/blackbox.h"
 #include "../filters/filter.h"
-#include "../filters/gvfa.h"
 
 
 static bool calibrate = false;
@@ -80,9 +79,8 @@ static gps_data_t gps_data;
 static gps_rel_data_t gps_rel_data = {0.0, 0.0, 0.0f, 0.0f};
 static calibration_t gyro_cal;
 static interval_t gyro_move_interval;
-static int init = 0;
 static Filter1 lp_filter;
-static float acc_vec[3];
+static float acc_vec[3] = {0.0, 0.0, G_CONSTANT};
 
 typedef union
 {
@@ -101,6 +99,7 @@ f_local_t;
 static int marg_err = 0;
 static pos_in_t pos_in;
 static calibration_t rc_cal;
+static bool prev_flying = true;
 
 
 void main_init(int argc, char *argv[])
@@ -191,7 +190,7 @@ void main_init(int argc, char *argv[])
    att_ctrl_init();
    yaw_ctrl_init();
    u_ctrl_init(REALTIME_PERIOD);
-   u_speed_init();
+   u_speed_ctrl_init();
    navi_init();
 
    LOG(LL_INFO, "initializing command interface");
@@ -226,7 +225,6 @@ void main_init(int argc, char *argv[])
    opcd_params_apply("main.", params);
    filter1_lp_init(&lp_filter, tsfloat_get(&acc_fg), 0.005, 3);
    lp_filter.z[2] = G_CONSTANT;
-   gvfa_init();
 
    cm_init();
    mon_init();
@@ -259,6 +257,9 @@ void main_step(const float dt,
    vec3_init(&pry_err);
    vec3_t pry_speed_err;
    vec3_init(&pry_speed_err);
+   pos_t pos_est;
+   vec2_init(&pos_est.ne_pos);
+   vec2_init(&pos_est.ne_speed);
 
    float u_pos_err = 0.0f;
    float u_spd_err = 0.0f;
@@ -306,11 +307,15 @@ void main_step(const float dt,
    marg_data_t cal_marg_data;
    marg_data_init(&cal_marg_data);
    marg_data_copy(&cal_marg_data, marg_data);
-   if (cal_sample_apply(&gyro_cal, cal_marg_data.gyro.ve) == 0 && gyro_moved(&marg_data->gyro))
+   if (!cal_sample_apply(&gyro_cal, cal_marg_data.gyro.ve))
    {
-      if (interval_measure(&gyro_move_interval) > 1.0)
-         LOG(LL_ERROR, "gyro moved during calibration, retrying");
-      cal_reset(&gyro_cal);
+      if (gyro_moved(&marg_data->gyro))
+      {
+         if (interval_measure(&gyro_move_interval) > 1.0)
+            LOG(LL_ERROR, "gyro moved during calibration, retrying");
+         cal_reset(&gyro_cal);
+      }
+      goto out;
    }
    ONCE(LOG(LL_INFO, "gyro biases: %f %f %f", gyro_cal.bias[0], gyro_cal.bias[1], gyro_cal.bias[2]));
 
@@ -349,27 +354,24 @@ void main_step(const float dt,
    
    /* compute orientation estimate: */
    euler_t euler;
-   int ahrs_state = cal_ahrs_update(&euler, &cal_marg_data, mag_decl, dt);
-   if (ahrs_state < 0 || !cal_complete(&gyro_cal))
+   if (cal_ahrs_update(&euler, &cal_marg_data, mag_decl, dt) < 0)
       goto out;
-   ONCE(init = 1; LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
-
+   
+   ONCE(LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
    /* rotate local ACC measurements into global NEU reference frame: */
    vec3_t world_acc;
    vec3_init(&world_acc);
    body_to_neu(&world_acc, &euler, &cal_marg_data.acc);
 
    /* center global ACC readings: */
-   filter1_run(&lp_filter, &world_acc.ve[0], &acc_vec[0]);
+   float a = 0.001;
    FOR_N(i, 3)
+   {
       pos_in.acc.ve[i] = world_acc.ve[i] - acc_vec[i];
-
-   //gvfa_calc(pos_in.acc.ve, world_acc.ve, euler.pitch, euler.roll, euler.yaw);
+      acc_vec[i] = (1.0f - a) * acc_vec[i] + a * world_acc.ve[i];
+   }
 
    /* compute next 3d position estimate using Kalman filters: */
-   pos_t pos_est;
-   vec2_init(&pos_est.ne_pos);
-   vec2_init(&pos_est.ne_speed);
    pos_update(&pos_est, &pos_in);
 
    /* execute flight logic (sets cm_x parameters used below): */
@@ -377,7 +379,7 @@ void main_step(const float dt,
    bool motors_enabled = flight_logic_run(&hard_off, sensor_status, flying, cal_channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg, dt);
    
    /* execute up position/speed controller(s): */
-   float a_u = 0.0f;
+   float a_u = -10.0f;
    if (cm_u_is_pos())
    {
       if (cm_u_is_baro_pos())
@@ -386,14 +388,15 @@ void main_step(const float dt,
          a_u = u_ctrl_step(&u_pos_err, cm_u_sp(), pos_est.ultra_u.pos, pos_est.ultra_u.speed, dt);
    }
    else if (cm_u_is_spd())
-      a_u = u_speed_step(&u_spd_err, cm_u_sp(), pos_est.baro_u.speed, dt);
-   else
+   {
+      a_u = u_speed_ctrl_step(&u_spd_err, cm_u_sp(), pos_est.baro_u.speed, dt);
+   }
+
+   if (cm_u_is_acc())
       a_u = cm_u_sp();
  
    if (a_u > cm_u_a_max())
-   {
       a_u = cm_u_a_max();
-   }
 
    /* execute north/east navigation and/or read speed vector input: */
    if (cm_att_is_gps_pos())
@@ -441,8 +444,7 @@ void main_step(const float dt,
    vec2_set(&pr_pos, -euler.pitch, euler.roll);
    vec2_init(&pr_pos_ctrl);
    att_ctrl_step(&pr_pos_ctrl, &att_err, dt, &pr_pos, &pr_spd, &pr_pos_sp);
-   pry_err.x = att_err.x;
-   pry_err.y = att_err.y;
+   FOR_N(i, 2) pry_err.ve[i] = att_err.ve[i];
 
    float piid_sp[3] = {0.0f, 0.0f, 0.0f};
    piid_sp[PIID_PITCH] = pr_pos_ctrl.ve[0];
@@ -459,9 +461,9 @@ void main_step(const float dt,
    }
 
    /* execute yaw position controller: */
-   float yaw_speed_sp, yaw_err;
+   float yaw_speed_sp;
    if (cm_yaw_is_pos())
-      yaw_speed_sp = yaw_ctrl_step(&yaw_err, cm_yaw_sp(), euler.yaw, cal_marg_data.gyro.z, dt);
+      yaw_speed_sp = yaw_ctrl_step(&pry_err.z, cm_yaw_sp(), euler.yaw, cal_marg_data.gyro.z, dt);
    else
       yaw_speed_sp = cm_yaw_sp(); /* direct yaw speed control */
    piid_sp[PIID_YAW] = yaw_speed_sp;
@@ -485,14 +487,29 @@ void main_step(const float dt,
 
    /* reset controllers, if motors are not controllable: */
    if (!motors_controllable())
-      control_reset();
+   {
+      piid_reset();
+      highlevel_control_reset();
+   }
+
+   /* wait until we are flying before enabling position/speed control integrators: */
+   if (!flying)
+      highlevel_control_reset();
+
+   /* give hint for flight detection debugging: */
+   if (flying && !prev_flying)
+      LOG(LL_DEBUG, "FLYING");
+   if (!flying && prev_flying)
+      LOG(LL_DEBUG, "STANDING");
+   prev_flying = flying;
+
 
    /* handle special cases for motor setpoints: */
    if (motors_starting())
       FOR_N(i, platform.n_motors) setpoints[i] = platform.ac.min;
    if (hard_off || motors_output_is_disabled())
       FOR_N(i, platform.n_motors) setpoints[i] = platform.ac.off_val;
-   
+
    /* write motors: */
    if (!override_hw)
    {
@@ -500,7 +517,7 @@ void main_step(const float dt,
    }
 
    mon_data_set(pos_est.ne_pos.x, pos_est.ne_pos.y, pos_est.ultra_u.pos, pos_est.baro_u.pos, euler.yaw,
-                ne_pos_err.x, ne_pos_err.y, u_pos_err, yaw_err);
+                ne_pos_err.x, ne_pos_err.y, u_pos_err, pry_err.z);
 
 out:
    EVERY_N_TIMES(bb_rate, blackbox_record(dt, marg_data, gps_data, ultra, baro, voltage, current, channels, sensor_status, /* sensor inputs */
@@ -509,6 +526,12 @@ out:
                           &mag_normal,
                           &pry_err, /* attitude errors */
                           &pry_speed_err /* attitude rate errors */,
-                          &euler));
+                          &euler,
+                          &pos_est.ne_pos,
+                          &pos_est.ne_speed,
+                          pos_est.baro_u.pos,
+                          pos_est.baro_u.speed,
+                          pos_est.ultra_u.pos,
+                          pos_est.ultra_u.speed));
 }
 

@@ -33,6 +33,7 @@
 #include <errno.h>
 #include <signal.h>
 
+
 /* read_pid
  *
  * Reads the specified pidfile and returns the read pid.
@@ -46,11 +47,18 @@ int read_pid(char *pidfile)
 
    if (!(f = fopen(pidfile, "r")))
       return 0;
-   int status = fscanf(f, "%d", &pid);
-   (void)status;
+
+   if (fscanf(f, "%d", &pid) != 1)
+   {
+      pid = 0;
+      goto out;
+   }
+
+out:
    fclose(f);
    return pid;
 }
+
 
 /* check_pid
  *
@@ -73,10 +81,11 @@ int check_pid(char *pidfile)
     */
    /* But... errno is usually changed only on error.. */
    if (kill(pid, 0) && errno == ESRCH)
-      return(0);
+      return 0;
 
    return pid;
 }
+
 
 /* write_pid
  *
