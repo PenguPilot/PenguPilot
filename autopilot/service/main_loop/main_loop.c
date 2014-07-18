@@ -43,6 +43,7 @@
 #include "main_util.h"
 #include "../interface/interface.h"
 #include "../util/math/conv.h"
+#include "../util/algo.h"
 #include "../util/logger/logger.h"
 #include "../estimators/cal_ahrs.h"
 #include "../estimators/pos.h"
@@ -75,6 +76,7 @@
 static bool calibrate = false;
 static float *rpm_square = NULL;
 static float *setpoints = NULL;
+static float *forces = NULL;
 static gps_data_t gps_data;
 static gps_rel_data_t gps_rel_data = {0.0, 0.0, 0.0f, 0.0f};
 static calibration_t gyro_cal;
@@ -180,6 +182,11 @@ void main_init(int argc, char *argv[])
    setpoints = malloc(array_len);
    ASSERT_NOT_NULL(setpoints);
    memset(setpoints, 0, array_len);
+   
+   forces = malloc(array_len);
+   ASSERT_NOT_NULL(forces);
+   memset(forces, 0, array_len);
+ 
    rpm_square = malloc(array_len);
    ASSERT_NOT_NULL(rpm_square);
    memset(rpm_square, 0, array_len);
@@ -489,6 +496,26 @@ void main_step(const float dt,
    
    /* computate rpm ^ 2 out of the desired forces: */
    inv_coupling_calc(rpm_square, f_local.ve);
+   
+   /* optimize forces (should not happen when we're standing, might cause catastrophic behavior): */
+   if (flying && pos_est.ultra_u.pos > 1.0f)
+   {
+      FOR_N(i, platform.n_motors)
+         forces[i] = rpm_square[i] * 1.5866e-007f;
+      float max_force = find_maximum(forces, platform.n_motors);
+      float min_force = find_minimum(forces, platform.n_motors);
+      float delta_lim = (platform.max_thrust_n / platform.n_motors) / 5.0; /* up to 20% thrust variation is allowed */
+      float delta_min = sym_limit(0.0f - min_force, delta_lim);
+      if (delta_min > 0.0f)
+         FOR_N(i, platform.n_motors)
+            forces[i] += delta_min;
+      float delta_max = sym_limit(max_force - platform.max_thrust_n / platform.n_motors, delta_lim);
+      if (delta_max > 0.0f)
+         FOR_N(i, platform.n_motors)
+            forces[i] -= delta_max;
+      FOR_N(i, platform.n_motors)
+         rpm_square[i] = forces[i] / 1.5866e-007f; 
+   }
 
    /* compute motor setpoints out of rpm ^ 2: */
    piid_int_enable(platform_ac_calc(setpoints, motors_spinning(), voltage, rpm_square));
