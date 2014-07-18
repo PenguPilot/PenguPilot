@@ -92,7 +92,7 @@ autopilot:
       acc_fg: 0.03 # accelerometer low-pass filter
 
    ahrs: # attitude and heading reference system
-      beta: 0.01
+      beta: 0.041 # optimal value from madgwick paper
       beta_start: 20.0
       beta_step: 10.0
 
@@ -122,8 +122,8 @@ autopilot:
       yaw_enabled: 1
 
    sticks:
-      pitch_roll_speed_max: 50.0 # [deg/s]
-      pitch_roll_angle_max: 15.0 # [deg]
+      pitch_roll_speed_max: 180.0 # [deg/s]
+      pitch_roll_angle_max: 35.0 # [deg]
       vert_speed_max: 1.0
       horiz_speed_max: 2.0 # maximal horizontal speed
       horiz_deadzone: 0.05 # deadzone for angle and gps control
@@ -144,38 +144,38 @@ autopilot:
    controllers:
 
       stabilizing: # basic stabilizing controller:
-         att_kp: 4.19227650348e-01
-         att_ki: 3.13780298778e+00
-         att_kii: 3.45789342669e+00
-         att_kd: 2.94830266817e-02
-         yaw_kp: 0.7
-         yaw_ki: 1.0
+         att_kd: 0.0373326973147051
+         att_ki: 2.9949718515596944
+         att_kii: 3.535664263437867
+         att_kp: 0.3635009762282838
+         yaw_kp: 0.6
+         yaw_ki: 0.4
          filt_fg: 10.0
          filt_d: 0.95
          jxx_jyy: 0.0097
          jzz: 0.0057292965
-         tmc: 0.005
+         tmc: 0.06
       
       ne_speed: # north-east speed controller
-         p: 2.1
-         i: 0.1
-         i_max: 1.0
+         p: 3.8
+         i: 2.5
+         i_max: 6.0
          d: 0.0
          lpfg: 50.0
 
       attitude:
-         p: 8.0
-         i: 8.5
+         p: 6.0
+         i: 1.0
          i_max: 10.0
-         d: 0.4
+         d: 0.6
          pitch_bias: 0.0
          roll_bias: 0.0
-         angles_max: 20.0 # maximal angle allowed in attitude control
+         angles_max: 60.0 # maximal angle allowed in attitude control
    
       u_speed: # up speed controller (barometer)
-         i: 0.15
-         imax: 1.0
-         p: 2.0
+         i: 6.0
+         imax: 10.0
+         p: 4.0
       
       u_pos: # ups position controller (barometer, ultrasonic)
          d: 20.0

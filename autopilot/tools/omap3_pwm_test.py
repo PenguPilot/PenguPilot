@@ -39,5 +39,6 @@ def write_motor(id, val):
    f.close()
 
 
-write_motor(int(argv[1]), 12000)
+while 1:
+   write_motor(int(argv[1]), 12500)
 

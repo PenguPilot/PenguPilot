@@ -77,7 +77,11 @@ def _main_wrapper(name, main):
 def daemonize(name, main):
    run_dir = user_data_dir + sep + 'run'
    pidf = pidlockfile.PIDLockFile(run_dir + sep + name + '.pid')
-   pidf.acquire(timeout = 1.0)
+   try:
+      pidf.acquire(timeout = 1.0)
+   except:
+      pidf.break_lock()
+      pidf.acquire(timeout = 1.0)
    pidf.release()
    with DaemonContext(pidfile = pidf):
       _main_wrapper(name, main)

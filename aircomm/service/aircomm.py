@@ -27,7 +27,7 @@
 
 
 from base64 import b64encode
-from interface import Interface
+from interface import NRF_Interface, ZMQ_Interface
 from scl import generate_map
 from time import sleep, time
 from threading import Thread
@@ -99,7 +99,7 @@ def main(name):
    out_socket = sm['aircomm_out']
    in_socket = sm['aircomm_in']
 
-   aci = Interface(device)
+   aci = ZMQ_Interface()
    acr = ACIReader(aci, out_socket, mhist)
    acr.start()
 

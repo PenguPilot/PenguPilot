@@ -103,36 +103,23 @@ def start(name, prio, path, args):
       print green('note:') + ' %s is already running' % name
    else:
       print 'starting', blue(name), '...',
-      try:
-         print path,
-         ps = subprocess.Popen(path.split(' '), shell = False, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-         ps.stdout.close()
-         ps.stderr.close()
-         ps.wait()
-         prio_fail = False
-         if ps.returncode != 0:
-            print red('[ERROR: service quit with code ' + str(ps.returncode) + ']')
-         else:
-            try:
-               pid = None
-               for timeout in range(30):
-                  time.sleep(0.1)
-                  try:
-                     pidfile = pidfile_from_name(name)
-                     pid = int(file(pidfile).read())
-                     break
-                  except:
-                     pass
-               if not pid:
-                  raise Exception('no pidfile found')
-               sched_set_prio(pid, prio)
-            except Exception, e:
-               prio_fail = True
-            print green('[OK]')
-         if prio_fail:
+      ps = subprocess.Popen(path.split(' '), shell = False, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+      ps.stdout.close()
+      ps.stderr.close()
+      ps.wait()
+      prio_fail = False
+      if ps.returncode != 0:
+         print red('[ERROR: service quit with code ' + str(ps.returncode) + ']')
+      else:
+         time.sleep(5)
+         pid = validate(name)
+         if not pid:
+            raise Exception('process terminated')
+         try:
+            sched_set_prio(pid, prio)
+         except:
             print red('warning:') + ' could not set process priority'
-      except Exception as e:
-         print red('[ERROR]: ' + str(e))
+         print green('[OK]')
 
 
 def stop(name):

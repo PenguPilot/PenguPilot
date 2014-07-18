@@ -75,17 +75,23 @@ static int cnt = 0;
 int platform_read_baro(float *baro)
 {
    CHECK_DEV(platform.read_baro);
-   float buf;
+   float buf = 0.0f;
    int status = platform.read_baro(&buf);
    if (status == 0)
    {
       avg += buf;
-      if (start == 0.0f && cnt++ > 100)
+      cnt++;
+      if (cnt > 100)
       {
-         start = avg / cnt;
+         if (start == 0.0f)
+            start = avg / cnt;
+         *baro = buf - start;
+      }
+      else
+      {
+         *baro = start;
       }
    }
-   *baro = buf - start;
    return status;
 }
 

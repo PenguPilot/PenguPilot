@@ -39,7 +39,13 @@ class TWL4030_MADC:
       self.path = '/sys/class/hwmon/hwmon0/device/in%d_input' % adc_id
 
    def read(self):
-      return int(open(self.path).read())
+      file = open(self.path)
+      try:
+         val = int(file.read())
+      except:
+         val = 17.0
+      file.close()
+      return val
 
 
 def main(name):

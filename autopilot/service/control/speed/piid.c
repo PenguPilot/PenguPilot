@@ -177,27 +177,7 @@ void piid_reset(void)
 
 
 void piid_run(float u_ctrl[4], float gyro[3], float rc[3], float dt)
-{   
-   float T = 1.0f / (2.0f * M_PI * tsfloat_get(&filt_fg));
-   float a0 = (4.0f * T * T + 4.0f * tsfloat_get(&filt_d) * T * dt + dt * dt);
-
-   float a[2];
-   a[0] = (2.0f * dt * dt - 8.0f * T * T) / a0;
-   a[1] = (4.0f * T * T   - 4.0f * tsfloat_get(&filt_d) * T * dt + dt * dt) / a0;
-
-   float b[3];
-   /* x-axis: */
-   __FF_B_SETUP(tsfloat_get(&jxx_jyy));
-   filter2_update_coeff(&filters[0], a, b);
-
-   /* y-axis: */
-   __FF_B_SETUP(tsfloat_get(&jxx_jyy));
-   filter2_update_coeff(&filters[1], a, b);
-
-   /* z-axis: */
-   __FF_B_SETUP(tsfloat_get(&jzz));
-   filter2_update_coeff(&filters[2], a, b);
-
+{
    /* run feed-forward: */
    FOR_N(i, 3)
       filter2_run(&filters[i], &rc[i], &u_ctrl[i]);
@@ -208,7 +188,6 @@ void piid_run(float u_ctrl[4], float gyro[3], float rc[3], float dt)
    float rc_filt[3];
 
    /* filter reference signals */
-   filter2_lp_update_coeff(&filter_ref, tsfloat_get(&filt_fg), tsfloat_get(&filt_d), dt);
    filter2_run(&filter_ref, rc, rc_filt);
 
    FOR_N(i, 3)
@@ -222,10 +201,7 @@ void piid_run(float u_ctrl[4], float gyro[3], float rc[3], float dt)
       ringbuf_idx = 0;
 
    /* error high/lowpass filter: */
-   filter1_hp_update_coeff(&filter_hp_err, tsfloat_get(&filt_fg), dt);
    filter1_run(&filter_hp_err, error, derror);
-   
-   filter1_lp_update_coeff(&filter_lp_err, tsfloat_get(&filt_fg), dt);
    filter1_run(&filter_lp_err, error, error);
 
    /* 1st error integration: */

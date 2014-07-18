@@ -49,13 +49,13 @@ class Config:
       tail = os.sep + 'config' + os.sep + 'params.yaml'
       self.base_path = os.getenv('PENGUPILOT_PATH') + tail
       self.overlay_path = user_data_dir + tail
-      print self.overlay_path
       # load base config and overlay of present:
       self.base = yaml.load(file(self.base_path))
       try:
          self.overlay = yaml.load(file(self.overlay_path))
-      except:
+      except IOError:
          self.overlay = {}
+
       # check single document integrity:
       for doc in self.base, self.overlay:
          self._check_tree(doc)
