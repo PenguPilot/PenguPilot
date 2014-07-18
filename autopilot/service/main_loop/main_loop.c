@@ -80,6 +80,7 @@ static gps_rel_data_t gps_rel_data = {0.0, 0.0, 0.0f, 0.0f};
 static calibration_t gyro_cal;
 static interval_t gyro_move_interval;
 static Filter1 lp_filter;
+static Filter1 avg_pr_filter;
 static float acc_vec[3] = {0.0, 0.0, G_CONSTANT};
 
 typedef union
@@ -225,6 +226,7 @@ void main_init(int argc, char *argv[])
    opcd_params_apply("main.", params);
    filter1_lp_init(&lp_filter, tsfloat_get(&acc_fg), 0.005, 3);
    lp_filter.z[2] = G_CONSTANT;
+   filter1_lp_init(&avg_pr_filter, 0.001, 0.005, 3);
 
    cm_init();
    mon_init();
@@ -358,17 +360,26 @@ void main_step(const float dt,
       goto out;
    
    ONCE(LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
+   float avg_pr[2] = {0.0f, 0.0f};
+   float avg_pr_in[2] = {euler.pitch, euler.roll};
+   filter1_run(&avg_pr_filter, &avg_pr_in[0], &avg_pr[0]);
+   EVERY_N_TIMES(100000, LOG(LL_INFO, "average pitch/roll: %f deg / %f deg", rad2deg(avg_pr[0]), rad2deg(avg_pr[1])));
+   
    /* rotate local ACC measurements into global NEU reference frame: */
    vec3_t world_acc;
    vec3_init(&world_acc);
    body_to_neu(&world_acc, &euler, &cal_marg_data.acc);
 
    /* center global ACC readings: */
-   float a = 0.001;
    FOR_N(i, 3)
    {
       pos_in.acc.ve[i] = world_acc.ve[i] - acc_vec[i];
+      
+      // IIR:
+      float a = 0.001;
       acc_vec[i] = (1.0f - a) * acc_vec[i] + a * world_acc.ve[i];
+      
+      // FIR: // filter1_run(&lp_filter, &world_acc.ve[0], &acc_vec[0]);
    }
 
    /* compute next 3d position estimate using Kalman filters: */
