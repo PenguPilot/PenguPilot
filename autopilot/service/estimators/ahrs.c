@@ -209,11 +209,11 @@ int ahrs_update(ahrs_t *ahrs, const marg_data_t *marg_data, const real_t dt)
       /* Gradient decent algorithm corrective step: */
       vec4_t s;
       vec4_init(&s);
-      s.ve[0] = -_2q2*(2*(q1q3 - q0q2) - ax)    +   _2q1*(2*(q0q1 + q2q3) - ay)   +  -_4bz*q2*(_4bx*(0.5 - q2q2 - q3q3) + _4bz*(q1q3 - q0q2) - mx)   +   (-_4bx*q3+_4bz*q1)*(_4bx*(q1q2 - q0q3) + _4bz*(q0q1 + q2q3) - my)    +   _4bx*q2*(_4bx*(q0q2 + q1q3) + _4bz*(0.5 - q1q1 - q2q2) - mz);
-      s.ve[1] = _2q3*(2*(q1q3 - q0q2) - ax) +   _2q0*(2*(q0q1 + q2q3) - ay) +   -4*q1*(2*(0.5 - q1q1 - q2q2) - az)    +   _4bz*q3*(_4bx*(0.5 - q2q2 - q3q3) + _4bz*(q1q3 - q0q2) - mx)   + (_4bx*q2+_4bz*q0)*(_4bx*(q1q2 - q0q3) + _4bz*(q0q1 + q2q3) - my)   +   (_4bx*q3-_8bz*q1)*(_4bx*(q0q2 + q1q3) + _4bz*(0.5 - q1q1 - q2q2) - mz);             
-      s.ve[2] = -_2q0*(2*(q1q3 - q0q2) - ax)    +     _2q3*(2*(q0q1 + q2q3) - ay)   +   (-4*q2)*(2*(0.5 - q1q1 - q2q2) - az) +   (-_8bx*q2-_4bz*q0)*(_4bx*(0.5 - q2q2 - q3q3) + _4bz*(q1q3 - q0q2) - mx)+(_4bx*q1+_4bz*q3)*(_4bx*(q1q2 - q0q3) + _4bz*(q0q1 + q2q3) - my)+(_4bx*q0-_8bz*q2)*(_4bx*(q0q2 + q1q3) + _4bz*(0.5 - q1q1 - q2q2) - mz);
-      s.ve[3] = _2q1*(2*(q1q3 - q0q2) - ax) +   _2q2*(2*(q0q1 + q2q3) - ay)+(-_8bx*q3+_4bz*q1)*(_4bx*(0.5 - q2q2 - q3q3) + _4bz*(q1q3 - q0q2) - mx)+(-_4bx*q0+_4bz*q2)*(_4bx*(q1q2 - q0q3) + _4bz*(q0q1 + q2q3) - my)+(_4bx*q1)*(_4bx*(q0q2 + q1q3) + _4bz*(0.5 - q1q1 - q2q2) - mz);     
-      
+      s.ve[0] = -_2q2*(REAL(2.0)*(q1q3 - q0q2) - ax)    +   _2q1*(REAL(2.0)*(q0q1 + q2q3) - ay)   +  -_4bz*q2*(_4bx*(REAL(0.5) - q2q2 - q3q3) + _4bz*(q1q3 - q0q2) - mx)   +   (-_4bx*q3+_4bz*q1)*(_4bx*(q1q2 - q0q3) + _4bz*(q0q1 + q2q3) - my)    +   _4bx*q2*(_4bx*(q0q2 + q1q3) + _4bz*(REAL(0.5) - q1q1 - q2q2) - mz);
+      s.ve[1] = _2q3*(REAL(2.0)*(q1q3 - q0q2) - ax) +   _2q0*(REAL(2.0)*(q0q1 + q2q3) - ay) +   -REAL(4.0)*q1*(REAL(2.0)*(REAL(0.5) - q1q1 - q2q2) - az)    +   _4bz*q3*(_4bx*(REAL(0.5) - q2q2 - q3q3) + _4bz*(q1q3 - q0q2) - mx)   + (_4bx*q2+_4bz*q0)*(_4bx*(q1q2 - q0q3) + _4bz*(q0q1 + q2q3) - my)   +   (_4bx*q3-_8bz*q1)*(_4bx*(q0q2 + q1q3) + _4bz*(REAL(0.5) - q1q1 - q2q2) - mz);             
+      s.ve[2] = -_2q0*(REAL(2.0)*(q1q3 - q0q2) - ax)    +     _2q3*(REAL(2.0)*(q0q1 + q2q3) - ay)   +   (-REAL(4.0)*q2)*(REAL(2.0)*(REAL(0.5) - q1q1 - q2q2) - az) +   (-_8bx*q2-_4bz*q0)*(_4bx*(REAL(0.5) - q2q2 - q3q3) + _4bz*(q1q3 - q0q2) - mx)+(_4bx*q1+_4bz*q3)*(_4bx*(q1q2 - q0q3) + _4bz*(q0q1 + q2q3) - my)+(_4bx*q0-_8bz*q2)*(_4bx*(q0q2 + q1q3) + _4bz*(REAL(0.5) - q1q1 - q2q2) - mz);
+      s.ve[3] = _2q1*(REAL(2.0)*(q1q3 - q0q2) - ax) +   _2q2*(REAL(2.0)*(q0q1 + q2q3) - ay)+(-_8bx*q3+_4bz*q1)*(_4bx*(REAL(0.5) - q2q2 - q3q3) + _4bz*(q1q3 - q0q2) - mx)+(-_4bx*q0+_4bz*q2)*(_4bx*(q1q2 - q0q3) + _4bz*(q0q1 + q2q3) - my)+(_4bx*q1)*(_4bx*(q0q2 + q1q3) + _4bz*(REAL(0.5) - q1q1 - q2q2) - mz);      
+
       vec_normalize(&s);
       
       /* apply feedback step: */
