@@ -197,10 +197,10 @@ int ahrs_update(ahrs_t *ahrs, const marg_data_t *marg_data, const real_t dt)
       real_t q3q3   = q3 * ahrs->quat.q3;
 
       /* reference direction of Earth's magnetic field: */
-      real_t hx   = mx * q0q0 - _2q0my * ahrs->quat.q3 + _2q0mz * ahrs->quat.q2 + mx * q1q1 + _2q1 * my * ahrs->quat.q2 + _2q1 * mz * ahrs->quat.q3 - mx * q2q2 - mx * q3q3;
-      real_t hy   = _2q0mx * ahrs->quat.q3 + my * q0q0 - _2q0mz * ahrs->quat.q1 + _2q1mx * ahrs->quat.q2 - my * q1q1 + my * q2q2 + _2q2 * mz * ahrs->quat.q3 - my * q3q3;
+      real_t hx   = mx * q0q0 - _2q0my * q3 + _2q0mz * q2 + mx * q1q1 + _2q1 * my * q2 + _2q1 * mz * q3 - mx * q2q2 - mx * q3q3;
+      real_t hy   = _2q0mx * q3 + my * q0q0 - _2q0mz * q1 + _2q1mx * q2 - my * q1q1 + my * q2q2 + _2q2 * mz * q3 - my * q3q3;
       real_t _2bx = sqrt(hx * hx + hy * hy);
-      real_t _2bz = -_2q0mx * ahrs->quat.q2 + _2q0my * ahrs->quat.q1 + mz * q0q0 + _2q1mx * ahrs->quat.q3 - mz * q1q1 + _2q2 * my * ahrs->quat.q3 - mz * q2q2 + mz * q3q3;
+      real_t _2bz = -_2q0mx * q2 + _2q0my * q1 + mz * q0q0 + _2q1mx * q3 - mz * q1q1 + _2q2 * my * q3 - mz * q2q2 + mz * q3q3;
       real_t _4bx = REAL(2.0) * _2bx;
       real_t _4bz = REAL(2.0) * _2bz;
       real_t _8bx = REAL(2.0) * _2bx;
