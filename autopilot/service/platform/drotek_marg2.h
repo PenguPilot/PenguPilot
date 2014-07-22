@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Main Loop Interface
+ DROTEK MARG (MPU) Driver Interface
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -24,58 +24,28 @@
  GNU General Public License for more details. */
 
 
-#ifndef __MAIN_LOOP_H__
-#define __MAIN_LOOP_H__
 
-#include <stdint.h>
-#include <stdbool.h>
-#include "../platform/platform.h"
+#ifndef __DROTEK_MARG2_H__
+#define __DROTEK_MARG2_H__
 
 
-#define REALTIME_PERIOD (0.005)
-
-
-#define DATA_DEFINITION() \
-   float channels[PP_MAX_CHANNELS]; \
-   marg_data_t marg_data; \
-   marg_data_init(&marg_data); \
-   float dt; \
-   float ultra_z; \
-   float baro_z; \
-   float voltage; \
-   float current; \
-   float decl; \
-   float elev; \
-   gps_data_t gps_data; \
-   uint16_t sensor_status
+#include "../sensors/util/marg_data.h"
+#include "../sensors/mpu6050/mpu6050.h"
+#include "../sensors/hmc5883/hmc5883.h"
 
 
 typedef struct
 {
-   float pitch;
-   float roll;
-   float yaw;
-   float gas;
+   mpu6050_t mpu;
+   hmc5883_t hmc;
 }
-stick_t;
+drotek_marg2_t;
 
 
-void main_init(int argc, char *argv[]);
+int drotek_marg2_init(drotek_marg2_t *marg, i2c_bus_t *bus);
 
-void main_step(const float dt,
-               const marg_data_t *marg_data,
-               const gps_data_t *gps_data,
-               const float ultra,
-               const float baro,
-               const float voltage,
-               const float current,
-               const float decl,
-               const float elev,
-               const float channels[PP_MAX_CHANNELS],
-               const uint16_t sensor_status,
-               const bool override_hw);
+int drotek_marg2_read(marg_data_t *data, drotek_marg2_t *marg);
 
-void main_calibrate(int enabled);
 
-#endif /* __MAIN_LOOP_H__ */
+#endif /* __DROTEK_MARG2_H__ */
 

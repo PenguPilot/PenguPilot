@@ -29,12 +29,12 @@
 #define __BLACKBOX_H__
 
 
-#include "../hardware/platform/platform.h"
+#include "../platform/platform.h"
 #include "../util/math/vec2.h"
 #include "../util/math/euler.h"
 
 
-#define BLACKBOX_ITEMS 52
+#define BLACKBOX_ITEMS 57
 
 
 extern char *blackbox_spec[BLACKBOX_ITEMS];
@@ -67,7 +67,10 @@ void blackbox_record(const float dt, /* sensor inputs ... */
                const float baro_u_pos,
                const float baro_u_spd,
                const float ultra_u_pos,
-               const float ultra_u_spd);
+               const float ultra_u_spd,
+               const vec3_t *f_neu,
+               const float decl,
+               const float elev);
 
 
 #endif /* __BLACKBOX_H__ */

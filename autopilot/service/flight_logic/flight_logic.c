@@ -75,14 +75,15 @@ bool flight_logic_run(bool *hard_off,
                       float u_ultra_pos,
                       float f_max,
                       float mass,
-                      float dt)
+                      float dt,
+                      float elev)
 
 {
    bool motors_enabled = false;
    switch (flight_mode)
    {
       case MODE_MANUAL:
-         motors_enabled = man_logic_run(hard_off, sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos, f_max, mass, dt);
+         motors_enabled = man_logic_run(hard_off, sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos, f_max, mass, dt, elev);
          break;
 
       case MODE_SAFE_AUTO:

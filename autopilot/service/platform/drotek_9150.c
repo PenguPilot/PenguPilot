@@ -9,8 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Manual Flight Logic Interface
+ Drotek MPU9150 + MS5611 Driver Implementation
 
+ Copyright (C) 2014 Jan Roemisch, Ilmenau University of Technology
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
@@ -24,22 +25,37 @@
  GNU General Public License for more details. */
 
 
-#ifndef __MAN_LOGIC_H__
-#define __MAN_LOGIC_H__
+#include <util.h>
+
+#include "drotek_9150.h"
+#include "../sensors/ak8975c/ak8975c_reader.h"
 
 
-#include <stdbool.h>
-#include <stdint.h>
-#include "../sensors/util/rc_channels.h"
-#include "../util/math/vec2.h"
-
-/* initialize manual flight logic */
-void man_logic_init(void);
-
-/* run manual flight logic */
-bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float channels[PP_MAX_CHANNELS],
-                   float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos, float f_max, float mass, float dt, float elev);
+int drotek_9150_init(drotek_9150_t *drotek, i2c_bus_t *bus)
+{
+   THROW_BEGIN();
+   THROW_ON_ERR(mpu6050_init(&drotek->mpu, bus, 0x69,
+      MPU6050_DLPF_CFG_94_98Hz, MPU6050_FS_SEL_1000, MPU6050_AFS_SEL_4G));
+   THROW_ON_ERR(ak8975c_reader_init(bus));
+   THROW_END();
+}
 
 
-#endif /* __MAN_LOGIC_H__ */
+int drotek_9150_read(marg_data_t *data, drotek_9150_t *drotek)
+{
+   float tmp;
+
+   THROW_BEGIN();
+   
+   THROW_ON_ERR(mpu6050_read(&drotek->mpu, &data->gyro, &data->acc, NULL));
+   THROW_ON_ERR(ak8975c_reader_get(&data->mag));
+
+   data->mag.z = -data->mag.z;
+   tmp = data->mag.x;
+   data->mag.x = data->mag.y;
+   data->mag.y = tmp;
+   
+   THROW_END();
+}
+
 

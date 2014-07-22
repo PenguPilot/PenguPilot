@@ -9,8 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Manual Flight Logic Interface
+ AK8975C Reader Interface
 
+ Copyright (C) 2014 Jan Roemisch, Ilmenau University of Technology
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
  This program is free software; you can redistribute it and/or modify
@@ -24,22 +25,18 @@
  GNU General Public License for more details. */
 
 
-#ifndef __MAN_LOGIC_H__
-#define __MAN_LOGIC_H__
+#ifndef __AK8975C_READER_H__
+#define __AK8975C_READER_H__
 
 
-#include <stdbool.h>
-#include <stdint.h>
-#include "../sensors/util/rc_channels.h"
-#include "../util/math/vec2.h"
-
-/* initialize manual flight logic */
-void man_logic_init(void);
-
-/* run manual flight logic */
-bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float channels[PP_MAX_CHANNELS],
-                   float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos, float f_max, float mass, float dt, float elev);
+#include <i2c/i2c.h>
+#include "../../util/math/vec3.h"
 
 
-#endif /* __MAN_LOGIC_H__ */
+int ak8975c_reader_init(i2c_bus_t *bus);
+
+int ak8975c_reader_get(vec3_t *mag);
+
+
+#endif /* __AK8975C_READER_H__ */
 

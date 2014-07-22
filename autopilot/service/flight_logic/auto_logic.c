@@ -34,7 +34,7 @@
 #include "auto_logic.h"
 #include "sticks.h"
 #include "../main_loop/control_mode.h"
-#include "../hardware/platform/platform.h"
+#include "../platform/platform.h"
 #include "../util/logger/logger.h"
 
 

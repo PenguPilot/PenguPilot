@@ -9,10 +9,11 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Manual Flight Logic Interface
-
+ 
+ Magnetic Declination SCL Subscriber Interface
+ 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
-
+ 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation; either version 2 of the License, or
@@ -24,22 +25,14 @@
  GNU General Public License for more details. */
 
 
-#ifndef __MAN_LOGIC_H__
-#define __MAN_LOGIC_H__
+#ifndef __SCL_MAG_DECL_H__
+#define __SCL_MAG_DECL_H__
 
 
-#include <stdbool.h>
-#include <stdint.h>
-#include "../sensors/util/rc_channels.h"
-#include "../util/math/vec2.h"
+int scl_mag_decl_init(void);
 
-/* initialize manual flight logic */
-void man_logic_init(void);
-
-/* run manual flight logic */
-bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float channels[PP_MAX_CHANNELS],
-                   float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos, float f_max, float mass, float dt, float elev);
+float scl_mag_decl_get(void);
 
 
-#endif /* __MAN_LOGIC_H__ */
+#endif /* __SCL_MAG_DECL_H__ */
 

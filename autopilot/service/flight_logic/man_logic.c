@@ -34,11 +34,11 @@
 
 #include "sticks.h"
 #include "man_logic.h"
-#include "../hardware/util/calibration.h"
+#include "../sensors/util/calibration.h"
 #include "../util/logger/logger.h"
 #include "../util/math/conv.h"
 #include "../util/math/linfunc.h"
-#include "../hardware/platform/platform.h"
+#include "../platform/platform.h"
 #include "../control/position/navi.h"
 #include "../control/position/u_ctrl.h"
 #include "../main_loop/control_mode.h"
@@ -60,7 +60,6 @@ man_mode_t last_mode = MAN_NONE;
 
 
 static bool always_hard_off = false;
-static bool vert_pos_locked = false;
 static bool horiz_pos_locked = true;
 static int rc_inval_count = 0;
 static float yaw_pos_sp = 0.0f;
@@ -155,26 +154,56 @@ static void set_att_angles(float pitch, float roll)
 }
 
 
-static bool emergency_landing(bool gps_valid, vec2_t *ne_gps_pos, float ultra_u_pos)
+static vec2_t rtl_horiz_sp;
+bool rtl_started = false;
+static vec2_t step;
+
+
+static bool rtl_tercom(bool gps_valid, vec2_t *ne_gps_pos, float baro_u_pos, float ultra_u_pos, float elev, float dt)
 {
-   vert_pos_locked = false;
-   cm_u_set_spd(-0.2);
-   
-   if (gps_valid)
-      set_horizontal_spd_or_pos(0.0f, 0.0f, 0.0f, ne_gps_pos, ultra_u_pos);
-   else
-      set_att_angles(0.0f, 0.0f);
-   
+   float safety_delta = 20.0f;
+
+   if (!rtl_started)
+   {
+      vec2_set(&rtl_horiz_sp, ne_gps_pos->x, ne_gps_pos->y);
+      rtl_started = true;
+      vec2_t origin_dir;
+      vec2_init(&origin_dir);
+      vec2_normalize(&origin_dir, &rtl_horiz_sp);
+      vec2_init(&step);
+      vec2_scale(&step, &origin_dir, 5.0 * dt); /* 5 m/s */
+   }
+
+   /* keep yaw speed low: */
    cm_yaw_set_spd(0.0f);
 
-   if (ultra_u_pos < 0.4f)
-      return true;
+   if (sqrt(ne_gps_pos->x * ne_gps_pos->x + ne_gps_pos->y * ne_gps_pos->y) < 10.0)
+   {
+      /* we are close enough to descend, go down.. */
+      if (ultra_u_pos > 4.0f)
+         cm_u_set_spd(-1.0); /* descent speed above 4 meters */
+      else if (ultra_u_pos > 2.0f)
+         cm_u_set_spd(-0.5); /* descent speed above 2 meters */
+      else
+         cm_u_set_spd(-0.2); /* final landing speed */
+      
+      if (ultra_u_pos < 0.4f)
+         return true;
+   }
+   else
+   {
+      vec2_sub(&rtl_horiz_sp, &rtl_horiz_sp, &step);
+      cm_u_set_baro_pos(elev + safety_delta);
+   }
+
+   EVERY_N_TIMES(100, LOG(LL_INFO, "%f %f %f", rtl_horiz_sp.x, rtl_horiz_sp.y, elev + safety_delta));
 
    return false;
 }
 
 
-bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float channels[PP_MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float baro_u_pos, float ultra_u_pos, float f_max, float mass, float dt)
+bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float channels[PP_MAX_CHANNELS],
+                  float yaw, vec2_t *ne_gps_pos, float baro_u_pos, float ultra_u_pos, float f_max, float mass, float dt, float elev)
 {
    if (always_hard_off)
    {
@@ -186,17 +215,15 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
    {
       if (rc_inval_count == 0)
          LOG(LL_ERROR, "rc signal invalid!");
-      /* restore previous channels: */
-      memset(channels, 0, sizeof(float) * PP_MAX_CHANNELS);
-      channels[CH_GAS] = 0.3;
+      
       rc_inval_count++;
       if (rc_inval_count >= RC_INVAL_MAX_COUNT)
       {
          /* too much; bring it down */
          if (rc_inval_count == RC_INVAL_MAX_COUNT)
             LOG(LL_ERROR, "performing emergency landing");
-         
-         if (emergency_landing(sensor_status & GPS_VALID, ne_gps_pos, ultra_u_pos))
+        
+         if (rtl_tercom(sensor_status & GPS_VALID, ne_gps_pos, baro_u_pos, ultra_u_pos, elev, dt))
          {
             if (!always_hard_off)
                LOG(LL_ERROR, "emergency landing complete; disabling actuators");
@@ -207,7 +234,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
    }
    else
       rc_inval_count = 0;   
-   
+
    vec2_t pr;
    vec2_set(&pr, channels[CH_PITCH], channels[CH_ROLL]);
    vec2_rotate(&pr, &pr, sticks_rotation());
@@ -273,7 +300,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
    if (((sensor_status & RC_VALID) && sw_l > 0.5))
       *hard_off = true;
 
-   cm_u_a_max_set(FLT_MAX);
+   cm_u_a_max_set(FLT_MAX); /* this limit applies only in auto mode */
    return gas_stick > -0.8;
 }
 

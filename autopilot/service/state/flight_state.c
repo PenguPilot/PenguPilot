@@ -53,7 +53,7 @@ void flight_state_init(size_t window, size_t hysteresis, float treshold)
    hyst = hysteresis;
    tresh = treshold;
    wnd = window;
-   dim = 3;
+   dim = 2;
    vars = malloc(dim * sizeof(sliding_var_t));
    ASSERT_NOT_NULL(vars);
 

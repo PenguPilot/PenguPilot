@@ -30,7 +30,7 @@
 #define __AHRS_H__
 
 
-#include "../hardware/util/marg_data.h"
+#include "../sensors/util/marg_data.h"
 #include "../util/math/quat.h"
 #include "../util/math/adams5.h"
 

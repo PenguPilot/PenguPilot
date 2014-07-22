@@ -28,7 +28,7 @@
 #define __INTERFACE_H__
 
 #include <stdbool.h>
-#include "../hardware/util/gps_data.h"
+#include "../sensors/util/gps_data.h"
 
 
 void gps_start_set(const gps_data_t *gps_data);

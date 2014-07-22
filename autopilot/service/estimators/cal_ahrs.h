@@ -27,10 +27,9 @@
 #ifndef __CAL_AHRS_H__
 #define __CAL_AHRS_H__
 
+
 #include "../util/math/euler.h"
-#include "../hardware/util/marg_data.h"
-
-
+#include "../sensors/util/marg_data.h"
 
 
 void cal_ahrs_init(void);

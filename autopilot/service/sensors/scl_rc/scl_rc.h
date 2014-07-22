@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Manual Flight Logic Interface
+ SCL Remote Control Interface
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -24,22 +24,17 @@
  GNU General Public License for more details. */
 
 
-#ifndef __MAN_LOGIC_H__
-#define __MAN_LOGIC_H__
+#ifndef __SCL_RC_H__
+#define __SCL_RC_H__
 
 
-#include <stdbool.h>
-#include <stdint.h>
-#include "../sensors/util/rc_channels.h"
-#include "../util/math/vec2.h"
-
-/* initialize manual flight logic */
-void man_logic_init(void);
-
-/* run manual flight logic */
-bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float channels[PP_MAX_CHANNELS],
-                   float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos, float f_max, float mass, float dt, float elev);
+#include "../util/rc_channels.h"
 
 
-#endif /* __MAN_LOGIC_H__ */
+int scl_rc_init(void);
+
+int scl_rc_read(float channels_out[PP_MAX_CHANNELS]);
+
+
+#endif /* __SCL_RC_H__ */
 
