@@ -157,7 +157,9 @@ void main_replay(int argc, char *argv[])
       FOR_N(i, PP_MAX_CHANNELS)
          channels[i] = double_data[19 + i];
       sensor_status = int_data[25];
-      main_step(dt, &marg_data, &gps_data, ultra_z, baro_z, voltage, current, channels, sensor_status, 1);
+      decl = double_data[55];
+      elev = double_data[56];
+      main_step(dt, &marg_data, &gps_data, ultra_z, baro_z, voltage, current, decl, elev, channels, sensor_status, 1);
    }
    free(buffer);
    msgpack_unpacked_destroy(&msg);

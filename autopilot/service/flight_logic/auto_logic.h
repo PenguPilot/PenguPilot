@@ -30,7 +30,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "../hardware/util/rc_channels.h"
+#include "../sensors/util/rc_channels.h"
 #include "../util/math/vec2.h"
 
 

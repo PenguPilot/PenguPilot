@@ -47,16 +47,15 @@
 #include "../util/logger/logger.h"
 #include "../estimators/cal_ahrs.h"
 #include "../estimators/pos.h"
-#include "../hardware/platform/platform.h"
-#include "../hardware/platform/overo_quad.h"
-#include "../hardware/platform/exynos_quad.h"
-#include "../hardware/platform/pi_quad.h"
-#include "../hardware/platform/inv_coupling.h"
-#include "../hardware/util/acc_mag_cal.h"
-#include "../hardware/util/cmc.h"
-#include "../hardware/util/calibration.h"
-#include "../hardware/util/gps_util.h"
-#include "../hardware/util/mag_decl.h"
+#include "../platform/platform.h"
+#include "../platform/overo_quad.h"
+#include "../platform/exynos_quad.h"
+#include "../platform/pi_quad.h"
+#include "../platform/inv_coupling.h"
+#include "../sensors/util/acc_mag_cal.h"
+#include "../sensors/util/cmc.h"
+#include "../sensors/util/calibration.h"
+#include "../sensors/util/gps_util.h"
 #include "../control/control.h"
 #include "../control/position/navi.h"
 #include "../control/position/att_ctrl.h"
@@ -103,6 +102,8 @@ static int marg_err = 0;
 static pos_in_t pos_in;
 static calibration_t rc_cal;
 static bool prev_flying = true;
+static float cal_channels_prev[PP_MAX_CHANNELS];
+static bool channels_prev_seen = false;
 
 
 void main_init(int argc, char *argv[])
@@ -221,7 +222,6 @@ void main_init(int argc, char *argv[])
    interval_init(&gyro_move_interval);
    gps_data_init(&gps_data);
 
-   mag_decl_init();
    cal_init(&rc_cal, 3, 500);
 
    tsfloat_t acc_fg;
@@ -252,6 +252,8 @@ void main_step(const float dt,
                const float baro,
                const float voltage,
                const float current,
+               const float decl,
+               const float elev,
                const float channels[PP_MAX_CHANNELS],
                const uint16_t sensor_status,
                const bool override_hw)
@@ -269,6 +271,8 @@ void main_step(const float dt,
    pos_t pos_est;
    vec2_init(&pos_est.ne_pos);
    vec2_init(&pos_est.ne_speed);
+   vec3_t f_neu;
+   vec3_init(&f_neu);
 
    float u_pos_err = 0.0f;
    float u_spd_err = 0.0f;
@@ -300,18 +304,6 @@ void main_step(const float dt,
    }
    marg_err = 0;
    
-   float cal_channels[PP_MAX_CHANNELS];
-   memcpy(cal_channels, channels, sizeof(cal_channels));
-   if (sensor_status & RC_VALID)
-   {
-      /* apply calibration if remote control input is valid: */
-      float cal_data[3] = {channels[CH_PITCH], channels[CH_ROLL], channels[CH_YAW]};
-      cal_sample_apply(&rc_cal, cal_data);
-      cal_channels[CH_PITCH] = cal_data[0];
-      cal_channels[CH_ROLL] = cal_data[1];
-      cal_channels[CH_YAW] = cal_data[2];
-   }
-
    /* perform gyro calibration: */
    marg_data_t cal_marg_data;
    marg_data_init(&cal_marg_data);
@@ -329,7 +321,6 @@ void main_step(const float dt,
    ONCE(LOG(LL_INFO, "gyro biases: %f %f %f", gyro_cal.bias[0], gyro_cal.bias[1], gyro_cal.bias[2]));
 
    /* update relative gps position, if we have a fix: */
-   float mag_decl;
    if (sensor_status & GPS_VALID)
    {
       gps_util_update(&gps_rel_data, gps_data);
@@ -338,7 +329,6 @@ void main_step(const float dt,
       pos_in.speed_n = gps_rel_data.speed_n;
       pos_in.speed_e = gps_rel_data.speed_e;
       ONCE(gps_start_set(gps_data));
-      mag_decl = mag_decl_get();
    }
    else
    {
@@ -346,7 +336,6 @@ void main_step(const float dt,
       pos_in.pos_e = 0.0f;
       pos_in.speed_n = 0.0f;
       pos_in.speed_e = 0.0f;
-      mag_decl = 0.0f;
    }
 
    /* apply acc/mag calibration: */
@@ -361,16 +350,49 @@ void main_step(const float dt,
    if (!flying && pos_in.ultra_u == 7.0)
       pos_in.ultra_u = 0.2;
    
+   /* compute channel calibration; safety code: */
+   float cal_channels[PP_MAX_CHANNELS];
+   memcpy(cal_channels, channels, sizeof(cal_channels));
+   if (sensor_status & RC_VALID)
+   {
+      /* apply calibration if remote control input is valid: */
+      float cal_data[3] = {channels[CH_PITCH], channels[CH_ROLL], channels[CH_YAW]};
+      cal_sample_apply(&rc_cal, cal_data);
+      cal_channels[CH_PITCH] = cal_data[0];
+      cal_channels[CH_ROLL] = cal_data[1];
+      cal_channels[CH_YAW] = cal_data[2];
+      
+      /* store channels state: */
+      memcpy(cal_channels_prev, cal_channels, sizeof(cal_channels_prev));
+      channels_prev_seen = true;
+   }
+   else
+   {
+      if (channels_prev_seen)
+      {
+         /* restore last valid channel states: */
+         memcpy(cal_channels, cal_channels_prev, sizeof(cal_channels_prev));   
+      }
+      else
+      {
+         /* imitate safe channel states: */
+         FOR_N(i, PP_MAX_CHANNELS)
+            cal_channels[i] = 0.0f;
+         if (!flying)
+            cal_channels[CH_GAS] = -1.0f;
+      }
+   }
+
    /* compute orientation estimate: */
    euler_t euler;
-   if (cal_ahrs_update(&euler, &cal_marg_data, mag_decl, dt) < 0)
+   if (cal_ahrs_update(&euler, &cal_marg_data, decl, dt) < 0)
       goto out;
    
    ONCE(LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
    float avg_pr[2] = {0.0f, 0.0f};
    float avg_pr_in[2] = {euler.pitch, euler.roll};
    filter1_run(&avg_pr_filter, &avg_pr_in[0], &avg_pr[0]);
-   EVERY_N_TIMES(100000, LOG(LL_INFO, "average pitch/roll: %f deg / %f deg", rad2deg(avg_pr[0]), rad2deg(avg_pr[1])));
+   EVERY_N_TIMES(10000, LOG(LL_INFO, "average pitch/roll: %f deg / %f deg", rad2deg(avg_pr[0]), rad2deg(avg_pr[1])));
    
    /* rotate local ACC measurements into global NEU reference frame: */
    vec3_t world_acc;
@@ -394,7 +416,8 @@ void main_step(const float dt,
 
    /* execute flight logic (sets cm_x parameters used below): */
    bool hard_off = false;
-   bool motors_enabled = flight_logic_run(&hard_off, sensor_status, flying, cal_channels, euler.yaw, &pos_est.ne_pos, pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg, dt);
+   bool motors_enabled = flight_logic_run(&hard_off, sensor_status, flying, cal_channels, euler.yaw, &pos_est.ne_pos,
+                                          pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg, dt, elev);
    
    /* execute up position/speed controller(s): */
    float a_u = -10.0f;
@@ -434,8 +457,6 @@ void main_step(const float dt,
  
    vec3_t a_neu;
    vec3_set(&a_neu, a_ne.x, a_ne.y, a_u);
-   vec3_t f_neu;
-   vec3_init(&f_neu);
    vec_scalar_mul(&f_neu, &a_neu, platform.mass_kg); /* f[i] = a[i] * m, makes ctrl device-independent */
 
    float hover_force = platform.mass_kg * G_CONSTANT;
@@ -555,7 +576,7 @@ void main_step(const float dt,
    /* write motors: */
    if (!override_hw)
    {
-      platform_write_motors(setpoints);
+      //platform_write_motors(setpoints);
    }
 
    mon_data_set(pos_est.ne_pos.x, pos_est.ne_pos.y, pos_est.ultra_u.pos, pos_est.baro_u.pos, euler.yaw,
@@ -574,6 +595,9 @@ out:
                           pos_est.baro_u.pos,
                           pos_est.baro_u.speed,
                           pos_est.ultra_u.pos,
-                          pos_est.ultra_u.speed));
+                          pos_est.ultra_u.speed,
+                          &f_neu,
+                          decl,
+                          elev));
 }
 

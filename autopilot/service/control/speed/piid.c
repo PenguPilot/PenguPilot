@@ -47,7 +47,8 @@
    b[1] = -(8.0f * j * tsfloat_get(&tmc)) / a0; \
    b[2] =  (2.0f * j * (2.0f * tsfloat_get(&tmc) - dt)) / a0;
 
-#define CTRL_NUM_TSTEP 7
+/* 21 ms */
+#define CTRL_NUM_TSTEP 4
 
 
 /* configuration parameters: */

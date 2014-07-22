@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Main Loop Interface
+ FreeIMU V0.4 Driver Interface
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -24,58 +24,28 @@
  GNU General Public License for more details. */
 
 
-#ifndef __MAIN_LOOP_H__
-#define __MAIN_LOOP_H__
 
-#include <stdint.h>
-#include <stdbool.h>
-#include "../platform/platform.h"
+#ifndef __FREEIMU_04_H__
+#define __FREEIMU_04_H__
 
 
-#define REALTIME_PERIOD (0.005)
-
-
-#define DATA_DEFINITION() \
-   float channels[PP_MAX_CHANNELS]; \
-   marg_data_t marg_data; \
-   marg_data_init(&marg_data); \
-   float dt; \
-   float ultra_z; \
-   float baro_z; \
-   float voltage; \
-   float current; \
-   float decl; \
-   float elev; \
-   gps_data_t gps_data; \
-   uint16_t sensor_status
+#include "../sensors/util/marg_data.h"
+#include "../sensors/mpu6050/mpu6050.h"
+#include "../sensors/hmc5883/hmc5883.h"
 
 
 typedef struct
 {
-   float pitch;
-   float roll;
-   float yaw;
-   float gas;
+   mpu6050_t mpu;
+   hmc5883_t hmc;
 }
-stick_t;
+freeimu_04_t;
 
 
-void main_init(int argc, char *argv[]);
+int freeimu_04_init(freeimu_04_t *freeimu, i2c_bus_t *bus);
 
-void main_step(const float dt,
-               const marg_data_t *marg_data,
-               const gps_data_t *gps_data,
-               const float ultra,
-               const float baro,
-               const float voltage,
-               const float current,
-               const float decl,
-               const float elev,
-               const float channels[PP_MAX_CHANNELS],
-               const uint16_t sensor_status,
-               const bool override_hw);
+int freeimu_04_read(marg_data_t *data, freeimu_04_t *freeimu);
 
-void main_calibrate(int enabled);
 
-#endif /* __MAIN_LOOP_H__ */
+#endif /* __FREEIMU_04_H__ */
 

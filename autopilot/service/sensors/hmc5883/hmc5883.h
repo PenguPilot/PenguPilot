@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Main Loop Interface
+ HMC5883 Driver Interface
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -24,58 +24,33 @@
  GNU General Public License for more details. */
 
 
-#ifndef __MAIN_LOOP_H__
-#define __MAIN_LOOP_H__
+#ifndef __HMC5883_H__
+#define __HMC5883_H__
+
 
 #include <stdint.h>
-#include <stdbool.h>
-#include "../platform/platform.h"
 
+#include <util.h>
 
-#define REALTIME_PERIOD (0.005)
-
-
-#define DATA_DEFINITION() \
-   float channels[PP_MAX_CHANNELS]; \
-   marg_data_t marg_data; \
-   marg_data_init(&marg_data); \
-   float dt; \
-   float ultra_z; \
-   float baro_z; \
-   float voltage; \
-   float current; \
-   float decl; \
-   float elev; \
-   gps_data_t gps_data; \
-   uint16_t sensor_status
+#include <i2c/i2c.h>
+#include "../../util/math/vec3.h"
 
 
 typedef struct
 {
-   float pitch;
-   float roll;
-   float yaw;
-   float gas;
+   /* i2c device: */
+   i2c_dev_t i2c_dev;
+   /* privated data: */
+   uint8_t gain;
+   vec3_t prev;
 }
-stick_t;
+hmc5883_t;
 
 
-void main_init(int argc, char *argv[]);
+int hmc5883_init(hmc5883_t *dev, i2c_bus_t *bus);
 
-void main_step(const float dt,
-               const marg_data_t *marg_data,
-               const gps_data_t *gps_data,
-               const float ultra,
-               const float baro,
-               const float voltage,
-               const float current,
-               const float decl,
-               const float elev,
-               const float channels[PP_MAX_CHANNELS],
-               const uint16_t sensor_status,
-               const bool override_hw);
+int hmc5883_read_mag(vec3_t *mag, const hmc5883_t *dev);
 
-void main_calibrate(int enabled);
 
-#endif /* __MAIN_LOOP_H__ */
+#endif /* __HMC5883_H__ */
 

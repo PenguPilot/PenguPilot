@@ -24,10 +24,6 @@
 # GNU General Public License for more details.
 
 
-- name: gvfa
-  sockets:
-  - gvfa: sub
-
 - name: mavlink
   sockets:
    - gps: sub
@@ -35,7 +31,6 @@
    - opcd_ctrl: req
    - gps: pub
    - sats: pub
-
 
 - name: elevmap
   sockets:
@@ -122,7 +117,7 @@
    - ap_mon: pub
    - power: sub
    - motors_spinning: pub
-   - gvfa: pub
+   - elev: sub
    - opcd_ctrl: req
    - opcd_event: sub
 

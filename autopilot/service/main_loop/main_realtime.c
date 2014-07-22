@@ -36,7 +36,8 @@
 #include "main_util.h"
 #include "main_loop.h"
 #include "../util/logger/logger.h"
-
+#include "../sensors/scl_mag_decl/scl_mag_decl.h"
+#include "../sensors/scl_elevmap/scl_elevmap.h"
 
 static struct sched_param sp;
 static periodic_thread_t _thread; 
@@ -81,11 +82,16 @@ void main_realtime(int argc, char *argv[])
    interval_t interval;
    interval_init(&interval);
    DATA_DEFINITION();
+   scl_mag_decl_init();
+   scl_elevmap_init();
+
    PERIODIC_THREAD_LOOP_BEGIN
    {
       dt = interval_measure(&interval);
       sensor_status = platform_read_sensors(&marg_data, &gps_data, &ultra_z, &baro_z, &voltage, &current, channels);
-      main_step(dt, &marg_data, &gps_data, ultra_z, baro_z, voltage, current, channels, sensor_status, 0);
+      decl = scl_mag_decl_get();
+      elev = scl_elevmap_get();
+      main_step(dt, &marg_data, &gps_data, ultra_z, baro_z, voltage, current, decl, elev, channels, sensor_status, 0);
    }
    PERIODIC_THREAD_LOOP_END
 }
