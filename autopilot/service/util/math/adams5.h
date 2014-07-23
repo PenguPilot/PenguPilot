@@ -25,8 +25,8 @@
  GNU General Public License for more details. */
 
 
-#ifndef __ADAMS4_H__
-#define __ADAMS4_H__
+#ifndef __ADAMS5_H__
+#define __ADAMS5_H__
 
 
 #include <stddef.h>
@@ -49,5 +49,5 @@ void adams5_run(adams5_t *a, float *out, float *in, float ts, int enabled);
 void adams5_term(adams5_t *a);
 
 
-#endif /* __ADAMS4_H__ */
+#endif /* __ADAMS5_H__ */
 
