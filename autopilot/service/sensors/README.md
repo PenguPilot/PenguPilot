@@ -10,7 +10,22 @@
     |___________________________________________________|
 
 
-Internal sensor code:
+Interfacing Concept
+-------------------
+
+Sensor reading code is integrated in the autopilot (internal), if:
+
+* the sensor has to be read very quick (logic or)
+* reading the sensor is not helpful outside of the autopilot
+
+As an example, the voltage information is relevant for system health
+and battery safety, even if the autopilot service is not running.
+
+
+Filesystem Contents
+-------------------
+
+**Internal sensor code:**
 
 * [itg3200](itg3200): gyroscope
 * [mpu6050](mpu6050): gyroscope and accelerometer
@@ -20,7 +35,7 @@ Internal sensor code:
 * [ms5611](ms5611): barometric pressure sensor
 * [i2cxl](i2cxl): ultrasonic sensor
 
-External sensor code:
+**External sensor code:**
 
 * [scl_power](scl_power): voltage/current
 * [scl_rc](scl_rc): remote control channels
@@ -31,12 +46,4 @@ External sensor code:
 Additional utility code:
 * [util](util)
 
-
-Sensor reading code is integrated in the autopilot (internal), if:
-
-* the sensor has to be read very quick (logic or)
-* reading the sensor is not helpful outside of the autopilot
-
-As an example, the voltage information is relevant for system health
-and battery safety, even if the autopilot service is not running.
 
