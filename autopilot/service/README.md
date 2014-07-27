@@ -1,32 +1,38 @@
-# Autopilot
-## Purpose
-This component is a real-time low-level flight controller using flight-relevant sensors and actuators.
+     ___________________________________________________
+    |  _____                       _____ _ _       _    |
+    | |  __ \                     |  __ (_) |     | |   |
+    | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
+    | |  ___/ _ \ '_ \ / _` | | | |  ___/ | |/ _ \| __| |
+    | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
+    | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
+    |                   __/ |                           |
+    |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
+    |___________________________________________________|
 
 
-command  control  filters  geometry  hardware  main.c  model  platform  README.md  util
+Autopilot
+=========
 
-## Directory Structure:
-```
-├── command: command interface
-├── control: various controllers
-├── filters:
-├── geometry
-├── hardware: sensor and actuator code
-├── model: state estimation models
-└── platform: platform code connecting hardware components
-```
+Purpose
+-------
 
-## Sensors:
+This service implements the real-time low-level flight controller.
 
-- CHR-6DM attitude and heading reference system: euler angles, accelerometers, gyro values
-- Ublox LEA-4GPS: global GPS position
-- ultrasonic range finder: max. 7 meters above the ground
-- barometric pressure sensor: meters above sea level
-- voltage sensor: voltage divider on VBat connected to ADC7
-- RPM sensor: indicates motor RPM (read from brushless motor controllers)
 
-## Actuators:
+Filesystem Contents
+-------------------
 
-- interface to holger flight control in heading-hold (aka axis lock) mode
-- signal light (xenon flash)
-- audio output via espeak/mp3 player
+* [main_loop](main_loop): main control flow
+* [sensors](sensors): sensor drivers
+* [filters](filters): filter code
+* [actuators](actutors): motors
+* [platform](platform): COM / sensor / actuator compositions
+* [control](control): speed and position controllers
+* [force_opt](force_opt): force optimizations
+* [estimators](estimators): orientation and position filters
+* [flight_logic](flight_logic): manual and auto flight logic
+* [state](state): (logical) system state estimation
+* [interface](interface): command interface
+* [blackbox](blackbox): blackbox data publisher
+* [util](util): utility code
+
