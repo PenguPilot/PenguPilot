@@ -118,6 +118,10 @@ elevmap:
   depends: [gpsp]
   priority: sys_low
 
+gpstime:
+  binary: 'gpstime/service/gpstime.py'
+  depends: [gpsp]
+  priority: sys_low
 
 # application-level services:
 

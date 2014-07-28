@@ -38,7 +38,6 @@
 #include <scl.h>
 #include <msgpack.h>
 
-#include "linux_sys.h"
 #include "nmealib/nmea/info.h"
 #include "nmealib/nmea/parser.h"
 
@@ -113,7 +112,6 @@ int main_serial(void)
    nmeaINFO info;
    nmea_zero_INFO(&info);
 
-   int time_set = 0;
    int smask = 0; /* global smask collects all sentences and is never reset,
                      in contrast to info.smask */
    double lat_prev = 0.0;
@@ -156,15 +154,6 @@ int main_serial(void)
             size_t len = generate_time_str(time_str, &info.utc);
             msgpack_pack_raw(pk, len);
             msgpack_pack_raw_body(pk, time_str, len); /* gps array index 0 */
-
-            /* set system time to gps time once: */
-            if (!time_set && info.fix >= 2)
-            {
-               char shell_date_cmd[TIME_STR_LEN + 8];
-               linux_sys_set_timezone(convert(info.lat), convert(info.lon));
-               sprintf(shell_date_cmd, "date -s \"%s\"", time_str);
-               time_set = system(shell_date_cmd) == 0;
-            }
 
             if (info.fix >= 2)
             {

@@ -1,4 +1,6 @@
-/*___________________________________________________
+#!/usr/bin/env python
+"""
+  ___________________________________________________
  |  _____                       _____ _ _       _    |
  | |  __ \                     |  __ (_) |     | |   |
  | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
@@ -9,7 +11,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Linux System Misc Implementation
+ GPS Timezone/Time Setting Service
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -21,37 +23,34 @@
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. */
+ GNU General Public License for more details. """
 
 
-#include <stdio.h>
-#include <string.h>
-#include <malloc.h>
-#include <math.h>
-#include <stdlib.h>
-
-#include "linux_sys.h"
-#include "tz_lookup.h"
+from scl import generate_map
+from misc import daemonize
+from gps_msgpack import *
+from msgpack import loads
+from os import system
+from tzwhere.tzwhere import tzwhere
 
 
-void linux_sys_set_timezone(float lat_dest, float lon_dest)
-{
-   char tzname[1024];
-   float dist_max = 360.0f;
-   int i;
-   for (i = 0; i < TZ_LOOKUP_ENTRIES; i++) 
-   {
-      float lat = tz_lookup[i].lat;
-      float lon = tz_lookup[i].lon;
-      float dist = fabs(lon - lon_dest) + fabs(lat - lat_dest);
-      if (dist < dist_max)
-      {
-         dist_max = dist;
-         strcpy(tzname, tz_lookup[i].tz);
-      }
-   }
-   char cmd[1024];
-   sprintf(cmd, "cp /usr/share/zoneinfo/%s /etc/localtime", tzname);
-   if (system(cmd)){};
-}
+def main(name):
+   tzw = tzwhere()
+   socket = generate_map(name)
+   while True:
+      try:
+         raw = socket.recv()
+         gps = loads(raw)
+         time, lat, lon = gps[time], gps[LAT], gps[LON]
+         break
+      except:
+         pass
+   tz_str = tzw.tzNameAt(lat, lon)
+   # update time zone:
+   system('cp /usr/share/zoneinfo/%s /etc/localtime' % tz_str)
+   # set data & time:
+   system('date -s "%s"' % gps[TIME])
+
+
+daemonize('gpstime', main)
 
