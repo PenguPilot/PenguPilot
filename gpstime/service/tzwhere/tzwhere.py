@@ -1,4 +1,3 @@
-#!/usr/bin/python
 
 from msgpack import loads
 import datetime
@@ -124,6 +123,4 @@ class tzwhere(object):
                         if self._point_inside_polygon(longitude, latitude, poly):
                             return tzname
 
-if __name__ == "__main__":
-    w = tzwhere()
-    print w.tzNameAt(float(50), float(10))
+

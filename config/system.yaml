@@ -32,6 +32,10 @@
    - gps: pub
    - sats: pub
 
+- name: gpstime
+  sockets:
+   - gps: sub
+
 - name: elevmap
   sockets:
    - gps: sub
