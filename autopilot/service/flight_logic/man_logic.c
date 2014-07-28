@@ -155,50 +155,93 @@ static void set_att_angles(float pitch, float roll)
 
 
 static vec2_t rtl_horiz_sp;
-bool rtl_started = false;
 static vec2_t step;
+
+
+enum
+{
+   RTL_INIT,
+   RTL_ASCEND,
+   RTL_RETURN,
+   RTL_DESCEND,
+   RTL_DONE
+}
+rtl_state = RTL_INIT;
 
 
 static bool rtl_tercom(bool gps_valid, vec2_t *ne_gps_pos, float baro_u_pos, float ultra_u_pos, float elev, float dt)
 {
+   bool motors_off = false;
    float safety_delta = 20.0f;
-
-   if (!rtl_started)
-   {
-      vec2_set(&rtl_horiz_sp, ne_gps_pos->x, ne_gps_pos->y);
-      rtl_started = true;
-      vec2_t origin_dir;
-      vec2_init(&origin_dir);
-      vec2_normalize(&origin_dir, &rtl_horiz_sp);
-      vec2_init(&step);
-      vec2_scale(&step, &origin_dir, 5.0 * dt); /* 5 m/s */
-   }
+   float safe_elev = safety_delta + elev;
 
    /* keep yaw speed low: */
    cm_yaw_set_spd(0.0f);
-
-   if (sqrt(ne_gps_pos->x * ne_gps_pos->x + ne_gps_pos->y * ne_gps_pos->y) < 10.0)
+   
+   switch (rtl_state)
    {
-      /* we are close enough to descend, go down.. */
-      if (ultra_u_pos > 4.0f)
-         cm_u_set_spd(-1.0); /* descent speed above 4 meters */
-      else if (ultra_u_pos > 2.0f)
-         cm_u_set_spd(-0.5); /* descent speed above 2 meters */
-      else
-         cm_u_set_spd(-0.2); /* final landing speed */
-      
-      if (ultra_u_pos < 0.4f)
-         return true;
-   }
-   else
-   {
-      vec2_sub(&rtl_horiz_sp, &rtl_horiz_sp, &step);
-      cm_u_set_baro_pos(elev + safety_delta);
+      case RTL_INIT:
+      {
+         vec2_set(&rtl_horiz_sp, ne_gps_pos->x, ne_gps_pos->y);
+         vec2_t origin_dir;
+         vec2_init(&origin_dir);
+         vec2_normalize(&origin_dir, &rtl_horiz_sp);
+         vec2_init(&step);
+         vec2_scale(&step, &origin_dir, -5.0 * dt); /* 5 m/s */
+         rtl_state = RTL_ASCEND;
+         break;
+      }
+
+      case RTL_ASCEND:
+         if (baro_u_pos < safe_elev)
+         {
+            /* increase altitude */   
+            cm_u_set_spd(1.0);
+         }
+         else
+         {
+            cm_u_set_spd(0.0);
+            rtl_state = RTL_RETURN;   
+         }
+         break;
+
+      case RTL_RETURN:
+         if (sqrt(ne_gps_pos->x * ne_gps_pos->x + ne_gps_pos->y * ne_gps_pos->y) > 5.0)
+         {
+            /* update N,E position setpoint towards starting point */
+            vec2_add(&rtl_horiz_sp, &rtl_horiz_sp, &step);
+            /* follow elevation map data (U) */
+            cm_u_set_baro_pos(safe_elev);
+         }
+         else
+         {
+            rtl_state = RTL_DESCEND;   
+         }
+         break;
+
+      case RTL_DESCEND:
+         if (ultra_u_pos > 0.4f)
+         {
+            /* decrease altitude */   
+            if (ultra_u_pos > 4.0f)
+               cm_u_set_spd(-1.0); /* descent speed above 4 meters */
+            else if (ultra_u_pos > 2.0f)
+               cm_u_set_spd(-0.5); /* descent speed above 2 meters */
+            else
+               cm_u_set_spd(-0.2); /* final landing speed */
+         }
+         else
+         {
+            rtl_state = RTL_DONE;
+         }
+         break;
+
+      case RTL_DONE:
+         motors_off = true;
    }
 
-   EVERY_N_TIMES(100, LOG(LL_INFO, "%f %f %f", rtl_horiz_sp.x, rtl_horiz_sp.y, elev + safety_delta));
-
-   return false;
+   EVERY_N_TIMES(100, LOG(LL_INFO, "%f %f %f", rtl_horiz_sp.x, rtl_horiz_sp.y, cm_u_sp()));
+   return motors_off;
 }
 
 

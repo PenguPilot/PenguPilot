@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
  
- Adams4 Integrator Implementation
+ 5-Step Adams-Bashforth Integrator Implementation
 
  Copyright (C) 2013 Alexander Barth, Ilmenau University of Technology
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology

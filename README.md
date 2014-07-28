@@ -12,7 +12,7 @@ Unlike other platforms, PenguPilot does not require a dedicated low-level microc
    * data fusion / filtering, and
    * motor control.
 
-Instead, the whole flight infrastructure is based on user-space tasks in a Linux operating system (PREEMPT or PREEMPT_RT). This means, if the control process is killed or the kernel panics, your UAV is killed as well :-) **Already scared**? If not, please read on...
+The whole flight infrastructure is based on Linux (PREEMPT/PREEMPT_RT) user-space tasks.
 
 **Some highlights of the PenguPilot software are**:
 
@@ -71,16 +71,16 @@ Filesystem Contents
 Flight Infrastructure:
 
 - [autopilot](autopilot): real-time control running at 200Hz
-- [icarus](icarus): high-level flight management service
-- [blackbox](blackbox): receives logging data containing every sensor input of the autopilot to sd card
-- [powerman](powerman): power management and monitoring service; warns the user if the battery is low
+- [icarus](icarus): high-level flight management service (10Hz)
+- [blackbox](blackbox): subscribes to autopilot log data and writes it to sd card
+- [powerman](powerman): power management and monitoring service; warns the user when the battery is low
 - [gpsp](gpsp): gps publisher, similar to gpsd but much simpler; uses [NMEALib](https://github.com/AHR-Project/nmealib)
-- [remote](remote): remote control data parser and publisher
-- [geomag](geomag): reads gps position and date; publishes magnetic declination in degrees
-- [elevmap](elevmap): reads gps position; publishes SRTM elevation data
-- [ads1x15](ads1x15): (I2C ADC driver for Raspberry PI)
-- [arduino](arduino): (ODROID U3)
-- [twl4030_madc](twl4030_madc): (Gumstix Overo)
+- [remote](remote): remote control channels publisher
+- [geomag](geomag): subscribes to gps position and date/time; publishes magnetic declination in degrees
+- [elevmap](elevmap): subscribes to gps position; publishes SRTM3 elevation data
+- [ads1x15](ads1x15): Raspberry PI I2C ADC voltage/current publisher
+- [arduino](arduino): ODROID U3 Arduino R/C, ADC voltage/current publisher; reads from ttySAC0
+- [twl4030_madc](twl4030_madc): Gumstix Overo ADC voltage/current publisher
 
 Supporting Infrastructures:
 
@@ -88,7 +88,7 @@ Supporting Infrastructures:
 - [scl](scl): signaling and communication link (IPC framework), see [config/system.yaml](config/system.yaml)
 - [opcd](opcd): online parameter configuration daemon, see [config/params.yaml](config/params.yaml)
 - [svctrl](svctrl): service management and control utility, see [config/services.yaml](config/services.yaml)
-- [shared](shared): shared Libraries for threading and other common tasks
+- [shared](shared): shared libraries shared among all PenguPilot components
 
 Additional Features:
 
