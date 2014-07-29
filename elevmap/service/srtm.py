@@ -25,13 +25,23 @@
  GNU General Public License for more details. """
 
 
-
+from numpy import array
 from osgeo import gdal
 from osgeo.gdalconst import *
 from numpy import matrix
 import sys
 import time
 import os
+
+
+def linfunc_from_points(v1, v2):
+   m = (v2[1] - v1[1]) / (v2[0] - v1[0])
+   n = v1[1] - m * v1[0]
+   return m, n
+
+
+def linfunc_calc(m, n, x):
+   return float(m) * float(x) + float(n)
 
 
 class SrtmElevMap:
@@ -74,9 +84,49 @@ class SrtmElevMap:
       offset = matrix([[xform[0]], [xform[3]]])
       A = matrix([[xform[1], xform[2]], [xform[4], xform[5]]])
       pixel = A.I * (world - offset)
-      if pixel[0] < 0.0 or pixel[0] > ds.RasterXSize or pixel[1] < 0.0 or pixel[1] > ds.RasterYSize:
+      if pixel[0] < 0 or pixel[0] > ds.RasterXSize or pixel[1] < 0 or pixel[1] > ds.RasterYSize:
          raise AssertionError('pixel out of bounds')
 
-      # return elevation:
-      return ds.ReadAsArray(int(pixel[0]), int(pixel[1]), 1, 1).ravel()[0]
+      center_pixel = array([[round(pixel[0]), round(pixel[1])]]).T
+      center_coord = A * center_pixel + offset
+      center_elev = ds.ReadAsArray(int(center_pixel[0]), int(center_pixel[1]), 1, 1).ravel()[0]
+      
+      # left/right linear interpolation:
+      left_pixel = array([center_pixel[0] - 1, center_pixel[1]])
+      left_elev = ds.ReadAsArray(int(left_pixel[0]), int(left_pixel[1]), 1, 1).ravel()[0]
+      left_coord = A * left_pixel + offset
+      right_pixel = array([center_pixel[0] + 1, center_pixel[1]])
+      right_elev = ds.ReadAsArray(int(right_pixel[0]), int(right_pixel[1]), 1, 1).ravel()[0]
+      right_coord = A * right_pixel + offset
+      if coord[0] < center_coord[0]:
+         # left half
+         m, n = linfunc_from_points([left_coord[0], left_elev], [center_coord[0], center_elev])
+         x_elev = linfunc_calc(m, n, coord[0])
+      elif coord[0] > center_coord[0]:
+         # left half
+         m, n = linfunc_from_points([center_coord[0], center_elev], [right_coord[0], right_elev])
+         x_elev = linfunc_calc(m, n, coord[0])
+      else:
+         x_elev = center_elev
+      
+      # up/down linear interpolation:
+      up_pixel = array([center_pixel[0], center_pixel[1] - 1])
+      up_elev = ds.ReadAsArray(int(up_pixel[0]), int(up_pixel[1]), 1, 1).ravel()[0]
+      up_coord = A * up_pixel + offset
+      down_pixel = array([center_pixel[0], center_pixel[1] + 1])
+      down_elev = ds.ReadAsArray(int(down_pixel[0]), int(down_pixel[1]), 1, 1).ravel()[0]
+      down_coord = A * down_pixel + offset
+      if coord[1] > center_coord[1]:
+         # upper half
+         m, n = linfunc_from_points([up_coord[1], up_elev], [center_coord[1], center_elev])
+         y_elev = linfunc_calc(m, n, coord[1])
+      elif coord[1] < center_coord[1]:
+         # left half
+         m, n = linfunc_from_points([center_coord[1], center_elev], [down_coord[1], down_elev])
+         y_elev = linfunc_calc(m, n, coord[1])
+      else:
+         y_elev = center_elev
+
+      # merge interpolations:
+      return (x_elev + y_elev) / 2.0
 
