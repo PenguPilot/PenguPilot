@@ -9,7 +9,12 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- GPS Time Setting Service
+ GPS Time Zone and Data/Time Setting Service
+
+ Note: This service will terminate after receiving valid GPS information
+       and setting the time zone and the system date/time.
+
+ Daylight savings time offsets are computed implicitly by the operating system.
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
