@@ -134,8 +134,3 @@ wifi_loc:
   depends: [gpsp, wifi_sensor]
   priority: app
 
-ferry:
-  binary: 'ferry/service/ferry.py'
-  depends: [icarus]
-  priority: app
-
