@@ -63,7 +63,18 @@ static bool always_hard_off = false;
 static bool horiz_pos_locked = true;
 static int rc_inval_count = 0;
 static float yaw_pos_sp = 0.0f;
-static float u_pos_sp = -1.0;
+static float u_pos_sp = -5.0;
+
+
+static float desired_speed(float err, float p, float max)
+{
+   float y = p * err;
+   if (y > max)
+      y = max;
+   else if (y < -max)
+      y = -max;
+   return -y;
+}
 
 
 void man_logic_init(void)
@@ -102,7 +113,7 @@ static void handle_mode_update(man_mode_t mode, float ultra_u_pos)
 }
 
 
-static void set_vertical_spd_or_pos(float gas_stick, float baro_u_pos, float ultra_u_pos, float dt)
+static void set_vertical_spd_or_pos(float gas_stick, float ultra_u_pos, float dt)
 {
    float inc = sticks_gas_speed_deadzone(gas_stick) * dt;
    if (   !(u_pos_sp < -1.0f && inc < 0.0f)
@@ -112,6 +123,21 @@ static void set_vertical_spd_or_pos(float gas_stick, float baro_u_pos, float ult
    }
    cm_u_set_ultra_pos(u_pos_sp);
    EVERY_N_TIMES(100, LOG(LL_INFO, "u_pos_sp: %f, u_pos: %f", u_pos_sp, ultra_u_pos));
+}
+
+
+static void set_vertical_spd_or_pos_baro(float gas_stick, float baro_u_pos, float dt)
+{
+   float inc = sticks_gas_speed_deadzone(gas_stick) * dt;
+   if (   !(u_pos_sp < -5.0f && inc < 0.0f)
+       && !(u_pos_sp > 100.0f && inc > 0.0f))
+   {
+      u_pos_sp += inc;
+   }
+   float err = baro_u_pos - u_pos_sp;
+   float spd = desired_speed(err, 1.0, 3.0);
+   cm_u_set_spd(spd);
+   EVERY_N_TIMES(100, LOG(LL_INFO, "u_pos_sp: %f, u_pos: %f", u_pos_sp, baro_u_pos));
 }
 
 
@@ -154,25 +180,46 @@ static void set_att_angles(float pitch, float roll)
 }
 
 
-static vec2_t rtl_horiz_sp;
-static vec2_t step;
 
-
-enum
+typedef enum
 {
    RTL_INIT,
    RTL_ASCEND,
    RTL_RETURN,
    RTL_DESCEND,
    RTL_DONE
+} rtl_state_t;
+
+static char *names[5] = {"INIT", "ASCEND", "RETURN", "DESCEND", "DONE"};
+
+static rtl_state_t rtl_state = RTL_INIT;
+static rtl_state_t rtl_state_prev = RTL_DONE;
+
+
+static vec2_t rtl_horiz_sp;
+static vec2_t step;
+
+
+
+static void tercom_u(float baro_u_pos, float elev)
+{
+   float spd_max = 2.0f;
+   float spd_p = 1.0;
+   float safety_delta = 5.0f;
+   float safe_elev = safety_delta + elev;
+   float err = baro_u_pos - safe_elev;
+   float spd = desired_speed(err, spd_p, spd_max);
+   cm_u_set_spd(spd);
+   EVERY_N_TIMES(100, LOG(LL_INFO, "u_pos: %f, safe_elev: %f", baro_u_pos, safe_elev));
 }
-rtl_state = RTL_INIT;
 
 
-static bool rtl_tercom(bool gps_valid, vec2_t *ne_gps_pos, float baro_u_pos, float ultra_u_pos, float elev, float dt)
+static bool rtl_tercom(bool flying, bool gps_valid, vec2_t *ne_gps_pos, float baro_u_pos, float ultra_u_pos, float elev, float dt)
 {
    bool motors_off = false;
-   float safety_delta = 20.0f;
+   float spd_max = 2.0f;
+   float spd_p = 1.0;
+   float safety_delta = 6.0f;
    float safe_elev = safety_delta + elev;
 
    /* keep yaw speed low: */
@@ -182,25 +229,39 @@ static bool rtl_tercom(bool gps_valid, vec2_t *ne_gps_pos, float baro_u_pos, flo
    {
       case RTL_INIT:
       {
-         vec2_set(&rtl_horiz_sp, ne_gps_pos->x, ne_gps_pos->y);
-         vec2_t origin_dir;
-         vec2_init(&origin_dir);
-         vec2_normalize(&origin_dir, &rtl_horiz_sp);
-         vec2_init(&step);
-         vec2_scale(&step, &origin_dir, -5.0 * dt); /* 5 m/s */
-         rtl_state = RTL_ASCEND;
+         if (flying)
+         {
+            vec2_set(&rtl_horiz_sp, ne_gps_pos->x, ne_gps_pos->y);
+            /* lock position before ascending: */
+            cm_att_set_gps_pos(&rtl_horiz_sp);
+            
+            vec2_t origin_dir;
+            vec2_init(&origin_dir);
+            vec2_normalize(&origin_dir, &rtl_horiz_sp);
+            vec2_init(&step);
+            vec2_scale(&step, &origin_dir, -spd_max * dt);
+
+            float err = baro_u_pos - safe_elev;
+            float spd = desired_speed(err, spd_p, spd_max);
+            cm_u_set_spd(spd);
+
+            rtl_state = RTL_ASCEND;
+         }
+         else
+         {
+            rtl_state = RTL_DONE;   
+         }
          break;
       }
 
       case RTL_ASCEND:
-         if (baro_u_pos < safe_elev)
+         if (fabs(baro_u_pos - safe_elev) > 2.0)
          {
             /* increase altitude */   
-            cm_u_set_spd(1.0);
+            cm_u_set_spd(spd_max);
          }
          else
          {
-            cm_u_set_spd(0.0);
             rtl_state = RTL_RETURN;   
          }
          break;
@@ -210,8 +271,11 @@ static bool rtl_tercom(bool gps_valid, vec2_t *ne_gps_pos, float baro_u_pos, flo
          {
             /* update N,E position setpoint towards starting point */
             vec2_add(&rtl_horiz_sp, &rtl_horiz_sp, &step);
+            cm_att_set_gps_pos(&rtl_horiz_sp);
             /* follow elevation map data (U) */
-            cm_u_set_baro_pos(safe_elev);
+            float err = baro_u_pos - safe_elev;
+            float spd = desired_speed(err, spd_p, spd_max);
+            cm_u_set_spd(spd);
          }
          else
          {
@@ -224,11 +288,11 @@ static bool rtl_tercom(bool gps_valid, vec2_t *ne_gps_pos, float baro_u_pos, flo
          {
             /* decrease altitude */   
             if (ultra_u_pos > 4.0f)
-               cm_u_set_spd(-1.0); /* descent speed above 4 meters */
+               cm_u_set_spd(-spd_max); /* descent speed above 4 meters */
             else if (ultra_u_pos > 2.0f)
-               cm_u_set_spd(-0.5); /* descent speed above 2 meters */
+               cm_u_set_spd(-spd_max / 2); /* descent speed above 2 meters */
             else
-               cm_u_set_spd(-0.2); /* final landing speed */
+               cm_u_set_spd(-spd_max / 4); /* final landing speed */
          }
          else
          {
@@ -237,10 +301,16 @@ static bool rtl_tercom(bool gps_valid, vec2_t *ne_gps_pos, float baro_u_pos, flo
          break;
 
       case RTL_DONE:
-         motors_off = true;
+         //motors_off = true;
+         break;
    }
+   
+   if (rtl_state != rtl_state_prev)
+   {
+      LOG(LL_DEBUG, "new state: %s", names[rtl_state]);
+   }
+   rtl_state_prev = rtl_state;
 
-   EVERY_N_TIMES(100, LOG(LL_INFO, "%f %f %f", rtl_horiz_sp.x, rtl_horiz_sp.y, cm_u_sp()));
    return motors_off;
 }
 
@@ -266,7 +336,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
          if (rc_inval_count == RC_INVAL_MAX_COUNT)
             LOG(LL_ERROR, "performing emergency landing");
         
-         if (rtl_tercom(sensor_status & GPS_VALID, ne_gps_pos, baro_u_pos, ultra_u_pos, elev, dt))
+         if (rtl_tercom(flying, sensor_status & GPS_VALID, ne_gps_pos, baro_u_pos, ultra_u_pos, elev, dt))
          {
             if (!always_hard_off)
                LOG(LL_ERROR, "emergency landing complete; disabling actuators");
@@ -325,14 +395,18 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       case MAN_RELAXED:
       {
          set_att_angles(pitch, roll);
-         cm_u_set_acc(sticks_gas_acc_func(gas_stick));
+         //cm_u_set_acc(sticks_gas_acc_func(gas_stick));
+         tercom_u(baro_u_pos, elev);
+         cm_u_a_max_set(sticks_gas_acc_func(gas_stick));
          break;
       }
 
       case MAN_NOVICE:
       {
+         //tercom_u(baro_u_pos, elev);
          set_horizontal_spd_or_pos(pitch, roll, yaw, ne_gps_pos, ultra_u_pos);
-         set_vertical_spd_or_pos(gas_stick, baro_u_pos, ultra_u_pos, dt);
+         set_vertical_spd_or_pos(gas_stick, ultra_u_pos, dt);
+         //cm_u_set_spd(gas_stick);
          break;
       }
 
@@ -343,7 +417,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
    if (((sensor_status & RC_VALID) && sw_l > 0.5))
       *hard_off = true;
 
-   cm_u_a_max_set(FLT_MAX); /* this limit applies only in auto mode */
+   //cm_u_a_max_set(FLT_MAX); /* this limit applies only in auto mode */
    return gas_stick > -0.8;
 }
 

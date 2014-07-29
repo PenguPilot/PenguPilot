@@ -149,6 +149,7 @@ autopilot:
          att_kii: 3.535664263437867
          att_kp: 0.3635009762282838
          yaw_kp: 0.6
+         yaw_kii: 3.535664263437867
          yaw_ki: 0.4
          filt_fg: 10.0
          filt_d: 0.95

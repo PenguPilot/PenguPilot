@@ -26,7 +26,6 @@
 
 #include <string.h>
 #include <stdlib.h>
-
 #include <util.h>
 
 
@@ -109,5 +108,23 @@ int binsearch(int x, const int v[], int n)
          return mid;
    }
    return -1; /* no match */
+}
+
+
+void rel_val_init(rel_val_t *val)
+{
+   val->start = 0.0f;
+   val->start_set = false;
+}
+
+
+float rel_val_get(rel_val_t *rel_val, float val)
+{
+   if (!rel_val->start_set)
+   {
+      rel_val->start = val;
+      rel_val->start_set = true;
+   }
+   return val - rel_val->start;
 }
 

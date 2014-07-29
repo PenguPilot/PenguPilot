@@ -22,5 +22,16 @@
 #define VDOP   8
 
 
+inline static unsigned int gps_msgpack_fix(unsigned int array_len)
+{
+   if (array_len > 7)
+      return 3;
+   else if (array_len > 1)
+      return 2;
+   else
+      return 0;
+}
+
+
 #endif /* __GPS_MSGPACK_H__ */
 

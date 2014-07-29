@@ -57,16 +57,6 @@ static interval_t interval;
 static float timer = 0.0f;
 
 
-static int gps_msgpack_fix(size_t array_len)
-{
-   if (array_len > 7)
-      return 3;
-   else if (array_len > 1)
-      return 2;
-   else
-      return 0;
-}
-
 
 SIMPLE_THREAD_BEGIN(thread_func)
 {

@@ -58,10 +58,9 @@ SIMPLE_THREAD_BEGIN(thread_func)
          {
             msgpack_object root = msg.data;
             assert (root.type == MSGPACK_OBJECT_ARRAY);
-            assert(root.via.array.size == 2);
-            float current_elev = root.via.array.ptr[0].via.dec;
-            float start_elev = root.via.array.ptr[1].via.dec;
-            tsfloat_set(&elevation, current_elev - start_elev);
+            assert(root.via.array.size == 1);
+            float elev = root.via.array.ptr[0].via.dec;
+            tsfloat_set(&elevation, elev);
          }
          msgpack_unpacked_destroy(&msg);
       }

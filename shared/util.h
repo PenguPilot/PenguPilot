@@ -33,6 +33,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <stdbool.h>
 
 #include <time.h>
 #include <sys/time.h>
@@ -198,7 +199,7 @@ int binsearch(int x, const int v[], int n);
 #define THROW_PROPAGATE(err) \
    if (err < 0) \
    { \
-      fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, err, errno); \
+      /*fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, err, errno);*/ \
    } \
    return err;
 
@@ -206,7 +207,7 @@ int binsearch(int x, const int v[], int n);
    ___return_code = err; \
    if (___return_code < 0 && ___return_code != -EAGAIN) \
    { \
-      fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, ___return_code, errno); \
+      /*fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, ___return_code, errno);*/ \
       goto __catch_label; \
    }
 
@@ -214,7 +215,7 @@ int binsearch(int x, const int v[], int n);
    ___return_code = err; \
    if ((___return_code < 0) && (___return_code != code)) \
    { \
-      fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, ___return_code, errno); \
+      /*fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, ___return_code, errno);*/ \
       goto __catch_label; \
    }
    
@@ -225,8 +226,8 @@ int binsearch(int x, const int v[], int n);
    if (cond) \
    { \
       ___return_code = code; \
-      if ((___return_code < 0) && (___return_code != -EAGAIN)) \
-         fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, code, errno); \
+      /*if ((___return_code < 0) && (___return_code != -EAGAIN)) \
+         fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, code, errno); */\
       goto __catch_label; \
    }
 
@@ -244,5 +245,22 @@ int binsearch(int x, const int v[], int n);
 
 #define THROW(code) \
    THROW_IF(1, code)
+
+
+
+typedef struct
+{
+   float start;
+   bool start_set;
+}
+rel_val_t;
+
+
+#define REL_VAL_INIT {0.0f, false}
+
+void rel_val_init(rel_val_t *val);
+
+float rel_val_get(rel_val_t *rel_val, float val);
+
 
 #endif /* __UTIL_H__ */
