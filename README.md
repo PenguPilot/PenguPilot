@@ -84,6 +84,7 @@ Flight Infrastructure:
 
 Supporting Infrastructures:
 
+- [gpstime](gpstime): GPS time zone / date / time setting service
 - [config](config): configuration files
 - [scl](scl): signaling and communication link (IPC framework), see [config/system.yaml](config/system.yaml)
 - [opcd](opcd): online parameter configuration daemon, see [config/params.yaml](config/params.yaml)
