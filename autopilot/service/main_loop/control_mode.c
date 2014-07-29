@@ -25,9 +25,10 @@
  GNU General Public License for more details. */
 
 
-#include "control_mode.h"
-
+#include <float.h>
 #include <util.h>
+
+#include "control_mode.h"
 
 
 /*
@@ -67,7 +68,7 @@ static enum
 }
 u_mode = U_ACC;
 static float u_sp = 0.0;
-static float u_a_max = 1.0;
+static float u_a_max = FLT_MAX;
 
 void cm_u_set_ultra_pos(float pos)
 {

@@ -40,19 +40,20 @@ def pidfile_from_name(name):
 
 
 def sched_set_prio(pid, prio):
-   _SCHED_FIFO = 1
-   libc = ctypes.cdll.LoadLibrary(util.find_library('c'))
-   if prio > libc.sched_get_priority_max(_SCHED_FIFO):
-      raise ValueError('priority too high: %d' % prio)
-   elif prio < libc.sched_get_priority_min(_SCHED_FIFO):
-      raise ValueError('priority too high: %d' % prio)
-   class _SchedParams(ctypes.Structure):
-      _fields_ = [('sched_priority', ctypes.c_int)]
-   schedParams = _SchedParams()
-   schedParams.sched_priority = prio
-   err = libc.sched_setscheduler(pid, _SCHED_FIFO, ctypes.byref(schedParams))
-   if err != 0:
-      raise OSError('could not set priority, code: %d' % err)
+   if prio > 0:
+      _SCHED_FIFO = 1
+      libc = ctypes.cdll.LoadLibrary(util.find_library('c'))
+      if prio > libc.sched_get_priority_max(_SCHED_FIFO):
+         raise ValueError('priority too high: %d' % prio)
+      elif prio < libc.sched_get_priority_min(_SCHED_FIFO):
+         raise ValueError('priority too high: %d' % prio)
+      class _SchedParams(ctypes.Structure):
+         _fields_ = [('sched_priority', ctypes.c_int)]
+      schedParams = _SchedParams()
+      schedParams.sched_priority = prio
+      err = libc.sched_setscheduler(pid, _SCHED_FIFO, ctypes.byref(schedParams))
+      if err != 0:
+         raise OSError('could not set priority, code: %d' % err)
 
 
 def kill(pid):
@@ -93,9 +94,9 @@ def validate(name):
 
 def start(name, prio, path, args):
    prio_map = {'sys_high': 99,
-               'sys_medium': 93, 
-               'sys_low': 92, 
-               'app': 91}
+               'sys_medium': 50, 
+               'sys_low': 30, 
+               'app': 0}
    prio = prio_map[prio]
    if args:
       path += ' ' + args
@@ -111,12 +112,16 @@ def start(name, prio, path, args):
       if ps.returncode != 0:
          print red('[ERROR: service quit with code ' + str(ps.returncode) + ']')
       else:
-         time.sleep(5)
-         pid = validate(name)
+         for _ in range(30):
+            time.sleep(0.1)
+            try:
+               pid = validate(name)
+            except:
+               pass
          if not pid:
             raise Exception('process terminated')
          try:
-            sched_set_prio(pid, prio)
+               sched_set_prio(pid, prio)
          except:
             print red('warning:') + ' could not set process priority'
          print green('[OK]')

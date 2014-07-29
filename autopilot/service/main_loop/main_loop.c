@@ -83,6 +83,8 @@ static interval_t gyro_move_interval;
 static Filter1 lp_filter;
 static Filter1 avg_pr_filter;
 static float acc_vec[3] = {0.0, 0.0, G_CONSTANT};
+static rel_val_t baro_rel = REL_VAL_INIT;
+static rel_val_t elev_rel = REL_VAL_INIT;
 
 typedef union
 {
@@ -243,21 +245,28 @@ void main_init(int argc, char *argv[])
 
 pthread_t thread;
 struct sched_param sched_param;
+static float elev_filt = 0.0f;
 
 
 void main_step(const float dt,
                const marg_data_t *marg_data,
                const gps_data_t *gps_data,
                const float ultra,
-               const float baro,
+               const float baro_abs,
                const float voltage,
                const float current,
                const float decl,
-               const float elev,
+               const float elev_abs,
                const float channels[PP_MAX_CHANNELS],
                const uint16_t sensor_status,
                const bool override_hw)
 {
+   float baro = rel_val_get(&baro_rel, baro_abs);
+   float elev = rel_val_get(&elev_rel, elev_abs);
+   
+   /* filter elevation signal: */
+   float elev_c = 0.002;
+   elev_filt = elev_filt * (1.0f - elev_c) + elev * elev_c;
    vec2_t ne_pos_err, ne_speed_sp, ne_spd_err;
    vec2_init(&ne_pos_err);
    vec2_init(&ne_speed_sp);
@@ -417,7 +426,7 @@ void main_step(const float dt,
    /* execute flight logic (sets cm_x parameters used below): */
    bool hard_off = false;
    bool motors_enabled = flight_logic_run(&hard_off, sensor_status, flying, cal_channels, euler.yaw, &pos_est.ne_pos,
-                                          pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg, dt, elev);
+                                          pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg, dt, elev_filt);
    
    /* execute up position/speed controller(s): */
    float a_u = -10.0f;
@@ -556,7 +565,7 @@ void main_step(const float dt,
    }
 
    /* wait until we are flying before enabling position/speed control integrators: */
-   if (!flying)
+   if (!flying || pos_est.ultra_u.pos < 1.0f)
       highlevel_control_reset();
 
    /* give hint for flight detection debugging: */
@@ -576,14 +585,14 @@ void main_step(const float dt,
    /* write motors: */
    if (!override_hw)
    {
-      //platform_write_motors(setpoints);
+      platform_write_motors(setpoints);
    }
 
    mon_data_set(pos_est.ne_pos.x, pos_est.ne_pos.y, pos_est.ultra_u.pos, pos_est.baro_u.pos, euler.yaw,
                 ne_pos_err.x, ne_pos_err.y, u_pos_err, pry_err.z);
 
 out:
-   EVERY_N_TIMES(bb_rate, blackbox_record(dt, marg_data, gps_data, ultra, baro, voltage, current, channels, sensor_status, /* sensor inputs */
+   EVERY_N_TIMES(bb_rate, blackbox_record(dt, marg_data, gps_data, ultra, baro_abs, voltage, current, channels, sensor_status, /* sensor inputs */
                           &ne_pos_err, u_pos_err, /* position errors */
                           &ne_spd_err, u_spd_err /* speed errors */,
                           &mag_normal,
@@ -598,6 +607,6 @@ out:
                           pos_est.ultra_u.speed,
                           &f_neu,
                           decl,
-                          elev));
+                          elev_abs));
 }
 

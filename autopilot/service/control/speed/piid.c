@@ -35,7 +35,6 @@
 #include <opcd_interface.h>
 
 #include "piid.h"
-#include "../util/pid.h"
 #include "../../filters/filter.h"
 #include "../../util/logger/logger.h"
 #include "../../util/math/adams5.h"
@@ -58,6 +57,7 @@ static tsfloat_t att_kii;
 static tsfloat_t att_kd;
 static tsfloat_t yaw_kp;
 static tsfloat_t yaw_ki;
+static tsfloat_t yaw_kii;
 static tsfloat_t filt_fg;
 static tsfloat_t filt_d;
 static tsfloat_t jxx_jyy;
@@ -82,7 +82,6 @@ static float *xi_err = NULL;
 static float *xii_err = NULL;
 static float ringbuf[3 * CTRL_NUM_TSTEP];
 static int ringbuf_idx = 0;
-pid_controller_t yaw_ctrl;
 
 
 /* integrator enable flag: */
@@ -101,6 +100,7 @@ void piid_init(float dt)
       {"att_kd", &att_kd},
       {"yaw_kp", &yaw_kp},
       {"yaw_ki", &yaw_ki},
+      {"yaw_kii", &yaw_kii},
       {"filt_fg", &filt_fg},
       {"filt_d", &filt_d},
       {"jxx_jyy", &jxx_jyy},
@@ -109,14 +109,12 @@ void piid_init(float dt)
       OPCD_PARAMS_END
    };
    opcd_params_apply("controllers.stabilizing.", params);
-   pid_init(&yaw_ctrl, &yaw_kp, &yaw_ki, NULL, NULL);
-
    LOG(LL_INFO, "ctrl dt = %fs", dt);
    LOG(LL_INFO, "filter: fg = %f Hz, d = %f",
                 tsfloat_get(&filt_fg), tsfloat_get(&filt_d));
    LOG(LL_INFO, "att-ctrl: P = %f, I = %f, II = %f, D = %f",
                 tsfloat_get(&att_kp), tsfloat_get(&att_ki), tsfloat_get(&att_kii), tsfloat_get(&att_kd));
-   LOG(LL_INFO, "yaw-ctrl: P = %f, I = %f", tsfloat_get(&yaw_kp), tsfloat_get(&yaw_ki));
+   LOG(LL_INFO, "yaw-ctrl: P = %f, I = %f, II = %f", tsfloat_get(&yaw_kp), tsfloat_get(&yaw_ki), tsfloat_get(&yaw_kii));
    LOG(LL_INFO, "feed-forward: jxx_jyy = %f, jzz = %f, tmc = %f",
                 tsfloat_get(&jxx_jyy), tsfloat_get(&jzz), tsfloat_get(&tmc));
    
@@ -173,7 +171,6 @@ void piid_reset(void)
    int_enable = 0;
    adams5_reset(&int_err1);
    adams5_reset(&int_err2);
-   pid_reset(&yaw_ctrl);
 }
 
 
@@ -213,14 +210,14 @@ void piid_run(float u_ctrl[4], float gyro[3], float rc[3], float dt)
 
    /* attitude feedback: */
    FOR_N(i, 2)
-   {
       u_ctrl[i] +=   tsfloat_get(&att_kp)  * error[i]
                    + tsfloat_get(&att_ki)  * xi_err[i]
                    + tsfloat_get(&att_kii) * xii_err[i] 
                    + tsfloat_get(&att_kd)  * derror[i];
-   }
 
    /* yaw feedback: */
-   u_ctrl[PIID_YAW] = pid_control(&yaw_ctrl, rc[PIID_YAW] - gyro[PIID_YAW], 0.0f, dt);
+   u_ctrl[PIID_YAW] +=   tsfloat_get(&yaw_kp)  * error[2]
+                       + tsfloat_get(&yaw_ki)  * xi_err[2]
+                       + tsfloat_get(&yaw_kii) * xii_err[2];
 }
 

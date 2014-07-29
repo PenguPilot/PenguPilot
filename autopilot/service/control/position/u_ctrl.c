@@ -47,11 +47,7 @@ static Filter1 filter;
 float u_ctrl_step(float *err, const float setpoint, const float pos, const float speed, const float dt)
 {
    *err = setpoint - pos;
-   float raw_ctrl = pid_control(&ctrl, *err, speed, dt);
-   float filt_ctrl = 0.0f;
-   filter1_lp_update_coeff(&filter, tsfloat_get(&lpfg), dt);
-   filter1_run(&filter, &raw_ctrl, &filt_ctrl);
-   return filt_ctrl;
+   return pid_control(&ctrl, *err, speed, dt);
 }
 
 

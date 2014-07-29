@@ -118,12 +118,12 @@ elevmap:
   depends: [gpsp]
   priority: sys_low
 
-gpstime:
-  binary: 'gpstime/service/gpstime.py'
-  depends: [gpsp]
-  priority: sys_low
-
 # application-level services:
+
+gpstime:
+  binary: 'gpstime/service/gpstime'
+  depends: [gpsp]
+  priority: app
 
 wifi_sensor:
   binary: 'wifi_sensor/service/wifi_sensor.py'

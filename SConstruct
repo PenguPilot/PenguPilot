@@ -33,7 +33,7 @@ re_cc = re.compile('.*\.(c|cpp)$')
 re_pb = re.compile('.*\.proto$')
 
 def set_compiler_dependent_cflags():
-   cflags = '-D_GNU_SOURCE -pipe -fomit-frame-pointer -std=c99 -Wall -Wextra '
+   cflags = '-D_GNU_SOURCE -pipe -fomit-frame-pointer -std=c99 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function '
    all_info = file('/proc/cpuinfo').read()
    board = 'None'
    for line in all_info.split('\n'):
@@ -112,8 +112,14 @@ common_libs = opcd_lib + opcd_pb_lib + scl_lib + shared_lib
 append_inc_lib('gpsp/service/nmealib')
 gpsp_dir = 'gpsp/'
 append_inc_lib(gpsp_dir + 'shared')
-gpsp_bin = env.Program('gpsp/service/gpsp', collect_files(gpsp_dir + 'service', re_cc), LIBS = common_libs + ['m', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
+gpsp_bin = env.Program('gpsp/service/gpsp', collect_files(gpsp_dir + 'service', re_cc), LIBS = common_libs + ['m', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
 Requires(gpsp_bin, common_libs)
+
+# GPS Time:
+gpst_dir = 'gpstime/'
+gpst_bin = env.Program('gpstime/service/gpstime', collect_files(gpst_dir + 'service', re_cc), LIBS = common_libs + ['m', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(gpst_bin, common_libs)
+
 
 # Arduino RC / Power Publisher:
 arduino_dir = 'arduino/'

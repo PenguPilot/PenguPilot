@@ -38,14 +38,11 @@ def main(name):
    socket_map = generate_map(name)
    gps_socket = socket_map['gps']
    elev_socket = socket_map['elev']
-   start_elev = None
    while True:
       gps = loads(gps_socket.recv())
       try:
          elev = float(elev_map.lookup((gps[LON], gps[LAT])))
-         if not start_elev:
-            start_elev = elev
-         elev_socket.send(dumps([elev, start_elev]))
+         elev_socket.send(dumps([elev]))
       except:
          pass
 

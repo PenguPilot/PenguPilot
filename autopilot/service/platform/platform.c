@@ -68,31 +68,10 @@ int platform_read_ultra(float *ultra)
 }
 
 
-static float start = 0.0f;
-static int avg = 0.0f;
-static int cnt = 0;
-
 int platform_read_baro(float *baro)
 {
    CHECK_DEV(platform.read_baro);
-   float buf = 0.0f;
-   int status = platform.read_baro(&buf);
-   if (status == 0)
-   {
-      avg += buf;
-      cnt++;
-      if (cnt > 100)
-      {
-         if (start == 0.0f)
-            start = avg / cnt;
-         *baro = buf - start;
-      }
-      else
-      {
-         *baro = start;
-      }
-   }
-   return status;
+   return platform.read_baro(baro);
 }
 
 
