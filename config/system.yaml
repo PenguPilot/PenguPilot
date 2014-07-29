@@ -165,6 +165,7 @@
    - remote: sub
    - sats: sub
    - decl: sub
+   - elev: sub
 
 - name: heartbeat
   sockets:

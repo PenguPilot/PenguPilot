@@ -245,7 +245,6 @@ void main_init(int argc, char *argv[])
 
 pthread_t thread;
 struct sched_param sched_param;
-static float elev_filt = 0.0f;
 
 
 void main_step(const float dt,
@@ -264,9 +263,6 @@ void main_step(const float dt,
    float baro = rel_val_get(&baro_rel, baro_abs);
    float elev = rel_val_get(&elev_rel, elev_abs);
    
-   /* filter elevation signal: */
-   float elev_c = 0.002;
-   elev_filt = elev_filt * (1.0f - elev_c) + elev * elev_c;
    vec2_t ne_pos_err, ne_speed_sp, ne_spd_err;
    vec2_init(&ne_pos_err);
    vec2_init(&ne_speed_sp);
@@ -426,7 +422,7 @@ void main_step(const float dt,
    /* execute flight logic (sets cm_x parameters used below): */
    bool hard_off = false;
    bool motors_enabled = flight_logic_run(&hard_off, sensor_status, flying, cal_channels, euler.yaw, &pos_est.ne_pos,
-                                          pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg, dt, elev_filt);
+                                          pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg, dt, elev);
    
    /* execute up position/speed controller(s): */
    float a_u = -10.0f;
