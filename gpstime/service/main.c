@@ -24,16 +24,40 @@
  GNU General Public License for more details. */
 
 
+#include <unistd.h>
+#include <math.h>
 #include <stdbool.h>
-#include <gps_msgpack.h>
 #include <msgpack.h>
 
+#include <gps_msgpack.h>
 #include <util.h>
 #include <scl.h>
 #include <threadsafe_types.h>
 #include <daemon.h>
 
-#include "linux_sys.h"
+#include "tz_lookup.h"
+
+
+static void linux_sys_set_timezone(float lat_dest, float lon_dest)
+{
+   char tzname[1024];
+   float dist_max = 360.0f;
+   int i;
+   for (i = 0; i < TZ_LOOKUP_ENTRIES; i++) 
+   {
+      float lat = tz_lookup[i].lat;
+      float lon = tz_lookup[i].lon;
+      float dist = fabs(lon - lon_dest) + fabs(lat - lat_dest);
+      if (dist < dist_max)
+      {
+         dist_max = dist;
+         strcpy(tzname, tz_lookup[i].tz);
+      }
+   }
+   char cmd[1024];
+   sprintf(cmd, "cp /usr/share/zoneinfo/%s /etc/localtime", tzname);
+   if (system(cmd)){};
+}
 
 
 bool running = true;
@@ -47,6 +71,7 @@ int _main(void)
    THROW_ON_ERR(scl_init("gpstime"));
    void *scl_socket = scl_get_socket("gps");
    THROW_IF(scl_socket == NULL, -ENODEV);
+   sleep(5);
 
    while (running)
    {
@@ -68,13 +93,10 @@ int _main(void)
                float lon = root.via.array.ptr[LON].via.dec;
                char time_buf[128];
                snprintf(time_buf, root.via.array.ptr[TIME].via.raw.size, "%s", root.via.array.ptr[TIME].via.raw.ptr);
-               printf("%s %f %f\n", time_buf, lat, lon);
-               
-               char shell_date_cmd[128];
+               char cmd[128];
                linux_sys_set_timezone(lat, lon);
-               sprintf(shell_date_cmd, "date -s \"%s\"", time_buf);
-               int result = system(shell_date_cmd);
-               (void)result;
+               sprintf(cmd, "date -u -s \"%s\"", time_buf);
+               if (system(cmd)){};
                break;
             }
          }
