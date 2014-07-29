@@ -33,7 +33,7 @@ re_cc = re.compile('.*\.(c|cpp)$')
 re_pb = re.compile('.*\.proto$')
 
 def set_compiler_dependent_cflags():
-   cflags = '-D_GNU_SOURCE -pipe -fomit-frame-pointer -std=c99 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function '
+   cflags = '-D_GNU_SOURCE -pipe -fomit-frame-pointer -std=c99 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-unused-but-set-variable '
    all_info = file('/proc/cpuinfo').read()
    board = 'None'
    for line in all_info.split('\n'):
