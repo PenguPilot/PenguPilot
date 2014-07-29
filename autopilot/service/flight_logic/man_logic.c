@@ -397,7 +397,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
          set_att_angles(pitch, roll);
          cm_u_set_acc(sticks_gas_acc_func(gas_stick));
          //tercom_u(baro_u_pos, elev);
-         cm_u_a_max_set(sticks_gas_acc_func(gas_stick));
+         //cm_u_a_max_set(sticks_gas_acc_func(gas_stick));
          break;
       }
 
@@ -416,7 +416,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
    if (((sensor_status & RC_VALID) && sw_l > 0.5))
       *hard_off = true;
 
-   //cm_u_a_max_set(FLT_MAX); /* this limit applies only in auto mode */
+   cm_u_a_max_set(FLT_MAX); /* this limit applies only in auto mode */
    return gas_stick > -0.8;
 }
 
