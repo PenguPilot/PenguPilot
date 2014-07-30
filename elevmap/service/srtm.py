@@ -34,14 +34,13 @@ import time
 import os
 
 
-def linfunc_from_points(v1, v2):
-   m = (v2[1] - v1[1]) / (v2[0] - v1[0])
-   n = v1[1] - m * v1[0]
-   return m, n
-
-
-def linfunc_calc(m, n, x):
-   return float(m) * float(x) + float(n)
+def bilinear_interpolation((x1, y1, w1), (x2, y2, w2), (x3, y3, w3), (x, y)):
+   # taken from: http://www1.eonfusion.com/manual/index.php/Formulae_for_interpolation
+   DET = x1 * y2 - x2 * y1 + x2 * y3 - x3 * y2 + x3 * y1 - x1 * y3
+   A = ((y2 - y3) * w1 + (y3 - y1) * w2 + (y1 - y2) * w3) / DET
+   B = ((x3 - x2) * w1 + (x1 - x3) * w2 + (x2 - x1) * w3) / DET
+   C = ((x2 * y3 - x3 * y2) * w1 + (x3 * y1 - x1 * y3) * w2 + (x1 * y2 - x2 * y1) * w3) / DET
+   return A * x + B * y + C
 
 
 class SrtmElevMap:
@@ -95,38 +94,61 @@ class SrtmElevMap:
       left_pixel = array([center_pixel[0] - 1, center_pixel[1]])
       left_elev = ds.ReadAsArray(int(left_pixel[0]), int(left_pixel[1]), 1, 1).ravel()[0]
       left_coord = A * left_pixel + offset
+
       right_pixel = array([center_pixel[0] + 1, center_pixel[1]])
       right_elev = ds.ReadAsArray(int(right_pixel[0]), int(right_pixel[1]), 1, 1).ravel()[0]
       right_coord = A * right_pixel + offset
-      if coord[0] < center_coord[0]:
-         # left half
-         m, n = linfunc_from_points([left_coord[0], left_elev], [center_coord[0], center_elev])
-         x_elev = linfunc_calc(m, n, coord[0])
-      elif coord[0] > center_coord[0]:
-         # left half
-         m, n = linfunc_from_points([center_coord[0], center_elev], [right_coord[0], right_elev])
-         x_elev = linfunc_calc(m, n, coord[0])
-      else:
-         x_elev = center_elev
       
       # up/down linear interpolation:
       up_pixel = array([center_pixel[0], center_pixel[1] - 1])
       up_elev = ds.ReadAsArray(int(up_pixel[0]), int(up_pixel[1]), 1, 1).ravel()[0]
       up_coord = A * up_pixel + offset
+      
       down_pixel = array([center_pixel[0], center_pixel[1] + 1])
       down_elev = ds.ReadAsArray(int(down_pixel[0]), int(down_pixel[1]), 1, 1).ravel()[0]
       down_coord = A * down_pixel + offset
-      if coord[1] > center_coord[1]:
-         # upper half
-         m, n = linfunc_from_points([up_coord[1], up_elev], [center_coord[1], center_elev])
-         y_elev = linfunc_calc(m, n, coord[1])
-      elif coord[1] < center_coord[1]:
-         # left half
-         m, n = linfunc_from_points([center_coord[1], center_elev], [down_coord[1], down_elev])
-         y_elev = linfunc_calc(m, n, coord[1])
-      else:
-         y_elev = center_elev
 
-      # merge interpolations:
-      return (x_elev + y_elev) / 2.0
+      inte = center_elev
+      if (coord[0] <= center_coord[0] and coord[1] <= center_coord[1]): # lower left quadrant
+         inte = bilinear_interpolation((left_coord[0], left_coord[1], left_elev),
+                                       (down_coord[0], down_coord[1], down_elev),
+                                       (center_coord[0], center_coord[1], center_elev),
+                                       (coord[0], coord[1]))
+      
+      elif (coord[0] <= center_coord[0] and coord[1] >= center_coord[1]): # upper left quadrant
+         inte = bilinear_interpolation((left_coord[0], left_coord[1], left_elev),
+                                       (up_coord[0], up_coord[1], up_elev),
+                                       (center_coord[0], center_coord[1], center_elev),
+                                       (coord[0], coord[1]))
+      
+      elif (coord[0] >= center_coord[0] and coord[1] <= center_coord[1]): # lower right quadrant
+         inte = bilinear_interpolation((right_coord[0], right_coord[1], right_elev),
+                                       (down_coord[0], down_coord[1], down_elev),
+                                       (center_coord[0], center_coord[1], center_elev),
+                                       (coord[0], coord[1]))
+      
+      elif (coord[0] >= center_coord[0] and coord[1] >= center_coord[1]): # upper right quadrant
+         inte = bilinear_interpolation((right_coord[0], right_coord[1], right_elev),
+                                       (up_coord[0], up_coord[1], up_elev),
+                                       (center_coord[0], center_coord[1], center_elev),
+                                       (coord[0], coord[1]))
+
+      return inte #, center_elev
+
+
+
+"""
+map = SrtmElevMap()
+for x in range(50):
+   for y in range(50):
+      inte, raw = map.lookup((10.01 + x / 10000.0, 50.1 + y / 10000.0))
+      print x, y, float(raw), float(inte)
+   print
+
+
+for x in range(50):
+   inte, raw = map.lookup((10.1 + x / 10000.0, 50.1))
+   #inte, raw = map.lookup((10.1, 50.1 + x / 10000.0))
+   print float(raw), float(inte)
+"""
 
