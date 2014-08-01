@@ -347,11 +347,12 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
    else
       rc_inval_count = 0;   
 
-   vec2_t pr;
+   vec2_t pr, pr_rot;
+   vec2_init(&pr_rot);
    vec2_set(&pr, channels[CH_PITCH], channels[CH_ROLL]);
-   vec2_rotate(&pr, &pr, sticks_rotation());
-   float pitch = pr.x;
-   float roll = pr.y;
+   vec2_rotate(&pr_rot, &pr, sticks_rotation());
+   float pitch = pr_rot.x;
+   float roll = pr_rot.y;
 
    float yaw_stick = channels[CH_YAW];
    float gas_stick = channels[CH_GAS];
