@@ -35,6 +35,9 @@ import os
 
 
 def bilinear_interpolation((x1, y1, w1), (x2, y2, w2), (x3, y3, w3), (x, y)):
+   a = x1, y1, w1, x2, y2, w2, x3, y3, w3, x, y
+   a = map(float, a)
+   x1, y1, w1, x2, y2, w2, x3, y3, w3, x, y = a
    # taken from: http://www1.eonfusion.com/manual/index.php/Formulae_for_interpolation
    DET = x1 * y2 - x2 * y1 + x2 * y3 - x3 * y2 + x3 * y1 - x1 * y3
    A = ((y2 - y3) * w1 + (y3 - y1) * w2 + (y1 - y2) * w3) / DET
@@ -133,22 +136,5 @@ class SrtmElevMap:
                                        (center_coord[0], center_coord[1], center_elev),
                                        (coord[0], coord[1]))
 
-      return inte #, center_elev
-
-
-
-"""
-map = SrtmElevMap()
-for x in range(50):
-   for y in range(50):
-      inte, raw = map.lookup((10.01 + x / 10000.0, 50.1 + y / 10000.0))
-      print x, y, float(raw), float(inte)
-   print
-
-
-for x in range(50):
-   inte, raw = map.lookup((10.1 + x / 10000.0, 50.1))
-   #inte, raw = map.lookup((10.1, 50.1 + x / 10000.0))
-   print float(raw), float(inte)
-"""
+      return inte
 
