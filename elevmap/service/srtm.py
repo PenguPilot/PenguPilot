@@ -136,9 +136,5 @@ class SrtmElevMap:
                                        (center_coord[0], center_coord[1], center_elev),
                                        (coord[0], coord[1]))
 
-<<<<<<< HEAD
       return inte
 
-=======
-      return float(elev)
->>>>>>> 821e22049aa8557b2cf890de3795d6d314098d7f
