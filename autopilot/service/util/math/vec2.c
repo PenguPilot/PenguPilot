@@ -144,6 +144,7 @@ void vec2_project(vec2_t *vo, const vec2_t *vi1, const vec2_t *vi2)
 void vec2_rotate(vec2_t *vo, const vec2_t *vi, float angle)
 {
    assert(vo && vi);
+   assert(vo != vi);
    assert(vo->dim == 2 && vi->dim == 2);
 
    float sa = real_sin(angle);
