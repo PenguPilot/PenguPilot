@@ -40,5 +40,5 @@ def write_motor(id, val):
 
 
 while 1:
-   write_motor(int(argv[1]), 12500)
+   write_motor(int(argv[1]), 13000)
 
