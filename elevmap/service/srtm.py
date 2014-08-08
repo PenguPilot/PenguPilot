@@ -35,6 +35,9 @@ import os
 
 
 def bilinear_interpolation((x1, y1, w1), (x2, y2, w2), (x3, y3, w3), (x, y)):
+   a = x1, y1, w1, x2, y2, w2, x3, y3, w3, x, y
+   a = map(float, a)
+   x1, y1, w1, x2, y2, w2, x3, y3, w3, x, y = a
    # taken from: http://www1.eonfusion.com/manual/index.php/Formulae_for_interpolation
    DET = x1 * y2 - x2 * y1 + x2 * y3 - x3 * y2 + x3 * y1 - x1 * y3
    A = ((y2 - y3) * w1 + (y3 - y1) * w2 + (y1 - y2) * w3) / DET
@@ -108,51 +111,30 @@ class SrtmElevMap:
       down_elev = ds.ReadAsArray(int(down_pixel[0]), int(down_pixel[1]), 1, 1).ravel()[0]
       down_coord = A * down_pixel + offset
 
-      inte = center_elev
+      elev = center_elev
       if (coord[0] <= center_coord[0] and coord[1] <= center_coord[1]): # lower left quadrant
-         inte = bilinear_interpolation((left_coord[0], left_coord[1], left_elev),
+         elev = bilinear_interpolation((left_coord[0], left_coord[1], left_elev),
                                        (down_coord[0], down_coord[1], down_elev),
                                        (center_coord[0], center_coord[1], center_elev),
                                        (coord[0], coord[1]))
       
       elif (coord[0] <= center_coord[0] and coord[1] >= center_coord[1]): # upper left quadrant
-         inte = bilinear_interpolation((left_coord[0], left_coord[1], left_elev),
+         elev = bilinear_interpolation((left_coord[0], left_coord[1], left_elev),
                                        (up_coord[0], up_coord[1], up_elev),
                                        (center_coord[0], center_coord[1], center_elev),
                                        (coord[0], coord[1]))
       
       elif (coord[0] >= center_coord[0] and coord[1] <= center_coord[1]): # lower right quadrant
-         inte = bilinear_interpolation((right_coord[0], right_coord[1], right_elev),
+         elev = bilinear_interpolation((right_coord[0], right_coord[1], right_elev),
                                        (down_coord[0], down_coord[1], down_elev),
                                        (center_coord[0], center_coord[1], center_elev),
                                        (coord[0], coord[1]))
       
       elif (coord[0] >= center_coord[0] and coord[1] >= center_coord[1]): # upper right quadrant
-         inte = bilinear_interpolation((right_coord[0], right_coord[1], right_elev),
+         elev = bilinear_interpolation((right_coord[0], right_coord[1], right_elev),
                                        (up_coord[0], up_coord[1], up_elev),
                                        (center_coord[0], center_coord[1], center_elev),
                                        (coord[0], coord[1]))
 
-      return inte, center_elev
-
-
-err = 0.0
-c = 0.0
-map = SrtmElevMap()
-for x in range(150):
-   for y in range(150):
-      inte, raw = map.lookup((10.41 + x / 10000.0, 50.2 + y / 10000.0))
-      c += 1
-      inte += 0.05
-      err += raw - inte
-      print x, y, float(raw), float(inte)
-   print
-print err / c
-
-"""
-for x in range(50):
-   inte, raw = map.lookup((10.1 + x / 10000.0, 50.1))
-   #inte, raw = map.lookup((10.1, 50.1 + x / 10000.0))
-   print float(raw), float(inte)
-"""
+      return elev
 

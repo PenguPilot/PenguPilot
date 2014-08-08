@@ -41,9 +41,10 @@ def main(name):
    while True:
       gps = loads(gps_socket.recv())
       try:
-         elev = float(elev_map.lookup((gps[LON], gps[LAT])))
+         elev = elev_map.lookup((gps[LON], gps[LAT]))
          elev_socket.send(dumps([elev]))
       except:
          pass
+
 
 daemonize('elevmap', main)
