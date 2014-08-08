@@ -39,31 +39,33 @@ def optimize(rate, samples, prefix, names, mse_indices):
    opcd = OPCD_Interface(gates['opcd_ctrl'])
    bb = gates['blackbox']
    print 'starting optimizer'
-   sleep(20)
    vec_best = [ opcd.get(prefix + n) for n in names]
    vec = vec_best
    mse_min = sys.float_info.max
-   while True:
-      vec = map(lambda x: x * uniform(1.0 - rate, 1.0 + rate), vec)
-      # send new params to opcd:
+   try:
+      while True:
+         vec = map(lambda x: x * uniform(1.0 - rate, 1.0 + rate), vec)
+         # send new params to opcd:
+         for i, n in zip(range(len(names)), names):
+            opcd.set(prefix + n, vec[i])
+         # read data from autopilot and compute fitness:
+         mse = 0.0
+         for _ in range(samples):
+            array = loads(bb.recv())
+            for i in mse_indices:
+               mse += array[i] ** 2
+         mse /= samples
+         # evaluate mse:
+         print 'fitness:', vec, mse
+         if mse < mse_min:
+            print 'new best fitness'
+            opcd.persist()
+            mse_min = mse
+            vec_best = copy(vec)
+         else:
+            # we did not improve;
+            # use best vector as search starting point
+            vec = copy(vec_best)
+   except:
       for i, n in zip(range(len(names)), names):
-         opcd.set(prefix + n, vec[i])
-      # read data from autopilot and compute fitness:
-      mse = 0.0
-      for _ in range(samples):
-         array = loads(bb.recv())
-         for i in mse_indices:
-            mse += array[i] ** 2
-      mse /= samples
-      # evaluate mse:
-      print 'fitness:', vec, mse
-      if mse < mse_min:
-         print 'new best fitness'
-         opcd.persist()
-         mse_min = mse
-         vec_best = copy(vec)
-      else:
-         # we did not improve;
-         # use best vector as search starting point
-         vec = copy(vec_best)
-
+         opcd.set(prefix + n, vec_best[i])

@@ -58,6 +58,7 @@ static tsfloat_t att_kd;
 static tsfloat_t yaw_kp;
 static tsfloat_t yaw_ki;
 static tsfloat_t yaw_kii;
+static tsfloat_t yaw_kd;
 static tsfloat_t filt_fg;
 static tsfloat_t filt_d;
 static tsfloat_t jxx_jyy;
@@ -101,6 +102,7 @@ void piid_init(float dt)
       {"yaw_kp", &yaw_kp},
       {"yaw_ki", &yaw_ki},
       {"yaw_kii", &yaw_kii},
+      {"yaw_kd", &yaw_kd},
       {"filt_fg", &filt_fg},
       {"filt_d", &filt_d},
       {"jxx_jyy", &jxx_jyy},
@@ -114,7 +116,8 @@ void piid_init(float dt)
                 tsfloat_get(&filt_fg), tsfloat_get(&filt_d));
    LOG(LL_INFO, "att-ctrl: P = %f, I = %f, II = %f, D = %f",
                 tsfloat_get(&att_kp), tsfloat_get(&att_ki), tsfloat_get(&att_kii), tsfloat_get(&att_kd));
-   LOG(LL_INFO, "yaw-ctrl: P = %f, I = %f, II = %f", tsfloat_get(&yaw_kp), tsfloat_get(&yaw_ki), tsfloat_get(&yaw_kii));
+   LOG(LL_INFO, "yaw-ctrl: P = %f, I = %f, II = %f, D = %f",
+                tsfloat_get(&yaw_kp), tsfloat_get(&yaw_ki), tsfloat_get(&yaw_kii), tsfloat_get(&yaw_kd));
    LOG(LL_INFO, "feed-forward: jxx_jyy = %f, jzz = %f, tmc = %f",
                 tsfloat_get(&jxx_jyy), tsfloat_get(&jzz), tsfloat_get(&tmc));
    
@@ -218,6 +221,7 @@ void piid_run(float u_ctrl[4], float gyro[3], float rc[3], float dt)
    /* yaw feedback: */
    u_ctrl[PIID_YAW] +=   tsfloat_get(&yaw_kp)  * error[2]
                        + tsfloat_get(&yaw_ki)  * xi_err[2]
-                       + tsfloat_get(&yaw_kii) * xii_err[2];
+                       + tsfloat_get(&yaw_kii) * xii_err[2]
+                       + tsfloat_get(&yaw_kd)  * derror[2];
 }
 

@@ -136,5 +136,5 @@ class SrtmElevMap:
                                        (center_coord[0], center_coord[1], center_elev),
                                        (coord[0], coord[1]))
 
-      return inte
+      return elev
 
