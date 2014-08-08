@@ -106,7 +106,7 @@ static calibration_t rc_cal;
 static bool prev_flying = true;
 static float cal_channels_prev[PP_MAX_CHANNELS];
 static bool channels_prev_seen = false;
-
+static bool flying;
 
 void main_init(int argc, char *argv[])
 {
@@ -350,11 +350,7 @@ void main_step(const float dt,
    /* apply current magnetometer compensation: */
    cmc_apply(&cal_marg_data.mag, current);
 
-   /* determine flight state: */
-   bool flying = flight_state_update(&cal_marg_data.acc.ve[0]);
-   if (!flying && pos_in.ultra_u == 7.0)
-      pos_in.ultra_u = 0.2;
-   
+  
    /* compute channel calibration; safety code: */
    float cal_channels[PP_MAX_CHANNELS];
    memcpy(cal_channels, channels, sizeof(cal_channels));
@@ -415,7 +411,12 @@ void main_step(const float dt,
       
       // FIR: // filter1_run(&lp_filter, &world_acc.ve[0], &acc_vec[0]);
    }
-
+   
+   /* determine flight state: */
+   flying = flight_state_update(&pos_in.acc.ve[0]);
+   if (!flying && pos_in.ultra_u == 7.0)
+      pos_in.ultra_u = 0.2;
+ 
    /* compute next 3d position estimate using Kalman filters: */
    pos_update(&pos_est, &pos_in);
 
