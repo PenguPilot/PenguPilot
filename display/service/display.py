@@ -114,6 +114,17 @@ def decl_reader():
    while True:
       decl = float(s.recv())
 
+elev_start = None
+elev = 0.0
+def elev_reader():
+   s = socket_map['elev']
+   global elev, elev_start
+   while True:
+      e = loads(s.recv())[0]
+      if elev_start is None:
+         elev_start = e
+      elev = e - elev_start
+
 
 def pm_reader():
    s = socket_map['powerman']
@@ -309,8 +320,9 @@ def draw_gps2(draw):
       draw.text((0, 13 * 0), 'Lat: %f' % gps[LAT], WHITE, font = font)
       draw.text((0, 13 * 1), 'Lon: %f' % gps[LON], WHITE, font = font)
       draw.text((0, 13 * 2), 'Declination: %.1f' % decl, WHITE, font = font)
+      draw.text((0, 13 * 3), 'SRTM3 Elev.: %.1f' % elev, WHITE, font = font)
       try:
-         draw.text((0, 13 * 3), 'Altitude: %.1f' % gps[ALT], WHITE, font = font)
+         draw.text((0, 13 * 4), 'Altitude: %.1f' % gps[ALT], WHITE, font = font)
       except:
          pass
    except:
@@ -350,6 +362,10 @@ def main(name):
    t6 = Thread(target = decl_reader)
    t6.daemon = True
    t6.start()
+
+   t7 = Thread(target = elev_reader)
+   t7.daemon = True
+   t7.start()
 
 
    screens = [(draw_health, 10),

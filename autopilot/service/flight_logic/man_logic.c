@@ -206,14 +206,13 @@ static vec2_t step;
 
 static void tercom_u(float baro_u_pos, float elev)
 {
-   float spd_max = 2.0f;
-   float spd_p = 1.0;
-   float safety_delta = 5.0f;
+   float spd_max = 1.5f;
+   float spd_p = 0.5;
+   float safety_delta = 7.0f;
    float safe_elev = safety_delta + elev;
    float err = baro_u_pos - safe_elev;
    float spd = desired_speed(err, spd_p, spd_max);
    cm_u_set_spd(spd);
-   EVERY_N_TIMES(100, LOG(LL_INFO, "u_pos: %f, safe_elev: %f", baro_u_pos, safe_elev));
 }
 
 
@@ -351,11 +350,12 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
    else
       rc_inval_count = 0;   
 
-   vec2_t pr;
+   vec2_t pr, pr_rot;
+   vec2_init(&pr_rot);
    vec2_set(&pr, channels[CH_PITCH], channels[CH_ROLL]);
-   vec2_rotate(&pr, &pr, sticks_rotation());
-   float pitch = pr.x;
-   float roll = pr.y;
+   vec2_rotate(&pr_rot, &pr, sticks_rotation());
+   float pitch = pr_rot.x;
+   float roll = pr_rot.y;
 
    float yaw_stick = channels[CH_YAW];
    float gas_stick = channels[CH_GAS];
@@ -398,17 +398,17 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       case MAN_RELAXED:
       {
          set_att_angles(pitch, roll);
-         cm_u_set_acc(sticks_gas_acc_func(gas_stick));
-         //tercom_u(baro_u_pos, elev);
-         //cm_u_a_max_set(sticks_gas_acc_func(gas_stick));
+         //cm_u_set_acc(sticks_gas_acc_func(gas_stick));
+         tercom_u(baro_u_pos, elev);
+         cm_u_a_max_set(sticks_gas_acc_func(gas_stick));
          break;
       }
 
       case MAN_NOVICE:
       {
          set_horizontal_spd_or_pos(pitch, roll, yaw, ne_gps_pos, ultra_u_pos);
-         set_vertical_spd_or_pos(gas_stick, ultra_u_pos, dt);
-         //cm_u_set_spd(gas_stick);
+         tercom_u(baro_u_pos, elev);
+         cm_u_a_max_set(sticks_gas_acc_func(gas_stick));
          break;
       }
 
@@ -419,7 +419,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
    if (((sensor_status & RC_VALID) && sw_l > 0.5))
       *hard_off = true;
 
-   cm_u_a_max_set(FLT_MAX); /* this limit applies only in auto mode */
+   //cm_u_a_max_set(FLT_MAX); /* this limit applies only in auto mode */
    return gas_stick > -0.8;
 }
 
