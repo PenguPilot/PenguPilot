@@ -154,8 +154,11 @@ static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t
    if (!sticks_pitch_roll_in_deadzone(pitch, roll) || ultra_u_pos < 0.4)
    {
       /* set GPS speed based on sticks input: */
+      vec2_t sticks;
+      vec2_set(&sticks, pitch, roll);
       vec2_t pitch_roll_spd_sp;
-      vec2_set(&pitch_roll_spd_sp, sticks_pitch_roll_gps_speed_func(pitch), sticks_pitch_roll_gps_speed_func(roll));
+      vec2_init(&pitch_roll_spd_sp);
+      sticks_pitch_roll_gps_speed_func(&pitch_roll_spd_sp, &sticks);
       vec2_t ne_spd_sp;
       vec2_init(&ne_spd_sp); 
       vec2_rotate(&ne_spd_sp, &pitch_roll_spd_sp, yaw);

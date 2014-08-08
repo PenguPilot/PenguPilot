@@ -133,19 +133,23 @@ class SrtmElevMap:
                                        (center_coord[0], center_coord[1], center_elev),
                                        (coord[0], coord[1]))
 
-      return inte #, center_elev
+      return inte, center_elev
 
 
-
-"""
+err = 0.0
+c = 0.0
 map = SrtmElevMap()
-for x in range(50):
-   for y in range(50):
-      inte, raw = map.lookup((10.01 + x / 10000.0, 50.1 + y / 10000.0))
+for x in range(150):
+   for y in range(150):
+      inte, raw = map.lookup((10.41 + x / 10000.0, 50.2 + y / 10000.0))
+      c += 1
+      inte += 0.05
+      err += raw - inte
       print x, y, float(raw), float(inte)
    print
+print err / c
 
-
+"""
 for x in range(50):
    inte, raw = map.lookup((10.1 + x / 10000.0, 50.1))
    #inte, raw = map.lookup((10.1, 50.1 + x / 10000.0))
