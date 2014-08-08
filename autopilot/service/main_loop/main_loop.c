@@ -603,6 +603,7 @@ out:
                           pos_est.ultra_u.speed,
                           &f_neu,
                           decl,
-                          elev_abs));
+                          elev_abs,
+                          thrust));
 }
 

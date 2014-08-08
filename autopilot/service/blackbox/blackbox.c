@@ -95,7 +95,8 @@ char *blackbox_spec[BLACKBOX_ITEMS] =
    "f_e",            /* 53 */
    "f_u",            /* 54 */
    "decl",           /* 55 */ 
-   "elev"            /* 56 */
+   "elev",           /* 56 */
+   "thrust"          /* 57 */
 };
 
 
@@ -149,8 +150,9 @@ void blackbox_record(const float dt, /* sensor inputs ... */
                const float ultra_u_pos,
                const float ultra_u_spd,
                const vec3_t *f_neu,
-               float decl,
-               float elev)
+               const float decl,
+               const float elev,
+               const float thrust)
 {
    msgpack_sbuffer_clear(msgpack_buf);
    msgpack_pack_array(pk, BLACKBOX_ITEMS);
@@ -184,6 +186,7 @@ void blackbox_record(const float dt, /* sensor inputs ... */
    PACKFV(f_neu->ve, 3);
    PACKF(decl);
    PACKF(elev);
+   PACKF(thrust);
    scl_copy_send_dynamic(blackbox_socket, msgpack_buf->data, msgpack_buf->size);
 }
 

@@ -203,11 +203,12 @@ static vec2_t step;
 
 static void tercom_u(float baro_u_pos, float elev)
 {
-   float spd_max = 1.5f;
+   float spd_max = 2.0f;
    float spd_p = 0.5;
-   float safety_delta = 7.0f;
+   float safety_delta = 6.0f;
    float safe_elev = safety_delta + elev;
    float err = baro_u_pos - safe_elev;
+   EVERY_N_TIMES(100, LOG(LL_INFO, "tercom_u err: %f", err));
    float spd = desired_speed(err, spd_p, spd_max);
    cm_u_set_spd(spd);
 }
@@ -395,15 +396,17 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
       case MAN_RELAXED:
       {
          set_att_angles(pitch, roll);
-         //cm_u_set_acc(sticks_gas_acc_func(gas_stick));
-         tercom_u(baro_u_pos, elev);
-         cm_u_a_max_set(sticks_gas_acc_func(gas_stick));
+         cm_u_set_acc(sticks_gas_acc_func(gas_stick));
+         //tercom_u(baro_u_pos, elev);
+         //set_vertical_spd_or_pos(gas_stick, ultra_u_pos, dt);
          break;
       }
 
       case MAN_NOVICE:
       {
          set_horizontal_spd_or_pos(pitch, roll, yaw, ne_gps_pos, ultra_u_pos);
+         //set_vertical_spd_or_pos(gas_stick, ultra_u_pos, dt);
+
          tercom_u(baro_u_pos, elev);
          cm_u_a_max_set(sticks_gas_acc_func(gas_stick));
          break;

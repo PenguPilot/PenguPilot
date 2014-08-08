@@ -34,7 +34,7 @@
 #include "../util/math/euler.h"
 
 
-#define BLACKBOX_ITEMS 57
+#define BLACKBOX_ITEMS 58
 
 
 extern char *blackbox_spec[BLACKBOX_ITEMS];
@@ -70,7 +70,8 @@ void blackbox_record(const float dt, /* sensor inputs ... */
                const float ultra_u_spd,
                const vec3_t *f_neu,
                const float decl,
-               const float elev);
+               const float elev,
+               const float thrust);
 
 
 #endif /* __BLACKBOX_H__ */

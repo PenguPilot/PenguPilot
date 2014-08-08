@@ -151,6 +151,7 @@ autopilot:
          yaw_kp: 0.6
          yaw_kii: 3.535664263437867
          yaw_ki: 0.4
+         yaw_kd: 0.001
          filt_fg: 10.0
          filt_d: 0.95
          jxx_jyy: 0.0097
