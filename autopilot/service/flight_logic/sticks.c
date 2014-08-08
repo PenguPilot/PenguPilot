@@ -216,9 +216,14 @@ float sticks_gas_speed_func(float stick)
 }
 
 
-float sticks_pitch_roll_gps_speed_func(float stick)
+void sticks_pitch_roll_gps_speed_func(vec2_t *speed, const vec2_t *sticks)
 {
-   return sqrt(sticks_horiz_speed_max()) * stick_expo(stick);
+   vec2_t expo_sticks;
+   vec2_set(&expo_sticks, stick_expo(sticks->ve[0]), stick_expo(sticks->ve[1]));
+   float norm = vec2_norm(&expo_sticks);
+   if (norm > 1.0f)
+      vec2_normalize(&expo_sticks, &expo_sticks);
+   vec2_scale(speed, &expo_sticks, sticks_horiz_speed_max());
 }
 
 

@@ -28,6 +28,8 @@
 #define __STICKS_H__
 
 
+#include "../util/math/vec2.h"
+
 #include <stdbool.h>
 
 #include <threadsafe_types.h>
@@ -47,7 +49,7 @@ float sticks_gas_acc_func(float stick);
 
 float sticks_gas_speed_func(float stick);
 
-float sticks_pitch_roll_gps_speed_func(float stick);
+void sticks_pitch_roll_gps_speed_func(vec2_t *speeds, const vec2_t *sticks);
 
 bool sticks_pitch_roll_in_deadzone(float pitch, float roll);
 
