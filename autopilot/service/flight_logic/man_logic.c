@@ -149,7 +149,7 @@ static void set_pitch_roll_rates(float pitch, float roll)
 }
 
 
-static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t *ne_gps_pos, float ultra_u_pos)
+static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t *ne_gps_pos, float ultra_u_pos, float horiz_speed)
 {
    if (!sticks_pitch_roll_in_deadzone(pitch, roll) || ultra_u_pos < 0.4)
    {
@@ -165,12 +165,12 @@ static void set_horizontal_spd_or_pos(float pitch, float roll, float yaw, vec2_t
       cm_att_set_gps_spd(&ne_spd_sp);
       horiz_pos_locked = false;
    }
-   else if (!horiz_pos_locked)
+   else if (!horiz_pos_locked && horiz_speed < 0.5f)
    {
       /* lock GPS position until next sticks activity: */
       navi_reset();
       horiz_pos_locked = true;
-      cm_att_set_gps_pos(ne_gps_pos);   
+      cm_att_set_gps_pos(ne_gps_pos);
    }
 }
 
@@ -228,6 +228,7 @@ static bool rtl_tercom(bool flying, bool gps_valid, vec2_t *ne_gps_pos, float ba
    /* keep yaw speed low: */
    cm_yaw_set_spd(0.0f);
    
+#if 0
    switch (rtl_state)
    {
       case RTL_INIT:
@@ -308,18 +309,28 @@ static bool rtl_tercom(bool flying, bool gps_valid, vec2_t *ne_gps_pos, float ba
          break;
    }
    
+  
    if (rtl_state != rtl_state_prev)
    {
       LOG(LL_DEBUG, "new state: %s", names[rtl_state]);
    }
    rtl_state_prev = rtl_state;
+   
+#endif
 
+   // auto-landing at current position
+   vec2_set(&rtl_horiz_sp, 0.0f, 0.0f);
+   cm_att_set_gps_spd(&rtl_horiz_sp);
+   cm_u_set_spd(-1.0); /* descent speed above 4 meters */
+   if (ultra_u_pos < 0.4f)
+      motors_off = true;
+ 
    return motors_off;
 }
 
 
-bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float channels[PP_MAX_CHANNELS],
-                  float yaw, vec2_t *ne_gps_pos, float baro_u_pos, float ultra_u_pos, float f_max, float mass, float dt, float elev)
+bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, const float channels[PP_MAX_CHANNELS],
+                  float yaw, vec2_t *ne_gps_pos, float baro_u_pos, float ultra_u_pos, float f_max, float mass, float dt, float elev, float horiz_speed)
 {
    if (always_hard_off)
    {
@@ -360,8 +371,8 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
 
    float yaw_stick = channels[CH_YAW];
    float gas_stick = channels[CH_GAS];
-   float sw_l = channels[CH_SWITCH_L];
-   float sw_r = channels[CH_SWITCH_R];
+   float sw_l = channels[CH_TWO_STATE];
+   float sw_r = channels[CH_THREE_STATE];
    bool gps_valid = (sensor_status & GPS_VALID) ? true : false;
 
    man_mode_t man_mode = channel_to_man_mode(sw_r);
@@ -407,11 +418,11 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
 
       case MAN_NOVICE:
       {
-         set_horizontal_spd_or_pos(pitch, roll, yaw, ne_gps_pos, ultra_u_pos);
-         //set_vertical_spd_or_pos(gas_stick, ultra_u_pos, dt);
+         set_horizontal_spd_or_pos(pitch, roll, yaw, ne_gps_pos, ultra_u_pos, horiz_speed);
+         set_vertical_spd_or_pos(gas_stick, ultra_u_pos, dt);
 
-         tercom_u(baro_u_pos, elev);
-         cm_u_a_max_set(sticks_gas_acc_func(gas_stick));
+         //tercom_u(baro_u_pos, elev);
+         //cm_u_a_max_set(sticks_gas_acc_func(gas_stick));
          break;
       }
 
@@ -421,8 +432,8 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float ch
 
    if (((sensor_status & RC_VALID) && sw_l > 0.5))
       *hard_off = true;
-
-   //cm_u_a_max_set(FLT_MAX); /* this limit applies only in auto mode */
+   
+   cm_u_a_max_set(1.0);
    return gas_stick > -0.8;
 }
 

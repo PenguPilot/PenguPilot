@@ -73,7 +73,7 @@ static void set_att_angles(float pitch, float roll)
 }
 
 
-bool auto_logic_run(bool *hard_off, bool is_full_auto, uint16_t sensor_status, bool flying, float channels[PP_MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos, float dt)
+bool auto_logic_run(bool *hard_off, bool is_full_auto, uint16_t sensor_status, bool flying, const float channels[PP_MAX_CHANNELS], float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos, float dt)
 { 
    /* set u position: */
    pthread_mutex_lock(&mutex);
@@ -96,7 +96,7 @@ bool auto_logic_run(bool *hard_off, bool is_full_auto, uint16_t sensor_status, b
    {
       if (sensor_status & RC_VALID)
       {
-         float sw_l = channels[CH_SWITCH_L];
+         float sw_l = channels[CH_TWO_STATE];
          float gas_stick = channels[CH_GAS];
          float pitch = channels[CH_PITCH];
          float roll = channels[CH_ROLL];

@@ -40,7 +40,6 @@
 #include "force_to_esc.h"
 #include "../sensors/i2cxl/i2cxl_reader.h"
 #include "../sensors/ms5611/ms5611_reader.h"
-#include "../sensors/util/rc_channels.h"
 #include "../actuators/afroi2c_pwms/afroi2c_pwms.h"
 #include "../util/logger/logger.h"
 #include "../util/math/quat.h"

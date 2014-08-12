@@ -67,8 +67,8 @@ aircomm:
 
 powerman:
    battery_cells: 4
-   battery_low_cell_voltage_idle: 3.5 # [V]
-   battery_low_cell_voltage_load: 3.3 # [V]
+   battery_low_cell_voltage_idle: 3.6 # [V]
+   battery_low_cell_voltage_load: 3.4 # [V]
    battery_current_treshold: 3.0 # [A]
    low_voltage_hysteresis: 10.0 # [s], battery needs to go below battery_low_cell_voltage for this time period in order to trigger a low power event
    battery_capacity: 3.0 # [Ah]
@@ -83,6 +83,32 @@ icarus:
 
 
 autopilot:
+
+   channels:
+      pitch:
+         index: -1
+         min: -1.0
+         max: 1.0
+      roll:
+         index: -1
+         min: -1.0
+         max: 1.0
+      yaw:
+         index: -1
+         min: -1.0
+         max: 1.0
+      gas:
+         index: -1
+         min: -1.0
+         max: 1.0
+      two_state:
+         index: -1
+         min: -1.0
+         max: 1.0
+      three_state:
+         index: -1
+         min: -1.0
+         max: 1.0
 
    logger:
       level: 3
@@ -124,8 +150,8 @@ autopilot:
    sticks:
       pitch_roll_speed_max: 180.0 # [deg/s]
       pitch_roll_angle_max: 35.0 # [deg]
-      vert_speed_max: 1.0
-      horiz_speed_max: 2.0 # maximal horizontal speed
+      vert_speed_max: 1.5
+      horiz_speed_max: 5.0 # maximal horizontal speed
       horiz_deadzone: 0.05 # deadzone for angle and gps control
       vert_deadzone: 0.15 # if magnitude of centered gas stick is lower than this value, altitude is locked
       yaw_speed_max: 90.0 # maximum yaw rotation speed [deg/s]
@@ -138,57 +164,57 @@ autopilot:
       process_noise: 1.0e-6
       baro_noise: 0.01
       ultra_noise: 0.01
-      gps_noise: 0.03
+      gps_noise: 0.01
       use_gps_speed: 0 # use gps speed to correct estimate?
 
    controllers:
 
       stabilizing: # basic stabilizing controller:
-         att_kd: 0.0373326973147051
-         att_ki: 2.9949718515596944
-         att_kii: 3.535664263437867
-         att_kp: 0.3635009762282838
-         yaw_kp: 0.6
-         yaw_kii: 3.535664263437867
-         yaw_ki: 0.4
-         yaw_kd: 0.001
+         att_kd: 0.03929356367277829
+         att_ki: 5.216018377845929
+         att_kii: 1.9043325795347907
+         att_kp: 0.36397715175895795
+         yaw_kd: 0.0009970913130018957
+         yaw_ki: 3.531770730332799
+         yaw_kii: 3.8199155415521995
+         yaw_kp: 0.35127751586656414
          filt_fg: 10.0
          filt_d: 0.95
          jxx_jyy: 0.0097
          jzz: 0.0057292965
-         tmc: 0.06
+         tmc: 0.03
       
       ne_speed: # north-east speed controller
-         p: 3.8
-         i: 2.5
-         i_max: 6.0
+         p: 2.581019276508608
+         i: 1.827463461175307
+         i_max: 10.0
          d: 0.0
          lpfg: 50.0
 
       attitude:
-         p: 6.0
-         i: 1.0
+         p: 6.226615273654109
+         i: 0.8956642009989297
          i_max: 10.0
-         d: 0.6
+         d: 0.5402391324294383
          pitch_bias: 0.0
          roll_bias: 0.0
-         angles_max: 60.0 # maximal angle allowed in attitude control
+         angles_max: 40.0 # maximal angle allowed in attitude control
    
       u_speed: # up speed controller (barometer)
-         i: 6.0
-         imax: 10.0
-         p: 4.0
+         i: 2.0
+         imax: 4.0
+         p: 7.0
       
       u_pos: # ups position controller (barometer, ultrasonic)
-         d: 20.0
-         i: 0.5
-         imax: 5.0
-         p: 30.0
+         d: 15.563081600990635
+         i: 15.563081600990635
+         imax: 20.0
+         p: 30.563081600990635
          lpfg: 15.0
 
       yaw: # yaw position controller
          pid_lim: 2.0
-         p: 10.0
+         p: 5.0
          d: 0.0
          i: 0.01
          i_max: 0.5
@@ -197,9 +223,9 @@ autopilot:
          speed_min: 0.5
          speed_std: 2.0
          speed_max: 3.5
-         sqrt_shift: 3.0
+         sqrt_shift: 4.0
          sqrt_scale: 0.25
-         square_shift: 0.5
+         square_shift: 0.2
          pos_i: 0.015
          pos_i_max: 5.0
          ortho_p: 0.0

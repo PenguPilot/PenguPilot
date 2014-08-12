@@ -157,6 +157,11 @@
    - aircomm_out: pub
    - opcd_ctrl: req
 
+- name: rc_cal
+  sockets:
+   - remote: sub
+   - opcd_ctrl: req
+
 - name: display
   sockets:
    - motors_spinning: sub

@@ -68,7 +68,7 @@ void flight_logic_init(void)
 bool flight_logic_run(bool *hard_off,
                       uint16_t sensor_status,
                       bool flying,
-                      float channels[PP_MAX_CHANNELS],
+                      const float channels[PP_MAX_CHANNELS],
                       float yaw,
                       vec2_t *ne_gps_pos,
                       float u_baro_pos,
@@ -76,14 +76,15 @@ bool flight_logic_run(bool *hard_off,
                       float f_max,
                       float mass,
                       float dt,
-                      float elev)
+                      float elev,
+                      float horiz_speed)
 
 {
    bool motors_enabled = false;
    switch (flight_mode)
    {
       case MODE_MANUAL:
-         motors_enabled = man_logic_run(hard_off, sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos, f_max, mass, dt, elev);
+         motors_enabled = man_logic_run(hard_off, sensor_status, flying, channels, yaw, ne_gps_pos, u_baro_pos, u_ultra_pos, f_max, mass, dt, elev, horiz_speed);
          break;
 
       case MODE_SAFE_AUTO:

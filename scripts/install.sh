@@ -42,4 +42,5 @@ sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/calibration/cal_finish.sh pp_cal_
 sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/motor_test.py pp_motor_test
 sudo ln -f -s $PENGUPILOT_PATH/scl/tools/scl_dump_msgpack.py pp_scl_dump_msgpack
 sudo ln -f -s $PENGUPILOT_PATH/scl/tools/scl_show_stats.py pp_scl_show_stats
+sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/rc_cal.py pp_rc_cal
 

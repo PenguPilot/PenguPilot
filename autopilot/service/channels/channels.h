@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- RC Channels Interface
+ Channels Mapping and Scaling Interface
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -24,41 +24,28 @@
  GNU General Public License for more details. */
 
 
-#ifndef __RC_CHANNELS_H__
-#define __RC_CHANNELS_H__
+#ifndef __CHANNELS_H__
+#define __CHANNELS_H__
 
 
 #include <stdint.h>
+#include <remote.h>
 
 
+#define PP_MAX_CHANNELS (6)
 
-#define PP_MAX_CHANNELS 6
-
-
-typedef enum
-{
-   CH_PITCH,
-   CH_ROLL,
-   CH_YAW,
-   CH_GAS,
-   CH_SWITCH_L,
-   CH_SWITCH_R
-}
-channel_t;
+#define CH_PITCH (0)
+#define CH_ROLL (1)
+#define CH_YAW (2)
+#define CH_GAS (3)
+#define CH_TWO_STATE (4)
+#define CH_THREE_STATE (5)
 
 
-typedef struct
-{
-   uint8_t *map;
-   float *scale;
-}
-rc_channels_t;
+int channels_init(void);
+
+void channels_update(float out[PP_MAX_CHANNELS], float in[MAX_CHANNELS]);
 
 
-void rc_channels_init(rc_channels_t *channels, uint8_t map[PP_MAX_CHANNELS], float scale[PP_MAX_CHANNELS]);
-
-float rc_channels_get(rc_channels_t *channels, float *raw_channels, channel_t channel);
-
-
-#endif /* __RC_CHANNELS__ */
+#endif /* __CHANNELS__ */
 

@@ -37,7 +37,6 @@
 #include <remote.h>
 
 #include "scl_rc.h"
-#include "../util/rc_channels.h"
 #include "../../util/logger/logger.h"
 
 
@@ -119,7 +118,7 @@ int scl_rc_init(void)
 }
 
 
-int scl_rc_read(float channels_out[PP_MAX_CHANNELS])
+int scl_rc_read(float channels_out[MAX_CHANNELS])
 {
    int ret_code = -ENODEV;
    pthread_mutex_lock(&mutex);
@@ -130,7 +129,7 @@ int scl_rc_read(float channels_out[PP_MAX_CHANNELS])
    }
    else
    {
-      memcpy(channels_out, channels, sizeof(float) * PP_MAX_CHANNELS);
+      memcpy(channels_out, channels, sizeof(float) * MAX_CHANNELS);
       ret_code = sig_valid ? 0 : -EAGAIN;
    }
    pthread_mutex_unlock(&mutex);
