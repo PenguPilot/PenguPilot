@@ -29,22 +29,15 @@
 #include "../sensors/scl_gps/scl_gps.h"
 #include "../sensors/scl_power/scl_power.h"
 #include "../sensors/scl_rc/scl_rc.h"
-#include "../sensors/util/rc_channels.h"
 #include "../util/logger/logger.h"
-
-
-/* pitch: 0, roll: 1, yaw: 3, gas: 2, switch left: 4, switch right: 5 */
-static uint8_t channel_mapping[PP_MAX_CHANNELS] =  {0, 1, 3, 2, 4, 5}; 
-static float channel_scale[PP_MAX_CHANNELS] =  {1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
-static rc_channels_t rc_channels;
+#include "../channels/channels.h"
 
 
 static int read_rc(float channels[PP_MAX_CHANNELS])
 {
-   float dsl_channels[PP_MAX_CHANNELS];
-   int ret = scl_rc_read(dsl_channels);
-   for (int c = 0; c < PP_MAX_CHANNELS; c++)
-      channels[c] = rc_channels_get(&rc_channels, dsl_channels, c);
+   float all_channels[MAX_CHANNELS];
+   int ret = scl_rc_read(all_channels);
+   channels_update(channels, all_channels);
    return ret;
 }
 
@@ -57,8 +50,10 @@ int generic_platform_init(platform_t *plat)
    THROW_ON_ERR(scl_power_init());
    plat->read_power = scl_power_read;
    
+   LOG(LL_INFO, "initializing remote control channel map/calibration");
+   THROW_ON_ERR(channels_init());
+   
    LOG(LL_INFO, "initializing remote control reader");
-   rc_channels_init(&rc_channels, channel_mapping, channel_scale);
    THROW_ON_ERR(scl_rc_init());
    plat->read_rc = read_rc;
  

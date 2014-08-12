@@ -102,10 +102,7 @@ f_local_t;
 
 static int marg_err = 0;
 static pos_in_t pos_in;
-static calibration_t rc_cal;
 static bool prev_flying = true;
-static float cal_channels_prev[PP_MAX_CHANNELS];
-static bool channels_prev_seen = false;
 static bool flying;
 
 void main_init(int argc, char *argv[])
@@ -224,8 +221,6 @@ void main_init(int argc, char *argv[])
    interval_init(&gyro_move_interval);
    gps_data_init(&gps_data);
 
-   cal_init(&rc_cal, 3, 500);
-
    tsfloat_t acc_fg;
    opcd_param_t params[] =
    {
@@ -335,13 +330,6 @@ void main_step(const float dt,
       pos_in.speed_e = gps_rel_data.speed_e;
       ONCE(gps_start_set(gps_data));
    }
-   else
-   {
-      pos_in.pos_n = 0.0f;
-      pos_in.pos_e = 0.0f;
-      pos_in.speed_n = 0.0f;
-      pos_in.speed_e = 0.0f;
-   }
 
    /* apply acc/mag calibration: */
    acc_mag_cal_apply(&cal_marg_data.acc, &cal_marg_data.mag);
@@ -349,40 +337,6 @@ void main_step(const float dt,
 
    /* apply current magnetometer compensation: */
    cmc_apply(&cal_marg_data.mag, current);
-
-  
-   /* compute channel calibration; safety code: */
-   float cal_channels[PP_MAX_CHANNELS];
-   memcpy(cal_channels, channels, sizeof(cal_channels));
-   if (sensor_status & RC_VALID)
-   {
-      /* apply calibration if remote control input is valid: */
-      float cal_data[3] = {channels[CH_PITCH], channels[CH_ROLL], channels[CH_YAW]};
-      cal_sample_apply(&rc_cal, cal_data);
-      cal_channels[CH_PITCH] = cal_data[0];
-      cal_channels[CH_ROLL] = cal_data[1];
-      cal_channels[CH_YAW] = cal_data[2];
-      
-      /* store channels state: */
-      memcpy(cal_channels_prev, cal_channels, sizeof(cal_channels_prev));
-      channels_prev_seen = true;
-   }
-   else
-   {
-      if (channels_prev_seen)
-      {
-         /* restore last valid channel states: */
-         memcpy(cal_channels, cal_channels_prev, sizeof(cal_channels_prev));   
-      }
-      else
-      {
-         /* imitate safe channel states: */
-         FOR_N(i, PP_MAX_CHANNELS)
-            cal_channels[i] = 0.0f;
-         if (!flying)
-            cal_channels[CH_GAS] = -1.0f;
-      }
-   }
 
    /* compute orientation estimate: */
    euler_t euler;
@@ -422,8 +376,8 @@ void main_step(const float dt,
 
    /* execute flight logic (sets cm_x parameters used below): */
    bool hard_off = false;
-   bool motors_enabled = flight_logic_run(&hard_off, sensor_status, flying, cal_channels, euler.yaw, &pos_est.ne_pos,
-                                          pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg, dt, elev);
+   bool motors_enabled = flight_logic_run(&hard_off, sensor_status, flying, channels, euler.yaw, &pos_est.ne_pos,
+                                          pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg, dt, elev, vec2_norm(&pos_est.ne_speed));
    
    /* execute up position/speed controller(s): */
    float a_u = -10.0f;

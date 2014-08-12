@@ -28,7 +28,7 @@
 #define __PLATFORM_H__
 
 #include "../sensors/util/gps_data.h"
-#include "../sensors/util/rc_channels.h"
+#include "../channels/channels.h"
 #include "../sensors/util/marg_data.h"
 #include "ac.h"
 

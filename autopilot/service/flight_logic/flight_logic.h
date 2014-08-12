@@ -30,7 +30,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "../sensors/util/rc_channels.h"
+#include "../channels/channels.h"
 #include "../util/math/vec2.h"
 
 
@@ -39,7 +39,7 @@ void flight_logic_init(void);
 bool flight_logic_run(bool *hard_off,
                       uint16_t sensor_status,
                       bool flying,
-                      float channels[PP_MAX_CHANNELS],
+                      const float channels[PP_MAX_CHANNELS],
                       float yaw,
                       vec2_t *ne_gps_pos,
                       float u_baro_pos,
@@ -47,7 +47,8 @@ bool flight_logic_run(bool *hard_off,
                       float f_max,
                       float mass,
                       float dt,
-                      float elev);
+                      float elev,
+                      float horiz_speed);
 
 
 #endif /* __FLIGHT_LOGIC_H__ */

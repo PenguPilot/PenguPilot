@@ -30,15 +30,15 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "../sensors/util/rc_channels.h"
+#include "../channels/channels.h"
 #include "../util/math/vec2.h"
 
 /* initialize manual flight logic */
 void man_logic_init(void);
 
 /* run manual flight logic */
-bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, float channels[PP_MAX_CHANNELS],
-                   float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos, float f_max, float mass, float dt, float elev);
+bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, const float channels[PP_MAX_CHANNELS],
+                   float yaw, vec2_t *ne_gps_pos, float u_baro_pos, float u_ultra_pos, float f_max, float mass, float dt, float elev, float horiz_speed);
 
 
 #endif /* __MAN_LOGIC_H__ */

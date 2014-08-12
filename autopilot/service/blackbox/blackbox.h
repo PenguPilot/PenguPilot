@@ -29,6 +29,8 @@
 #define __BLACKBOX_H__
 
 
+#include <remote.h>
+
 #include "../platform/platform.h"
 #include "../util/math/vec2.h"
 #include "../util/math/euler.h"
