@@ -31,7 +31,7 @@ The whole flight infrastructure is based on Linux (PREEMPT/PREEMPT_RT) user-spac
 **Currently, PenguPilot supports the following computer-on-modues**:
 
 - Gumstix Overo (custom Gentoo Linux)
-- Raspberry Pi (Respbian)
+- Raspberry Pi (Raspbian)
 - Odroid U3 (custom Gentoo Linux)
 
 What's different compared to other Approaches?
