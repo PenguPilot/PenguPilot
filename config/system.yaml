@@ -28,7 +28,6 @@
   sockets:
    - gps: sub
    - power: sub
-   - opcd_ctrl: req
    - gps: pub
    - sats: pub
 
@@ -48,13 +47,10 @@
 
 - name: gpsp
   sockets:
-   - opcd_ctrl: req
    - gps: pub
    - sats: pub
 
 - name: svctrl
-  sockets:
-   - opcd_ctrl: req
 
 - name: gps_test
   sockets:
@@ -67,7 +63,6 @@
 - name: twl4030_madc
   sockets:
    - power: pub
-   - opcd_ctrl: req
 
 - name: console_logger
   sockets:
@@ -76,18 +71,15 @@
 - name: remote
   sockets:
    - remote: pub
-   - opcd_ctrl: req
 
 - name: arduino
   sockets:
    - power: pub
    - remote: pub
-   - opcd_ctrl: req
 
 - name: ads1x15
   sockets:
    - power: pub
-   - opcd_ctrl: req
 
 - name: mission
   sockets:
@@ -122,12 +114,9 @@
    - power: sub
    - motors_spinning: pub
    - elev: sub
-   - opcd_ctrl: req
-   - opcd_event: sub
 
 - name: optimizer
   sockets:
-   - opcd_ctrl: req
    - blackbox: sub
 
 - name: pilot_shell
@@ -140,27 +129,22 @@
    - powerman_ctrl: rep
    - power: sub
    - powerman: pub
-   - opcd_ctrl: req
 
 - name: opcd
   sockets:
-   - opcd_ctrl: rep
    - opcd_event: pub
+   - opcd_ctrl: rep
 
 - name: opcd_shell
-  sockets:
-   - opcd_ctrl: req
 
 - name: aircomm
   sockets:
    - aircomm_in: sub
    - aircomm_out: pub
-   - opcd_ctrl: req
 
 - name: rc_cal
   sockets:
    - remote: sub
-   - opcd_ctrl: req
 
 - name: display
   sockets:

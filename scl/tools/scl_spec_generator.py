@@ -25,6 +25,7 @@
  GNU General Public License for more details. """
 
 
+import traceback
 import sys
 import yaml
 import zmq
@@ -88,7 +89,9 @@ try:
       try:
          sockets = comp['sockets']
       except:
-         raise AssertionError('component %s (%d) must contain a sockets field' % (comp_name, comp_count))
+         sockets = []
+      if comp_name != 'opcd':
+         sockets += [{'opcd_ctrl': 'req'}, {'opcd_event': 'sub'}]
       if not isinstance(sockets, list):
          raise AssertionError("socket structure of component %s (%d) must be a list, got: %s" % (comp_name, comp_count, comp.__class__))
       if len(sockets) == 0:
@@ -126,6 +129,6 @@ try:
    sys.stdout.write(yaml.dump(zmq_spec))
 
 except Exception, e:
-   sys.stderr.write(str(e) + '\n')
+   sys.stderr.write(traceback.format_exc())
    sys.exit(1)
 
