@@ -165,7 +165,7 @@ void blackbox_record(const float dt, /* sensor inputs ... */
    PACKF(ultra); PACKF(baro);
    PACKF(voltage);
    PACKF(current);
-   PACKFV(channels, MAX_CHANNELS);
+   PACKFV(channels, PP_MAX_CHANNELS);
    PACKI(sensor_status);
    PACKFV(ne_pos_err->ve, 2);
    PACKF(u_pos_err);
