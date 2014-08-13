@@ -79,7 +79,6 @@ class Config:
       get attribute using key
       '''
       try:
-         print key
          if key == 'platform':
             plat_file_path = user_data_dir + '/config/platform'
             try:
