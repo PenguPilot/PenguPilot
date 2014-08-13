@@ -83,7 +83,7 @@ class ChannelDetector:
 
 def remote_reader():
    try:
-      s = socket_map['remote']
+      s = socket_map['rc_raw']
       global channels, channels_valid
       while True:
          data = loads(s.recv())
@@ -93,7 +93,7 @@ def remote_reader():
       killed = True
 
 try:
-   socket_map = generate_map('rc_cal')
+   socket_map = generate_map('rc_cal_tool')
    t = Thread(target = remote_reader)
    t.daemon = True
    t.start()
@@ -135,7 +135,7 @@ try:
    print 'writing to opcd'
    opcd = OPCD_Interface(socket_map['opcd_ctrl'])
    for name, index, max, min in channel_map:
-      prefix = 'autopilot.channels.' + name + '.'
+      prefix = 'rc_cal.' + name + '.'
       opcd.set(prefix + 'index', index)
       opcd.set(prefix + 'max', max)
       opcd.set(prefix + 'min', min)
