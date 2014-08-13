@@ -33,6 +33,7 @@ from sys import stdin
 svs = load(stdin.read())
 
 print 'digraph {'
+print 'node [fontname = "Arial"];'
 print 'rankdir = BT;'
 for comp in svs:
    try:
