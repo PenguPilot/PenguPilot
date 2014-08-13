@@ -10,10 +10,11 @@
     |___________________________________________________|
 
 
-Remote Control Calibration
-==========================
+Remote Control Channel Permutation and Calibration Service
+==========================================================
 
 - subscribes to raw remote control channel inputs (socket: rc\_raw)
 - applies channel permutation and scaling based on calibration
 - publishes calibrated remote control channel inputs (socket: rc\_cal)
 
+For the calibration precedure itself, the interactive utility program "pp_rc_cal" is used.
