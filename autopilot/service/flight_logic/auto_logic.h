@@ -30,7 +30,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "../channels/channels.h"
+#include <rc_cal.h>
+
 #include "../util/math/vec2.h"
 
 

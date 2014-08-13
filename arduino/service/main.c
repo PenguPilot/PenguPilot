@@ -49,7 +49,7 @@ int _main(void)
 
    /* init scl and get sockets:: */
    THROW_ON_ERR(scl_init("arduino"));
-   void *rc_socket = scl_get_socket("remote");
+   void *rc_socket = scl_get_socket("rc_raw");
    THROW_IF(rc_socket == NULL, -ENODEV);
    void *power_socket = scl_get_socket("power");
    THROW_IF(power_socket == NULL, -ENODEV);

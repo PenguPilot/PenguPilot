@@ -28,7 +28,7 @@
 
 autopilot:
    binary: 'autopilot/service/autopilot'
-   depends: [gpsp, geomag, powerman, arduino, remote]
+   depends: [gpsp, geomag, powerman, arduino, rc_cal]
    priority: sys_high
 
 
@@ -42,6 +42,11 @@ icarus:
 arduino:
    binary: 'arduino/service/arduino'
    platforms: [exynos_quad]
+   priority: sys_medium
+
+rc_cal:
+   binary: 'rc_cal/service/rc_cal'
+   depends: [remote, arduino]
    priority: sys_medium
 
 ads1x15:
@@ -82,7 +87,7 @@ powerman:
 display:
   binary: 'display/service/display.py'
   platforms: [overo_quad]
-  depends: [powerman, geomag, elevmap, remote]
+  depends: [powerman, geomag, elevmap, rc_cal]
   priority: sys_low
 
 emerg_kill:

@@ -96,7 +96,7 @@ def cpu_reader():
 
 
 def remote_reader():
-   s = socket_map['remote']
+   s = socket_map['rc_cal']
    global channels
    rt = RateTimer(5)
    while True:

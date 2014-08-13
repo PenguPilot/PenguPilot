@@ -142,7 +142,7 @@ int _main(void)
   
    /* initialize SCL: */
    THROW_ON_ERR(scl_init("remote"));
-   rc_socket = scl_get_socket("remote");
+   rc_socket = scl_get_socket("rc_raw");
    THROW_IF(rc_socket == NULL, -EIO);
 
    /* init opcd and get plaform string: */

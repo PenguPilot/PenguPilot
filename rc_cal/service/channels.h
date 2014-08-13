@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Linear Function Implementation
+ Channels Mapping and Scaling Interface
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -24,19 +24,19 @@
  GNU General Public License for more details. */
 
 
-
-#include "linfunc.h"
-
-
-void linfunc_init_points(linfunc_t *func, vec2_t *v1, vec2_t *v2)
-{
-   func->m = (v2->y - v1->y) / (v2->x - v1->x);
-   func->n = v1->y - func->m * v1->x;
-}
+#ifndef __CHANNELS_H__
+#define __CHANNELS_H__
 
 
-float linfunc_calc(linfunc_t *func, float x)
-{
-   return func->m * x + func->n;   
-}
+#include <stdint.h>
+#include <remote.h>
+
+
+
+int channels_init(void);
+
+void channels_update(float out[PP_MAX_CHANNELS], float in[MAX_CHANNELS]);
+
+
+#endif /* __CHANNELS__ */
 

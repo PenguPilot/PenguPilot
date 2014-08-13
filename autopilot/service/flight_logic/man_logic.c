@@ -37,7 +37,6 @@
 #include "../sensors/util/calibration.h"
 #include "../util/logger/logger.h"
 #include "../util/math/conv.h"
-#include "../util/math/linfunc.h"
 #include "../platform/platform.h"
 #include "../control/position/navi.h"
 #include "../control/position/u_ctrl.h"

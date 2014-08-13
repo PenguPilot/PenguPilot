@@ -29,9 +29,9 @@
 #include <util.h>
 #include <threadsafe_types.h>
 #include <opcd_interface.h>
+#include <linfunc.h>
 
 #include "../util/math/conv.h"
-#include "../util/math/linfunc.h"
 #include "../util/logger/logger.h"
 
 #include "sticks.h"
@@ -128,20 +128,8 @@ float stick_dz(float g, float d)
    float dz_l = -d / 2.0;
    float dz_r = d / 2.0;
    linfunc_t left, right;
-   vec2_t pr1;
-   vec2_set(&pr1, 0.5f, 0.5f);
-   
-   vec2_t pr2;
-   vec2_set(&pr2, dz_r, 0.0f);
-   linfunc_init_points(&right, &pr1, &pr2);
-   
-   vec2_t pl1;
-   vec2_set(&pl1, -0.5f, -0.5f);
-   
-   vec2_t pl2;
-   vec2_set(&pl2, dz_l, 0.0f);
-   linfunc_init_points(&left, &pl1, &pl2);
-   
+   linfunc_init_points(&right, 0.5f, 0.5f, dz_r, 0.0f);
+   linfunc_init_points(&left, -0.5f, -0.5f, dz_l, 0.0f);
    if (g < dz_l)
    {
       return linfunc_calc(&left, g);

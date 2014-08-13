@@ -82,33 +82,34 @@ icarus:
       z_low: 0.5
 
 
-autopilot:
+rc_cal:
+   pitch:
+      index: -1
+      min: -1.0
+      max: 1.0
+   roll:
+      index: -1
+      min: -1.0
+      max: 1.0
+   yaw:
+      index: -1
+      min: -1.0
+      max: 1.0
+   gas:
+      index: -1
+      min: -1.0
+      max: 1.0
+   two_state:
+      index: -1
+      min: -1.0
+      max: 1.0
+   three_state:
+      index: -1
+      min: -1.0
+      max: 1.0
 
-   channels:
-      pitch:
-         index: -1
-         min: -1.0
-         max: 1.0
-      roll:
-         index: -1
-         min: -1.0
-         max: 1.0
-      yaw:
-         index: -1
-         min: -1.0
-         max: 1.0
-      gas:
-         index: -1
-         min: -1.0
-         max: 1.0
-      two_state:
-         index: -1
-         min: -1.0
-         max: 1.0
-      three_state:
-         index: -1
-         min: -1.0
-         max: 1.0
+
+autopilot:
 
    logger:
       level: 3
