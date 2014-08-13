@@ -147,6 +147,10 @@
    - rc_raw: sub
    - rc_cal: pub
 
+- name: rc_cal_tool
+  sockets:
+   - rc_raw: sub
+
 - name: display
   sockets:
    - motors_spinning: sub
