@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Remote Control Calibration
+ Remote Control Calibration Service Implementation
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
