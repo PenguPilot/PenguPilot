@@ -120,6 +120,11 @@ gpst_dir = 'gpstime/'
 gpst_bin = env.Program('gpstime/service/gpstime', collect_files(gpst_dir + 'service', re_cc), LIBS = common_libs + ['m', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
 Requires(gpst_bin, common_libs)
 
+# Remote Control Calibration:
+rc_cal_dir = 'rc_cal/'
+append_inc_lib(rc_cal_dir + 'shared')
+rc_cal_bin = env.Program('rc_cal/service/rc_cal', collect_files(rc_cal_dir + 'service', re_cc), LIBS = common_libs + ['m', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(rc_cal_bin, common_libs)
 
 # Arduino RC / Power Publisher:
 arduino_dir = 'arduino/'
@@ -152,7 +157,6 @@ Requires(remote_bin, common_libs + [remote_lib])
 sbus_print_test_src = remote_dir + 'tests/sbus_print_test.c'
 sbus_print_test_bin = env.Program(remote_dir + 'tests/sbus_print_test', sbus_print_test_src, LIBS = [remote_lib])
 Requires(sbus_print_test_bin, common_libs + [remote_lib])
-
 
 # HLFM:
 icarus_dir = 'icarus/'

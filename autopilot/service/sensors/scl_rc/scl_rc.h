@@ -28,12 +28,12 @@
 #define __SCL_RC_H__
 
 
-#include <remote.h>
+#include <rc_cal.h>
 
 
 int scl_rc_init(void);
 
-int scl_rc_read(float channels_out[MAX_CHANNELS]);
+int scl_rc_read(float channels_out[PP_MAX_CHANNELS]);
 
 
 #endif /* __SCL_RC_H__ */

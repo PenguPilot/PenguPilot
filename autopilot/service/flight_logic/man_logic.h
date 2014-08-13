@@ -30,11 +30,14 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "../channels/channels.h"
+#include <rc_cal.h>
+
 #include "../util/math/vec2.h"
+
 
 /* initialize manual flight logic */
 void man_logic_init(void);
+
 
 /* run manual flight logic */
 bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, const float channels[PP_MAX_CHANNELS],

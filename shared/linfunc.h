@@ -29,9 +29,6 @@
 #define __LINFUNC_H__
 
 
-#include "vec2.h"
-
-
 typedef struct
 {
    float m;
@@ -40,7 +37,7 @@ typedef struct
 linfunc_t;
 
 
-void linfunc_init_points(linfunc_t *func, vec2_t *v1, vec2_t *v2);
+void linfunc_init_points(linfunc_t *func, float x1, float y1, float x2, float y2);
 
 
 float linfunc_calc(linfunc_t *func, float x);

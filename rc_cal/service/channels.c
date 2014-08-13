@@ -30,10 +30,10 @@
 #include <threadsafe_types.h>
 #include <opcd_interface.h>
 #include <util.h>
-#include "../util/math/linfunc.h"
+#include <linfunc.h>
+#include <rc_cal.h>
 
 #include "channels.h"
-
 
 static linfunc_t pitch_linfunc;
 static tsint_t pitch_index;
@@ -92,36 +92,18 @@ int channels_init(void)
       {"three_state.min", &three_state_min},
       OPCD_PARAMS_END
    };
-   opcd_params_apply("channels.", params);
+   opcd_params_apply(".", params);
 
    /* check if channels are configured: */
    if (tsint_get(&pitch_index) == -1)
       return -1;
 
-   vec2_t v1, v2;
-   vec2_set(&v1, tsfloat_get(&pitch_min), 1.0f);
-   vec2_set(&v2, tsfloat_get(&pitch_max), -1.0f);
-   linfunc_init_points(&pitch_linfunc, &v1, &v2);
-
-   vec2_set(&v1, tsfloat_get(&roll_min), 1.0f);
-   vec2_set(&v2, tsfloat_get(&roll_max), -1.0f);
-   linfunc_init_points(&roll_linfunc, &v1, &v2);
-
-   vec2_set(&v1, tsfloat_get(&yaw_min), -1.0f);
-   vec2_set(&v2, tsfloat_get(&yaw_max), 1.0f);
-   linfunc_init_points(&yaw_linfunc, &v1, &v2);
-
-   vec2_set(&v1, tsfloat_get(&gas_min), -1.0f);
-   vec2_set(&v2, tsfloat_get(&gas_max), 1.0f);
-   linfunc_init_points(&gas_linfunc, &v1, &v2);
-
-   vec2_set(&v1, tsfloat_get(&two_state_min), 0.0f);
-   vec2_set(&v2, tsfloat_get(&two_state_max), 1.0f);
-   linfunc_init_points(&two_state_linfunc, &v1, &v2);
-   
-   vec2_set(&v1, tsfloat_get(&three_state_min), 0.0f);
-   vec2_set(&v2, tsfloat_get(&three_state_max), 1.0f);
-   linfunc_init_points(&three_state_linfunc, &v1, &v2);
+   linfunc_init_points(&pitch_linfunc, tsfloat_get(&pitch_min), 1.0f, tsfloat_get(&pitch_max), -1.0f);
+   linfunc_init_points(&roll_linfunc, tsfloat_get(&roll_min), 1.0f, tsfloat_get(&roll_max), -1.0f);
+   linfunc_init_points(&yaw_linfunc, tsfloat_get(&yaw_min), -1.0f, tsfloat_get(&yaw_max), 1.0f);
+   linfunc_init_points(&gas_linfunc, tsfloat_get(&gas_min), -1.0f, tsfloat_get(&gas_max), 1.0f);
+   linfunc_init_points(&two_state_linfunc, tsfloat_get(&two_state_min), 0.0f, tsfloat_get(&two_state_max), 1.0f);
+   linfunc_init_points(&three_state_linfunc, tsfloat_get(&three_state_min), 0.0f, tsfloat_get(&three_state_max), 1.0f);
    return 0;
 }
 

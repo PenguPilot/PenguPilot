@@ -251,8 +251,8 @@ try:
          else:
             ex_str = red('not running')
          try:
-            if len(config[name][1]) != 0:
-               ex_str += ', depends: ' + str(config[name][1])
+            if len(config[name][1]) > 0:
+               ex_str += '\t(deps: ' + ', '.join(config[name][1]) + ')'
          except:
             pass
          print '%s:%s %s' % (blue(name), skip, ex_str)

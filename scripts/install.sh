@@ -35,12 +35,11 @@ sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/shell/pilot_shell.sh pp_pilot_she
 sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/logger.py pp_logger
 sudo ln -f -s $PENGUPILOT_PATH/scripts/clear_pidfiles.sh pp_clear_pidfiles
 sudo ln -f -s $PENGUPILOT_PATH/svctrl/svctrl.py pp_svctrl
-sudo ln -f -s $PENGUPILOT_PATH/gps/tools/gps_debug.py pp_gps_debug
 sudo ln -f -s $PENGUPILOT_PATH/icarus/tools/icarus_shell.sh pp_icarus_shell
 sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/calibration/cal_start.sh pp_cal_start
 sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/calibration/cal_finish.sh pp_cal_finish
-sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/motor_test.py pp_motor_test
+sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/omap3_pwm_test.py pp_omap3_pwm_test
 sudo ln -f -s $PENGUPILOT_PATH/scl/tools/scl_dump_msgpack.py pp_scl_dump_msgpack
 sudo ln -f -s $PENGUPILOT_PATH/scl/tools/scl_show_stats.py pp_scl_show_stats
-sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/rc_cal.py pp_rc_cal
+sudo ln -f -s $PENGUPILOT_PATH/rc_cal/tools/rc_cal.py pp_rc_cal
 

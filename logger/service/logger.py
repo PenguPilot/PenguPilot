@@ -32,13 +32,16 @@ from misc import daemonize, user_data_dir
 
 
 def main(name):
-   socket = generate_map(name)['log_data']
+   map = generate_map(name)
+   socket_in = map['log_data']
+   socket_out = map['log_data_out']
    prefix = user_data_dir + sep + 'log' + sep
    try:
       new_file = prefix + 'session.log'
       f = open(new_file, "wb")
       while True:
-         data = socket.recv()
+         data = socket_in.recv()
+         socket_out.send(data)
          f.write(data)
          f.flush()
    finally:

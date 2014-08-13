@@ -27,8 +27,11 @@
 #ifndef __PLATFORM_H__
 #define __PLATFORM_H__
 
+
+#include <stdint.h>
+#include <rc_cal.h>
+
 #include "../sensors/util/gps_data.h"
-#include "../channels/channels.h"
 #include "../sensors/util/marg_data.h"
 #include "ac.h"
 
