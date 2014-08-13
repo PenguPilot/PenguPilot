@@ -76,6 +76,7 @@ Flight Infrastructure:
 - [powerman](powerman): power management and monitoring service; warns the user when the battery is low
 - [gpsp](gpsp): gps publisher, similar to gpsd but much simpler; uses [NMEALib](https://github.com/AHR-Project/nmealib)
 - [remote](remote): remote control channels publisher
+- [rc_cal](rc_cal): remote control channel permutation and calibration service
 - [geomag](geomag): subscribes to gps position and date/time; publishes magnetic declination in degrees
 - [elevmap](elevmap): subscribes to gps position; publishes SRTM3 elevation data
 - [ads1x15](ads1x15): Raspberry PI I2C ADC voltage/current publisher
