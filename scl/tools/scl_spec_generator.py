@@ -92,6 +92,8 @@ try:
          sockets = []
       if comp_name != 'opcd':
          sockets += [{'opcd_ctrl': 'req'}, {'opcd_event': 'sub'}]
+      if comp_name != 'logger':
+         sockets += [{'log_data': 'pub'}]
       if not isinstance(sockets, list):
          raise AssertionError("socket structure of component %s (%d) must be a list, got: %s" % (comp_name, comp_count, comp.__class__))
       if len(sockets) == 0:

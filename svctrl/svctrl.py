@@ -111,6 +111,10 @@ def read_config():
             raise
          except:
             depends = []
+         if name not in ['opcd', 'logger']:
+            depends += ['opcd']
+         if name != 'logger':
+            depends += ['logger']
          # insert the service:
          config[name] = (cmd, depends, prio)
          count += 1

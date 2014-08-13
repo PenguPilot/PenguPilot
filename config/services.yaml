@@ -28,7 +28,7 @@
 
 autopilot:
    binary: 'autopilot/service/autopilot'
-   depends: [opcd, gpsp, geomag, powerman, arduino, remote]
+   depends: [gpsp, geomag, powerman, arduino, remote]
    priority: sys_high
 
 
@@ -42,30 +42,25 @@ icarus:
 arduino:
    binary: 'arduino/service/arduino'
    platforms: [exynos_quad]
-   depends: [opcd]
    priority: sys_medium
 
 ads1x15:
    binary: 'ads1x15/service/ads1x15.py'
    platforms: [pi_quad]
-   depends: [opcd]
    priority: sys_medium
 
 gpsp:
    binary: 'gpsp/service/gpsp'
-   depends: [opcd]
    priority: sys_medium
 
 twl4030_madc:
    binary: 'twl4030_madc/service/twl4030_madc.py'
    platforms: [overo_quad]
-   depends: [opcd]
    priority: sys_medium
 
 remote:
    binary: 'remote/service/remote'
    platforms: [overo_quad, pi_quad]
-   depends: [opcd]
    priority: sys_medium
 
 
@@ -81,7 +76,7 @@ mavlink:
 
 powerman:
   binary: 'powerman/service/powerman.py'
-  depends: [opcd, arduino, twl4030_madc, ads1x15]
+  depends: [arduino, twl4030_madc, ads1x15]
   priority: sys_low
 
 display:
@@ -100,7 +95,6 @@ blackbox:
 
 aircomm:
   binary: 'aircomm/service/aircomm.py'
-  depends: [opcd]
   priority: sys_low
 
 heartbeat:
@@ -132,5 +126,9 @@ wifi_sensor:
 wifi_loc:
   binary: 'wifi_loc/service/wifi_loc.py'
   depends: [gpsp, wifi_sensor]
+  priority: app
+
+logger:
+  binary: 'logger/service/logger.py'
   priority: app
 

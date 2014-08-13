@@ -24,6 +24,10 @@
 # GNU General Public License for more details.
 
 
+- name: logger
+  sockets:
+   - log_data: sub
+
 - name: mavlink
   sockets:
    - gps: sub
@@ -65,8 +69,6 @@
    - power: pub
 
 - name: console_logger
-  sockets:
-   - ap_log: sub
 
 - name: remote
   sockets:
@@ -104,7 +106,6 @@
 
 - name: autopilot
   sockets:
-   - ap_log: pub
    - blackbox: pub
    - gps: sub
    - decl: sub

@@ -46,7 +46,7 @@ def logdata_2_string(log_data):
 
 
 if __name__ == '__main__':
-   socket = generate_map('console_logger')['ap_log']
+   socket = generate_map('console_logger')['log_data']
    while True:
       try:
          log_data = log_data_pb2.log_data()
