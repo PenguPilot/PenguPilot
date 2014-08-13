@@ -31,7 +31,7 @@ The whole flight infrastructure is based on Linux (PREEMPT/PREEMPT_RT) user-spac
 **Currently, PenguPilot supports the following computer-on-modues**:
 
 - Gumstix Overo (custom Gentoo Linux)
-- Raspberry Pi (Respbian)
+- Raspberry Pi (Raspbian)
 - Odroid U3 (custom Gentoo Linux)
 
 What's different compared to other Approaches?
@@ -106,7 +106,7 @@ Build System and Environment:
 
 Software Dependencies:
 - Gentoo: app-admin/sudo app-misc/screen dev-lang/python dev-lang/swig dev-libs/glib dev-libs/libyaml dev-libs/msgpack dev-libs/protobuf dev-libs/protobuf-c dev-python/imaging dev-python/msgpack dev-python/numpy dev-python/psutil dev-python/python-daemon dev-python/pyyaml dev-python/pyzmq dev-util/scons sys-power/cpufrequtils dev-python/pyproj sci-libs/gdal
-- Ubuntu: realpath scons swig protobuf-compiler python-protobuf libmsgpack-dev libprotobuf-dev python-yaml protobuf-c-compiler libprotobuf-c0-dev libzmq-dev python-zmq libyaml-dev libglib2.0-dev python-daemon libpython-dev
+- Ubuntu: realpath scons swig protobuf-compiler python-protobuf libmsgpack-dev libprotobuf-dev python-yaml protobuf-c-compiler libprotobuf-c0-dev libzmq-dev python-zmq libyaml-dev libglib2.0-dev python-daemon python-dev
 
 
 Service Dependencies
