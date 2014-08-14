@@ -26,7 +26,7 @@
 
 - name: logger
   sockets:
-   - log_data: sub
+   - log_data: pull
    - log_data_out: pub
 
 - name: mavlink

@@ -29,6 +29,7 @@
 from os import sep
 from scl import generate_map
 from misc import daemonize, user_data_dir
+from time import sleep
 
 
 def main(name):
@@ -36,20 +37,16 @@ def main(name):
    socket_in = map['log_data']
    socket_out = map['log_data_out']
    prefix = user_data_dir + sep + 'log' + sep
-   try:
-      new_file = prefix + 'session.log'
-      f = open(new_file, "wb")
-      while True:
+   new_file = prefix + 'session.log'
+   f = open(new_file, "wb")
+   while True:
+      try:
          data = socket_in.recv()
          socket_out.send(data)
          f.write(data)
          f.flush()
-   finally:
-      try:
-         f.close()
       except:
-         pass
-
+         sleep(1)
 
 daemonize('logger', main)
 

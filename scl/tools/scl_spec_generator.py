@@ -55,7 +55,7 @@ def parse_args():
 
 
 try:
-   socket_type_map = {'sub': zmq.SUB, 'pub': zmq.PUB, 'req': zmq.REQ, 'rep': zmq.REP}
+   socket_type_map = {'sub': zmq.SUB, 'pub': zmq.PUB, 'req': zmq.REQ, 'rep': zmq.REP, 'pull': zmq.PULL, 'push': zmq.PUSH}
    # regex definitions:
    ident_re = Regex('^[a-zA-Z_][a-zA-Z_0-9]*$') # identifier
    comp_socket_re = Regex('^[a-zA-Z_][a-zA-Z_0-9]*[.][a-zA-Z_][a-zA-Z_0-9]*$') # component.socket (2 identifiers)
@@ -93,7 +93,7 @@ try:
       if comp_name != 'opcd':
          sockets += [{'opcd_ctrl': 'req'}, {'opcd_event': 'sub'}]
       if comp_name != 'logger':
-         sockets += [{'log_data': 'pub'}]
+         sockets += [{'log_data': 'push'}]
       if not isinstance(sockets, list):
          raise AssertionError("socket structure of component %s (%d) must be a list, got: %s" % (comp_name, comp_count, comp.__class__))
       if len(sockets) == 0:
