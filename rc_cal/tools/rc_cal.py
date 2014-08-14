@@ -141,5 +141,5 @@ try:
       opcd.set(prefix + 'min', min)
    opcd.persist()
    print 'done'
-except Exception, e:
-   print 'canceled by user', e
+except Exception:
+   print 'canceled by user'
