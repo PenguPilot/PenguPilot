@@ -36,7 +36,7 @@ def logdata_2_string(log_data):
    LOG_LEVEL_NAMES = ["ERROR", " WARN", " INFO", "DEBUG"];
    level_name = LOG_LEVEL_NAMES[log_data[1]]
    file = basename(log_data[2])
-   return "[%s] %s: %s,%d: %s" % (level_name, log_data[0], file, log_data[3], log_data[4])
+   return "[%s] %s|%s,%d: %s" % (level_name, log_data[0], file, log_data[3], log_data[4])
 
 
 
