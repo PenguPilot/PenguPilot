@@ -90,6 +90,7 @@ Supporting Infrastructures:
 - [scl](scl): signaling and communication link (IPC framework), see [config/system.yaml](config/system.yaml)
 - [opcd](opcd): online parameter configuration daemon, see [config/params.yaml](config/params.yaml)
 - [svctrl](svctrl): service management and control utility, see [config/services.yaml](config/services.yaml)
+- [logger](logger): logging services and utility programs
 - [shared](shared): shared libraries shared among all PenguPilot components
 
 Additional Features:
