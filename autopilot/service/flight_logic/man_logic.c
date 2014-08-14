@@ -409,7 +409,6 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, const fl
       case MAN_RELAXED:
       {
          set_att_angles(pitch, roll);
-         EVERY_N_TIMES(10, printf("%f\n", sticks_gas_acc_func(gas_stick)));
          cm_u_set_acc(sticks_gas_acc_func(gas_stick));
          //tercom_u(baro_u_pos, elev);
          //set_vertical_spd_or_pos(gas_stick, ultra_u_pos, dt);
