@@ -49,12 +49,14 @@ void add_socket(char *name, char *path, int type)
    {
       case ZMQ_REP:
       case ZMQ_PUB:
+      case ZMQ_PULL:
          zmq_bind(socket, path);
          break;
 
       case ZMQ_SUB:
          zmq_setsockopt(socket, ZMQ_SUBSCRIBE, "", 0);
 
+      case ZMQ_PUSH:
       case ZMQ_REQ:
          zmq_connect(socket, path);
    }
