@@ -11,7 +11,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Logger Service
+ File Logger Service
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -42,5 +42,5 @@ def main(name):
       f.write(data)
       f.flush()
 
-daemonize('logger', main)
+daemonize('file_logger', main)
 
