@@ -30,7 +30,6 @@
 
 
 import os, yaml, zmq, subprocess
-from time import sleep
 
 class ZSEx(Exception):
    """

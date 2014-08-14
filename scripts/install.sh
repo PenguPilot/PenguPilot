@@ -32,7 +32,6 @@ sudo ln -f -s $PENGUPILOT_PATH/blackbox/tools/compare_msgpack.py pp_compare_msgp
 sudo ln -f -s $PENGUPILOT_PATH/opcd/tools/opcd_shell.sh pp_opcd_shell
 sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/replay.py pp_replay
 sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/shell/pilot_shell.sh pp_pilot_shell
-sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/logger.py pp_logger
 sudo ln -f -s $PENGUPILOT_PATH/scripts/clear_pidfiles.sh pp_clear_pidfiles
 sudo ln -f -s $PENGUPILOT_PATH/svctrl/svctrl.py pp_svctrl
 sudo ln -f -s $PENGUPILOT_PATH/icarus/tools/icarus_shell.sh pp_icarus_shell
@@ -42,4 +41,5 @@ sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/omap3_pwm_test.py pp_omap3_pwm_te
 sudo ln -f -s $PENGUPILOT_PATH/scl/tools/scl_dump_msgpack.py pp_scl_dump_msgpack
 sudo ln -f -s $PENGUPILOT_PATH/scl/tools/scl_show_stats.py pp_scl_show_stats
 sudo ln -f -s $PENGUPILOT_PATH/rc_cal/tools/rc_cal.py pp_rc_cal
+sudo ln -f -s $PENGUPILOT_PATH/rc_cal/tools/rc_cal_dump.py pp_rc_cal_dump
 

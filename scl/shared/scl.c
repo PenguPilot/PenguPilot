@@ -158,8 +158,6 @@ int scl_init(char *comp_name)
       return -3;   
    }
 
-   sleep(1); /* give scl some time to establish
-                a link between publisher and subscriber */
    return 0;
 }
 

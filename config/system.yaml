@@ -151,6 +151,10 @@
   sockets:
    - rc_raw: sub
 
+- name: rc_cal_dump
+  sockets:
+   - rc_cal: sub
+
 - name: display
   sockets:
    - motors_spinning: sub
