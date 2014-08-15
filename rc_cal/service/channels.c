@@ -98,8 +98,8 @@ int channels_init(void)
    if (tsint_get(&pitch_index) == -1)
       return -1;
 
-   linfunc_init_points(&pitch_linfunc, tsfloat_get(&pitch_min), 1.0f, tsfloat_get(&pitch_max), -1.0f);
-   linfunc_init_points(&roll_linfunc, tsfloat_get(&roll_min), 1.0f, tsfloat_get(&roll_max), -1.0f);
+   linfunc_init_points(&pitch_linfunc, tsfloat_get(&pitch_min), -1.0f, tsfloat_get(&pitch_max), 1.0f);
+   linfunc_init_points(&roll_linfunc, tsfloat_get(&roll_min), -1.0f, tsfloat_get(&roll_max), 1.0f);
    linfunc_init_points(&yaw_linfunc, tsfloat_get(&yaw_min), -1.0f, tsfloat_get(&yaw_max), 1.0f);
    linfunc_init_points(&gas_linfunc, tsfloat_get(&gas_min), -1.0f, tsfloat_get(&gas_max), 1.0f);
    linfunc_init_points(&two_state_linfunc, tsfloat_get(&two_state_min), 0.0f, tsfloat_get(&two_state_max), 1.0f);
