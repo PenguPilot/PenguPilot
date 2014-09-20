@@ -11,10 +11,7 @@
   
  GPS Time Zone and Data/Time Setting Service
 
- Note: This service will terminate after receiving valid GPS information
-       and setting the time zone and the system date/time.
-
- Daylight savings time offsets are computed implicitly by the operating system.
+ Daylight savings time offsets are computed by the operating system.
 
  Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
 
@@ -66,23 +63,35 @@ static void linux_sys_set_timezone(float lat_dest, float lon_dest)
 
 
 bool running = true;
+static msgpack_sbuffer *msgpack_buf = NULL;
+static msgpack_packer *pk = NULL;
 
 
 int _main(void)
 {
    THROW_BEGIN()
+   
+   /* init msgpack buffer: */
+   ASSERT_NULL(msgpack_buf);
+   msgpack_buf = msgpack_sbuffer_new();
+   ASSERT_NOT_NULL(msgpack_buf);
+   ASSERT_NULL(pk);
+   pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
 
    /* init scl and get sockets:: */
    THROW_ON_ERR(scl_init("gpstime"));
-   void *scl_socket = scl_get_socket("gps");
-   THROW_IF(scl_socket == NULL, -ENODEV);
+   void *gps_socket = scl_get_socket("gps");
+   THROW_IF(gps_socket == NULL, -ENODEV);
+   void *ts_socket = scl_get_socket("time_set");
+   THROW_IF(ts_socket == NULL, -ENODEV);
    sleep(5);
+   bool set = false;
 
    while (running)
    {
       char buffer[128];
-      int ret = scl_recv_static(scl_socket, buffer, sizeof(buffer));
-      if (ret > 0)
+      int ret = scl_recv_static(gps_socket, buffer, sizeof(buffer));
+      if (ret > 0 && !set)
       {
          msgpack_unpacked msg;
          msgpack_unpacked_init(&msg);
@@ -102,11 +111,18 @@ int _main(void)
                linux_sys_set_timezone(lat, lon);
                sprintf(cmd, "date -u -s \"%s\"", time_buf);
                if (system(cmd)){};
-               break;
+               set = true;
             }
          }
          msgpack_unpacked_destroy(&msg);
       }
+
+      msgpack_sbuffer_clear(msgpack_buf);
+      if (set)
+         msgpack_pack_true(pk);
+      else
+         msgpack_pack_false(pk);
+      scl_copy_send_dynamic(ts_socket, msgpack_buf->data, msgpack_buf->size);
    }
    THROW_END();
 }

@@ -119,7 +119,7 @@ common_libs = opcd_lib + opcd_pb_lib + scl_lib + shared_lib
 append_inc_lib('gpsp/service/nmealib')
 gpsp_dir = 'gpsp/'
 append_inc_lib(gpsp_dir + 'shared')
-gpsp_bin = env.Program('gpsp/service/gpsp', collect_files(gpsp_dir + 'service', re_cc), LIBS = common_libs + ['m', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+gpsp_bin = env.Program('gpsp/service/gpsp', collect_files(gpsp_dir + 'service', re_cc), LIBS = common_libs + ['rt', 'm', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
 Requires(gpsp_bin, common_libs)
 
 # GPS Time:

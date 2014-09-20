@@ -142,3 +142,8 @@ file_logger:
   depends: [log_proxy]
   priority: app
 
+gps_logger:
+  binary: 'logger/service/gps_logger.py'
+  depends: [gpstime]
+  priority: app
+
