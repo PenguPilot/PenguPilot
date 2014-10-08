@@ -13,7 +13,7 @@
  Inspired by: http://www.netzmafia.de/skripten/unix/linux-daemon-howto.html
  Most of the code has been hacked by Devin Watson, thanks!
  
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by

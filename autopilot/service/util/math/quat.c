@@ -11,7 +11,7 @@
   
  Quaternion Implementation
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
  Most of the code was borrowed from the Internet
 
  This program is free software; you can redistribute it and/or modify

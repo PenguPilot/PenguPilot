@@ -16,8 +16,8 @@
  | 1 dt | * | p | + | 0.5 * dt ^ 2 | * | a | = | p |
  | 0  1 | * | v |   |     dt       |   | v |
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
- Copyright (C) 2013 Jan Roemisch, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2013 Jan Roemisch, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
