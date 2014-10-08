@@ -11,7 +11,7 @@
 
  Thread Utils Implementation
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
  Most of the code is taken from: http://linux.die.net/man/3/pthread_getschedparam
 
  This program is free software; you can redistribute it and/or modify
