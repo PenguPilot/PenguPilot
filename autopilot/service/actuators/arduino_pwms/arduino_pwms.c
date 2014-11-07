@@ -49,7 +49,7 @@ int arduino_pwms_init(void)
    THROW_BEGIN();
    opcd_param_get("exynos_quad.arduino_serial.path", &dev_path);
    opcd_param_get("exynos_quad.arduino_serial.speed", &dev_speed);
-   THROW_ON_ERR(serial_open(&port, dev_path, dev_speed, O_WRONLY));
+   THROW_ON_ERR(serial_open(&port, dev_path, dev_speed, O_WRONLY, 0));
    THROW_END();
 }
 

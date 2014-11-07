@@ -33,7 +33,7 @@ re_cc = re.compile('.*\.(c|cpp)$')
 re_pb = re.compile('.*\.proto$')
 
 def set_compiler_dependent_cflags():
-   cflags = '-D_GNU_SOURCE -pipe -fomit-frame-pointer -std=c99 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-unused-but-set-variable '
+   cflags = '-D_GNU_SOURCE -pipe -fomit-frame-pointer -std=c99 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-unused-but-set-variable -Wno-error=unused-result'
    all_info = file('/proc/cpuinfo').read()
    board = 'None'
    for line in all_info.split('\n'):
@@ -104,7 +104,6 @@ append_inc_lib(shared_dir)
 logger_dir = 'logger/'
 logger_shared_dir = logger_dir + 'shared/'
 logger_lib = env.Library(logger_shared_dir + 'logger', collect_files(logger_shared_dir, re_cc))
-logger_sh_lib = env.SharedLibrary(logger_shared_dir + 'logger', collect_files(logger_shared_dir, re_cc))
 append_inc_lib(logger_shared_dir)
 
 # OPCD:
@@ -139,15 +138,23 @@ arduino_bin = env.Program('arduino/service/arduino', collect_files(arduino_dir +
 Requires(arduino_bin, common_libs)
 
 # Autopilot:
+append_inc_lib('autopilot/service/control/util/R2014a/simulink/include')
+append_inc_lib('autopilot/service/control/speed/PIID_Controller_RTW')
+append_inc_lib('autopilot/service/control/speed/Hinf_Controller_RTW')
+append_inc_lib('autopilot/service/control/util/R2014a/rtw/c/src')
 ap_dir = 'autopilot/'
 ap_pb_dir = ap_dir + 'shared/'
 ap_src = collect_files(ap_dir + 'service', re_cc)
 ap_pb_lib = make_proto_lib(ap_pb_dir, 'autopilot_pb')
-ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = common_libs + [ap_pb_lib + logger_sh_lib] + ['m', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
+ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = common_libs + [ap_pb_lib + logger_lib] + ['m', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
 
 # Display:
 display_src = map(lambda x: 'display/shared/' + x, ['pyssd1306.c', 'pyssd1306.i', 'ssd1306.c']) + ['shared/i2c/i2c.c']
 env.SharedLibrary('display/shared/_pyssd1306.so', display_src)
+
+# perialport:
+serialport_src = map(lambda x: 'shared/' + x, ['serial.c', 'serialport.i'])
+env.SharedLibrary('shared/_serialport.so', serialport_src)
 
 # Remote Control Service:
 # Library:
@@ -162,7 +169,7 @@ remote_bin = env.Program(remote_dir + 'service/remote', remote_src, LIBS = ['m',
 Requires(remote_bin, common_libs + [remote_lib])
 # Tests:
 sbus_print_test_src = remote_dir + 'tests/sbus_print_test.c'
-sbus_print_test_bin = env.Program(remote_dir + 'tests/sbus_print_test', sbus_print_test_src, LIBS = [remote_lib])
+sbus_print_test_bin = env.Program(remote_dir + 'tests/sbus_print_test', sbus_print_test_src, LIBS = common_libs + [remote_lib])
 Requires(sbus_print_test_bin, common_libs + [remote_lib])
 
 # HLFM:

@@ -117,6 +117,10 @@ elevmap:
   depends: [gpsp]
   priority: sys_low
 
+teensy_taranis:
+  binary: 'teensy_taranis/service/teensy_taranis.py'
+  priority: sys_low
+
 # application-level services:
 
 gpstime:

@@ -38,12 +38,12 @@ def optimize(rate, samples, prefix, names, mse_indices):
    gates = generate_map('optimizer')
    opcd = OPCD_Interface(gates['opcd_ctrl'])
    bb = gates['blackbox']
-   print 'starting optimizer'
    vec_best = [ opcd.get(prefix + n) for n in names]
    vec = vec_best
    mse_min = sys.float_info.max
+   best_log = []
    try:
-      while True:
+      for _ in range(5):
          vec = map(lambda x: x * uniform(1.0 - rate, 1.0 + rate), vec)
          # send new params to opcd:
          for i, n in zip(range(len(names)), names):
@@ -56,9 +56,8 @@ def optimize(rate, samples, prefix, names, mse_indices):
                mse += array[i] ** 2
          mse /= samples
          # evaluate mse:
-         print 'fitness:', vec, mse
          if mse < mse_min:
-            print 'new best fitness'
+            best_log.append(mse)
             opcd.persist()
             mse_min = mse
             vec_best = copy(vec)
@@ -69,3 +68,4 @@ def optimize(rate, samples, prefix, names, mse_indices):
    except:
       for i, n in zip(range(len(names)), names):
          opcd.set(prefix + n, vec_best[i])
+   return best_log

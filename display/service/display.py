@@ -271,7 +271,7 @@ def draw_remote(draw):
    else:
       draw.text((15, 0), 'RC signal: invalid', WHITE, font = font)
    for i in range(6):
-      bar(draw, 0, 17 + i * 8, 127, 6, channels[1 + i] + 0.5)
+      bar(draw, 0, 17 + i * 8, 127, 6, channels[1 + i] / 2.0 + 0.5)
 
 
 def circle(draw, x, y, rad, i, o):
