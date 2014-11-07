@@ -8,11 +8,10 @@
  |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
-  
- S.Bus Serial Port Implementation
- NOTE: requires logic inverter on UART receiver line
+ 
+ Serial Port Interface for SWIG
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon,  Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -25,15 +24,12 @@
  GNU General Public License for more details. */
 
 
+%feature("autodoc", "1");
 
-#ifndef __SBUS_SERIAL_H__
-#define __SBUS_SERIAL_H__
+%module(docstring="Serial Interface") serialport
+%{
+   #include "serial.h"
+%}
 
-
-int sbus_serial_open(const char *device);
-
-int sbus_serial_read(int fd);
-
-
-#endif /* __SBUS_SERIAL_H__ */
-
+%include "stdint.i"
+%include "serial.h"

@@ -8,6 +8,7 @@
 *_pb2.py
 *.pb-c.c
 *.pb-c.h
+shared/serialport.py
 gpsp/service/gpsp
 gpstime/service/gpstime
 autopilot/service/autopilot

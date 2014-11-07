@@ -11,7 +11,7 @@
   
  Quaternion Implementation
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
  Most of the code was borrowed from the Internet
 
  This program is free software; you can redistribute it and/or modify
@@ -107,6 +107,14 @@ void quat_to_euler(euler_t *euler, const quat_t *quat)
    euler->yaw = norm_angle_0_2pi(atan2f(2.f * (x * y + z * w), xx - yy - zz + ww));
    euler->pitch = asinf(-2.f * (x * z - y * w));
    euler->roll = atan2f(2.f * (y * z + x * w), -xx - yy + zz + ww);
+ 
+   /* fix for new AHRS code: */
+   euler->pitch *= -1.0f;
+   euler->yaw *= -1.0f;
+   if (euler->roll < 0)
+      euler->roll += M_PI;
+   else
+      euler->roll -= M_PI;
 }
 
 
