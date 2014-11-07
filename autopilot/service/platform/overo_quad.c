@@ -126,7 +126,7 @@ int overo_quad_init(platform_t *plat, int override_hw)
    
   
    plat->max_thrust_n = 40.0f;
-   plat->mass_kg = 1.3f;
+   plat->mass_kg = 1.0f;
    plat->n_motors = N_MOTORS;
 
    LOG(LL_INFO, "initializing inverse coupling matrix");

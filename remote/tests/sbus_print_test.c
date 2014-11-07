@@ -28,7 +28,7 @@
 
 
 #include "../shared/sbus_parser.h"
-#include "../shared/sbus_serial.h"
+#include <serial.h>
 
 
 int main(void)
@@ -36,8 +36,8 @@ int main(void)
    THROW_BEGIN();
 
    /* open serial port: */
-   int fd = sbus_serial_open("/dev/ttyO0");
-   THROW_IF(fd < 0, -ENODEV);
+   serialport_t port;
+   THROW_ON_ERR(serial_open(&port, "/dev/ttyO0", 100000, O_RDONLY, CSTOPB));
    
    /* init parser: */
    sbus_parser_t parser;
@@ -45,7 +45,7 @@ int main(void)
 
    for (;;)
    {
-      int b = sbus_serial_read(fd);
+      int b = serial_read_char(&port);
       if (sbus_parser_process(&parser, b))
          printf("%s | %.1f %.1f %.1f %.1f\n", parser.valid ? "valid" : "invalid", parser.channels[0], parser.channels[1], parser.channels[2], parser.channels[3]);
    }

@@ -25,7 +25,6 @@
 
 
 
-#include <serial.h>
 #include <simple_thread.h>
 #include <threadsafe_types.h>
 

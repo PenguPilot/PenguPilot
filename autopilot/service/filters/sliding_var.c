@@ -53,6 +53,6 @@ float sliding_var_calc(sliding_var_t *sliding_var, float val)
    sliding_var->square_sum = sliding_var->square_sum - last + square_diff;
    sliding_var->hist[sliding_var->pos] = square_diff;
    sliding_var->pos = next_pos;
-   return sliding_var->square_sum / (sliding_var->wnd_size - 2);
+   return sliding_var->square_sum / ((float)sliding_var->wnd_size - 2.0f);
 }
 

@@ -43,7 +43,8 @@ bool sbus_parser_process(sbus_parser_t *parser, uint8_t c)
    if (c == 0x0F && parser->zero_char_seen)
       parser->frame_idx = 0;
    
-   parser->buffer[parser->frame_idx++] = c;
+   if (parser->frame_idx < sizeof(parser->buffer))
+      parser->buffer[parser->frame_idx++] = c;
 	
    if (c == 0)
       parser->zero_char_seen = true;

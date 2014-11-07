@@ -26,7 +26,7 @@
 
 
 #include <fcntl.h>
-#include <termios.h>
+#include <linux/termios.h>
 
 
 #ifndef __SERIAL_H__
@@ -35,16 +35,13 @@
 
 typedef struct
 {
-   const char *path;
+   char *path;
    int handle;
-   struct termios orig_options;
 }
 serialport_t;
 
 
-int serial_open(serialport_t *port, const char *path, int baudrate, int rw_mode);
-
-int serial_read_line(char buffer[256], const serialport_t *port);
+int serial_open(serialport_t *port, char *path, int baudrate, int rw_mode, int flags);
 
 int serial_read_char(const serialport_t *port);
 
@@ -52,10 +49,10 @@ int serial_read_buffer(char *buffer, int buf_size, const serialport_t *port);
 
 int serial_write(const serialport_t *port, const char *buffer, unsigned int len);
 
-int serial_write_line(const serialport_t *port, const char *buffer);
+int serial_write_str(const serialport_t *port, const char *str);
 
 int serial_close(serialport_t *port);
 
 
-#endif /* COCO_SERIAL_H */
+#endif /* __SERIAL_H__ */
 

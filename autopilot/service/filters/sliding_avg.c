@@ -36,16 +36,14 @@ void sliding_avg_init(sliding_avg_t *sliding_avg, size_t wnd_size, float init)
    ASSERT_NOT_NULL(sliding_avg->hist);
    sliding_avg->sum = init * wnd_size;
    FOR_N(i, sliding_avg->wnd_size)
-   {
       sliding_avg->hist[i] = init;
-   }
    sliding_avg->pos = 0;
 }
 
 
 float sliding_avg_val(sliding_avg_t *sliding_avg)
 {
-   return sliding_avg->sum / (sliding_avg->wnd_size - 1);   
+   return sliding_avg->sum / (float)(sliding_avg->wnd_size - 1);   
 }
 
 

@@ -105,7 +105,7 @@ int main_serial(void)
    opcd_param_get(buffer_speed, &dev_speed);
 
    serialport_t port;
-   THROW_ON_ERR(serial_open(&port, dev_path, dev_speed, O_RDONLY));
+   THROW_ON_ERR(serial_open(&port, dev_path, dev_speed, O_RDONLY, 0));
 
    nmeaPARSER parser;
    nmea_parser_init(&parser);

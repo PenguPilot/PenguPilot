@@ -74,7 +74,7 @@ int _main(void)
    
    /* opern serial port: */
    serialport_t port;
-   THROW_ON_ERR(serial_open(&port, dev_path, tsint_get(&dev_speed), O_RDONLY));
+   THROW_ON_ERR(serial_open(&port, dev_path, tsint_get(&dev_speed), O_RDONLY, 0));
 
    uint16_t channels_raw[PPM_CHAN_MAX];
    uint32_t voltage_raw, current_raw;

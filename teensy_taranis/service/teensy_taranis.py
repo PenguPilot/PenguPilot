@@ -11,7 +11,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Elevation Map Service
+ OLED Display Showing Various Information
 
  Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -26,28 +26,61 @@
  GNU General Public License for more details. """
 
 
+from time import sleep, time
+from threading import Thread
 from scl import generate_map
 from misc import daemonize, RateTimer
+from msgpack import loads
 from gps_msgpack import *
-from msgpack import loads, dumps
-from srtm import SrtmElevMap
+from serialport import serialport_t, serial_open, serial_write_str
+import os
+
+
+socket_map = None
+
+
+def gps_reader():
+   global gps
+   socket = socket_map['gps']
+   while True:
+      raw = socket.recv()
+      gps = loads(raw)
+
+
+def pm_reader():
+   s = socket_map['power']
+   global voltage, current
+   while True:
+      raw = s.recv()
+      voltage, current = loads(raw)
 
 
 def main(name):
-   elev_map = SrtmElevMap()
+   global socket_map
    socket_map = generate_map(name)
-   gps_socket = socket_map['gps']
-   elev_socket = socket_map['elev']
-   rt = RateTimer(1.0)
+
+   t2 = Thread(target = pm_reader)
+   t2.daemon = True
+   t2.start()
+
+   t3 = Thread(target = gps_reader)
+   t3.daemon = True
+   t3.start()
+   
+   ser = serialport_t()
+   CSTOPB = 0000100
+   serial_open(ser, "/dev/ttyO0", 100000, os.O_WRONLY, CSTOPB)
    while True:
-      raw = gps_socket.recv()
-      if rt.expired():
-         try:
-            gps = loads(gps_socket.recv())
-            elev = elev_map.lookup((gps[LON], gps[LAT]))
-            elev_socket.send(dumps([elev]))
-         except:
-            pass
+      try:
+         serial_write_str(ser, "H %d %d\n" % (int(current * 100), int(voltage * 100)))
+         if fix(gps) >= 2:
+            serial_write_str(ser, "G2 %d %d %d\n" % (int(gps[LAT] * 10000000.0), int(gps[LON] * 10000000.0), int(gps[SPEED] * 10.0)))
+         if fix(gps) == 3:
+            serial_write_str(ser, "G3 %d %d\n" % (int(gps[ALT] * 1000), 0))
+      except:
+         pass
+      sleep(0.1)
 
+#main('teensy_taranis')
+daemonize('teensy_taranis', main)
 
-daemonize('elevmap', main)
