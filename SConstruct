@@ -138,10 +138,6 @@ arduino_bin = env.Program('arduino/service/arduino', collect_files(arduino_dir +
 Requires(arduino_bin, common_libs)
 
 # Autopilot:
-append_inc_lib('autopilot/service/control/util/R2014a/simulink/include')
-append_inc_lib('autopilot/service/control/speed/PIID_Controller_RTW')
-append_inc_lib('autopilot/service/control/speed/Hinf_Controller_RTW')
-append_inc_lib('autopilot/service/control/util/R2014a/rtw/c/src')
 ap_dir = 'autopilot/'
 ap_pb_dir = ap_dir + 'shared/'
 ap_src = collect_files(ap_dir + 'service', re_cc)
