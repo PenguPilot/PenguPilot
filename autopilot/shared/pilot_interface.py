@@ -12,7 +12,7 @@
   
  AutoPilot Protocol Interface
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
  Inspired by the PsychoPy library Copyright (C) 2009 Jonathan Peirce
 
  This program is free software; you can redistribute it and/or modify

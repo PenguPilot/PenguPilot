@@ -11,7 +11,7 @@
 #
 # System Parameters Configuration File
 #
-# Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+# Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -82,37 +82,39 @@ icarus:
       z_low: 0.5
 
 
+rc_cal:
+   pitch:
+      index: -1
+      min: -1.0
+      max: 1.0
+   roll:
+      index: -1
+      min: -1.0
+      max: 1.0
+   yaw:
+      index: -1
+      min: -1.0
+      max: 1.0
+   gas:
+      index: -1
+      min: -1.0
+      max: 1.0
+   two_state:
+      index: -1
+      min: -1.0
+      max: 1.0
+   three_state:
+      index: -1
+      min: -1.0
+      max: 1.0
+
+
+logger:
+   level: 3
+   details: 2
+
+
 autopilot:
-
-   channels:
-      pitch:
-         index: -1
-         min: -1.0
-         max: 1.0
-      roll:
-         index: -1
-         min: -1.0
-         max: 1.0
-      yaw:
-         index: -1
-         min: -1.0
-         max: 1.0
-      gas:
-         index: -1
-         min: -1.0
-         max: 1.0
-      two_state:
-         index: -1
-         min: -1.0
-         max: 1.0
-      three_state:
-         index: -1
-         min: -1.0
-         max: 1.0
-
-   logger:
-      level: 3
-      details: 2
 
    main:
       acc_fg: 0.03 # accelerometer low-pass filter

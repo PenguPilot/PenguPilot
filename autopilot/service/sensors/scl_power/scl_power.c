@@ -11,7 +11,7 @@
   
  SCL Power Reader Implementation
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -30,9 +30,9 @@
 #include <simple_thread.h>
 #include <msgpack.h>
 #include <scl.h>
+#include <logger.h>
 
 #include "scl_power.h"
-#include "../../util/logger/logger.h"
 
 
 #define THREAD_PRIORITY 98

@@ -16,7 +16,7 @@
  REQ <-> REP: 1 shared link
  PUB --> SUB: 1 publisher, multiple subscribers
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@
 
 
 import os, yaml, zmq, subprocess
-from time import sleep
 
 class ZSEx(Exception):
    """
@@ -73,18 +72,17 @@ def generate_map(component_name):
    
    # generate the map:
    context = zmq.Context()
-   sleep(1)
    socket_map = {}
    for entry in zmq_spec[component_name]:
       socket_name = entry['socket_name']
       socket_type = entry['zmq_socket_type']
       socket_path = entry['zmq_socket_path']
       socket = context.socket(socket_type)
-      if socket_type in [zmq.SUB, zmq.REQ]:
+      if socket_type in [zmq.SUB, zmq.REQ, zmq.PUSH]:
          if socket_type == zmq.SUB:
             socket.setsockopt(zmq.SUBSCRIBE, "")
          socket.connect(socket_path)
-      elif socket_type in [zmq.PUB, zmq.REP]:
+      elif socket_type in [zmq.PUB, zmq.REP, zmq.PULL]:
          socket.bind(socket_path)
       else:
          raise ZSEx("unknown socket type: %d" % socket_type)

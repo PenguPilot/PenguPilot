@@ -12,7 +12,7 @@
   
  OPCD Config File Handling
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -79,7 +79,6 @@ class Config:
       get attribute using key
       '''
       try:
-         print key
          if key == 'platform':
             plat_file_path = user_data_dir + '/config/platform'
             try:

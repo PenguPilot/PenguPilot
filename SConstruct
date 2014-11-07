@@ -12,7 +12,7 @@
   
  SCons Build Script
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ re_cc = re.compile('.*\.(c|cpp)$')
 re_pb = re.compile('.*\.proto$')
 
 def set_compiler_dependent_cflags():
-   cflags = '-D_GNU_SOURCE -pipe -fomit-frame-pointer -std=c99 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-unused-but-set-variable '
+   cflags = '-D_GNU_SOURCE -pipe -fomit-frame-pointer -std=c99 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-unused-but-set-variable -Wno-error=unused-result'
    all_info = file('/proc/cpuinfo').read()
    board = 'None'
    for line in all_info.split('\n'):
@@ -100,6 +100,12 @@ shared_lib = env.Library(shared_dir + 'shared', collect_files(shared_dir, re_cc)
 shared_sh_lib = env.SharedLibrary(shared_dir + 'shared', collect_files(shared_dir, re_cc))
 append_inc_lib(shared_dir)
 
+# Logger Library:
+logger_dir = 'logger/'
+logger_shared_dir = logger_dir + 'shared/'
+logger_lib = env.Library(logger_shared_dir + 'logger', collect_files(logger_shared_dir, re_cc))
+append_inc_lib(logger_shared_dir)
+
 # OPCD:
 opcd_pb_dir = 'opcd/shared/'
 opcd_pb_lib = make_proto_lib(opcd_pb_dir, 'opcd_pb')
@@ -112,7 +118,7 @@ common_libs = opcd_lib + opcd_pb_lib + scl_lib + shared_lib
 append_inc_lib('gpsp/service/nmealib')
 gpsp_dir = 'gpsp/'
 append_inc_lib(gpsp_dir + 'shared')
-gpsp_bin = env.Program('gpsp/service/gpsp', collect_files(gpsp_dir + 'service', re_cc), LIBS = common_libs + ['m', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+gpsp_bin = env.Program('gpsp/service/gpsp', collect_files(gpsp_dir + 'service', re_cc), LIBS = common_libs + ['rt', 'm', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
 Requires(gpsp_bin, common_libs)
 
 # GPS Time:
@@ -120,6 +126,11 @@ gpst_dir = 'gpstime/'
 gpst_bin = env.Program('gpstime/service/gpstime', collect_files(gpst_dir + 'service', re_cc), LIBS = common_libs + ['m', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
 Requires(gpst_bin, common_libs)
 
+# Remote Control Calibration:
+rc_cal_dir = 'rc_cal/'
+append_inc_lib(rc_cal_dir + 'shared')
+rc_cal_bin = env.Program('rc_cal/service/rc_cal', collect_files(rc_cal_dir + 'service', re_cc), LIBS = common_libs + ['m', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(rc_cal_bin, common_libs)
 
 # Arduino RC / Power Publisher:
 arduino_dir = 'arduino/'
@@ -131,11 +142,15 @@ ap_dir = 'autopilot/'
 ap_pb_dir = ap_dir + 'shared/'
 ap_src = collect_files(ap_dir + 'service', re_cc)
 ap_pb_lib = make_proto_lib(ap_pb_dir, 'autopilot_pb')
-ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = common_libs + [ap_pb_lib] + ['m', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
+ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = common_libs + [ap_pb_lib + logger_lib] + ['m', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
 
 # Display:
 display_src = map(lambda x: 'display/shared/' + x, ['pyssd1306.c', 'pyssd1306.i', 'ssd1306.c']) + ['shared/i2c/i2c.c']
 env.SharedLibrary('display/shared/_pyssd1306.so', display_src)
+
+# perialport:
+serialport_src = map(lambda x: 'shared/' + x, ['serial.c', 'serialport.i'])
+env.SharedLibrary('shared/_serialport.so', serialport_src)
 
 # Remote Control Service:
 # Library:
@@ -150,9 +165,8 @@ remote_bin = env.Program(remote_dir + 'service/remote', remote_src, LIBS = ['m',
 Requires(remote_bin, common_libs + [remote_lib])
 # Tests:
 sbus_print_test_src = remote_dir + 'tests/sbus_print_test.c'
-sbus_print_test_bin = env.Program(remote_dir + 'tests/sbus_print_test', sbus_print_test_src, LIBS = [remote_lib])
+sbus_print_test_bin = env.Program(remote_dir + 'tests/sbus_print_test', sbus_print_test_src, LIBS = common_libs + [remote_lib])
 Requires(sbus_print_test_bin, common_libs + [remote_lib])
-
 
 # HLFM:
 icarus_dir = 'icarus/'

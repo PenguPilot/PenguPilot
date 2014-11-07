@@ -11,7 +11,7 @@
   
  Auto Flight Logic Interface
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -30,7 +30,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "../channels/channels.h"
+#include <rc_cal.h>
+
 #include "../util/math/vec2.h"
 
 

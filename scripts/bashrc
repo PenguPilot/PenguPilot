@@ -11,7 +11,7 @@
 #
 # This File sets up important Environment Variables
 #
-# Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+# Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ export PYTHONPATH="$PYTHONPATH:$PENGUPILOT_PATH/powerman/shared"
 export PYTHONPATH="$PYTHONPATH:$PENGUPILOT_PATH/autopilot/shared"
 export PYTHONPATH="$PYTHONPATH:$PENGUPILOT_PATH/icarus/shared"
 export PYTHONPATH="$PYTHONPATH:$PENGUPILOT_PATH/gpsp/shared"
+export PYTHONPATH="$PYTHONPATH:$PENGUPILOT_PATH/logger/shared"
 export PYTHONPATH="$PYTHONPATH:$PENGUPILOT_PATH/shared"
 
 PENGU_USER_PATH=$HOME/.PenguPilot

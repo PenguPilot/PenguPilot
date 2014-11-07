@@ -13,7 +13,7 @@
 
  Calibration Math
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
  Copyright (C) 2013 Fabio Varesano <fabio at varesano dot net>
 
  This program is free software; you can redistribute it and/or modify

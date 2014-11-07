@@ -11,7 +11,7 @@
   
  Auto Flight Logic Implementation
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -30,12 +30,12 @@
 #include <util.h>
 #include <threadsafe_types.h>
 #include <opcd_interface.h>
+#include <logger.h>
 
 #include "auto_logic.h"
 #include "sticks.h"
 #include "../main_loop/control_mode.h"
 #include "../platform/platform.h"
-#include "../util/logger/logger.h"
 
 
 /* n/e direction in meters: */

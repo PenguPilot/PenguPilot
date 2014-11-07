@@ -31,7 +31,7 @@ The whole flight infrastructure is based on Linux (PREEMPT/PREEMPT_RT) user-spac
 **Currently, PenguPilot supports the following computer-on-modues**:
 
 - Gumstix Overo (custom Gentoo Linux)
-- Raspberry Pi (Respbian)
+- Raspberry Pi (Raspbian)
 - Odroid U3 (custom Gentoo Linux)
 
 What's different compared to other Approaches?
@@ -76,6 +76,7 @@ Flight Infrastructure:
 - [powerman](powerman): power management and monitoring service; warns the user when the battery is low
 - [gpsp](gpsp): gps publisher, similar to gpsd but much simpler; uses [NMEALib](https://github.com/AHR-Project/nmealib)
 - [remote](remote): remote control channels publisher
+- [rc_cal](rc_cal): remote control channel permutation and calibration service
 - [geomag](geomag): subscribes to gps position and date/time; publishes magnetic declination in degrees
 - [elevmap](elevmap): subscribes to gps position; publishes SRTM3 elevation data
 - [ads1x15](ads1x15): Raspberry PI I2C ADC voltage/current publisher
@@ -89,6 +90,7 @@ Supporting Infrastructures:
 - [scl](scl): signaling and communication link (IPC framework), see [config/system.yaml](config/system.yaml)
 - [opcd](opcd): online parameter configuration daemon, see [config/params.yaml](config/params.yaml)
 - [svctrl](svctrl): service management and control utility, see [config/services.yaml](config/services.yaml)
+- [logger](logger): logging services and utility programs
 - [shared](shared): shared libraries shared among all PenguPilot components
 
 Additional Features:
@@ -106,7 +108,7 @@ Build System and Environment:
 
 Software Dependencies:
 - Gentoo: app-admin/sudo app-misc/screen dev-lang/python dev-lang/swig dev-libs/glib dev-libs/libyaml dev-libs/msgpack dev-libs/protobuf dev-libs/protobuf-c dev-python/imaging dev-python/msgpack dev-python/numpy dev-python/psutil dev-python/python-daemon dev-python/pyyaml dev-python/pyzmq dev-util/scons sys-power/cpufrequtils dev-python/pyproj sci-libs/gdal
-- Ubuntu: realpath scons swig protobuf-compiler python-protobuf libmsgpack-dev libprotobuf-dev python-yaml protobuf-c-compiler libprotobuf-c0-dev libzmq-dev python-zmq libyaml-dev libglib2.0-dev python-daemon python-termcolor libpython-dev
+- Ubuntu: realpath scons swig python-msgpack protobuf-compiler python-protobuf libmsgpack-dev libprotobuf-dev python-yaml protobuf-c-compiler libprotobuf-c0-dev libzmq-dev python-zmq libyaml-dev libglib2.0-dev python-daemon python-dev
 
 
 Service Dependencies

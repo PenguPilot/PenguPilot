@@ -11,7 +11,7 @@
   
  Channels Mapping and Scaling Interface
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -31,15 +31,6 @@
 #include <stdint.h>
 #include <remote.h>
 
-
-#define PP_MAX_CHANNELS (6)
-
-#define CH_PITCH (0)
-#define CH_ROLL (1)
-#define CH_YAW (2)
-#define CH_GAS (3)
-#define CH_TWO_STATE (4)
-#define CH_THREE_STATE (5)
 
 
 int channels_init(void);

@@ -11,7 +11,7 @@
  
  Serial NMEA GPS Publisher and System Time Update Service
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -105,7 +105,7 @@ int main_serial(void)
    opcd_param_get(buffer_speed, &dev_speed);
 
    serialport_t port;
-   THROW_ON_ERR(serial_open(&port, dev_path, dev_speed, O_RDONLY));
+   THROW_ON_ERR(serial_open(&port, dev_path, dev_speed, O_RDONLY, 0));
 
    nmeaPARSER parser;
    nmea_parser_init(&parser);

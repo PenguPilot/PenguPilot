@@ -8,6 +8,7 @@
 *_pb2.py
 *.pb-c.c
 *.pb-c.h
+shared/serialport.py
 gpsp/service/gpsp
 gpstime/service/gpstime
 autopilot/service/autopilot
@@ -16,5 +17,6 @@ remote/service/remote
 remote/tests/sbus_print_test
 display/shared/pyssd1306.py
 arduino/service/arduino
+rc_cal/service/rc_cal
 arduino/firmware/build-uno/*
 !arduino/firmware/build-uno/firmware.hex

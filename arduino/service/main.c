@@ -11,8 +11,8 @@
   
  Arduino Remote Control and ADC Bridge Service
 
- Copyright (C) 2014 Jan Roemisch, Ilmenau University of Technology
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Jan Roemisch, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@ int _main(void)
 
    /* init scl and get sockets:: */
    THROW_ON_ERR(scl_init("arduino"));
-   void *rc_socket = scl_get_socket("remote");
+   void *rc_socket = scl_get_socket("rc_raw");
    THROW_IF(rc_socket == NULL, -ENODEV);
    void *power_socket = scl_get_socket("power");
    THROW_IF(power_socket == NULL, -ENODEV);
@@ -77,7 +77,7 @@ int _main(void)
    
    /* opern serial port: */
    serialport_t port;
-   THROW_ON_ERR(serial_open(&port, dev_path, tsint_get(&dev_speed), O_RDONLY));
+   THROW_ON_ERR(serial_open(&port, dev_path, tsint_get(&dev_speed), O_RDONLY, 0));
 
    uint16_t channels_raw[PPM_CHAN_MAX];
    uint32_t voltage_raw, current_raw;
