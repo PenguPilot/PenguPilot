@@ -11,8 +11,8 @@
   
  Arduino Serial ESC Bridge Driver Implementation
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
- Copyright (C) 2014 Jan Roemisch, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2014 Jan Roemisch, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ int arduino_pwms_init(void)
    THROW_BEGIN();
    opcd_param_get("exynos_quad.arduino_serial.path", &dev_path);
    opcd_param_get("exynos_quad.arduino_serial.speed", &dev_speed);
-   THROW_ON_ERR(serial_open(&port, dev_path, dev_speed, O_WRONLY));
+   THROW_ON_ERR(serial_open(&port, dev_path, dev_speed, O_WRONLY, 0));
    THROW_END();
 }
 

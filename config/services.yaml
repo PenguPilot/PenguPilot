@@ -11,7 +11,7 @@
 #
 # Services Configuration File
 #
-# Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+# Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -65,7 +65,8 @@ twl4030_madc:
 
 remote:
    binary: 'remote/service/remote'
-   platforms: [overo_quad, pi_quad]
+   platforms: [overo_quad, pi_quad, exynos_quad]
+   depends: [opcd]
    priority: sys_medium
 
 
@@ -115,6 +116,10 @@ geomag:
 elevmap:
   binary: 'elevmap/service/elevmap.py'
   depends: [gpsp]
+  priority: sys_low
+
+teensy_taranis:
+  binary: 'teensy_taranis/service/teensy_taranis.py'
   priority: sys_low
 
 # application-level services:

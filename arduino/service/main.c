@@ -11,8 +11,8 @@
   
  Arduino Remote Control and ADC Bridge Service
 
- Copyright (C) 2014 Jan Roemisch, Ilmenau University of Technology
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Jan Roemisch, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -39,6 +39,9 @@
 #include "ppm_parse.h"
 #include "power_common.h"
 #include "power_parse.h"
+
+
+#define CHANNELS_MAX (16)
 
 
 static bool running = true;
@@ -74,11 +77,12 @@ int _main(void)
    
    /* opern serial port: */
    serialport_t port;
-   THROW_ON_ERR(serial_open(&port, dev_path, tsint_get(&dev_speed), O_RDONLY));
+   THROW_ON_ERR(serial_open(&port, dev_path, tsint_get(&dev_speed), O_RDONLY, 0));
 
    uint16_t channels_raw[PPM_CHAN_MAX];
    uint32_t voltage_raw, current_raw;
-   float channels[PPM_CHAN_MAX];
+   float channels[CHANNELS_MAX];
+   memset(channels, 0, sizeof(channels));
 
    while (running)
    {
@@ -107,9 +111,9 @@ int _main(void)
          
          /* send channels: */
          msgpack_sbuffer_clear(msgpack_buf);
-         msgpack_pack_array(pk, 1 + PPM_CHAN_MAX);
+         msgpack_pack_array(pk, 1 + CHANNELS_MAX);
          PACKI(sig_valid);               /* index 0: valid */
-         PACKFV(channels, PPM_CHAN_MAX); /* index 1, .. : channels */
+         PACKFV(channels, CHANNELS_MAX); /* index 1, .. : channels */
          scl_copy_send_dynamic(rc_socket, msgpack_buf->data, msgpack_buf->size);
       }
 

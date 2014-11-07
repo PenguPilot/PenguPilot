@@ -11,7 +11,7 @@
   
  Main Loop Implementation
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -103,7 +103,7 @@ f_local_t;
 static int marg_err = 0;
 static pos_in_t pos_in;
 static bool prev_flying = true;
-static bool flying;
+static bool high_acc_variance;
 
 void main_init(int argc, char *argv[])
 {
@@ -367,8 +367,8 @@ void main_step(const float dt,
    }
    
    /* determine flight state: */
-   flying = flight_state_update(&pos_in.acc.ve[0]);
-   if (!flying && pos_in.ultra_u == 7.0)
+   high_acc_variance = flight_state_update(&pos_in.acc.ve[0]);
+   if (!high_acc_variance && pos_in.ultra_u == 7.0)
       pos_in.ultra_u = 0.2;
  
    /* compute next 3d position estimate using Kalman filters: */
@@ -376,7 +376,7 @@ void main_step(const float dt,
 
    /* execute flight logic (sets cm_x parameters used below): */
    bool hard_off = false;
-   bool motors_enabled = flight_logic_run(&hard_off, sensor_status, flying, channels, euler.yaw, &pos_est.ne_pos,
+   bool motors_enabled = flight_logic_run(&hard_off, sensor_status, high_acc_variance, channels, euler.yaw, &pos_est.ne_pos,
                                           pos_est.baro_u.pos, pos_est.ultra_u.pos, platform.max_thrust_n, platform.mass_kg, dt, elev, vec2_norm(&pos_est.ne_speed));
    
    /* execute up position/speed controller(s): */
@@ -479,7 +479,7 @@ void main_step(const float dt,
    inv_coupling_calc(rpm_square, f_local.ve);
    
    /* optimize forces (must not happen when we're standing, might cause catastrophic behavior) */
-   if (flying && pos_est.ultra_u.pos > 1.0f)
+   if (high_acc_variance && pos_est.ultra_u.pos > 1.0f)
    {
       FOR_N(i, platform.n_motors)
          forces[i] = rpm_square[i] * 1.5866e-007f;
@@ -506,7 +506,7 @@ void main_step(const float dt,
    piid_int_enable(platform_ac_calc(setpoints, motors_spinning(), voltage, rpm_square));
 
    /* enables motors, if flight logic requests it: */
-   motors_state_update(flying, dt, motors_enabled);
+   motors_state_update(high_acc_variance, dt, motors_enabled);
 
    /* reset controllers, if motors are not controllable: */
    if (!motors_controllable())
@@ -514,9 +514,11 @@ void main_step(const float dt,
       piid_reset();
       highlevel_control_reset();
    }
+   
+   bool flying = motors_controllable() && high_acc_variance;
 
-   /* wait until we are flying before enabling position/speed control integrators: */
-   if (!flying || pos_est.ultra_u.pos < 1.0f)
+   /* wait until we are high_acc_variance before enabling position/speed control integrators: */
+   if (!high_acc_variance || pos_est.ultra_u.pos < 1.0f)
       highlevel_control_reset();
 
    /* give hint for flight detection debugging: */

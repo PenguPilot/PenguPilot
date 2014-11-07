@@ -12,7 +12,7 @@
  Madgwick AHRS Algorithm Interface
  See: http://www.x-io.co.uk/open-source-imu-and-ahrs-algorithms
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
  Copyright (C) 2014 SOH Madgwick, X-IO Technologies
 
  This program is free software; you can redistribute it and/or modify
