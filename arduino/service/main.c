@@ -41,6 +41,9 @@
 #include "power_parse.h"
 
 
+#define CHANNELS_MAX (16)
+
+
 static bool running = true;
 
 int _main(void)
@@ -78,7 +81,8 @@ int _main(void)
 
    uint16_t channels_raw[PPM_CHAN_MAX];
    uint32_t voltage_raw, current_raw;
-   float channels[PPM_CHAN_MAX];
+   float channels[CHANNELS_MAX];
+   memset(channels, 0, sizeof(channels));
 
    while (running)
    {
@@ -107,9 +111,9 @@ int _main(void)
          
          /* send channels: */
          msgpack_sbuffer_clear(msgpack_buf);
-         msgpack_pack_array(pk, 1 + PPM_CHAN_MAX);
+         msgpack_pack_array(pk, 1 + CHANNELS_MAX);
          PACKI(sig_valid);               /* index 0: valid */
-         PACKFV(channels, PPM_CHAN_MAX); /* index 1, .. : channels */
+         PACKFV(channels, CHANNELS_MAX); /* index 1, .. : channels */
          scl_copy_send_dynamic(rc_socket, msgpack_buf->data, msgpack_buf->size);
       }
 

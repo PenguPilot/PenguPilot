@@ -36,6 +36,7 @@
 #include <serial.h>
 
 #include "../shared/remote.h"
+#include "../shared/sixaxis.h"
 #include "../shared/rc_dsl.h"
 #include "../shared/sbus_parser.h"
 #include "../shared/sbus_serial.h"
@@ -90,6 +91,34 @@ int dsl_run(void)
  
    THROW_END();
 }
+
+
+int sixaxis_run(void)
+{  
+   THROW_BEGIN();
+   THROW_ON_ERR(sixaxis_init());
+   while (running)
+   {
+      float pitch, roll, yaw, gas, sw_l, sw_r;
+      sixaxis_read(&pitch, &roll, &yaw, &gas, &sw_l, &sw_r);
+      msgpack_sbuffer_clear(msgpack_buf);
+      msgpack_pack_array(pk, MAX_CHANNELS + 1);
+      PACKI(1);    /* index 0: valid */
+      PACKF(pitch);
+      PACKF(roll);
+      PACKF(yaw);
+      PACKF(gas);
+      PACKF(sw_l);
+      PACKF(sw_r);
+      for (int i = 0; i < MAX_CHANNELS - 6; i++)
+         PACKF(0.0f);
+      scl_copy_send_dynamic(rc_socket, msgpack_buf->data, msgpack_buf->size);
+      usleep(10000);
+   }
+ 
+   THROW_END();
+}
+
 
 
 int sbus_run(void)
@@ -148,7 +177,7 @@ int _main(void)
    /* init opcd and get plaform string: */
    opcd_params_init("", 0);
    opcd_param_get("platform", &platform);
-   
+
    /* determine the receiver type: */
    char type_buf[128];
    strcpy(type_buf, platform);
@@ -167,6 +196,8 @@ int _main(void)
       THROW_ON_ERR(sbus_run());
    }
    
+   //sixaxis_run();
+
    THROW_END();
 }
 
