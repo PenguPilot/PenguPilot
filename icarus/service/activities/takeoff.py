@@ -58,7 +58,7 @@ class TakeoffActivity(Activity, StabMixIn):
       else:
          u_setpoint = 1.0
 
-      u_setpoint = 1.0
+      u_setpoint = 4.0
       pilot.start_motors()
 
       if self.canceled:
