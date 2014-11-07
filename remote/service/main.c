@@ -11,7 +11,7 @@
   
  Remote Control Service Implementation
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -39,7 +39,6 @@
 #include "../shared/sixaxis.h"
 #include "../shared/rc_dsl.h"
 #include "../shared/sbus_parser.h"
-#include "../shared/sbus_serial.h"
 
 
 static int running = 1;
@@ -64,7 +63,7 @@ int dsl_run(void)
    int dev_speed;
    opcd_param_get(buffer_speed, &dev_speed);
    serialport_t port;
-   THROW_ON_ERR(serial_open(&port, dev_path, dev_speed, O_RDONLY));
+   THROW_ON_ERR(serial_open(&port, dev_path, dev_speed, O_RDONLY, 0));
    
    /* init parser: */
    rc_dsl_t rc_dsl;
@@ -129,16 +128,16 @@ int sbus_run(void)
    strcat(buffer_path, ".sbus_serial.path");
    char *dev_path;
    opcd_param_get(buffer_path, &dev_path);
-   int fd = sbus_serial_open(dev_path);
-   THROW_IF(fd < 0, -ENODEV);
-   
+   serialport_t port;
+   THROW_ON_ERR(serial_open(&port, dev_path, 100000, O_RDONLY, CSTOPB));
+
    /* init parser: */
    sbus_parser_t parser;
    sbus_parser_init(&parser);
 
    while (running)
    {
-      int b = sbus_serial_read(fd);
+      int b = serial_read_char(&port);
       if (b < 0)
       {
          msleep(1);
@@ -171,7 +170,7 @@ int _main(void)
   
    /* initialize SCL: */
    THROW_ON_ERR(scl_init("remote"));
-   rc_socket = scl_get_socket("remote");
+   rc_socket = scl_get_socket("rc_raw");
    THROW_IF(rc_socket == NULL, -EIO);
 
    /* init opcd and get plaform string: */

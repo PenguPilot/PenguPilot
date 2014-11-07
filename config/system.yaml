@@ -11,7 +11,7 @@
 #
 # SCL Configuration File
 #
-# Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+# Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,18 +23,31 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+- name: gps_logger
+  sockets:
+   - gps: sub
+   - time_set: sub
+
+- name: log_proxy
+  sockets:
+   - log_data: pull
+   - log_data_pub: pub
+
+- name: file_logger
+  sockets:
+   - log_data_pub: sub
 
 - name: mavlink
   sockets:
    - gps: sub
    - power: sub
-   - opcd_ctrl: req
    - gps: pub
    - sats: pub
 
 - name: gpstime
   sockets:
    - gps: sub
+   - time_set: pub
 
 - name: elevmap
   sockets:
@@ -48,46 +61,35 @@
 
 - name: gpsp
   sockets:
-   - opcd_ctrl: req
    - gps: pub
    - sats: pub
 
 - name: svctrl
-  sockets:
-   - opcd_ctrl: req
 
 - name: gps_test
-  sockets:
-   - gps: sub
-
-- name: gpx_logger
   sockets:
    - gps: sub
 
 - name: twl4030_madc
   sockets:
    - power: pub
-   - opcd_ctrl: req
 
 - name: console_logger
   sockets:
-   - ap_log: sub
+  - log_data_pub: sub
 
 - name: remote
   sockets:
-   - remote: pub
-   - opcd_ctrl: req
+   - rc_raw: pub
 
 - name: arduino
   sockets:
    - power: pub
-   - remote: pub
-   - opcd_ctrl: req
+   - rc_raw: pub
 
 - name: ads1x15
   sockets:
    - power: pub
-   - opcd_ctrl: req
 
 - name: mission
   sockets:
@@ -112,22 +114,18 @@
 
 - name: autopilot
   sockets:
-   - ap_log: pub
    - blackbox: pub
    - gps: sub
    - decl: sub
-   - remote: sub
+   - rc_cal: sub
    - ap_ctrl: rep
    - ap_mon: pub
    - power: sub
    - motors_spinning: pub
    - elev: sub
-   - opcd_ctrl: req
-   - opcd_event: sub
 
 - name: optimizer
   sockets:
-   - opcd_ctrl: req
    - blackbox: sub
 
 - name: pilot_shell
@@ -140,37 +138,46 @@
    - powerman_ctrl: rep
    - power: sub
    - powerman: pub
-   - opcd_ctrl: req
 
 - name: opcd
   sockets:
-   - opcd_ctrl: rep
    - opcd_event: pub
+   - opcd_ctrl: rep
 
 - name: opcd_shell
-  sockets:
-   - opcd_ctrl: req
 
 - name: aircomm
   sockets:
    - aircomm_in: sub
    - aircomm_out: pub
-   - opcd_ctrl: req
 
 - name: rc_cal
   sockets:
-   - remote: sub
-   - opcd_ctrl: req
+   - rc_raw: sub
+   - rc_cal: pub
+
+- name: rc_cal_tool
+  sockets:
+   - rc_raw: sub
+
+- name: rc_cal_dump
+  sockets:
+   - rc_cal: sub
 
 - name: display
   sockets:
    - motors_spinning: sub
    - gps: sub
    - powerman: sub
-   - remote: sub
+   - rc_cal: sub
    - sats: sub
    - decl: sub
    - elev: sub
+
+- name: teensy_taranis
+  sockets:
+   - gps: sub
+   - power: sub
 
 - name: heartbeat
   sockets:

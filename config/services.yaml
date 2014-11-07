@@ -11,7 +11,7 @@
 #
 # Services Configuration File
 #
-# Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+# Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 
 autopilot:
    binary: 'autopilot/service/autopilot'
-   depends: [opcd, gpsp, geomag, powerman, arduino, remote]
+   depends: [gpsp, geomag, powerman, arduino, rc_cal]
    priority: sys_high
 
 
@@ -42,24 +42,25 @@ icarus:
 arduino:
    binary: 'arduino/service/arduino'
    platforms: [exynos_quad]
-   depends: [opcd]
+   priority: sys_medium
+
+rc_cal:
+   binary: 'rc_cal/service/rc_cal'
+   depends: [remote, arduino]
    priority: sys_medium
 
 ads1x15:
    binary: 'ads1x15/service/ads1x15.py'
    platforms: [pi_quad]
-   depends: [opcd]
    priority: sys_medium
 
 gpsp:
    binary: 'gpsp/service/gpsp'
-   depends: [opcd]
    priority: sys_medium
 
 twl4030_madc:
    binary: 'twl4030_madc/service/twl4030_madc.py'
    platforms: [overo_quad]
-   depends: [opcd]
    priority: sys_medium
 
 remote:
@@ -81,13 +82,13 @@ mavlink:
 
 powerman:
   binary: 'powerman/service/powerman.py'
-  depends: [opcd, arduino, twl4030_madc, ads1x15]
+  depends: [arduino, twl4030_madc, ads1x15]
   priority: sys_low
 
 display:
   binary: 'display/service/display.py'
   platforms: [overo_quad]
-  depends: [powerman, geomag, elevmap, remote]
+  depends: [powerman, geomag, elevmap, rc_cal]
   priority: sys_low
 
 emerg_kill:
@@ -100,7 +101,6 @@ blackbox:
 
 aircomm:
   binary: 'aircomm/service/aircomm.py'
-  depends: [opcd]
   priority: sys_low
 
 heartbeat:
@@ -118,6 +118,10 @@ elevmap:
   depends: [gpsp]
   priority: sys_low
 
+teensy_taranis:
+  binary: 'teensy_taranis/service/teensy_taranis.py'
+  priority: sys_low
+
 # application-level services:
 
 gpstime:
@@ -132,5 +136,19 @@ wifi_sensor:
 wifi_loc:
   binary: 'wifi_loc/service/wifi_loc.py'
   depends: [gpsp, wifi_sensor]
+  priority: app
+
+log_proxy:
+  binary: 'logger/service/log_proxy.py'
+  priority: app
+
+file_logger:
+  binary: 'logger/service/file_logger.py'
+  depends: [log_proxy]
+  priority: app
+
+gps_logger:
+  binary: 'logger/service/gps_logger.py'
+  depends: [gpstime]
   priority: app
 

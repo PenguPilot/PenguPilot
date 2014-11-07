@@ -9,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Linear Function Interface
+ Calibrated RC Channels Interface
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,27 +24,20 @@
  GNU General Public License for more details. */
 
 
-
-#ifndef __LINFUNC_H__
-#define __LINFUNC_H__
-
-
-#include "vec2.h"
+#ifndef __RC_CAL_H__
+#define __RC_CAL_H__
 
 
-typedef struct
-{
-   float m;
-   float n;
-}
-linfunc_t;
+#define MAX_CHANNELS (16)
+#define PP_MAX_CHANNELS (6)
+
+#define CH_PITCH (0)
+#define CH_ROLL (1)
+#define CH_YAW (2)
+#define CH_GAS (3)
+#define CH_TWO_STATE (4)
+#define CH_THREE_STATE (5)
 
 
-void linfunc_init_points(linfunc_t *func, vec2_t *v1, vec2_t *v2);
-
-
-float linfunc_calc(linfunc_t *func, float x);
-
-
-#endif /* __LINFUNC_H__ */
+#endif /* __RC_CAL_H__ */
 

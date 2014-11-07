@@ -1,4 +1,6 @@
-/*___________________________________________________
+#!/usr/bin/env python
+"""
+  ___________________________________________________
  |  _____                       _____ _ _       _    |
  | |  __ \                     |  __ (_) |     | |   |
  | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
@@ -9,9 +11,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Linear Function Implementation
+ File Logger Service
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -21,22 +23,24 @@
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. */
+ GNU General Public License for more details. """
 
 
-
-#include "linfunc.h"
-
-
-void linfunc_init_points(linfunc_t *func, vec2_t *v1, vec2_t *v2)
-{
-   func->m = (v2->y - v1->y) / (v2->x - v1->x);
-   func->n = v1->y - func->m * v1->x;
-}
+from os import sep
+from scl import generate_map
+from misc import daemonize, user_data_dir
 
 
-float linfunc_calc(linfunc_t *func, float x)
-{
-   return func->m * x + func->n;   
-}
+def main(name):
+   map = generate_map(name)
+   socket = map['log_data_pub']
+   prefix = user_data_dir + sep + 'log' + sep
+   new_file = prefix + 'session.log'
+   f = open(new_file, "wb")
+   while True:
+      data = socket_in.recv()
+      f.write(data)
+      f.flush()
+
+daemonize('file_logger', main)
 

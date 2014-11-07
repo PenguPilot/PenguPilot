@@ -13,7 +13,7 @@
   
  Elevation Map Service
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -38,13 +38,16 @@ def main(name):
    socket_map = generate_map(name)
    gps_socket = socket_map['gps']
    elev_socket = socket_map['elev']
+   rt = RateTimer(1.0)
    while True:
-      gps = loads(gps_socket.recv())
-      try:
-         elev = elev_map.lookup((gps[LON], gps[LAT]))
-         elev_socket.send(dumps([elev]))
-      except:
-         pass
+      raw = gps_socket.recv()
+      if rt.expired():
+         try:
+            gps = loads(gps_socket.recv())
+            elev = elev_map.lookup((gps[LON], gps[LAT]))
+            elev_socket.send(dumps([elev]))
+         except:
+            pass
 
 
 daemonize('elevmap', main)

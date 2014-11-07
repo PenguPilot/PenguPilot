@@ -13,7 +13,7 @@
   
  Service Control Utility
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -111,6 +111,10 @@ def read_config():
             raise
          except:
             depends = []
+         if name not in ['opcd', 'log_proxy']:
+            depends += ['opcd']
+         if name != 'log_proxy':
+            depends += ['log_proxy']
          # insert the service:
          config[name] = (cmd, depends, prio)
          count += 1
@@ -247,8 +251,8 @@ try:
          else:
             ex_str = red('not running')
          try:
-            if len(config[name][1]) != 0:
-               ex_str += ', depends: ' + str(config[name][1])
+            if len(config[name][1]) > 0:
+               ex_str += '\t(deps: ' + ', '.join(config[name][1]) + ')'
          except:
             pass
          print '%s:%s %s' % (blue(name), skip, ex_str)

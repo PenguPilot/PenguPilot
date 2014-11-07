@@ -13,7 +13,7 @@
   
  Remote Control Calibration Utility
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ from msgpack import loads
 from threading import Thread
 from copy import copy
 from opcd_interface import OPCD_Interface
+from misc import RateTimer
 
 
 CHANNELS_MAX = 16
@@ -82,7 +83,7 @@ class ChannelDetector:
 
 def remote_reader():
    try:
-      s = socket_map['remote']
+      s = socket_map['rc_raw']
       global channels, channels_valid
       while True:
          data = loads(s.recv())
@@ -92,7 +93,7 @@ def remote_reader():
       killed = True
 
 try:
-   socket_map = generate_map('rc_cal')
+   socket_map = generate_map('rc_cal_tool')
    t = Thread(target = remote_reader)
    t.daemon = True
    t.start()
@@ -110,9 +111,11 @@ try:
    detectors = [ ChannelDetector(spec) for spec in specs ]
    channel_map = [ None ] * len(specs)
    states = range(len(specs))
+   rt = RateTimer(0.2)
    while not killed:
       if not channels_valid:
-         print 'please enable your remote control'
+         if rt.expired():
+            print 'please enable your remote control'
       else:
          result = detectors[state].run(channels, channels_prev)
          if result is not None:
@@ -132,11 +135,11 @@ try:
    print 'writing to opcd'
    opcd = OPCD_Interface(socket_map['opcd_ctrl'])
    for name, index, max, min in channel_map:
-      prefix = 'autopilot.channels.' + name + '.'
+      prefix = 'rc_cal.' + name + '.'
       opcd.set(prefix + 'index', index)
       opcd.set(prefix + 'max', max)
       opcd.set(prefix + 'min', min)
    opcd.persist()
    print 'done'
-except Exception, e:
-   print 'canceled by user', e
+except Exception:
+   print 'canceled by user'

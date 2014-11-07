@@ -11,7 +11,7 @@
   
  Sliding Average Implementation
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -36,16 +36,14 @@ void sliding_avg_init(sliding_avg_t *sliding_avg, size_t wnd_size, float init)
    ASSERT_NOT_NULL(sliding_avg->hist);
    sliding_avg->sum = init * wnd_size;
    FOR_N(i, sliding_avg->wnd_size)
-   {
       sliding_avg->hist[i] = init;
-   }
    sliding_avg->pos = 0;
 }
 
 
 float sliding_avg_val(sliding_avg_t *sliding_avg)
 {
-   return sliding_avg->sum / (sliding_avg->wnd_size - 1);   
+   return sliding_avg->sum / (float)(sliding_avg->wnd_size - 1);   
 }
 
 

@@ -11,7 +11,7 @@
   
  Generic Platform Implementation
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -25,21 +25,12 @@
 
 
 #include <util.h>
+#include <logger.h>
+
 #include "platform.h"
 #include "../sensors/scl_gps/scl_gps.h"
 #include "../sensors/scl_power/scl_power.h"
 #include "../sensors/scl_rc/scl_rc.h"
-#include "../util/logger/logger.h"
-#include "../channels/channels.h"
-
-
-static int read_rc(float channels[PP_MAX_CHANNELS])
-{
-   float all_channels[MAX_CHANNELS];
-   int ret = scl_rc_read(all_channels);
-   channels_update(channels, all_channels);
-   return ret;
-}
 
 
 int generic_platform_init(platform_t *plat)
@@ -50,12 +41,9 @@ int generic_platform_init(platform_t *plat)
    THROW_ON_ERR(scl_power_init());
    plat->read_power = scl_power_read;
    
-   LOG(LL_INFO, "initializing remote control channel map/calibration");
-   THROW_ON_ERR(channels_init());
-   
    LOG(LL_INFO, "initializing remote control reader");
    THROW_ON_ERR(scl_rc_init());
-   plat->read_rc = read_rc;
+   plat->read_rc = scl_rc_read;
  
    LOG(LL_INFO, "initializing GPS reader");
    THROW_ON_ERR(scl_gps_init());

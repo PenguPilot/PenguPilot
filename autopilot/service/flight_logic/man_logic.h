@@ -11,7 +11,7 @@
   
  Manual Flight Logic Interface
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -30,11 +30,14 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "../channels/channels.h"
+#include <rc_cal.h>
+
 #include "../util/math/vec2.h"
+
 
 /* initialize manual flight logic */
 void man_logic_init(void);
+
 
 /* run manual flight logic */
 bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, const float channels[PP_MAX_CHANNELS],

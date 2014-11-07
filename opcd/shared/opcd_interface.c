@@ -11,7 +11,7 @@
   
  OPCD C binding
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -147,6 +147,7 @@ static void init_param(Value *val, char *id, void *data)
    entry->data = data;
    g_hash_table_insert(params_ht, id, entry);
 }
+
 
 
 static void update_param(void *data, Pair *pair)

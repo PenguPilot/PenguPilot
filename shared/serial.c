@@ -11,7 +11,7 @@
   
  Serial Port Interface
  
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -36,112 +36,12 @@
 static pthread_mutex_t write_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
-int map_baudrate(int baudrate)
+int ioctl(int d, int request, ...);
+
+
+int serial_open(serialport_t *port, char *path, int baudrate, int rw_mode, int flags)
 {
-   int baudr;
-   switch(baudrate)
-   {
-      case 50:
-         baudr = B50;
-         break;
-       
-      case 75:
-         baudr = B75;
-         break;
-      
-      case 110:
-         baudr = B110;
-         break;
-      
-      case 134:
-         baudr = B134;
-         break;
-
-      case 150:
-         baudr = B150;
-         break;
-      
-      case 200:
-         baudr = B200;
-         break;
-      
-      case 300:
-         baudr = B300;
-         break;
-
-      case 600: 
-         baudr = B600;
-         break;
-
-      case 1200:
-         baudr = B1200;
-         break;
-
-      case 1800:
-         baudr = B1800;
-         break;
-
-      case 2400:
-         baudr = B2400;
-         break;
-
-      case 4800: 
-         baudr = B4800;
-         break;
-
-      case 9600:
-         baudr = B9600;
-         break;
-
-      case 19200: 
-         baudr = B19200;
-         break;
-
-      case 38400: 
-         baudr = B38400;
-         break;
-
-      case 57600: 
-         baudr = B57600;
-         break;
-
-      case 115200:
-         baudr = B115200;
-         break;
-
-      case 230400: 
-         baudr = B230400;
-         break;
-
-      case 460800:
-         baudr = B460800;
-         break;
-
-      case 500000: 
-         baudr = B500000;
-         break;
-
-      case 576000: 
-         baudr = B576000;
-         break;
-
-      case 921600:
-         baudr = B921600;
-         break;
-
-      case 1000000: 
-         baudr = B1000000;
-         break;
-
-      default:
-         assert(0);
-   }
-   return baudr;
-}
-
-int serial_open(serialport_t *port, const char *path, int baudrate, int rw_mode)
-{
-   struct termios new_options;
+   struct termios2 new_options;
    port->path = path;
    port->handle = open(path, rw_mode | O_NOCTTY);
    if (port->handle == -1)
@@ -150,12 +50,8 @@ int serial_open(serialport_t *port, const char *path, int baudrate, int rw_mode)
    }
    else
    {
-      (void)tcgetattr(port->handle, &port->orig_options);
-
-      new_options.c_cflag = CREAD | CLOCAL | CS8;
-      int baudr = map_baudrate(baudrate);
-      cfsetospeed(&new_options, baudr);
-      cfsetispeed(&new_options, baudr);
+      ioctl(port->handle, TCGETS2, &new_options);
+      new_options.c_cflag = CREAD | CLOCAL | CS8 | BOTHER | flags;
       new_options.c_oflag = 0;
       new_options.c_iflag = 0;
       new_options.c_lflag = 0;
@@ -178,7 +74,9 @@ int serial_open(serialport_t *port, const char *path, int baudrate, int rw_mode)
       new_options.c_cc[VLNEXT]   = 0;     /* Ctrl-v */
       new_options.c_cc[VEOL2]    = 0;     /* '\0' */
 
-      (void)tcsetattr(port->handle, TCSANOW, &new_options);
+      new_options.c_ispeed = baudrate;
+      new_options.c_ospeed = baudrate;
+      ioctl(port->handle, TCSETS2, &new_options);
       return 0;
    }
 }
@@ -202,13 +100,6 @@ int serial_read_buffer(char *buffer, int buf_size, const serialport_t *port)
 }
 
 
-
-int serial_read_line(char buffer[256], const serialport_t *port)
-{
-   return read(port->handle, buffer, 256);
-}
-
-
 int serial_write(const serialport_t *port, const char *buffer, unsigned int len)
 {
    int err;
@@ -219,15 +110,14 @@ int serial_write(const serialport_t *port, const char *buffer, unsigned int len)
 }
 
 
-int serial_write_line(const serialport_t *port, const char *buffer)
+int serial_write_str(const serialport_t *port, const char *str)
 {
-   return serial_write(port, buffer, strlen(buffer));
+   return serial_write(port, str, strlen(str));
 }
 
 
 int serial_close(serialport_t *port)
 {
-   (void)tcsetattr(port->handle, TCSANOW, &port->orig_options);
    return close(port->handle);
 }
 

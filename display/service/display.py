@@ -13,7 +13,7 @@
   
  OLED Display Showing Various Information
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -96,7 +96,7 @@ def cpu_reader():
 
 
 def remote_reader():
-   s = socket_map['remote']
+   s = socket_map['rc_cal']
    global channels
    rt = RateTimer(5)
    while True:
@@ -271,7 +271,7 @@ def draw_remote(draw):
    else:
       draw.text((15, 0), 'RC signal: invalid', WHITE, font = font)
    for i in range(6):
-      bar(draw, 0, 17 + i * 8, 127, 6, channels[1 + i] + 0.5)
+      bar(draw, 0, 17 + i * 8, 127, 6, channels[1 + i] / 2.0 + 0.5)
 
 
 def circle(draw, x, y, rad, i, o):

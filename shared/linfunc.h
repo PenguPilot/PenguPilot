@@ -8,10 +8,10 @@
  |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
- 
- Message Format for AutoPilot Logger
+  
+ Linear Function Interface
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,13 +24,24 @@
  GNU General Public License for more details. */
 
 
-message log_data
+
+#ifndef __LINFUNC_H__
+#define __LINFUNC_H__
+
+
+typedef struct
 {
-   enum Level {ERR = 1; WARN = 2; INFO = 3; DEBUG = 4;}
-   
-   required Level level = 1;
-   required uint32 details = 2;
-   required string file = 3;
-   required uint32 line = 4;
-   required string msg = 5;
+   float m;
+   float n;
 }
+linfunc_t;
+
+
+void linfunc_init_points(linfunc_t *func, float x1, float y1, float x2, float y2);
+
+
+float linfunc_calc(linfunc_t *func, float x);
+
+
+#endif /* __LINFUNC_H__ */
+

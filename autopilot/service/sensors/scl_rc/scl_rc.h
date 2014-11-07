@@ -11,7 +11,7 @@
   
  SCL Remote Control Interface
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -28,12 +28,12 @@
 #define __SCL_RC_H__
 
 
-#include <remote.h>
+#include <rc_cal.h>
 
 
 int scl_rc_init(void);
 
-int scl_rc_read(float channels_out[MAX_CHANNELS]);
+int scl_rc_read(float channels_out[PP_MAX_CHANNELS]);
 
 
 #endif /* __SCL_RC_H__ */

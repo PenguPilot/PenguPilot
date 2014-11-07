@@ -13,7 +13,7 @@
   
  Online Parameter Configuration Daemon
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ from misc import daemonize
 from sys import argv
 from re import match
 from time import sleep
+from pylogger import *
 
 
 class OPCD:
@@ -42,6 +43,7 @@ class OPCD:
       map = generate_map(name)
       self.ctrl_socket = map['opcd_ctrl']
       self.event_socket = map['opcd_event']
+      logger_init('opcd', map['log_data'])
       self.conf = Config()
       self.map = {str: 'str_val', int: 'int_val', float: 'dbl_val', bool: 'bool_val'}
 
@@ -65,7 +67,8 @@ class OPCD:
          req = CtrlReq()
          try:
             req.ParseFromString(self.ctrl_socket.recv())
-         except:
+         except Exception, e:
+            log(LL_ERROR, 'could not receive request: %s' % str(e))
             sleep(1)
             continue
          # process request and prepare reply:
@@ -90,6 +93,7 @@ class OPCD:
                      except:
                         pass
                   if not found:
+                     log(LL_ERROR, 'key not found: %s' % req.id)
                      rep.status = CtrlRep.PARAM_UNKNOWN
 
             # SET REQUEST:
@@ -103,6 +107,7 @@ class OPCD:
                   pair = Pair(id = req.id, val = req.val)
                   self.event_socket.send(pair.SerializeToString())
                except ConfigError, e:
+                  log(LL_ERROR, 'key not found: %s' % req.id)
                   rep.status = CtrlRep.PARAM_UNKNOWN
 
             # PERSIST REQUEST:
@@ -112,7 +117,7 @@ class OPCD:
                   self.conf.persist()
                   rep.status = CtrlRep.OK
                except Exception, e:
-                  print str(e)
+                  log(LL_ERROR, 'persist failed: %s' % str(e))
                   rep.status = CtrlRep.IO_ERROR
          except:
             rep.status = CtrlRep.PARAM_UNKNOWN

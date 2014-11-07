@@ -11,7 +11,7 @@
   
  Manual Flight Logic Implementation
 
- Copyright (C) 2014 Tobias Simon, Ilmenau University of Technology
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -31,13 +31,12 @@
 #include <opcd_interface.h>
 #include <util.h>
 #include <interval.h>
+#include <logger.h>
 
 #include "sticks.h"
 #include "man_logic.h"
 #include "../sensors/util/calibration.h"
-#include "../util/logger/logger.h"
 #include "../util/math/conv.h"
-#include "../util/math/linfunc.h"
 #include "../platform/platform.h"
 #include "../control/position/navi.h"
 #include "../control/position/u_ctrl.h"
@@ -332,39 +331,49 @@ static bool rtl_tercom(bool flying, bool gps_valid, vec2_t *ne_gps_pos, float ba
 bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, const float channels[PP_MAX_CHANNELS],
                   float yaw, vec2_t *ne_gps_pos, float baro_u_pos, float ultra_u_pos, float f_max, float mass, float dt, float elev, float horiz_speed)
 {
+
    if (always_hard_off)
    {
       *hard_off = true;
       return false;
    }
 
-   if (!(sensor_status & RC_VALID))
-   {
-      always_hard_off = true;
-      *hard_off = true;
+   /* we're standing, everything is safe if the rc is off; don't allow to start motors  */
+   bool rc_valid = (sensor_status & RC_VALID) ? true : false;
+   if (!flying && !rc_valid)
       return false;
 
-      if (rc_inval_count == 0)
-         LOG(LL_ERROR, "rc signal invalid!");
-      
-      rc_inval_count++;
-      if (rc_inval_count >= RC_INVAL_MAX_COUNT)
+   if (!rc_valid)
+   {
+      if (!flying)
       {
-         /* too much; bring it down */
-         if (rc_inval_count == RC_INVAL_MAX_COUNT)
-            LOG(LL_ERROR, "performing emergency landing");
-        
-         if (rtl_tercom(flying, sensor_status & GPS_VALID, ne_gps_pos, baro_u_pos, ultra_u_pos, elev, dt))
+         return false;
+      }
+      else
+      {
+         if (rc_inval_count == 0)
+            LOG(LL_ERROR, "rc signal invalid!");
+      
+         rc_inval_count++;
+         if (rc_inval_count >= RC_INVAL_MAX_COUNT)
          {
-            if (!always_hard_off)
-               LOG(LL_ERROR, "emergency landing complete; disabling actuators");
-            always_hard_off = true;
-            return false;
+            /* too much; bring it down */
+            if (rc_inval_count == RC_INVAL_MAX_COUNT)
+               LOG(LL_ERROR, "performing emergency landing");
+        
+            if (rtl_tercom(flying, sensor_status & GPS_VALID, ne_gps_pos, baro_u_pos, ultra_u_pos, elev, dt))
+            {
+               if (!always_hard_off)
+                  LOG(LL_ERROR, "emergency landing complete; disabling actuators");
+               always_hard_off = true;
+               return false;
+            }
          }
       }
    }
    else
       rc_inval_count = 0;   
+
 
    vec2_t pr, pr_rot;
    vec2_init(&pr_rot);
@@ -437,7 +446,7 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, const fl
    if (((sensor_status & RC_VALID) && sw_l > 0.5))
       *hard_off = true;
    
-   cm_u_a_max_set(1.0);
+   cm_u_a_max_set(FLT_MAX);
    return gas_stick > -0.8;
 }
 
