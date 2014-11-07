@@ -340,6 +340,10 @@ bool man_logic_run(bool *hard_off, uint16_t sensor_status, bool flying, const fl
 
    if (!(sensor_status & RC_VALID))
    {
+      always_hard_off = true;
+      *hard_off = true;
+      return false;
+
       if (rc_inval_count == 0)
          LOG(LL_ERROR, "rc signal invalid!");
       
