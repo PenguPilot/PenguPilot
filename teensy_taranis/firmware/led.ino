@@ -9,10 +9,10 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
  
- GPS Publisher Program Entry Point
+ Blinking LED Implementation
 
  Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
-
+ 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation; either version 2 of the License, or
@@ -25,55 +25,63 @@
 
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <daemon.h>
+#include "led.h"
 
-#include "main_serial.h"
-#include "main_i2c.h"
 
-#include <opcd_interface.h>
-#include <scl.h>
-#include <syslog.h>
+static const int led = 13;
 
-void _cleanup(void)
+
+void led_init()
 {
-
+   pinMode(led, OUTPUT);
 }
 
 
-void _main(int argc, char *argv[])
+int led_update(int flags)
 {
-   (void)argc;
-   (void)argv;
+   static int val = 0;
+   static int state = 0;
+   static int k = 0;
+   static const int steps = 200000;
+   state++;
+   if (state < steps)
+   {
+      if ((k++ >= 4000) && (flags & S_PORT_ACTIVITY))
+      {
+         k = 0;
+         val ^= 1;
+      }
+   }
+   else if (state == steps)
+   {
+      val = 0;
+   }
+   else if (state > steps && state < 2 * steps)
+   {
+      if ((k++ >= 8000) && (flags & S_BUS_ACTIVITY))
+      {
+         k = 0;
+         val ^= 1;
+      }
+   }
+   else if (state == 2 * steps)
+   {
+      val = 0;
+   }
+   else if (state > 2 * steps && state < 3 * steps)
+   {
+      if ((k++ >= 16000) && (flags & AP_ACTIVITY))
+      {
+         k = 0;
+         val ^= 1;
+      }
+   }
+   else if (state > 3 * steps)
+   {
+      state = 0;
+      flags = 0;
+   }
 
-   if (scl_init("gpsp") != 0)
-   {
-      syslog(LOG_CRIT, "could not init scl module");
-      exit(EXIT_FAILURE);
-   }
-   
-   opcd_params_init("", 0);
-   char *plat = NULL;
-   opcd_param_get("platform", &plat);
-   if (strcmp(plat, "overo_quad") == 0 || strcmp(plat, "exynos_quad") == 0)
-   {
-      main_serial();
-   }
-   else if (strcmp(plat, "pi_quad") == 0)
-   {
-      main_i2c();   
-   }
+   digitalWrite(led, val);
+   return flags;
 }
-
-
-int main(int argc, char *argv[])
-{
-   char pid_file[1024];
-   sprintf(pid_file, "%s/.PenguPilot/run/gpsp.pid", getenv("HOME"));
-   daemonize(pid_file, _main, _cleanup, argc, argv);
-   return 0;
-}
-
-

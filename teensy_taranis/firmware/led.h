@@ -9,9 +9,13 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
  
- GPS Publisher Program Entry Point
+ Blinking LED Interface
 
  Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ 
+ S_PORT: fast flashing / off
+ S_BUS:  medium flashing / off
+ AP:     slow flashing / off
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,56 +28,20 @@
  GNU General Public License for more details. */
 
 
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <daemon.h>
-
-#include "main_serial.h"
-#include "main_i2c.h"
-
-#include <opcd_interface.h>
-#include <scl.h>
-#include <syslog.h>
-
-void _cleanup(void)
-{
-
-}
+#ifndef __LED_H__
+#define __LED_H__
 
 
-void _main(int argc, char *argv[])
-{
-   (void)argc;
-   (void)argv;
-
-   if (scl_init("gpsp") != 0)
-   {
-      syslog(LOG_CRIT, "could not init scl module");
-      exit(EXIT_FAILURE);
-   }
-   
-   opcd_params_init("", 0);
-   char *plat = NULL;
-   opcd_param_get("platform", &plat);
-   if (strcmp(plat, "overo_quad") == 0 || strcmp(plat, "exynos_quad") == 0)
-   {
-      main_serial();
-   }
-   else if (strcmp(plat, "pi_quad") == 0)
-   {
-      main_i2c();   
-   }
-}
+/* flag definitions: */
+#define S_PORT_ACTIVITY 1
+#define S_BUS_ACTIVITY  2
+#define AP_ACTIVITY     4
 
 
-int main(int argc, char *argv[])
-{
-   char pid_file[1024];
-   sprintf(pid_file, "%s/.PenguPilot/run/gpsp.pid", getenv("HOME"));
-   daemonize(pid_file, _main, _cleanup, argc, argv);
-   return 0;
-}
+void led_init();
 
+int led_update(int flags);
+
+
+#endif /* __LED_H__ */
 

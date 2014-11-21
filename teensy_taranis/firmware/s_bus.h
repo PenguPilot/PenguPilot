@@ -9,10 +9,10 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
  
- GPS Publisher Program Entry Point
+ S.Bus Bridge Interface
 
  Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
-
+ 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation; either version 2 of the License, or
@@ -24,56 +24,13 @@
  GNU General Public License for more details. */
 
 
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <daemon.h>
-
-#include "main_serial.h"
-#include "main_i2c.h"
-
-#include <opcd_interface.h>
-#include <scl.h>
-#include <syslog.h>
-
-void _cleanup(void)
-{
-
-}
+#ifndef __S_BUS_H__
+#define __S_BUS_H__
 
 
-void _main(int argc, char *argv[])
-{
-   (void)argc;
-   (void)argv;
+void s_bus_init();
 
-   if (scl_init("gpsp") != 0)
-   {
-      syslog(LOG_CRIT, "could not init scl module");
-      exit(EXIT_FAILURE);
-   }
-   
-   opcd_params_init("", 0);
-   char *plat = NULL;
-   opcd_param_get("platform", &plat);
-   if (strcmp(plat, "overo_quad") == 0 || strcmp(plat, "exynos_quad") == 0)
-   {
-      main_serial();
-   }
-   else if (strcmp(plat, "pi_quad") == 0)
-   {
-      main_i2c();   
-   }
-}
+int s_bus_copy(void (*write)(char byte));
 
 
-int main(int argc, char *argv[])
-{
-   char pid_file[1024];
-   sprintf(pid_file, "%s/.PenguPilot/run/gpsp.pid", getenv("HOME"));
-   daemonize(pid_file, _main, _cleanup, argc, argv);
-   return 0;
-}
-
-
+#endif /* __S_BUS_H__ */
