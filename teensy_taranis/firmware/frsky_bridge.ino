@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
  
- GPS Publisher Program Entry Point
+ Teensy Taranis Firmware Program Entry Point
 
  Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -25,55 +25,35 @@
 
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <daemon.h>
 
-#include "main_serial.h"
-#include "main_i2c.h"
+#include "s_bus.h"
+#include "led.h"
 
-#include <opcd_interface.h>
-#include <scl.h>
-#include <syslog.h>
 
-void _cleanup(void)
+void setup()
 {
-
+   led_init();
+   s_port_init();
+   s_bus_init(); 
+   ap_init();
 }
 
 
-void _main(int argc, char *argv[])
+void loop()
 {
-   (void)argc;
-   (void)argv;
+   /* update led flashing signal: */
+   static uint8_t flags = 0;
+   flags = led_update(flags);
 
-   if (scl_init("gpsp") != 0)
-   {
-      syslog(LOG_CRIT, "could not init scl module");
-      exit(EXIT_FAILURE);
-   }
-   
-   opcd_params_init("", 0);
-   char *plat = NULL;
-   opcd_param_get("platform", &plat);
-   if (strcmp(plat, "overo_quad") == 0 || strcmp(plat, "exynos_quad") == 0)
-   {
-      main_serial();
-   }
-   else if (strcmp(plat, "pi_quad") == 0)
-   {
-      main_i2c();   
-   }
+   /* provide telemetry to remote control via s-port RX/TX (1-wire) */
+   if (s_port_rx_tx())
+      flags |= S_PORT_ACTIVITY;
+
+   /* copy from s-bus TX to AP rx */
+   if (s_bus_copy(ap_tx))
+      flags |= S_BUS_ACTIVITY;
+
+   /* read data from autopilot via AP RX into global variables: */
+   if (ap_rx())
+      flags |= AP_ACTIVITY;
 }
-
-
-int main(int argc, char *argv[])
-{
-   char pid_file[1024];
-   sprintf(pid_file, "%s/.PenguPilot/run/gpsp.pid", getenv("HOME"));
-   daemonize(pid_file, _main, _cleanup, argc, argv);
-   return 0;
-}
-
-

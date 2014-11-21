@@ -9,10 +9,10 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
  
- GPS Publisher Program Entry Point
+ S.Bus Bridge Implementation
 
  Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
-
+ 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation; either version 2 of the License, or
@@ -24,56 +24,30 @@
  GNU General Public License for more details. */
 
 
+#include "bits.h"
+#include "s_bus.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <daemon.h>
 
-#include "main_serial.h"
-#include "main_i2c.h"
+#define s_bus_uart      Serial2
+#define s_bus_uart_s2   UART1_S2
 
-#include <opcd_interface.h>
-#include <scl.h>
-#include <syslog.h>
 
-void _cleanup(void)
+void s_bus_init() 
 {
-
+   s_bus_uart.begin(100000, SERIAL_8N2_RXINV); /* should be 8E2 */
 }
 
 
-void _main(int argc, char *argv[])
+
+int s_bus_copy(void (*write)(char byte))
 {
-   (void)argc;
-   (void)argv;
-
-   if (scl_init("gpsp") != 0)
+   int status = 0;
+   while (s_bus_uart.available()) 
    {
-      syslog(LOG_CRIT, "could not init scl module");
-      exit(EXIT_FAILURE);
+      write(s_bus_uart.read());
+      status = 1;
    }
-   
-   opcd_params_init("", 0);
-   char *plat = NULL;
-   opcd_param_get("platform", &plat);
-   if (strcmp(plat, "overo_quad") == 0 || strcmp(plat, "exynos_quad") == 0)
-   {
-      main_serial();
-   }
-   else if (strcmp(plat, "pi_quad") == 0)
-   {
-      main_i2c();   
-   }
-}
-
-
-int main(int argc, char *argv[])
-{
-   char pid_file[1024];
-   sprintf(pid_file, "%s/.PenguPilot/run/gpsp.pid", getenv("HOME"));
-   daemonize(pid_file, _main, _cleanup, argc, argv);
-   return 0;
+   return status;
 }
 
 
