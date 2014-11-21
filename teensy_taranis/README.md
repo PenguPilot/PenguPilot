@@ -7,4 +7,4 @@ Most of the code is based on [this software](http://diydrones.com/forum/topics/a
 
 The figure below shows the wiring diagram of the Teensy.
 
-![Schematic](https://raw.github.com/PenguPilot/PenguPilot/teensy_taranis/doc/master/schematic.png)
+![Schematic](https://github.com/PenguPilot/PenguPilot/blob/master/teensy_taranis/doc/schematic.png)
