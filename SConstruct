@@ -138,7 +138,7 @@ arduino_dir = 'arduino/'
 arduino_bin = env.Program('arduino/service/arduino', collect_files(arduino_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
 Requires(arduino_bin, common_libs)
 
-# OFS:
+# Optical Flow Sensor:
 ofs_dir = 'ofs/'
 ofs_bin = env.Program(ofs_dir + 'service/ofs', collect_files(ofs_dir + 'service', re_cc), LIBS = common_libs + ['m', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
 Requires(ofs_bin, common_libs)
