@@ -129,6 +129,5 @@ def main(name):
    opcd = OPCD(name)
    opcd.run()
 
-
 daemonize('opcd', main)
 

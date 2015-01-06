@@ -32,7 +32,7 @@
 void mon_init(void);
 
 /* set monitor data */
-void mon_data_set(float n, float e, float u_ground, float u, float y,
+void mon_data_set(float n, float e, float u_ground, float u, float yaw, float pitch, float roll,
                   float n_err, float e_err, float u_err, float y_err);
 
 

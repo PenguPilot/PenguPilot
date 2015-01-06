@@ -65,7 +65,7 @@ class StabMixIn:
             print 'canceled'
             return
          # read error values from pilot:
-         n_err, e_err, u_err = pilot.mon[5], pilot.mon[6], pilot.mon[7]
+         n_err, e_err, u_err = pilot.mon[7], pilot.mon[8], pilot.mon[9]
          print 'X:', n_err, e_err, u_err
          # reset counter if one of the errors becomes too huge:
          if abs(u_err) > self.STAB_EPSILON:
