@@ -385,12 +385,13 @@ void main_step(const float dt,
    if (cal_ahrs_update(&euler, &cal_marg_data, decl, dt) < 0)
       goto out;
    
+   // experimental color-tracking stuff:
    float x = tsfloat_get(&color_x);
    float y = -tsfloat_get(&color_y);
    float n = x * cos(-euler.yaw) - y * sin(-euler.yaw);
    float e = x * sin(-euler.yaw) + y * cos(-euler.yaw);
-   pos_in.pos_n = -n;
-   pos_in.pos_e = e;
+   //pos_in.pos_n = -n;
+   //pos_in.pos_e = e;
  
    ONCE(LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
    float avg_pr[2] = {0.0f, 0.0f};
