@@ -71,6 +71,7 @@
 #include "../blackbox/blackbox.h"
 #include "../filters/filter.h"
 
+#include <simple_thread.h>
 
 static bool calibrate = false;
 static float *rpm_square = NULL;
@@ -105,8 +106,49 @@ static pos_in_t pos_in;
 static bool prev_flying = true;
 static bool high_acc_variance;
 
+static tsfloat_t color_x;
+static tsfloat_t color_y;
+static simple_thread_t thread;
+static void *obj_pos_socket = NULL;
+
+
+#define THREAD_NAME       "color_reader"
+#define THREAD_PRIORITY   98
+
+
+SIMPLE_THREAD_BEGIN(thread_func)
+{
+   SIMPLE_THREAD_LOOP_BEGIN
+   {
+      char buffer[128];
+      int ret = scl_recv_static(obj_pos_socket, buffer, sizeof(buffer));
+      if (ret > 0)
+      {
+         msgpack_unpacked msg;
+         msgpack_unpacked_init(&msg);
+         if (msgpack_unpack_next(&msg, buffer, ret, NULL))
+         {
+            msgpack_object root = msg.data;
+            assert (root.type == MSGPACK_OBJECT_ARRAY);
+            tsfloat_set(&color_x, root.via.array.ptr[0].via.dec);
+            tsfloat_set(&color_y, root.via.array.ptr[1].via.dec);
+         }
+         msgpack_unpacked_destroy(&msg);
+      }
+      else
+      {
+         msleep(1);
+      }
+   }
+   SIMPLE_THREAD_LOOP_END
+}
+SIMPLE_THREAD_END
+
+
 void main_init(int argc, char *argv[])
 {
+   tsfloat_init(&color_x, 0.0f);
+   tsfloat_init(&color_y, 0.0f);
    bool override_hw = false;
    if (argc > 1)
    {
@@ -234,12 +276,12 @@ void main_init(int argc, char *argv[])
 
    cm_init();
    mon_init();
+
+
+   obj_pos_socket = scl_get_socket("obj_pos");
+   simple_thread_start(&thread, thread_func, THREAD_NAME, THREAD_PRIORITY, NULL);
    LOG(LL_INFO, "entering main loop");
 }
-
-
-pthread_t thread;
-struct sched_param sched_param;
 
 
 void main_step(const float dt,
@@ -330,7 +372,7 @@ void main_step(const float dt,
       pos_in.speed_e = gps_rel_data.speed_e;
       ONCE(gps_start_set(gps_data));
    }
-
+   
    /* apply acc/mag calibration: */
    acc_mag_cal_apply(&cal_marg_data.acc, &cal_marg_data.mag);
    vec_copy(&mag_normal, &cal_marg_data.mag);
@@ -343,6 +385,13 @@ void main_step(const float dt,
    if (cal_ahrs_update(&euler, &cal_marg_data, decl, dt) < 0)
       goto out;
    
+   float x = tsfloat_get(&color_x);
+   float y = -tsfloat_get(&color_y);
+   float n = x * cos(-euler.yaw) - y * sin(-euler.yaw);
+   float e = x * sin(-euler.yaw) + y * cos(-euler.yaw);
+   pos_in.pos_n = -n;
+   pos_in.pos_e = e;
+ 
    ONCE(LOG(LL_DEBUG, "system initialized; orientation = yaw: %f pitch: %f roll: %f", euler.yaw, euler.pitch, euler.roll));
    float avg_pr[2] = {0.0f, 0.0f};
    float avg_pr_in[2] = {euler.pitch, euler.roll};
@@ -373,6 +422,7 @@ void main_step(const float dt,
  
    /* compute next 3d position estimate using Kalman filters: */
    pos_update(&pos_est, &pos_in);
+   printf("%f %f %f %f\n", n, pos_est.ne_pos.x, e, pos_est.ne_pos.y);
 
    /* execute flight logic (sets cm_x parameters used below): */
    bool hard_off = false;
@@ -538,10 +588,11 @@ void main_step(const float dt,
    /* write motors: */
    if (!override_hw)
    {
-      platform_write_motors(setpoints);
+      //platform_write_motors(setpoints);
    }
+   
 
-   mon_data_set(pos_est.ne_pos.x, pos_est.ne_pos.y, pos_est.ultra_u.pos, pos_est.baro_u.pos, euler.yaw,
+   mon_data_set(pos_est.ne_pos.x, pos_est.ne_pos.y, pos_est.ultra_u.pos, pos_est.baro_u.pos, euler.yaw, euler.pitch, euler.roll,
                 ne_pos_err.x, ne_pos_err.y, u_pos_err, pry_err.z);
 
 out:

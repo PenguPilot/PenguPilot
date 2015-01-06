@@ -24,6 +24,9 @@
  GNU General Public License for more details. */
 
 
+
+#include "mon.h"
+
 #include <string.h>
 #include <util.h>
 #include <scl.h>
@@ -37,11 +40,16 @@
 
 static pthread_mutexattr_t mutexattr;
 static pthread_mutex_t mutex;
+/* position: */
 static float n = 0.0f;
 static float e = 0.0f;
 static float u_ground = 0.0f;
 static float u = 0.0f;
-static float y = 0.0f;
+/* angles: */
+static float yaw = 0.0f;
+static float pitch = 0.0f;
+static float roll = 0.0f;
+/* position errors: */
 static float n_err = 0.0f;
 static float e_err = 0.0f;
 static float u_err = 0.0f;
@@ -57,18 +65,20 @@ PERIODIC_THREAD_BEGIN(mon_emitter)
    PERIODIC_THREAD_LOOP_BEGIN
    {
       msgpack_sbuffer_clear(msgpack_buf);
-      msgpack_pack_array(pk, 9);
+      msgpack_pack_array(pk, 11);
 
       pthread_mutex_lock(&mutex);
       PACKF(n); /* 0 */
       PACKF(e); /* 1 */
       PACKF(u_ground); /* 2 */
       PACKF(u); /* 3 */
-      PACKF(y); /* 4 */
-      PACKF(n_err); /* 5 */
-      PACKF(e_err); /* 6 */
-      PACKF(u_err); /* 7 */
-      PACKF(y_err); /* 8 */
+      PACKF(yaw); /* 4 */
+      PACKF(pitch); /* 5 */
+      PACKF(roll); /* 6 */
+      PACKF(n_err); /* 7 */
+      PACKF(e_err); /* 8 */
+      PACKF(u_err); /* 9 */
+      PACKF(y_err); /* 10 */
       pthread_mutex_unlock(&mutex);
       
       //if (n != 0.0f && e != 0.0f)
@@ -92,7 +102,7 @@ void mon_init(void)
    zmq_setsockopt(mon_socket, ZMQ_SNDHWM, &hwm, sizeof(hwm));
 
    /* create monitoring connection: */
-   const struct timespec period = {0, 100 * NSEC_PER_MSEC};
+   const struct timespec period = {0, 20 * NSEC_PER_MSEC};
    pthread_mutexattr_init(&mutexattr);
    pthread_mutexattr_setprotocol(&mutexattr, PTHREAD_PRIO_INHERIT);
    pthread_mutex_init(&mutex, &mutexattr);
@@ -108,7 +118,7 @@ void mon_init(void)
 }
 
 
-void mon_data_set(float _n, float _e, float _u_ground, float _u, float _y,
+void mon_data_set(float _n, float _e, float _u_ground, float _u, float _yaw, float _pitch, float _roll,
                   float _n_err, float _e_err, float _u_err, float _y_err)
 {
    pthread_mutex_lock(&mutex);
@@ -116,7 +126,9 @@ void mon_data_set(float _n, float _e, float _u_ground, float _u, float _y,
    e = _e;
    u_ground = _u_ground;
    u = _u;
-   y = _y;
+   yaw = _yaw;
+   pitch = _pitch;
+   roll = _roll;
    n_err = _n_err;
    e_err = _e_err;
    u_err = _u_err;

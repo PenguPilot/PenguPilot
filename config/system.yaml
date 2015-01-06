@@ -23,6 +23,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 
+- name: ofs
+  sockets:
+   - oflow: pub
+
 - name: gps_logger
   sockets:
    - gps: sub
@@ -123,6 +127,11 @@
    - power: sub
    - motors_spinning: pub
    - elev: sub
+   - obj_pos: sub
+
+- name: opcd_shell
+  sockets:
+   - opcd_ctrl: req
 
 - name: optimizer
   sockets:
@@ -144,7 +153,10 @@
    - opcd_event: pub
    - opcd_ctrl: rep
 
-- name: opcd_shell
+- name: object_tracking
+  sockets:
+    - obj_pos: pub
+    - ap_mon: sub
 
 - name: aircomm
   sockets:

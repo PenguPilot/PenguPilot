@@ -34,6 +34,10 @@ autopilot:
 
 # medium-priority system services:
 
+ofs:
+   binary: 'ofs/service/ofs'
+   priority: sys_medium
+
 icarus:
    binary: 'icarus/service/icarus.py'
    depends: [autopilot]
