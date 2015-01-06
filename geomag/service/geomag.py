@@ -54,5 +54,4 @@ def main(name):
          except:
             pass
 
-
 daemonize('geomag', main)
