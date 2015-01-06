@@ -168,7 +168,7 @@ remote_sh_lib = env.SharedLibrary(remote_shared_dir + 'remote', collect_files(re
 append_inc_lib(remote_shared_dir)
 # Service:
 remote_src = remote_dir + 'service/main.c'
-remote_bin = env.Program(remote_dir + 'service/remote', remote_src, LIBS = ['m', 'rt', 'remote', 'opcd', 'opcd_pb', 'pthread', 'shared', 'scl', 'protobuf-c', 'yaml', 'zmq', 'glib-2.0'])
+remote_bin = env.Program(remote_dir + 'service/remote', remote_src, LIBS = ['m', 'remote', 'opcd', 'opcd_pb', 'pthread', 'shared', 'scl', 'protobuf-c', 'yaml', 'zmq', 'glib-2.0', 'rt'])
 Requires(remote_bin, common_libs + [remote_lib])
 # Tests:
 sbus_print_test_src = remote_dir + 'tests/sbus_print_test.c'
