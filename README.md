@@ -83,7 +83,7 @@ Flight Infrastructure:
 - [arduino](arduino): ODROID U3 Arduino R/C, ADC voltage/current publisher; reads from ttySAC0
 - [twl4030_madc](twl4030_madc): Gumstix Overo ADC voltage/current publisher
 
-Supporting Infrastructures:
+Support Infrastructure:
 
 - [gpstime](gpstime): GPS time zone / date / time setting service
 - [config](config): configuration files

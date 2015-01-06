@@ -13,7 +13,6 @@
 #include <time.h>
 
 // Spi options
-static const char *device = "/dev/spidev0.0";
 static uint8_t mode = 0;
 static uint8_t bits = 8;
 static uint32_t speed = 2000000;
@@ -24,7 +23,7 @@ int adns3080_init(const char *device)
 	int ret = 0;
 
 	//Open Device
-	int fd = open(device, O_RDWR); //Device öffnen
+	int fd = open(device, O_RDWR); //Device Ã¶ffnen
 	if (fd == -1)
 	{
 		fprintf(stderr, "Error: can't open device");
@@ -136,17 +135,6 @@ int adns3080_read_image(int fd, uint8_t *buf)
 	    return -1;
 	}
 
-/*
-	int i = 0;
-	for(i = 1; i < 1499; i++)
-	{
-		if(((i - 1) % 30) == 0)
-			printf("\n");
-		printf("%i ", frame[i]);
-	}
-
-	usleep(5000);
-*/
 	if((frame[1] & 0x40) != 0x40) // First pixel has bit 6 set
 	{
 //		fprintf(stderr, "Fist byte of frame not as expected: %X\n", frame[1]);
