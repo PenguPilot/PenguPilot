@@ -13,8 +13,8 @@
 
  System Model:
 
- | 1 dt | * | p | + |  0 | * | a | = | p_new |
- | 0  1 | * | v |   | dt |           | v_new |
+ | 1 dt | * | p | + | 0.5 * dt ^ 2 | * | a | = | p |
+ | 0  1 | * | v |   |     dt       |   | v |
 
  Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
  Copyright (C) 2013 Jan Roemisch, Integrated Communication Systems Group, TU Ilmenau
@@ -259,9 +259,9 @@ static void kalman_run(kalman_t *kf, float *est_pos, float *est_speed, float pos
           | init  init | */
    kf->A.me[0][1] = dt;
 
-   /* B = |  0 |
-          | dt | */
-   kf->B.me[0][0] = 0.0f;
+   /* B = | 0.5 * dt ^ 2 |
+          |     dt       | */
+   kf->B.me[0][0] = 0.5f * dt * dt;
    kf->B.me[1][0] = dt;
    
    /* Q, R: */
