@@ -69,7 +69,7 @@ twl4030_madc:
 
 remote:
    binary: 'remote/service/remote'
-   platforms: [overo_quad, pi_quad, exynos_quad]
+   platforms: [overo_quad, pi_quad]
    depends: [opcd]
    priority: sys_medium
 

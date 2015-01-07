@@ -130,7 +130,7 @@ Requires(gpst_bin, common_libs)
 # Remote Control Calibration:
 rc_cal_dir = 'rc_cal/'
 append_inc_lib(rc_cal_dir + 'shared')
-rc_cal_bin = env.Program('rc_cal/service/rc_cal', collect_files(rc_cal_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+rc_cal_bin = env.Program('rc_cal/service/rc_cal', collect_files(rc_cal_dir + 'service', re_cc), LIBS = common_libs + [logger_lib, 'm', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
 Requires(rc_cal_bin, common_libs)
 
 # Arduino RC / Power Publisher:
@@ -142,7 +142,6 @@ Requires(arduino_bin, common_libs)
 ofs_dir = 'ofs/'
 ofs_bin = env.Program(ofs_dir + 'service/ofs', collect_files(ofs_dir + 'service', re_cc), LIBS = common_libs + ['m', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
 Requires(ofs_bin, common_libs)
-
 
 # Autopilot:
 ap_dir = 'autopilot/'

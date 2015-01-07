@@ -45,6 +45,7 @@ pi_quad: # Raspberry PI based quadrotor
    current_channel: 1 # currently ignored
    adc_to_voltage: 'lambda x : x * 0.003 * 3.6045'
    adc_to_current: 'lambda x : x'
+   rx_type: 'dsl'
    dsl_serial: # ACT DSL
       path: '/dev/ttyAMA0'
       speed: 38400
@@ -52,6 +53,7 @@ pi_quad: # Raspberry PI based quadrotor
 
 
 exynos_quad: # ODROID U3 based quadrotor
+   rx_type: 'dsl'
    arduino_serial: # U3 IO shield serial interface
       path: '/dev/ttySAC0'
       speed: 115200
