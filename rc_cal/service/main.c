@@ -23,6 +23,7 @@
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details. */
 
+#include <syslog.h>
 
 #include <msgpack.h>
 #include <daemon.h>
@@ -30,6 +31,7 @@
 #include <scl.h>
 #include <opcd_interface.h>
 #include <serial.h>
+#include <logger.h>
 
 #include "../shared/rc_cal.h"
 #include "channels.h"
@@ -39,9 +41,9 @@ static int running = 1;
 static msgpack_sbuffer *msgpack_buf = NULL;
 static msgpack_packer *pk = NULL;
 static char *platform = NULL;
-static void *rc_socket = NULL;
+static void *rc_raw_socket = NULL;
 static float channels[MAX_CHANNELS];
-static void *scl_cal_socket = NULL;
+static void *rc_cal_socket = NULL;
 
 
 int _main(void)
@@ -56,21 +58,32 @@ int _main(void)
   
    /* initialize SCL: */
    THROW_ON_ERR(scl_init("rc_cal"));
-   rc_socket = scl_get_socket("rc_raw");
-   THROW_IF(rc_socket == NULL, -EIO);
-   scl_cal_socket = scl_get_socket("rc_cal");
-   THROW_IF(scl_cal_socket == NULL, -EIO);
+   rc_raw_socket = scl_get_socket("rc_raw");
+   THROW_IF(rc_raw_socket == NULL, -EIO);
+   rc_cal_socket = scl_get_socket("rc_cal");
+   THROW_IF(rc_cal_socket == NULL, -EIO);
+
 
    /* init opcd: */
    opcd_params_init("rc_cal", 0);
    
+   /* initialize logger: */
+   syslog(LOG_INFO, "opening logger");
+   if (logger_open("rc_cal") != 0)
+   {  
+      syslog(LOG_CRIT, "could not open logger");
+      THROW(-EIO);
+   }
+   syslog(LOG_CRIT, "logger opened");
+
    /* init channel mapping: */
+   LOG(LL_INFO, "loading channels configuration");
    THROW_ON_ERR(channels_init());
    
    while (1)
    {
       char buffer[1024];
-      int ret = scl_recv_static(rc_socket, buffer, sizeof(buffer));
+      int ret = scl_recv_static(rc_raw_socket, buffer, sizeof(buffer));
       if (ret > 0)
       {
          float channels[MAX_CHANNELS];
@@ -96,7 +109,7 @@ int _main(void)
             msgpack_pack_array(pk, PP_MAX_CHANNELS + 1);
             PACKI(valid);    /* index 0: valid */
             PACKFV(cal_channels, PP_MAX_CHANNELS); /* index 1, .. : channels */
-            scl_copy_send_dynamic(scl_cal_socket, msgpack_buf->data, msgpack_buf->size);
+            scl_copy_send_dynamic(rc_cal_socket, msgpack_buf->data, msgpack_buf->size);
          }
          msgpack_unpacked_destroy(&msg);
       }
@@ -105,6 +118,7 @@ int _main(void)
          msleep(1);
       }
    }
+   printf("nrf\n");
   
    THROW_END();
 }

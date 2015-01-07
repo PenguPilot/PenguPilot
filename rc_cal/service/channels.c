@@ -32,6 +32,7 @@
 #include <util.h>
 #include <linfunc.h>
 #include <rc_cal.h>
+#include <logger.h>
 
 #include "channels.h"
 
@@ -96,7 +97,10 @@ int channels_init(void)
 
    /* check if channels are configured: */
    if (tsint_get(&pitch_index) == -1)
+   {
+      LOG(LL_INFO, "channels not configured; use pp_rc_cal and start the service again");
       return -1;
+   }
 
    linfunc_init_points(&pitch_linfunc, tsfloat_get(&pitch_min), -1.0f, tsfloat_get(&pitch_max), 1.0f);
    linfunc_init_points(&roll_linfunc, tsfloat_get(&roll_min), -1.0f, tsfloat_get(&roll_max), 1.0f);

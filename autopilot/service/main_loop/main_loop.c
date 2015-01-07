@@ -423,7 +423,6 @@ void main_step(const float dt,
  
    /* compute next 3d position estimate using Kalman filters: */
    pos_update(&pos_est, &pos_in);
-   printf("%f %f %f %f\n", n, pos_est.ne_pos.x, e, pos_est.ne_pos.y);
 
    /* execute flight logic (sets cm_x parameters used below): */
    bool hard_off = false;
