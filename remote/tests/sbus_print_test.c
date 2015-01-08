@@ -47,7 +47,7 @@ int main(void)
    {
       int b = serial_read_char(&port);
       if (sbus_parser_process(&parser, b))
-         printf("%s | %.1f %.1f %.1f %.1f\n", parser.valid ? "valid" : "invalid", parser.channels[0], parser.channels[1], parser.channels[2], parser.channels[3]);
+         printf("%s | %.1f %.1f %.1f %.1f\n", parser.sig_valid ? "valid" : "invalid", parser.channels[0], parser.channels[1], parser.channels[2], parser.channels[3]);
    }
  
    THROW_END();
