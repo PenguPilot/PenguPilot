@@ -57,7 +57,10 @@ bool sbus_parser_process(sbus_parser_t *parser, uint8_t c)
    if (parser->frame_idx == 25)
    {
       if (sbus[23] & 0x08) /* failsafe flag */
+      {
          parser->sig_valid = false;
+         goto failsafe;
+      }
       else
          parser->sig_valid = true;
       
@@ -65,6 +68,7 @@ bool sbus_parser_process(sbus_parser_t *parser, uint8_t c)
          parser->invalid_count++;   
       else
       {
+         failsafe:
          parser->valid_count++;
          int int_rc[MAX_CHANNELS];
          int_rc[ 0] = ((sbus[ 1]      | sbus[ 2] << 8                 ) & 0x07FF);
