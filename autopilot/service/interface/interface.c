@@ -190,9 +190,10 @@ SIMPLE_THREAD_BEGIN(thread_func)
             case REQUEST_TYPE__GET_PARAMS:
                LOG(LL_DEBUG, "GET_PARAMS");
                {
-                  Params params = PARAMS__INIT;
-                  get_state(&params);
-                  reply.params = &params;
+                  Params *params = malloc(sizeof(Params));
+                  params__init(params);
+                  get_state(params);
+                  reply.params = params;
                }
                break;
 
