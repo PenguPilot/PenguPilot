@@ -37,7 +37,9 @@
 
 typedef struct
 {
-   bool valid;
+   uint32_t invalid_count;
+   uint32_t valid_count;
+   bool sig_valid; /* signal valid */
    uint8_t buffer[128];
    float channels[MAX_CHANNELS];
    size_t frame_idx;

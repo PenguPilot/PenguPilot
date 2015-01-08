@@ -148,7 +148,7 @@ int sbus_run(void)
       {
          msgpack_sbuffer_clear(msgpack_buf);
          msgpack_pack_array(pk, MAX_CHANNELS + 1);
-         PACKI((int)parser.valid);    /* index 0: valid */
+         PACKI((int)parser.sig_valid);    /* index 0: signal valid */
          PACKFV(parser.channels, MAX_CHANNELS); /* index 1, .. : channels */
          scl_copy_send_dynamic(rc_socket, msgpack_buf->data, msgpack_buf->size);
       }
