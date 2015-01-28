@@ -176,6 +176,10 @@
   sockets:
    - rc_cal: sub
 
+- name: motors
+  sockets:
+   - motor_forces: sub
+
 - name: display
   sockets:
    - motors_spinning: sub

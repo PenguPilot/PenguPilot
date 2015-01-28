@@ -25,6 +25,14 @@
 
 
 overo_quad: # Gumstix Overo based quadrotor
+   motors:
+      driver: 'omap3_pwm'
+      f2e: 'hk20_roxxy282735_1045'
+      n_motors: 4
+      mot_1: 8
+      mot_2: 10
+      mot_3: 11
+      mot_4: 9
    voltage_channel: 7 # TWL4030_MADC
    current_channel: 2 # TWL4030_MADC
    adc_to_voltage: 'lambda x: (x + 27.0951) / 117.1319'

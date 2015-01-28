@@ -1,0 +1,92 @@
+/*___________________________________________________
+ |  _____                       _____ _ _       _    |
+ | |  __ \                     |  __ (_) |     | |   |
+ | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
+ | |  ___/ _ \ '_ \ / _` | | | |  ___/ | |/ _ \| __| |
+ | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
+ | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
+ |                   __/ |                           |
+ |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
+ |___________________________________________________|
+ 
+ Message Format for AutoPilot
+
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details. */
+
+
+/////////////////////////
+// REQUEST-REPLY DATA: //
+/////////////////////////
+
+
+enum RequestType
+{
+   // requests without parameters:
+   START_MOTORS =   1;
+   STOP_MOTORS =    2;
+   GET_PARAMS =     3;
+   RESET_CTRL =     4;
+   // request with parameters:
+   SET_CTRL_PARAM = 5; // requires CtrlData */
+}
+
+
+enum CtrlParam
+{
+   // position setpoints:
+   POS_E =        1; // East position, relative to starting point
+   POS_N =        2; // North position, relative to starting point
+   POS_U_GROUND = 3; // altitude above ground
+   POS_U =        4; // altitude above msl
+   POS_YAW =      5; // absolute yaw position, north = 0.0
+}
+
+
+message CtrlData
+{
+   required CtrlParam param = 1;
+   required float val =       2;
+}
+
+
+message Params
+{
+   required double start_lon = 1;
+   required double start_lat = 2;
+   required double start_alt = 3;
+};
+
+
+message PilotReq
+{
+   required RequestType type =   1;
+   optional CtrlData ctrl_data = 2; // needed if type == SET_CTRL_DATA
+}
+
+
+enum Status
+{
+   OK =         0; // everything OK
+   E_SYNTAX =   1; // syntactic error in data
+   E_SEMANTIC = 2; // semantic errror in protobuf data
+   E_HARDWARE = 3; // hardware error
+}
+
+
+message PilotRep
+{
+   required Status status =  1;
+   optional string err_msg = 2;
+   optional Params params =  3; // required if type == GET_PARAMS
+}
+
