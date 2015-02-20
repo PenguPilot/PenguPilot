@@ -26,6 +26,7 @@
 
 #include <math.h>
 #include <float.h>
+#include <string.h>
 
 #include <threadsafe_types.h>
 #include <opcd_interface.h>
@@ -114,11 +115,16 @@ int channels_init(void)
 
 void channels_update(float out[PP_MAX_CHANNELS], float in[16])
 {
+   memset(out, 0, sizeof(float) * PP_MAX_CHANNELS);
    out[CH_PITCH] = linfunc_calc(&pitch_linfunc, in[tsint_get(&pitch_index)]);
    out[CH_ROLL] = linfunc_calc(&roll_linfunc, in[tsint_get(&roll_index)]);
    out[CH_YAW] = linfunc_calc(&yaw_linfunc, in[tsint_get(&yaw_index)]);
    out[CH_GAS] = linfunc_calc(&gas_linfunc, in[tsint_get(&gas_index)]);
-   out[CH_TWO_STATE] = linfunc_calc(&two_state_linfunc, in[tsint_get(&two_state_index)]);
-   out[CH_THREE_STATE] = linfunc_calc(&three_state_linfunc, in[tsint_get(&three_state_index)]);
+   int twsi = tsint_get(&two_state_index);
+   if (twsi != -1)
+      out[CH_TWO_STATE] = linfunc_calc(&two_state_linfunc, in[twsi]);
+   int trsi = tsint_get(&three_state_index);
+   if (trsi != -1)
+      out[CH_THREE_STATE] = linfunc_calc(&three_state_linfunc, in[trsi]);
 }
 
