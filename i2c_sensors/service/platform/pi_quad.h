@@ -9,9 +9,11 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Main Utilities Interface
+ Raspberry Pi Quadrotor Platform Interface
 
  Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2013 Alexander Barth, Control Engineering Group, TU Ilmenau
+ Copyright (C) 2013 Benjamin Jahn, Control Engineering Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,12 +26,15 @@
  GNU General Public License for more details. */
 
 
-#ifndef __MAIN_UTIL_H__
-#define __MAIN_UTIL_H__
+#ifndef __PI_QUAD_H__
+#define __PI_QUAD_H__
 
 
-void die(void);
+#include "platform.h"
 
 
-#endif /* __MAIN_UTIL_H__ */
+int pi_quad_init(platform_t *platform);
+
+
+#endif /* __PI_QUAD_H__ */
 

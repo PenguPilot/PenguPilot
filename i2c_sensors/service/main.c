@@ -24,6 +24,7 @@
  GNU General Public License for more details. */
 
 
+#include <syslog.h>
 #include <stdlib.h>
 #include <daemon.h>
 #include <stdbool.h>
@@ -33,11 +34,16 @@
 #include <stdlib.h>
 #include <sys/mman.h>
 
+#include <scl.h>
+#include <opcd_interface.h>
 #include <periodic_thread.h>
 #include <util.h>
 #include <interval.h>
 #include <logger.h>
 
+#include "platform/exynos_quad.h"
+#include "platform/overo_quad.h"
+#include "platform/pi_quad.h"
 
 #define REALTIME_PERIOD 0.005
 
@@ -47,14 +53,13 @@ static periodic_thread_t _thread;
 static periodic_thread_t *thread = &_thread;
 
 
-static void main_realtime_init(void)
+static void _main(int argc, char *argv[])
 {
    ASSERT_ONCE();
 
-
    /* init SCL subsystem: */
    syslog(LOG_INFO, "initializing signaling and communication link (SCL)");
-   if (scl_init("autopilot") != 0)
+   if (scl_init("10dof_sensor") != 0)
    {
       syslog(LOG_CRIT, "could not init scl module");
       die();
@@ -79,21 +84,21 @@ static void main_realtime_init(void)
    opcd_param_get("platform", &plat_name);
    if (strcmp(plat_name, "overo_quad") == 0)
    {
-      if (overo_quad_init(&platform, override_hw) < 0)
+      if (overo_quad_init(&platform) < 0)
       {
          LOG(LL_ERROR, "could not initialize platform");
       }
    }
    else if (strcmp(plat_name, "pi_quad") == 0)
    {
-      if (pi_quad_init(&platform, override_hw) < 0)
+      if (pi_quad_init(&platform) < 0)
       {
          LOG(LL_ERROR, "could not initialize platform");
       }
    }
    else if (strcmp(plat_name, "exynos_quad") == 0)
    {
-      if (exynos_quad_init(&platform, override_hw) < 0)
+      if (exynos_quad_init(&platform) < 0)
       {
          LOG(LL_ERROR, "could not initialize platform");
       }
@@ -120,22 +125,17 @@ static void main_realtime_init(void)
    thread->running = 1;
    thread->periodic_data.period.tv_sec = 0;
    thread->periodic_data.period.tv_nsec = NSEC_PER_SEC * REALTIME_PERIOD;
-}
 
-
-/* executed on the actual hardware */
-void _main(int argc, char *argv[])
-{
-   main_realtime_init();
    interval_t interval;
    interval_init(&interval);
-   DATA_DEFINITION();
 
    PERIODIC_THREAD_LOOP_BEGIN
    {
-      dt = interval_measure(&interval);
-      sensor_status = platform_read_sensors(&marg_data, &gps_data, &ultra_z, &baro_z, &voltage, &current, channels);
-      main_step(dt, &marg_data, &gps_data, ultra_z, baro_z, voltage, current, decl, elev, channels, sensor_status, 0);
+      marg_data_t marg_data;
+      float ultra_z;
+      float baro_z;
+      float dt = interval_measure(&interval);
+      uint8_t status = platform_read_sensors(&marg_data, &ultra_z, &baro_z);
    }
    PERIODIC_THREAD_LOOP_END
 }

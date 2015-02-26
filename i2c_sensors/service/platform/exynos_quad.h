@@ -5,7 +5,7 @@
 #include "platform.h"
 
 
-int exynos_quad_init(platform_t *platform, int override_hw);
+int exynos_quad_init(platform_t *platform);
 
 
 #endif /* __EXYNOS_QUAD_H__ */

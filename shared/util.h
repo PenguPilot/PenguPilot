@@ -262,5 +262,7 @@ void rel_val_init(rel_val_t *val);
 
 float rel_val_get(rel_val_t *rel_val, float val);
 
+void die(void);
+
 
 #endif /* __UTIL_H__ */

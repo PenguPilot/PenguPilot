@@ -47,20 +47,6 @@ int platform_read_marg(marg_data_t *marg_data)
 }
 
 
-int platform_read_rc(float channels[PP_MAX_CHANNELS])
-{
-   CHECK_DEV(platform.read_rc);
-   return platform.read_rc(channels);
-}
-
-
-int platform_read_gps(gps_data_t *gps_data)
-{
-   CHECK_DEV(platform.read_gps);
-   return platform.read_gps(gps_data);
-}
-
-
 int platform_read_ultra(float *ultra)
 {
    CHECK_DEV(platform.read_ultra);
@@ -75,39 +61,14 @@ int platform_read_baro(float *baro)
 }
 
 
-int platform_read_power(float *voltage, float *current)
+uint8_t platform_read_sensors(marg_data_t *marg_data,
+                              float *ultra, 
+                              float *baro)
 {
-   CHECK_DEV(platform.read_power);
-   return platform.read_power(voltage, current);
-}
-
-
-int platform_ac_calc(float *setpoints, const int enabled, const float voltage, const float *forces)
-{
-   return ac_calc(setpoints, &platform.ac, enabled, voltage, forces);
-}
-
-
-uint16_t platform_read_sensors(marg_data_t *marg_data,
-                               gps_data_t *gps_data, 
-                               float *ultra, 
-                               float *baro, 
-                               float *voltage, 
-                               float *current, 
-                               float channels[PP_MAX_CHANNELS])
-{
-   uint16_t status = 0;
+   uint8_t status = 0;
    if (platform_read_marg(marg_data) == 0)
    {
       status |= MARG_VALID;
-   }
-   
-   if (platform_read_gps(gps_data) == 0)
-   {
-      if (gps_data->fix >= FIX_2D)
-      {
-         status |= GPS_VALID;
-      }
    }
    
    if (platform_read_ultra(ultra) == 0)
@@ -120,23 +81,6 @@ uint16_t platform_read_sensors(marg_data_t *marg_data,
       status |= BARO_VALID;
    }
    
-   if (platform_read_power(voltage, current) == 0)
-   {
-      status |= POWER_VALID;
-   }
-   
-   if (platform_read_rc(channels) == 0)
-   {
-      status |= RC_VALID;
-   }
-   
    return status;
-}
-
-
-int platform_write_motors(float *setpoints)
-{
-   CHECK_DEV(platform.write_motors);
-   return platform.write_motors(setpoints);
 }
 

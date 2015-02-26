@@ -24,9 +24,13 @@
  GNU General Public License for more details. */
 
 
+
+#include <signal.h>
+#include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-#include <util.h>
+
+#include "util.h"
 
 
 void user_data_dir(char *buffer)
@@ -127,4 +131,19 @@ float rel_val_get(rel_val_t *rel_val, float val)
    }
    return val - rel_val->start;
 }
+
+
+
+void die(void)
+{
+   static int killing = 0;
+   if (!killing)
+   {
+      killing = 1;
+      fprintf(stderr, "killed\n");
+      sleep(1);
+      kill(0, 9);
+   }
+}
+
 

@@ -27,10 +27,11 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <daemon.h>
 #include <stdbool.h>
 
-#include "main_loop/main_util.h"
+#include <daemon.h>
+#include <util.h>
+
 #include "main_loop/main_realtime.h"
 #include "main_loop/main_replay.h"
 

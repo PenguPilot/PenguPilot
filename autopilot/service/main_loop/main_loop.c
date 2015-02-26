@@ -41,7 +41,6 @@
 #include "mon.h"
 #include "control_mode.h"
 #include "main_loop.h"
-#include "main_util.h"
 #include "../interface/interface.h"
 #include "../util/math/conv.h"
 #include "../util/algo.h"

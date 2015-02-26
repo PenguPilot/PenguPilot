@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Main Utilities Implementation
+ Gumstix Overo based Quad-Rotor Platform
 
  Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -24,24 +24,15 @@
  GNU General Public License for more details. */
 
 
-#include <signal.h>
-#include <unistd.h>
-
-#include <logger.h>
-
-#include "main_util.h"
+#ifndef __ARCADE_QUAD_H__
+#define __ARCADE_QUAD_H__
 
 
-void die(void)
-{
-   static int killing = 0;
-   if (!killing)
-   {
-      killing = 1;
-      LOG(LL_INFO, "shutting down");
-      sleep(1);
-      kill(0, 9);
-   }
-}
+#include "platform.h"
 
+
+int overo_quad_init(platform_t *platform);
+
+
+#endif /* __ARCADE_QUAD_H__ */
 

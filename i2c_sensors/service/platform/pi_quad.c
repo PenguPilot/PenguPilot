@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Raspberry Pi Quadrotor Platform Interface
+ Raspberry Pi Quadrotor Platform
 
  Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
  Copyright (C) 2013 Alexander Barth, Control Engineering Group, TU Ilmenau
@@ -26,15 +26,54 @@
  GNU General Public License for more details. */
 
 
-#ifndef __PI_QUAD_H__
-#define __PI_QUAD_H__
+#include <stddef.h>
+#include <unistd.h>
+#include <malloc.h>
+#include <math.h>
 
+#include <logger.h>
+#include <util.h>
+#include <i2c/i2c.h>
 
 #include "platform.h"
+#include "drotek_9150.h"
+#include "../sensors/i2cxl/i2cxl_reader.h"
+#include "../sensors/ms5611/ms5611_reader.h"
+#include "../util/math/quat.h"
 
 
-int pi_quad_init(platform_t *platform, int override_hw);
+static i2c_bus_t i2c_bus;
+static drotek_9150_t marg;
 
 
-#endif /* __PI_QUAD_H__ */
+static int read_marg(marg_data_t *marg_data)
+{
+   return drotek_9150_read(marg_data, &marg);
+}
+
+
+int pi_quad_init(platform_t *plat)
+{
+   ASSERT_ONCE();
+   THROW_BEGIN();
+
+   LOG(LL_INFO, "initializing i2c bus");
+   THROW_ON_ERR(i2c_bus_open(&i2c_bus, "/dev/i2c-1"));
+   plat->priv = &i2c_bus;
+
+   LOG(LL_INFO, "initializing MARG sensor cluster");
+   THROW_ON_ERR(drotek_9150_init(&marg, &i2c_bus));
+   plat->read_marg = read_marg;
+ 
+   LOG(LL_INFO, "initializing i2cxl sonar sensor");
+   THROW_ON_ERR(i2cxl_reader_init(&i2c_bus));
+   plat->read_ultra = i2cxl_reader_get_alt;
+      
+   LOG(LL_INFO, "initializing ms5611 barometric pressure sensor");
+   THROW_ON_ERR(ms5611_reader_init(&i2c_bus));
+   plat->read_baro = ms5611_reader_get_alt;
+   
+   LOG(LL_INFO, "pi_quad sensor platform initialized");
+   THROW_END();
+}
 

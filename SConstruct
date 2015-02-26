@@ -157,12 +157,10 @@ ap_src = collect_files(ap_dir + 'service', re_cc)
 ap_pb_lib = make_proto_lib(ap_pb_dir, 'autopilot_pb')
 ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = common_libs + [ap_pb_lib + logger_lib] + ['m', 'rt', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
 
-
-# Sensor Reader:
-#sr_dir = 'sensor_reader/'
-#sr_src = collect_files(sr_dir + 'service', re_cc)
-#sr_bin = env.Program(sr_dir + 'service/sensor_reader', sr_src, LIBS = common_libs + [logger_lib] + ['m', 'rt', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
-
+# I2C Sensor Reader:
+sr_dir = 'i2c_sensors/'
+sr_src = collect_files(sr_dir + 'service', re_cc)
+sr_bin = env.Program(sr_dir + 'service/i2c_sensors', sr_src, LIBS = common_libs + [logger_lib] + ['m', 'rt', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
 
 # Display:
 display_src = map(lambda x: 'display/shared/' + x, ['pyssd1306.c', 'pyssd1306.i', 'ssd1306.c']) + ['shared/i2c/i2c.c']

@@ -34,7 +34,6 @@
 #include <interval.h>
 #include <logger.h>
 
-#include "main_util.h"
 #include "main_loop.h"
 #include "../sensors/scl_mag_decl/scl_mag_decl.h"
 #include "../sensors/scl_elevmap/scl_elevmap.h"
