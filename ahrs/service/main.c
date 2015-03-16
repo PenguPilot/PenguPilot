@@ -51,10 +51,9 @@ int _main(void)
    THROW_BEGIN();
  
    /* init SCL: */
-   THROW_ON_ERR(scl_init(name));
-   void *marg_cal_socket = scl_get_socket("marg_cal");
+   void *marg_cal_socket = scl_get_socket("marg_cal", "sub");
    THROW_IF(marg_cal_socket == NULL, -EIO);
-   void *orientation_socket = scl_get_socket("orientation");
+   void *orientation_socket = scl_get_socket("orientation", "pub");
    THROW_IF(orientation_socket == NULL, -EIO);
    
    /* init logger: */

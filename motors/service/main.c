@@ -57,8 +57,7 @@ int __main(void)
    THROW_BEGIN();
 
    /* initialize SCL: */
-   THROW_ON_ERR(scl_init("motors"));
-   forces_socket = scl_get_socket("motor_forces");
+   forces_socket = scl_get_socket("motor_forces", "sub");
    THROW_IF(forces_socket == NULL, -EIO);
 
    /* init opcd: */

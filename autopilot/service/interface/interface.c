@@ -212,7 +212,7 @@ SIMPLE_THREAD_END
 int cmd_init(void)
 {
    ASSERT_ONCE();
-   cmd_socket = scl_get_socket("ap_ctrl");
+   cmd_socket = scl_get_socket("ap_ctrl", "rep");
    if (cmd_socket == NULL)
    {
       return -1;

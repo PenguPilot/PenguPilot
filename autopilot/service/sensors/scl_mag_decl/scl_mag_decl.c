@@ -67,7 +67,7 @@ SIMPLE_THREAD_END
 
 int scl_mag_decl_init(void)
 {
-   decl_socket = scl_get_socket("decl");
+   decl_socket = scl_get_socket("decl", "sub");
    if (decl_socket == NULL)
    {
       return -1;

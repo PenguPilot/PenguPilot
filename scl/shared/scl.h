@@ -31,11 +31,7 @@
 #include <zmq.h>
 
 
-int scl_init(char *component);
-
-void *scl_get_context(void);
-
-void *scl_get_socket(char *gate);
+void *scl_get_socket(char *id, char *type_name);
 
 
 /*

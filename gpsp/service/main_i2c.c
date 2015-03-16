@@ -47,12 +47,12 @@ int main_i2c(void)
 {
    THROW_BEGIN();
 
-   void *gps_socket = scl_get_socket("gps");
+   void *gps_socket = scl_get_socket("gps", "pub");
    THROW_IF(gps_socket == NULL, -EIO);
    int64_t hwm = 1;
    zmq_setsockopt(gps_socket, ZMQ_SNDHWM, &hwm, sizeof(hwm));
 
-   void *sats_socket = scl_get_socket("sats");
+   void *sats_socket = scl_get_socket("sats", "pub");
    THROW_IF(sats_socket == NULL, -EIO);
  
    i2c_bus_t bus;

@@ -28,7 +28,7 @@
 
 from config import Config, ConfigError
 from opcd_pb2 import CtrlReq, CtrlRep, Pair
-from scl import generate_map
+from scl import scl_get_socket
 from misc import daemonize
 from sys import argv
 from re import match
@@ -40,10 +40,9 @@ class OPCD:
 
 
    def __init__(self, name):
-      map = generate_map(name)
-      self.ctrl_socket = map['opcd_ctrl']
-      self.event_socket = map['opcd_event']
-      logger_init('opcd', map['log_data'])
+      self.ctrl_socket = scl_get_socket('opcd_ctrl', 'rep')
+      self.event_socket = scl_get_socket('opcd_event', 'pub')
+      logger_init('opcd', scl_get_socket('log_data', 'push'))
       self.conf = Config()
       self.map = {str: 'str_val', int: 'int_val', float: 'dbl_val', bool: 'bool_val'}
 

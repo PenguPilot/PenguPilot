@@ -62,10 +62,9 @@ int _main(void)
    THROW_IF(pk == NULL, -ENOMEM);
   
    /* initialize SCL: */
-   THROW_ON_ERR(scl_init("marg_cal"));
-   marg_raw_socket = scl_get_socket("marg_raw");
+   marg_raw_socket = scl_get_socket("marg_raw", "sub");
    THROW_IF(marg_raw_socket == NULL, -EIO);
-   marg_cal_socket = scl_get_socket("marg_cal");
+   marg_cal_socket = scl_get_socket("marg_cal", "pub");
    THROW_IF(marg_cal_socket == NULL, -EIO);
 
    /* initialize logger: */

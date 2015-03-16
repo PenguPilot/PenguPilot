@@ -79,10 +79,9 @@ int _main(void)
    pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
 
    /* init scl and get sockets:: */
-   THROW_ON_ERR(scl_init("gpstime"));
-   void *gps_socket = scl_get_socket("gps");
+   void *gps_socket = scl_get_socket("gps", "sub");
    THROW_IF(gps_socket == NULL, -ENODEV);
-   void *ts_socket = scl_get_socket("time_set");
+   void *ts_socket = scl_get_socket("time_set", "pub");
    THROW_IF(ts_socket == NULL, -ENODEV);
    sleep(5);
    bool set = false;

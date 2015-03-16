@@ -51,10 +51,9 @@ int _main(void)
    THROW_BEGIN()
 
    /* init scl and get sockets:: */
-   THROW_ON_ERR(scl_init("arduino"));
-   void *rc_socket = scl_get_socket("rc_raw");
+   void *rc_socket = scl_get_socket("rc_raw", "pub");
    THROW_IF(rc_socket == NULL, -ENODEV);
-   void *power_socket = scl_get_socket("power");
+   void *power_socket = scl_get_socket("power", "pub");
    THROW_IF(power_socket == NULL, -ENODEV);
 
    /* allocate msgpack buffers: */

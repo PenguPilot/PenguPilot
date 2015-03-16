@@ -40,6 +40,7 @@ export PYTHONPATH="$PYTHONPATH:$PENGUPILOT_PATH/logger/shared"
 export PYTHONPATH="$PYTHONPATH:$PENGUPILOT_PATH/shared"
 
 PENGU_USER_PATH=$HOME/.PenguPilot
+mkdir -p $PENGU_USER_PATH/ipc
 mkdir -p $PENGU_USER_PATH/run
 mkdir -p $PENGU_USER_PATH/config
 mkdir -p $PENGU_USER_PATH/log

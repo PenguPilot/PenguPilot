@@ -26,14 +26,13 @@
  GNU General Public License for more details. """
 
 
-from scl import generate_map
+from scl import scl_get_socket
 from misc import daemonize
 
 
 def main(name):
-   map = generate_map(name)
-   socket_in = map['log_data']
-   socket_out = map['log_data_pub']
+   socket_in = scl_get_socket('log_data', 'pull')
+   socket_out = scl_get_socket('log_data_pub', 'pub')
    while True:
       data = socket_in.recv()
       socket_out.send(data)

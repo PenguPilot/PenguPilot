@@ -169,8 +169,7 @@ int _main(void)
    THROW_IF(pk == NULL, -ENOMEM);
   
    /* initialize SCL: */
-   THROW_ON_ERR(scl_init("remote"));
-   rc_socket = scl_get_socket("rc_raw");
+   rc_socket = scl_get_socket("rc_raw", "pub");
    THROW_IF(rc_socket == NULL, -EIO);
 
    /* init opcd and get plaform string: */

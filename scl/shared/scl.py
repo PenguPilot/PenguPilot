@@ -10,11 +10,6 @@
  |__________________________________|
 
  SCL Python interface
- converts system specification into component socket specification,
- enriched with the corresponding zeromq socket-pair definitions
-
- REQ <-> REP: 1 shared link
- PUB --> SUB: 1 publisher, multiple subscribers
 
  Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -29,64 +24,29 @@
  GNU General Public License for more details. """
 
 
-import os, yaml, zmq, subprocess
-
-class ZSEx(Exception):
-   """
-   zeromq specification exception
-   """
-
-   pass
+import os, zmq
 
 
-def generate_map(component_name):
-
-   """
-   generates zeromq socket map for a certain component
-   """
-
-   # figure out common base path:
-   try:
-      cache = os.environ["HOME"] + "/.SCL/scl.yaml"
-   except:
-      raise ZSEx("HOME environment variable is not set")
-   try:
-      generator = os.environ["SCL_CACHE_GENERATOR"]
-   except:
-      raise ZSEx("SCL_CACHE_GENERATOR environment variable is not set")
+try:
+   pp_path = "ipc://" + os.environ["HOME"] + "/.PenguPilot/ipc/"
+except:
+   raise ZSEx("HOME environment variable is not set")
+context = zmq.Context()
 
 
-   # call code generator:
-   try:
-      result = subprocess.call(["bash", generator])
-      if result != 0:
-         raise ZSEx("%s failed with code %d" % (generator, result))
-   except:
-      raise ZSEx("could not execute %s" % generator)
-
-   # load generated zmq specification:
-   try:
-      zmq_spec = yaml.load(file(cache))
-   except:
-      raise ZSEx("could not load " + zmq_spec_path)
-   
-   # generate the map:
-   context = zmq.Context()
-   socket_map = {}
-   for entry in zmq_spec[component_name]:
-      socket_name = entry['socket_name']
-      socket_type = entry['zmq_socket_type']
-      socket_path = entry['zmq_socket_path']
-      socket = context.socket(socket_type)
-      if socket_type in [zmq.SUB, zmq.REQ, zmq.PUSH]:
-         if socket_type == zmq.SUB:
-            socket.setsockopt(zmq.SUBSCRIBE, "")
-         socket.connect(socket_path)
-      elif socket_type in [zmq.PUB, zmq.REP, zmq.PULL]:
-         socket.bind(socket_path)
-      else:
-         raise ZSEx("unknown socket type: %d" % socket_type)
-      socket_map[socket_name] = socket
-
-   return socket_map
+def scl_get_socket(id, type_name):
+   map = {"sub": zmq.SUB, "req": zmq.REQ, "push": zmq.PUSH,
+          "pub": zmq.PUB, "rep": zmq.REP, "pull": zmq.PULL}
+   socket_type = map[type_name]
+   socket_path = pp_path + id
+   socket = context.socket(socket_type)
+   if socket_type in [zmq.SUB, zmq.REQ, zmq.PUSH]:
+      if socket_type == zmq.SUB:
+         socket.setsockopt(zmq.SUBSCRIBE, "")
+      socket.connect(socket_path)
+   elif socket_type in [zmq.PUB, zmq.REP, zmq.PULL]:
+      socket.bind(socket_path)
+   else:
+      raise Exception("unknown socket type: %d" % socket_type)
+   return socket
 

@@ -96,7 +96,7 @@ void mon_init(void)
    ASSERT_ONCE();
 
    /* open monitoring socket: */
-   mon_socket = scl_get_socket("ap_mon");
+   mon_socket = scl_get_socket("ap_mon", "pub");
    ASSERT_NOT_NULL(mon_socket);
    int64_t hwm = 1;
    zmq_setsockopt(mon_socket, ZMQ_SNDHWM, &hwm, sizeof(hwm));

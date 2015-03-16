@@ -53,7 +53,7 @@ int logger_open(const char *_name)
    name_len = strlen(name);
    msgpack_sbuffer_init(&sbuf);
    msgpack_packer_init(&pk, &sbuf, msgpack_sbuffer_write);
-   log_socket = scl_get_socket("log_data");
+   log_socket = scl_get_socket("log_data", "push");
    return (log_socket == NULL) ? -ENODEV : 0;
 }
 

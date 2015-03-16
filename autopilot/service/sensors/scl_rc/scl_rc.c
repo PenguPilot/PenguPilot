@@ -107,7 +107,7 @@ int scl_rc_init(void)
    ASSERT_ONCE();
    THROW_BEGIN();
    memset(channels, 0, sizeof(channels));
-   scl_socket = scl_get_socket("rc_cal");
+   scl_socket = scl_get_socket("rc_cal", "sub");
    THROW_IF(scl_socket == NULL, -ENODEV);
    pthread_mutexattr_init(&mutexattr); 
    pthread_mutexattr_setprotocol(&mutexattr, PTHREAD_PRIO_INHERIT); 

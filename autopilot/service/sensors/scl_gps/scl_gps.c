@@ -101,7 +101,7 @@ int scl_gps_init(void)
 {
    ASSERT_ONCE();
    THROW_BEGIN();
-   scl_socket = scl_get_socket("gps");
+   scl_socket = scl_get_socket("gps", "sub");
    THROW_IF(scl_socket == NULL, -ENODEV);
    pthread_mutexattr_init(&mutexattr);
    pthread_mutexattr_setprotocol(&mutexattr, PTHREAD_PRIO_INHERIT);

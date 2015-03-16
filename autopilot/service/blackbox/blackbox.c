@@ -105,7 +105,7 @@ void blackbox_init(void)
    ASSERT_ONCE();
    ASSERT_NULL(blackbox_socket);
    /* get scl socket */
-   blackbox_socket = scl_get_socket("blackbox");
+   blackbox_socket = scl_get_socket("blackbox", "pub");
    ASSERT_NOT_NULL(blackbox_socket);
 
    /* send blackbox header: */

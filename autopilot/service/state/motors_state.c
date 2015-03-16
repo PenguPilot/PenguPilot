@@ -52,7 +52,7 @@ void motors_state_init(void)
 {
    ASSERT_ONCE();
    ASSERT_NULL(spinning_socket);
-   spinning_socket = scl_get_socket("motors_spinning");
+   spinning_socket = scl_get_socket("motors_spinning", "pub");
    scl_send_static(spinning_socket, "false", 5);
    ASSERT_NOT_NULL(spinning_socket);
    etimer_init(&timer, 1.5);

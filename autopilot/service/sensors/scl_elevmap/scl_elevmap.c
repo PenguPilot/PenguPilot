@@ -78,7 +78,7 @@ SIMPLE_THREAD_END
 int scl_elevmap_init(void)
 {
    THROW_BEGIN();
-   scl_socket = scl_get_socket("elev");
+   scl_socket = scl_get_socket("elev", "sub");
    THROW_IF(scl_socket == NULL, -ENODEV);
    tsfloat_init(&elevation, 0.0f);
    simple_thread_start(&thread, thread_func, "elevmap_reader", THREAD_PRIORITY, NULL);

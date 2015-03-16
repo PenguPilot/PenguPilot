@@ -23,154 +23,94 @@
  GNU General Public License for more details. */
 
 
+#include <stdbool.h>
+#include <string.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <pthread.h>
 
-#include <yaml.h>
-#include <glib.h>
 #include <zmq.h>
 
 #include "scl.h"
 
 
-static GHashTable *params_ht = NULL;
-static void *context = NULL;
+void *context;
+char pp_path[1024];
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+bool initialized;
 
 
-void add_socket(char *name, char *path, int type)
+static int scl_init(void)
 {
-   assert(name);
-   assert(path);
-   assert(type != -1);
-   void *socket = zmq_socket(context, type);
-   assert(socket);
-   switch (type)
-   {
-      case ZMQ_REP:
-      case ZMQ_PUB:
-      case ZMQ_PULL:
-         zmq_bind(socket, path);
-         break;
-
-      case ZMQ_SUB:
-         zmq_setsockopt(socket, ZMQ_SUBSCRIBE, "", 0);
-
-      case ZMQ_PUSH:
-      case ZMQ_REQ:
-         zmq_connect(socket, path);
-   }
-
-   g_hash_table_insert(params_ht, name, socket);
-}
-
-
-
-int scl_init(char *comp_name)
-{
-   char *generator = getenv("SCL_CACHE_GENERATOR");
-   if (generator == NULL)
-   {
-      fprintf(stderr, "environment variable SCL_CACHE_GENERATOR is undefined\n");
-      return -1;
-   }
-   
-   char cache[128];
    char *home = getenv("HOME");
    if (home == NULL)
    {
       fprintf(stderr, "environment variable HOME is undefined\n");
       return -2;
    }
-   sprintf(cache, "%s/.SCL/scl.yaml", home);
-
-   int result = system(generator);
-   if (result != 0)
-   {
-      fprintf(stderr, "generator script failed\n");
-      return -2;
-   }
+   sprintf(pp_path, "ipc://%s/PenguPilot/ipc/", home);
 
    context = zmq_init(1);
-   params_ht = g_hash_table_new(g_str_hash, g_str_equal);
-   FILE *source = fopen(cache, "rb");
-    
-   yaml_parser_t parser;
-   yaml_parser_initialize(&parser);
-   yaml_parser_set_input_file(&parser, source);
-    
-   yaml_document_t document;
-   yaml_parser_load(&parser, &document);
-    
-   yaml_node_t *root = yaml_document_get_root_node(&document);
-   assert(root->type == YAML_MAPPING_NODE);
-   int found = 0;
-
-   for (yaml_node_pair_t *i = root->data.mapping.pairs.start;
-        i != root->data.mapping.pairs.top;
-        i++)
-   {
-      yaml_node_t *node = yaml_document_get_node(&document, i->value);
-      assert(node->type == YAML_SEQUENCE_NODE);
-      char *name = (char *)yaml_document_get_node(&document, i->key)->data.scalar.value;
-      if (strcmp(name, comp_name) == 0)
-      {
-         found = 1;
-         for (yaml_node_item_t *j = node->data.sequence.items.start;
-              j != node->data.sequence.items.top;
-              j++)
-         {
-            yaml_node_t *list_node = yaml_document_get_node(&document, *j);
-            assert(list_node->type == YAML_MAPPING_NODE);
-            char *socket_name = NULL;
-            char *ipc_path = NULL;
-            int socket_type = -1;
-            for (yaml_node_pair_t *k = list_node->data.mapping.pairs.start;
-                 k != list_node->data.mapping.pairs.top;
-                 k++)
-            {
-               char *key_name = (char *)yaml_document_get_node(&document, k->key)->data.scalar.value;
-               char *val_name = (char *)yaml_document_get_node(&document, k->value)->data.scalar.value;
-               if (strcmp(key_name, "socket_name") == 0)
-               {
-                  assert(socket_name == NULL);
-                  socket_name = val_name;
-               }
-               else if (strcmp(key_name, "zmq_socket_path") == 0)
-               {
-                  assert(ipc_path == NULL);
-                  ipc_path = val_name;
-               }
-               else
-               {
-                  assert(socket_type == -1);
-                  assert(strcmp(key_name, "zmq_socket_type") == 0);
-                  socket_type = atoi(val_name);
-               }
-            }
-            add_socket(socket_name, ipc_path, socket_type);
-         }
-      }
-   }
-   if (!found)
-   {
-      fprintf(stderr, "could not find component %s\n", comp_name);
-      return -3;   
-   }
-
    return 0;
 }
 
 
-void *scl_get_context(void)
+void *scl_get_socket(char *id, char *type_name)
 {
-   return context;
-}
+   pthread_mutex_lock(&mutex);
+   if (!initialized)
+   {
+      scl_init();
+   }
+   pthread_mutex_unlock(&mutex);
 
+   static struct 
+   {
+      char *name;
+      int type;
+   }
+   map[6] = 
+   {
+      {"sub", ZMQ_SUB},
+      {"req", ZMQ_REQ},
+      {"push", ZMQ_PUSH},
+      {"rep", ZMQ_REP},
+      {"pub", ZMQ_PUB},
+      {"pull", ZMQ_PULL}
+   };
 
-void *scl_get_socket(char *socket)
-{
-   return g_hash_table_lookup(params_ht, socket);
+   int type = 0;
+   int i;
+   for (i = 0; i < 6; i++)
+   {
+      if (strcmp(map[i].name, type_name) == 0)
+      {
+         type = map[i].type;
+      }
+   }
+   if (i == 6)
+   {
+      fprintf(stderr, "unknown socket type: %s", type_name);   
+      exit(EINVAL);
+   }
+
+   void *socket = zmq_socket(context, type);
+   if (!socket)
+      return NULL;
+
+   char path[1024];
+   sprintf("%s%s", pp_path, id);
+
+   if (i < 3)
+      zmq_bind(socket, path);
+   if (i == 2)
+      zmq_setsockopt(socket, ZMQ_SUBSCRIBE, "", 0);
+   if (i > 2)
+      zmq_connect(socket, path);
+
+   return socket;
 }
 
 

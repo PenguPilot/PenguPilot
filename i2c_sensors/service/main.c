@@ -66,8 +66,7 @@ static int _main(int argc, char *argv[])
  
    /* initialize SCL: */
    syslog(LOG_INFO, "initializing scl");
-   THROW_ON_ERR(scl_init(name));
-   void *marg_raw_socket = scl_get_socket("marg_raw");
+   void *marg_raw_socket = scl_get_socket("marg_raw", "sub");
    THROW_IF(marg_raw_socket == NULL, -EIO);
 
    /* initialize msgpack buffers: */

@@ -27,7 +27,6 @@
 
 
 from opcd_pb2 import CtrlReq, CtrlRep, Value
-from scl import generate_map
 from threading import Lock
 
 

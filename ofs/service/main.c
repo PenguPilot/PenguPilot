@@ -29,8 +29,7 @@ int _main(void)
    pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
 
    /* initialize SCL: */
-   scl_init("ofs");
-   rc_socket = scl_get_socket("oflow");
+   rc_socket = scl_get_socket("oflow", "pub");
 
    /* init opcd and get plaform string: */
    //opcd_params_init("", 0);

@@ -48,12 +48,6 @@ void _main(int argc, char *argv[])
    (void)argc;
    (void)argv;
 
-   if (scl_init("gpsp") != 0)
-   {
-      syslog(LOG_CRIT, "could not init scl module");
-      exit(EXIT_FAILURE);
-   }
-   
    opcd_params_init("", 0);
    char *plat = NULL;
    opcd_param_get("platform", &plat);

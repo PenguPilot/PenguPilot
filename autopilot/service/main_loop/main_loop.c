@@ -161,14 +161,6 @@ void main_init(int argc, char *argv[])
    memset(&pos_in, 0, sizeof(pos_in_t));
    vec3_init(&pos_in.acc);
 
-   /* init SCL subsystem: */
-   syslog(LOG_INFO, "initializing signaling and communication link (SCL)");
-   if (scl_init("autopilot") != 0)
-   {
-      syslog(LOG_CRIT, "could not init scl module");
-      die();
-   }
-   
    /* init params subsystem: */
    syslog(LOG_INFO, "initializing opcd interface");
    opcd_params_init("autopilot.", 1);
@@ -277,7 +269,7 @@ void main_init(int argc, char *argv[])
    mon_init();
 
 
-   obj_pos_socket = scl_get_socket("obj_pos");
+   obj_pos_socket = scl_get_socket("obj_pos", "sub");
    simple_thread_start(&thread, thread_func, THREAD_NAME, THREAD_PRIORITY, NULL);
    LOG(LL_INFO, "entering main loop");
 }

@@ -57,10 +57,9 @@ int _main(void)
    THROW_IF(pk == NULL, -ENOMEM);
   
    /* initialize SCL: */
-   THROW_ON_ERR(scl_init("rc_cal"));
-   rc_raw_socket = scl_get_socket("rc_raw");
+   rc_raw_socket = scl_get_socket("rc_raw", "sub");
    THROW_IF(rc_raw_socket == NULL, -EIO);
-   rc_cal_socket = scl_get_socket("rc_cal");
+   rc_cal_socket = scl_get_socket("rc_cal", "pub");
    THROW_IF(rc_cal_socket == NULL, -EIO);
 
 
