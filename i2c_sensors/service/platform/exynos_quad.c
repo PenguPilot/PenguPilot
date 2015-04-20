@@ -68,15 +68,12 @@ int exynos_quad_init(platform_t *plat)
 
    LOG(LL_INFO, "initializing MARG sensor cluster");
    THROW_ON_ERR(drotek_9150_init(&marg, &i2c_4));
-   plat->read_marg = read_marg;
-     
+ 
    LOG(LL_INFO, "initializing i2cxl sonar sensor");
    THROW_ON_ERR(i2cxl_reader_init(&i2c_4));
-   plat->read_ultra = i2cxl_reader_get_alt;
 
    LOG(LL_INFO, "initializing ms5611 barometric pressure sensor");
    THROW_ON_ERR(ms5611_reader_init(&i2c_4));
-   plat->read_baro = ms5611_reader_get_alt;
    
    LOG(LL_INFO, "exynos_quadro sensor platform initialized");
    THROW_END();

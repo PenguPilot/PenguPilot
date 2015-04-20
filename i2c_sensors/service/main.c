@@ -66,8 +66,10 @@ static int _main(int argc, char *argv[])
  
    /* initialize SCL: */
    syslog(LOG_INFO, "initializing scl");
-   void *marg_raw_socket = scl_get_socket("marg_raw", "sub");
-   THROW_IF(marg_raw_socket == NULL, -EIO);
+   void *gyro_raw_socket = scl_get_socket("gyro_raw", "pub");
+   THROW_IF(gyro_raw_socket == NULL, -EIO);
+   void *acc_raw_socket = scl_get_socket("acc_raw", "pub");
+   THROW_IF(acc_raw_socket == NULL, -EIO);
 
    /* initialize msgpack buffers: */
    msgpack_buf = msgpack_sbuffer_new();
@@ -126,27 +128,22 @@ static int _main(int argc, char *argv[])
    thread->running = 1;
    thread->periodic_data.period.tv_sec = 0;
    thread->periodic_data.period.tv_nsec = NSEC_PER_SEC * REALTIME_PERIOD;
-   interval_t interval;
-   interval_init(&interval);
 
    PERIODIC_THREAD_LOOP_BEGIN
    {
       marg_data_t marg_data;
       marg_data_init(&marg_data);
-      float baro_z;
-      float ultra_z;
-      float dt = interval_measure(&interval);
-      uint8_t status = platform_read_sensors(&marg_data, &ultra_z, &baro_z);
+      uint8_t status = platform_read_sensors(&marg_data);
+      
       msgpack_sbuffer_clear(msgpack_buf);
-      msgpack_pack_array(pk, 12);
-      PACKI(status);                /* 0: status */
-      PACKFV(marg_data.gyro.ve, 3); /* 1-3: gyro */
-      PACKFV(marg_data.acc.ve, 3);  /* 4-6: acc */
-      PACKFV(marg_data.mag.ve, 3);  /* 7-9: mag */
-      PACKF(ultra_z);               /* 10: ultra */
-      PACKF(baro_z);                /* 11: baro */
-      scl_copy_send_dynamic(marg_raw_socket, msgpack_buf->data, msgpack_buf->size);
- 
+      msgpack_pack_array(pk, 3);
+      PACKFV(marg_data.gyro.ve, 3);
+      scl_copy_send_dynamic(gyro_raw_socket, msgpack_buf->data, msgpack_buf->size);
+      
+      msgpack_sbuffer_clear(msgpack_buf);
+      msgpack_pack_array(pk, 3);
+      PACKFV(marg_data.acc.ve, 3);
+      scl_copy_send_dynamic(acc_raw_socket, msgpack_buf->data, msgpack_buf->size);
    }
    PERIODIC_THREAD_LOOP_END
 
@@ -163,7 +160,7 @@ void main_wrap(int argc, char *argv[])
 void pp_daemonize(char *name, int argc, char *argv[])
 {
    char pid_file[1024];
-   sprintf(pid_file, "%s/.PenguPilot/run/%s.pid", getenv("HOME"), name);
+   service_name_to_pidfile(pid_file, name);
    daemonize(pid_file, main_wrap, die, argc, argv);
 }
 

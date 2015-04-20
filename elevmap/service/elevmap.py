@@ -13,7 +13,7 @@
   
  Elevation Map Service
 
- Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
  GNU General Public License for more details. """
 
 
-from scl import generate_map
+from scl import scl_get_socket
 from misc import daemonize, RateTimer
 from gps_msgpack import *
 from msgpack import loads, dumps
@@ -35,9 +35,8 @@ from srtm import SrtmElevMap
 
 def main(name):
    elev_map = SrtmElevMap()
-   socket_map = generate_map(name)
-   gps_socket = socket_map['gps']
-   elev_socket = socket_map['elev']
+   gps_socket = scl_get_socket('gps', 'sub')
+   elev_socket = scl_get_socket('elev', 'pub')
    rt = RateTimer(1.0)
    while True:
       raw = gps_socket.recv()

@@ -47,38 +47,12 @@ int platform_read_marg(marg_data_t *marg_data)
 }
 
 
-int platform_read_ultra(float *ultra)
-{
-   CHECK_DEV(platform.read_ultra);
-   return platform.read_ultra(ultra);
-}
-
-
-int platform_read_baro(float *baro)
-{
-   CHECK_DEV(platform.read_baro);
-   return platform.read_baro(baro);
-}
-
-
-uint8_t platform_read_sensors(marg_data_t *marg_data,
-                              float *ultra, 
-                              float *baro)
+uint8_t platform_read_sensors(marg_data_t *marg_data)
 {
    uint8_t status = 0;
    if (platform_read_marg(marg_data) == 0)
    {
       status |= MARG_VALID;
-   }
-   
-   if (platform_read_ultra(ultra) == 0)
-   {
-      status |= ULTRA_VALID;
-   }
-    
-   if (platform_read_baro(baro) == 0)
-   {
-      status |= BARO_VALID;
    }
    
    return status;

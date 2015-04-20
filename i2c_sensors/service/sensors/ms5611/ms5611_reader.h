@@ -33,8 +33,6 @@
 
 int ms5611_reader_init(i2c_bus_t *bus);
 
-int ms5611_reader_get_alt(float *alt);
-
 
 #endif /* __MS5611_READER_H__ */
 

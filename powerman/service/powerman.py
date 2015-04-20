@@ -32,7 +32,7 @@
 
 from misc import *
 from msgpack import loads, dumps
-from scl import generate_map
+from scl import scl_get_socket
 from opcd_interface import OPCD_Interface
 from misc import daemonize
 from os import system
@@ -49,10 +49,9 @@ def warning():
 
 
 def main(name):
-   map = generate_map(name)
-   power_socket = map['power']
-   powerman_socket = map['powerman']
-   opcd = OPCD_Interface(map['opcd_ctrl'])
+   power_socket = scl_get_socket('power', 'sub')
+   powerman_socket = scl_get_socket('powerman', 'pub')
+   opcd = OPCD_Interface(scl_get_socket('opcd_ctrl', 'req'))
    hysteresis = Hysteresis(opcd.get('powerman.low_voltage_hysteresis'))
    cells = opcd.get('powerman.battery_cells')
    low_cell_voltage_idle = opcd.get('powerman.battery_low_cell_voltage_idle')

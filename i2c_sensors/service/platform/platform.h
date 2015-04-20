@@ -66,9 +66,7 @@ int platform_read_baro(float *baro);
 #define SENSORS_VALID (MARG_VALID | ULTRA_VALID | BARO_VALID)
 
 
-uint8_t platform_read_sensors(marg_data_t *marg_data,
-                              float *ultra,
-                              float *baro);
+uint8_t platform_read_sensors(marg_data_t *marg_data);
 
 
 #endif /* __PLATFORM_H__ */

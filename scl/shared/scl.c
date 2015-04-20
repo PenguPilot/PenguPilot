@@ -30,31 +30,16 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <pthread.h>
-
+#include <syslog.h>
 #include <zmq.h>
 
 #include "scl.h"
 
 
-void *context;
-char pp_path[1024];
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-bool initialized;
-
-
-static int scl_init(void)
-{
-   char *home = getenv("HOME");
-   if (home == NULL)
-   {
-      fprintf(stderr, "environment variable HOME is undefined\n");
-      return -2;
-   }
-   sprintf(pp_path, "ipc://%s/PenguPilot/ipc/", home);
-
-   context = zmq_init(1);
-   return 0;
-}
+static void *context = NULL;
+static char pp_path[1024];
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static bool initialized = false;
 
 
 void *scl_get_socket(char *id, char *type_name)
@@ -62,7 +47,21 @@ void *scl_get_socket(char *id, char *type_name)
    pthread_mutex_lock(&mutex);
    if (!initialized)
    {
-      scl_init();
+      initialized = true;
+      char *home = getenv("HOME");
+      if (home == NULL)
+      {
+         fprintf(stderr, "environment variable HOME is undefined\n");
+         return NULL;
+      }
+      sprintf(pp_path, "ipc://%s/.PenguPilot/ipc/", home);
+
+      context = zmq_init(1);
+      if (!context)
+      {
+         fprintf(stderr, "could not instantiate zeromq context\n");
+         return NULL;
+      }
    }
    pthread_mutex_unlock(&mutex);
 
@@ -73,11 +72,11 @@ void *scl_get_socket(char *id, char *type_name)
    }
    map[6] = 
    {
-      {"sub", ZMQ_SUB},
       {"req", ZMQ_REQ},
       {"push", ZMQ_PUSH},
-      {"rep", ZMQ_REP},
+      {"sub", ZMQ_SUB},
       {"pub", ZMQ_PUB},
+      {"rep", ZMQ_REP},
       {"pull", ZMQ_PULL}
    };
 
@@ -88,12 +87,13 @@ void *scl_get_socket(char *id, char *type_name)
       if (strcmp(map[i].name, type_name) == 0)
       {
          type = map[i].type;
+         break;
       }
    }
    if (i == 6)
    {
       fprintf(stderr, "unknown socket type: %s", type_name);   
-      exit(EINVAL);
+      return NULL;
    }
 
    void *socket = zmq_socket(context, type);
@@ -101,15 +101,24 @@ void *scl_get_socket(char *id, char *type_name)
       return NULL;
 
    char path[1024];
-   sprintf("%s%s", pp_path, id);
+   sprintf(path, "%s%s", pp_path, id);
+   syslog(LOG_INFO, "path: %s, %d", path, i);
 
-   if (i < 3)
-      zmq_bind(socket, path);
    if (i == 2)
+   {
+      syslog(LOG_INFO, "ZMQ_SUBSCRIBE %p", socket);
       zmq_setsockopt(socket, ZMQ_SUBSCRIBE, "", 0);
-   if (i > 2)
+   }
+   if (i <= 2)
+   {
+      syslog(LOG_INFO, "zmq_connect %p", socket);
       zmq_connect(socket, path);
-
+   }
+   if (i > 2)
+   {
+      syslog(LOG_INFO, "zmq_bind %p", socket);
+      zmq_bind(socket, path);
+   }
    return socket;
 }
 

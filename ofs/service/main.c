@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 {
    //_main();
    char pid_file[1024];
-   sprintf(pid_file, "%s/.PenguPilot/run/ofs.pid", getenv("HOME"));
+   service_name_to_pidfile(pid_file, "ofs");
    daemonize(pid_file, main_wrap, _cleanup, argc, argv);
    return 0;
 }

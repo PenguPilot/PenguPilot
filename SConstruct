@@ -113,7 +113,7 @@ opcd_pb_lib = make_proto_lib(opcd_pb_dir, 'opcd_pb')
 opcd_lib = env.Library('opcd/shared/opcd', collect_files('opcd', re_cc))
 Requires(opcd_lib, scl_lib + opcd_pb_lib)
 
-common_libs = opcd_lib + opcd_pb_lib + scl_lib + shared_lib
+common_libs = logger_lib + opcd_lib + opcd_pb_lib + scl_lib + shared_lib
 
 # GPS Publisher:
 append_inc_lib('gpsp/service/nmealib')
@@ -130,18 +130,18 @@ Requires(gpst_bin, common_libs)
 # Remote Control Calibration:
 rc_cal_dir = 'rc_cal/'
 append_inc_lib(rc_cal_dir + 'shared')
-rc_cal_bin = env.Program('rc_cal/service/rc_cal', collect_files(rc_cal_dir + 'service', re_cc), LIBS = common_libs + [logger_lib, 'm', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+rc_cal_bin = env.Program('rc_cal/service/rc_cal', collect_files(rc_cal_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
 Requires(rc_cal_bin, common_libs)
 
 # MARG Data Calibration Service:
 marg_cal_dir = 'marg_cal/'
 append_inc_lib(marg_cal_dir + 'shared')
-marg_cal_bin = env.Program('marg_cal/service/marg_cal', collect_files(marg_cal_dir + 'service', re_cc), LIBS = common_libs + [logger_lib, 'm', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+marg_cal_bin = env.Program('marg_cal/service/marg_cal', collect_files(marg_cal_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
 Requires(marg_cal_bin, common_libs)
 
 # AHRS Service:
 ahrs_dir = 'ahrs/'
-ahrs_bin = env.Program('ahrs/service/ahrs', collect_files(ahrs_dir + 'service', re_cc), LIBS = common_libs + [logger_lib, 'm', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+ahrs_bin = env.Program('ahrs/service/ahrs', collect_files(ahrs_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
 Requires(ahrs_bin, common_libs)
 
 # Arduino RC / Power Publisher:
@@ -159,12 +159,12 @@ ap_dir = 'autopilot/'
 ap_pb_dir = ap_dir + 'shared/'
 ap_src = collect_files(ap_dir + 'service', re_cc)
 ap_pb_lib = make_proto_lib(ap_pb_dir, 'autopilot_pb')
-ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = common_libs + [ap_pb_lib + logger_lib] + ['m', 'rt', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
+ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = common_libs + [ap_pb_lib] + ['m', 'rt', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
 
 # I2C Sensor Reader:
 sr_dir = 'i2c_sensors/'
 sr_src = collect_files(sr_dir + 'service', re_cc)
-sr_bin = env.Program(sr_dir + 'service/i2c_sensors', sr_src, LIBS = common_libs + [logger_lib] + ['m', 'rt', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
+sr_bin = env.Program(sr_dir + 'service/i2c_sensors', sr_src, LIBS = common_libs + ['m', 'rt', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
 
 # Display:
 display_src = map(lambda x: 'display/shared/' + x, ['pyssd1306.c', 'pyssd1306.i', 'ssd1306.c']) + ['shared/i2c/i2c.c']
@@ -178,20 +178,19 @@ env.SharedLibrary('shared/_serialport.so', serialport_src)
 # Library:
 remote_dir = 'remote/'
 remote_shared_dir = remote_dir + 'shared/'
-remote_lib = env.Library(remote_shared_dir + 'remote', collect_files(remote_shared_dir, re_cc))
-remote_sh_lib = env.SharedLibrary(remote_shared_dir + 'remote', collect_files(remote_shared_dir, re_cc))
+remote_lib = env.Library(remote_shared_dir + 'remote', collect_files(remote_shared_dir, re_cc), LIBS = common_libs + ['m', 'remote', 'opcd', 'opcd_pb', 'pthread', 'shared', 'scl', 'protobuf-c', 'yaml', 'zmq', 'glib-2.0', 'rt'])
 append_inc_lib(remote_shared_dir)
 
 # Service:
 remote_src = remote_dir + 'service/main.c'
-remote_bin = env.Program(remote_dir + 'service/remote', remote_src, LIBS = ['m', 'remote', 'opcd', 'opcd_pb', 'pthread', 'shared', 'scl', 'protobuf-c', 'yaml', 'zmq', 'glib-2.0', 'rt'])
+remote_bin = env.Program(remote_dir + 'service/remote', remote_src, LIBS = common_libs + ['m', 'remote', 'opcd', 'opcd_pb', 'pthread', 'shared', 'scl', 'protobuf-c', 'yaml', 'zmq', 'glib-2.0', 'rt'])
 Requires(remote_bin, common_libs + [remote_lib])
 
 # Motors:
 motors_dir = 'motors/'
 motors_service_dir = motors_dir + '/service'
 motors_src =  collect_files(motors_service_dir, re_cc)
-motors_bin = env.Program(motors_dir + 'service/motors', motors_src, LIBS = [logger_lib] + ['m', 'opcd', 'opcd_pb', 'pthread', 'msgpack', 'shared', 'scl', 'protobuf-c', 'yaml', 'zmq', 'glib-2.0', 'rt'])
+motors_bin = env.Program(motors_dir + 'service/motors', motors_src, LIBS = common_libs + ['m', 'opcd', 'opcd_pb', 'pthread', 'msgpack', 'shared', 'scl', 'protobuf-c', 'yaml', 'zmq', 'glib-2.0', 'rt'])
 Requires(motors_bin, common_libs)
 
 # Tests:

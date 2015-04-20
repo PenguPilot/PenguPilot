@@ -28,6 +28,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <util.h>
 #include <daemon.h>
 
 #include "main_serial.h"
@@ -65,7 +67,7 @@ void _main(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
    char pid_file[1024];
-   sprintf(pid_file, "%s/.PenguPilot/run/gpsp.pid", getenv("HOME"));
+   service_name_to_pidfile(pid_file, "gpsp");
    daemonize(pid_file, _main, _cleanup, argc, argv);
    return 0;
 }

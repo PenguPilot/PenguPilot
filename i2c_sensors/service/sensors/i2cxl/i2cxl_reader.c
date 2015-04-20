@@ -27,6 +27,8 @@
 
 #include <simple_thread.h>
 #include <threadsafe_types.h>
+#include <scl.h>
+#include <msgpack.h>
 
 #include <util.h>
 #include "i2cxl_reader.h"
@@ -34,25 +36,28 @@
 
 
 #define THREAD_NAME       "i2cxl_reader"
-#define THREAD_PRIORITY   98
+#define THREAD_PRIORITY   99
 
 
 static simple_thread_t thread;
 static i2cxl_t i2cxl;
-static tsfloat_t altitude;
-static int status;
-
+static void *ultra_raw_socket;
+static msgpack_sbuffer *msgpack_buf;
+static msgpack_packer *pk;
+ 
 
 SIMPLE_THREAD_BEGIN(thread_func)
 {
    SIMPLE_THREAD_LOOP_BEGIN
    {
       float alt;
-      status = i2cxl_read(&i2cxl, &alt);
+      int status = i2cxl_read(&i2cxl, &alt);
+      msgpack_sbuffer_clear(msgpack_buf);
       if (status == 0)
-      {
-         tsfloat_set(&altitude, alt);
-      }
+         PACKF(alt);
+      else
+         PACKI(status);
+      scl_copy_send_dynamic(ultra_raw_socket, msgpack_buf->data, msgpack_buf->size);
       msleep(30);
    }
    SIMPLE_THREAD_LOOP_END
@@ -63,19 +68,15 @@ SIMPLE_THREAD_END
 int i2cxl_reader_init(i2c_bus_t *bus)
 {
    ASSERT_ONCE();
-   tsfloat_init(&altitude, 0.2);
+   THROW_BEGIN();
    i2cxl_init(&i2cxl, bus);
+   ultra_raw_socket = scl_get_socket("ultra_raw", "pub");
+   THROW_IF(ultra_raw_socket == NULL, -EIO);
+   msgpack_buf = msgpack_sbuffer_new();
+   THROW_IF(msgpack_buf == NULL, -ENOMEM);
+   pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
+   THROW_IF(pk == NULL, -ENOMEM);
    simple_thread_start(&thread, thread_func, THREAD_NAME, THREAD_PRIORITY, NULL);
-   return 0;
-}
-
-
-int i2cxl_reader_get_alt(float *alt)
-{
-   if (status == 0)
-   {
-      *alt = tsfloat_get(&altitude);
-   }
-   return status;
+   THROW_END();
 }
 

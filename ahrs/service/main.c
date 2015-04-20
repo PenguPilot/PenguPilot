@@ -152,10 +152,11 @@ void main_wrap(int argc, char *argv[])
 }
 
 
+
 int main(int argc, char *argv[])
 {
    char pid_file[1024];
-   sprintf(pid_file, "%s/.PenguPilot/run/%s.pid", getenv("HOME"), name);
+   service_name_to_pidfile(pid_file, name);
    daemonize(pid_file, main_wrap, _cleanup, argc, argv);
    return 0;
 }

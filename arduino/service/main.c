@@ -28,6 +28,8 @@
 #include <stdbool.h>
 #include <msgpack.h>
 
+#include <syslog.h>
+#include <logger.h>
 #include <util.h>
 #include <serial.h>
 #include <scl.h>
@@ -45,11 +47,22 @@
 
 
 static bool running = true;
+static char *name = "arduino";
+
 
 int _main(void)
 {
    THROW_BEGIN()
+   
+   syslog(LOG_INFO, "opening logger");
+   if (logger_open(name) != 0)
+   {  
+      syslog(LOG_CRIT, "could not open logger");
+      THROW(-EIO);
+   }
+   syslog(LOG_CRIT, "logger opened");
 
+   LOG(LL_INFO, "creating sockets");
    /* init scl and get sockets:: */
    void *rc_socket = scl_get_socket("rc_raw", "pub");
    THROW_IF(rc_socket == NULL, -ENODEV);
@@ -63,6 +76,7 @@ int _main(void)
    THROW_IF(pk == NULL, -ENOMEM);
  
    /* fetch parameters: */
+   LOG(LL_INFO, "reading parameters");
    char *dev_path;
    tsint_t dev_speed;
    opcd_params_init("exynos_quad.arduino_serial.", 0);
@@ -74,7 +88,8 @@ int _main(void)
    };
    opcd_params_apply("", params);
    
-   /* opern serial port: */
+   /* open serial port: */
+   LOG(LL_INFO, "opening serial port");
    serialport_t port;
    THROW_ON_ERR(serial_open(&port, dev_path, tsint_get(&dev_speed), O_RDONLY, 0));
 
@@ -154,7 +169,7 @@ void main_wrap(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
    char pid_file[1024];
-   sprintf(pid_file, "%s/.PenguPilot/run/arduino.pid", getenv("HOME"));
+   service_name_to_pidfile(pid_file, "arduino");
    daemonize(pid_file, main_wrap, _cleanup, argc, argv);
    return 0;
 }

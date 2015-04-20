@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
 {
    __main();
    char pid_file[1024];
-   sprintf(pid_file, "%s/.PenguPilot/run/motors.pid", getenv("HOME"));
+   service_name_to_pidfile(pid_file, "motors");
    daemonize(pid_file, _main, NULL, argc, argv);
    return 0;
 }

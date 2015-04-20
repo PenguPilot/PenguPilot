@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
    {
       main_realtime(argc, argv);
       char pid_file[1024];
-      sprintf(pid_file, "%s/.PenguPilot/run/autopilot.pid", getenv("HOME"));
+      service_name_to_pidfile(pid_file, "autopilot");
       daemonize(pid_file, main_realtime, die, argc, argv);
    }
    return 0;

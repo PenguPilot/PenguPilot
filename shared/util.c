@@ -33,6 +33,12 @@
 #include "util.h"
 
 
+void service_name_to_pidfile(char *pid_file, const char *name)
+{
+   sprintf(pid_file, "%s/.PenguPilot/run/%s.pid", getenv("HOME"), name);
+}
+
+
 void user_data_dir(char *buffer)
 {
    char *home = getenv("HOME");

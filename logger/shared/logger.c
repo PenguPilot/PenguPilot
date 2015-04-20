@@ -79,7 +79,7 @@ void logger_write(char *file, loglevel_t level, unsigned int line, char *format,
    size_t file_len = strlen(file);
    msgpack_pack_raw(&pk, file_len);
    msgpack_pack_raw_body(&pk, file, file_len); /* 2: file */
-   msgpack_pack_int(&pk, level); /* 3: line */
+   msgpack_pack_int(&pk, line); /* 3: line */
    msgpack_pack_raw(&pk, msg_len);
    msgpack_pack_raw_body(&pk, message_buffer, msg_len); /* 4: message */
 

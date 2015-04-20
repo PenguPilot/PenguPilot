@@ -27,7 +27,7 @@
 
 
 import sys
-from scl import generate_map
+from scl import scl_get_socket
 from os.path import basename
 from msgpack import loads
 
@@ -41,7 +41,7 @@ def logdata_2_string(log_data):
 
 
 if __name__ == '__main__':
-   socket = generate_map('console_logger')['log_data_pub']
+   socket = scl_get_socket('log_data_pub', 'sub')
    while True:
       try:
          log_data = loads(socket.recv())

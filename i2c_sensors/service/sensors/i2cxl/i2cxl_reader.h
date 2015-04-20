@@ -33,8 +33,6 @@
 
 int i2cxl_reader_init(i2c_bus_t *bus);
 
-int i2cxl_reader_get_alt(float *alt);
-
 
 #endif /* __I2CXL_READER_H__ */
 

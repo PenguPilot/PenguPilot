@@ -39,6 +39,8 @@
 #include <sys/time.h>
 
 
+void service_name_to_pidfile(char *pid_file, const char *name);
+
 void user_data_dir(char *buffer);
 
 
@@ -194,12 +196,12 @@ int binsearch(int x, const int v[], int n);
 #include <stdio.h>
 #include <stddef.h>
 #include <errno.h>
-
+#include <logger.h>
 
 #define THROW_PROPAGATE(err) \
    if (err < 0) \
    { \
-      /*fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, err, errno);*/ \
+      LOG(LL_ERROR, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, err, errno); \
    } \
    return err;
 
@@ -207,7 +209,7 @@ int binsearch(int x, const int v[], int n);
    ___return_code = err; \
    if (___return_code < 0 && ___return_code != -EAGAIN) \
    { \
-      /*fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, ___return_code, errno);*/ \
+      LOG(LL_ERROR, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, ___return_code, errno); \
       goto __catch_label; \
    }
 
@@ -215,7 +217,7 @@ int binsearch(int x, const int v[], int n);
    ___return_code = err; \
    if ((___return_code < 0) && (___return_code != code)) \
    { \
-      /*fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, ___return_code, errno);*/ \
+      LOG(LL_ERROR, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, ___return_code, errno); \
       goto __catch_label; \
    }
    
@@ -226,8 +228,8 @@ int binsearch(int x, const int v[], int n);
    if (cond) \
    { \
       ___return_code = code; \
-      /*if ((___return_code < 0) && (___return_code != -EAGAIN)) \
-         fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, code, errno); */\
+      if ((___return_code < 0) && (___return_code != -EAGAIN)) \
+         LOG(LL_ERROR, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, code, errno); \
       goto __catch_label; \
    }
 

@@ -69,8 +69,15 @@ exynos_quad: # ODROID U3 based quadrotor
       path: "/dev/gps0" # created by udev rule
       speed: 115200
    nrf_serial: "/dev/nrf0" # created by udev rule
-
-
+   motors:
+      driver: 'arduino'
+      f2e: 'hk20_roxxy282735_1045'
+      n_motors: 4
+      mot_1: 8
+      mot_2: 10
+      mot_3: 11
+      mot_4: 9
+ 
 aircomm:
    id: 1
    psk: "This is the PenguPilot Standard Pre-Shared Key for NRF24L01+ Communication"

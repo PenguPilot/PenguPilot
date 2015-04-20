@@ -29,11 +29,12 @@
 from sys import argv
 from msgpack import loads
 from zmq import Context, SUB, SUBSCRIBE
-from os import listdir
+from os import listdir, environ
 from time import time, sleep
 from threading import Thread
 
-files = listdir('/tmp')
+path = environ['HOME'] + '/.PenguPilot/ipc/'
+files = listdir(path)
 context = Context()
 threads = []
 
@@ -54,13 +55,12 @@ class Receiver(Thread):
 
 for file in files:
    try:
-      if file[0:4] == 'scl_':
-         socket = context.socket(SUB)
-         socket.connect("ipc:///tmp/" + file)
-         socket.setsockopt(SUBSCRIBE, '')
-         thread = Receiver(socket, file[4:])
-         thread.start()
-         threads.append(thread)
+      socket = context.socket(SUB)
+      socket.connect("ipc://" + path + file)
+      socket.setsockopt(SUBSCRIBE, '')
+      thread = Receiver(socket, file)
+      thread.start()
+      threads.append(thread)
    except:
       pass
 
