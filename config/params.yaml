@@ -77,6 +77,18 @@ exynos_quad: # ODROID U3 based quadrotor
       mot_2: 10
       mot_3: 11
       mot_4: 9
+   marg:
+      rot_quat: # marg orientation with reference to uav
+         x: 0.0
+         y: 0.0
+         z: 1.0
+         w: 135.0 # degrees
+      mag:
+         rot_quat: # magnetometer orientation with reference to marg platform
+            x: 0.0
+            y: 0.0
+            z: 1.0
+            w: 0.0
  
 aircomm:
    id: 1

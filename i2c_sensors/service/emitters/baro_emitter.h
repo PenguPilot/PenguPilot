@@ -9,10 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Drotek MPU9150 + MS5611 Driver Interface
+ Barometer Emitter Interface
 
- Copyright (C) 2014 Jan Roemisch, Integrated Communication Systems Group, TU Ilmenau
- Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -25,26 +24,12 @@
  GNU General Public License for more details. */
 
 
-
-#ifndef __DROTEK_9150_H__
-#define __DROTEK_9150_H__
-
-
-#include <marg_data.h>
-#include "../sensors/mpu6050/mpu6050.h"
+#ifndef __BARO_EMITTER_H__
+#define __BARO_EMITTER_H__
 
 
-typedef struct
-{
-   mpu6050_t mpu;
-}
-drotek_9150_t;
+int baro_emitter_start(void);
 
 
-int drotek_9150_init(drotek_9150_t *drotek, i2c_bus_t *bus);
-
-int drotek_9150_read(marg_data_t *data, drotek_9150_t *drotek);
-
-
-#endif /* __DROTEK_9150_H__ */
+#endif /* __BARO_EMITTER_H__ */
 

@@ -49,7 +49,7 @@ def warning():
 
 
 def main(name):
-   power_socket = scl_get_socket('power', 'sub')
+   voltage_socket = scl_get_socket('power', 'sub')
    powerman_socket = scl_get_socket('powerman', 'pub')
    opcd = OPCD_Interface(scl_get_socket('opcd_ctrl', 'req'))
    hysteresis = Hysteresis(opcd.get('powerman.low_voltage_hysteresis'))
@@ -60,7 +60,8 @@ def main(name):
    capacity = opcd.get('powerman.battery_capacity')
    vmin = 13.2
    vmax = 16.4
-   voltage, current = loads(power_socket.recv())
+   voltage = loads(voltage_socket.recv())[0]
+   current = 0.0
    batt = min(1.0, max(0.0, (voltage - vmin) / (vmax - vmin)))
    consumed = (1.0 - batt) * capacity
    low_battery_voltage_idle = cells * low_cell_voltage_idle
@@ -68,7 +69,7 @@ def main(name):
    time_prev = time()
    critical = False
    while True:
-      voltage, current = loads(power_socket.recv())
+      voltage = loads(voltage_socket.recv())[0]
       consumed += current / 3600.0 * (time() - time_prev)
       time_prev = time()
       if voltage < low_battery_voltage_idle and current < battery_current_treshold or voltage < low_battery_voltage_load and current >= battery_current_treshold:

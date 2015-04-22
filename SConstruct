@@ -193,11 +193,6 @@ motors_src =  collect_files(motors_service_dir, re_cc)
 motors_bin = env.Program(motors_dir + 'service/motors', motors_src, LIBS = common_libs + ['m', 'opcd', 'opcd_pb', 'pthread', 'msgpack', 'shared', 'scl', 'protobuf-c', 'yaml', 'zmq', 'glib-2.0', 'rt'])
 Requires(motors_bin, common_libs)
 
-# Tests:
-sbus_print_test_src = remote_dir + 'tests/sbus_print_test.c'
-sbus_print_test_bin = env.Program(remote_dir + 'tests/sbus_print_test', sbus_print_test_src, LIBS = common_libs + [remote_lib])
-Requires(sbus_print_test_bin, common_libs + [remote_lib])
-
 # HLFM:
 icarus_dir = 'icarus/'
 icarus_pb_dir = icarus_dir + 'shared/'

@@ -30,17 +30,16 @@
 
 #include <stdint.h>
 
-#include <marg_data.h>
+#include <math/vec3.h>
 
 
 typedef struct
 {
-   /* sensors: */
-   int (*read_marg)(marg_data_t *marg_data);
-   int (*read_ultra)(float *ultra);
-   int (*read_baro)(float *baro);
-   /* private data: */
-   void *priv;
+   int (*read_gyro)(vec3_t *gyro);
+   int (*read_acc)(vec3_t *acc);
+   int (*read_mag)(vec3_t *mag);
+   int (*read_ultra)(float *altitude);
+   int (*read_baro)(float *altitude, float *temperature);
 }
 platform_t;
 
@@ -48,25 +47,15 @@ platform_t;
 extern platform_t platform;
 
 
-int platform_read_marg(marg_data_t *marg_data);
+int platform_read_gyro(vec3_t *gyro);
 
+int platform_read_acc(vec3_t *acc);
 
-int platform_read_ultra(float *ultra);
+int platform_read_mag(vec3_t *mag);
 
+int platform_read_ultra(float *altitude);
 
-int platform_read_baro(float *baro);
-
-
-#define GYRO_VALID    0x01
-#define ACC_VALID     0x02
-#define MAG_VALID     0x04
-#define ULTRA_VALID   0x08
-#define BARO_VALID    0x10
-#define MARG_VALID    (GYRO_VALID | ACC_VALID | MAG_VALID)
-#define SENSORS_VALID (MARG_VALID | ULTRA_VALID | BARO_VALID)
-
-
-uint8_t platform_read_sensors(marg_data_t *marg_data);
+int platform_read_baro(float *altitude, float *temperature);
 
 
 #endif /* __PLATFORM_H__ */

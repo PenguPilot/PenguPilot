@@ -9,11 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Gumstix Overo based Quad-Rotor Platform
+ I2CXL Reader Implementation
 
  Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
- Copyright (C) 2013 Alexander Barth, Control Engineering Group, TU Ilmenau
- Copyright (C) 2013 Benjamin Jahn, Control Engineering Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -26,55 +24,57 @@
  GNU General Public License for more details. */
 
 
-#include <stddef.h>
-#include <unistd.h>
-#include <malloc.h>
-#include <math.h>
 
+#include <simple_thread.h>
+#include <threadsafe_types.h>
+#include <scl.h>
+#include <msgpack.h>
 #include <util.h>
-#include <i2c/i2c.h>
-#include <logger.h>
 
-#include "overo_quad.h"
-#include "platform.h"
-#include "drotek_marg2.h"
-#include "../sensors/i2cxl/i2cxl_reader.h"
-#include "../sensors/ms5611/ms5611_reader.h"
+#include "../platform/platform.h"
+#include "ultra_emitter.h"
 
 
-#define N_MOTORS 4
+#define THREAD_NAME       "ultra_emitter"
+#define THREAD_PRIORITY   99
 
 
-static i2c_bus_t i2c_3;
-static drotek_marg2_t marg;
+static simple_thread_t thread;
+static void *ultra_raw_socket;
+static msgpack_sbuffer *msgpack_buf;
+static msgpack_packer *pk;
+ 
 
-
-static int read_marg(marg_data_t *marg_data)
+SIMPLE_THREAD_BEGIN(thread_func)
 {
-   return drotek_marg2_read(marg_data, &marg);   
+   SIMPLE_THREAD_LOOP_BEGIN
+   {
+      float altitude;
+      int status = platform_read_ultra(&altitude);
+      msgpack_sbuffer_clear(msgpack_buf);
+      if (status == 0)
+         PACKF(altitude);
+      else
+         PACKI(status);
+      scl_copy_send_dynamic(ultra_raw_socket, msgpack_buf->data, msgpack_buf->size);
+      msleep(30);
+   }
+   SIMPLE_THREAD_LOOP_END
 }
+SIMPLE_THREAD_END
 
 
-int overo_quad_init(platform_t *plat)
+int ultra_emitter_start(void)
 {
    ASSERT_ONCE();
    THROW_BEGIN();
-
-   LOG(LL_INFO, "initializing i2c bus");
-   THROW_ON_ERR(i2c_bus_open(&i2c_3, "/dev/i2c-3"));
-   plat->priv = &i2c_3;
-
-   LOG(LL_INFO, "initializing MARG sensor cluster");
-   THROW_ON_ERR(drotek_marg2_init(&marg, &i2c_3));
-   plat->read_marg = read_marg;
-
-   LOG(LL_INFO, "initializing i2cxl sonar sensor");
-   THROW_ON_ERR(i2cxl_reader_init(&i2c_3));
-      
-   LOG(LL_INFO, "initializing ms5611 barometric pressure sensor");
-   THROW_ON_ERR(ms5611_reader_init(&i2c_3));
-   
-   LOG(LL_INFO, "overo_quad sensor platform initialized");
+   ultra_raw_socket = scl_get_socket("ultra_raw", "pub");
+   THROW_IF(ultra_raw_socket == NULL, -EIO);
+   msgpack_buf = msgpack_sbuffer_new();
+   THROW_IF(msgpack_buf == NULL, -ENOMEM);
+   pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
+   THROW_IF(pk == NULL, -ENOMEM);
+   simple_thread_start(&thread, thread_func, THREAD_NAME, THREAD_PRIORITY, NULL);
    THROW_END();
 }
 

@@ -40,21 +40,37 @@ platform_t platform;
       return -ENODEV
 
 
-int platform_read_marg(marg_data_t *marg_data)
+int platform_read_gyro(vec3_t *gyro)
 {
-   CHECK_DEV(platform.read_marg);
-   return platform.read_marg(marg_data);
+   CHECK_DEV(platform.read_gyro);
+   return platform.read_gyro(gyro);
 }
 
 
-uint8_t platform_read_sensors(marg_data_t *marg_data)
+int platform_read_acc(vec3_t *acc)
 {
-   uint8_t status = 0;
-   if (platform_read_marg(marg_data) == 0)
-   {
-      status |= MARG_VALID;
-   }
-   
-   return status;
+   CHECK_DEV(platform.read_gyro);
+   return platform.read_acc(acc);
+}
+
+
+int platform_read_mag(vec3_t *mag)
+{
+   CHECK_DEV(platform.read_mag);
+   return platform.read_mag(mag);
+}
+
+
+int platform_read_ultra(float *altitude)
+{
+   CHECK_DEV(platform.read_ultra);
+   return platform.read_ultra(altitude);
+}
+
+
+int platform_read_baro(float *altitude, float *temperature)
+{
+   CHECK_DEV(platform.read_baro);
+   return platform.read_baro(altitude, temperature);
 }
 

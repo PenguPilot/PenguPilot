@@ -9,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- MS5611 Reader Implementation
+ Magnetometer Emitter Implementation
 
- Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,52 +24,57 @@
  GNU General Public License for more details. */
 
 
+#include <errno.h>
+
 #include <util.h>
 #include <simple_thread.h>
 #include <threadsafe_types.h>
-#include <scl.h>
 #include <msgpack.h>
+#include <scl.h>
+#include <math/vec3.h>
 
-#include "ms5611_reader.h"
-#include "ms5611.h"
+#include "../platform/platform.h"
+#include "mag_emitter.h"
 
 
-#define THREAD_NAME       "ms5611_reader"
-#define THREAD_PRIORITY   99
+#define THREAD_NAME       "ak8975c_reader"
+#define THREAD_PRIORITY   98
 
 
 static simple_thread_t thread;
-static ms5611_t ms5611;
-static void *baro_raw_socket;
+static void *mag_raw_socket;
 static msgpack_sbuffer *msgpack_buf;
 static msgpack_packer *pk;
  
 
 SIMPLE_THREAD_BEGIN(thread_func)
-{   
+{
    SIMPLE_THREAD_LOOP_BEGIN
    {
-      int status = ms5611_measure(&ms5611);
+      vec3_t vec;
+      vec3_init(&vec);
       msgpack_sbuffer_clear(msgpack_buf);
-      if (status == 0)
-         PACKF(ms5611.c_a);
+      int ret = platform_read_mag(&vec);
+      if (ret == 0)
+      {
+         msgpack_pack_array(pk, 3);
+         PACKFV(vec.ve, 3);
+      }
       else
-         PACKI(status);
-      scl_copy_send_dynamic(baro_raw_socket, msgpack_buf->data, msgpack_buf->size);
-      msleep(10);
+         PACKI(ret);
+      scl_copy_send_dynamic(mag_raw_socket, msgpack_buf->data, msgpack_buf->size);
    }
    SIMPLE_THREAD_LOOP_END
 }
 SIMPLE_THREAD_END
 
 
-int ms5611_reader_init(i2c_bus_t *bus)
+int mag_emitter_start(void)
 {
    ASSERT_ONCE();
    THROW_BEGIN();
-   ms5611_init(&ms5611, bus, MS5611_OSR4096, MS5611_OSR4096);
-   baro_raw_socket = scl_get_socket("baro_raw", "pub");
-   THROW_IF(baro_raw_socket == NULL, -EIO);
+   mag_raw_socket = scl_get_socket("mag_raw", "pub");
+   THROW_IF(mag_raw_socket == NULL, -EIO);
 
    msgpack_buf = msgpack_sbuffer_new();
    THROW_IF(msgpack_buf == NULL, -ENOMEM);

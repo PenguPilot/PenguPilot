@@ -34,21 +34,72 @@
 #include <logger.h>
 #include <util.h>
 #include <i2c/i2c.h>
-#include <math/quat.h>
+#include <math/vec3.h>
 
 #include "platform.h"
-#include "drotek_9150.h"
-#include "../sensors/i2cxl/i2cxl_reader.h"
-#include "../sensors/ms5611/ms5611_reader.h"
+#include "../sensors/ak8975c/ak8975c.h"
+#include "../sensors/mpu6050/mpu6050.h"
+#include "../sensors/i2cxl/i2cxl.h"
+#include "../sensors/ms5611/ms5611.h"
 
 
 static i2c_bus_t i2c_bus;
-static drotek_9150_t marg;
+static mpu6050_t mpu;
+static ak8975c_t ak;
+static i2cxl_t i2cxl;
+static ms5611_t ms5611;
+static vec3_t acc;
+static float temperature;
+static int ret;
 
 
-static int read_marg(marg_data_t *marg_data)
+static int read_gyro(vec3_t *gyro)
 {
-   return drotek_9150_read(marg_data, &marg);
+   THROW_BEGIN();
+   ret = mpu6050_read(&mpu, gyro, &acc, &temperature);
+   THROW_ON_ERR(ret);
+   THROW_END();
+}
+
+
+static int read_acc(vec3_t *acc_out)
+{
+   if (ret == 0)
+      vec_copy(acc_out, &acc);
+   return ret;
+}
+
+
+static int read_mag(vec3_t *mag)
+{
+   THROW_BEGIN();
+   THROW_ON_ERR(ak8975c_read(&ak));
+   /* align ak to mpu: */
+   ak.raw.z = -ak.raw.z;
+   float tmp = ak.raw.x;
+   ak.raw.x = ak.raw.y;
+   ak.raw.y = tmp;
+   /* copy: */
+   vec_copy(mag, &ak.raw);
+   THROW_END();
+}
+
+
+static int read_ultra(float *altitude)
+{
+   THROW_BEGIN();
+   THROW_ON_ERR(i2cxl_read(&i2cxl, altitude));
+   THROW_END();
+}
+
+
+static int read_baro(float *altitude, float *temperature)
+{
+   THROW_BEGIN();
+   THROW_ON_ERR(ms5611_measure(&ms5611));
+   *altitude = ms5611.c_a;
+   *temperature = ms5611.c_t;
+   THROW_END();
 }
 
 
@@ -56,20 +107,25 @@ int pi_quad_init(platform_t *plat)
 {
    ASSERT_ONCE();
    THROW_BEGIN();
+   vec3_init(&acc);
 
    LOG(LL_INFO, "initializing i2c bus");
    THROW_ON_ERR(i2c_bus_open(&i2c_bus, "/dev/i2c-1"));
-   plat->priv = &i2c_bus;
 
-   LOG(LL_INFO, "initializing MARG sensor cluster");
-   THROW_ON_ERR(drotek_9150_init(&marg, &i2c_bus));
-   plat->read_marg = read_marg;
+   LOG(LL_INFO, "initializing MPU9150");
+   THROW_ON_ERR(mpu6050_init(&mpu, &i2c_bus, 0x69, MPU6050_DLPF_CFG_94_98Hz, MPU6050_FS_SEL_1000, MPU6050_AFS_SEL_4G));
+   plat->read_gyro = read_gyro;
+   plat->read_acc = read_acc;
  
+   LOG(LL_INFO, "initializing AK8975C");
+   THROW_ON_ERR(ak8975c_init(&ak, &i2c_bus));
+   plat->read_mag = read_mag;
+
    LOG(LL_INFO, "initializing i2cxl sonar sensor");
-   THROW_ON_ERR(i2cxl_reader_init(&i2c_bus));
-      
+   THROW_ON_ERR(i2cxl_init(&i2cxl, &i2c_bus));
+
    LOG(LL_INFO, "initializing ms5611 barometric pressure sensor");
-   THROW_ON_ERR(ms5611_reader_init(&i2c_bus));
+   THROW_ON_ERR(ms5611_init(&ms5611, &i2c_bus, MS5611_OSR4096, MS5611_OSR4096));
    
    LOG(LL_INFO, "pi_quad sensor platform initialized");
    THROW_END();

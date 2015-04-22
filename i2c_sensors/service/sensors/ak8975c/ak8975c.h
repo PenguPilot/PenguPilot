@@ -41,11 +41,11 @@ typedef struct
 
    vec3_t raw;
 }
-ak8975c_dev_t;
+ak8975c_t;
 
 
-int ak8975c_init(ak8975c_dev_t *dev, i2c_bus_t *bus);
+int ak8975c_init(ak8975c_t *dev, i2c_bus_t *bus);
 
-int ak8975c_read(ak8975c_dev_t *dev);
+int ak8975c_read(ak8975c_t *dev);
 
 #endif

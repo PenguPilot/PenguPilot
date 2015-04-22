@@ -9,10 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- AK8975C Reader Implementation
+ Barometer Emitter Implementation
 
- Copyright (C) 2014 Jan Roemisch, Integrated Communication Systems Group, TU Ilmenau
- Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -25,72 +24,63 @@
  GNU General Public License for more details. */
 
 
-#include <errno.h>
-
 #include <util.h>
 #include <simple_thread.h>
 #include <threadsafe_types.h>
+#include <scl.h>
+#include <msgpack.h>
 
-#include "ak8975c_reader.h"
-#include "ak8975c.h"
+#include "../platform/platform.h"
+#include "baro_emitter.h"
 
 
-#define THREAD_NAME       "ak8975c_reader"
-#define THREAD_PRIORITY   98
+#define THREAD_NAME       "baro_emitter"
+#define THREAD_PRIORITY   99
 
 
 static simple_thread_t thread;
-static pthread_mutexattr_t mutexattr;   
-static pthread_mutex_t mutex;
-static ak8975c_dev_t ak8975c;
-static vec3_t val;
-static vec3_t null_val;
-static int status = -EAGAIN;
-
+static void *baro_raw_socket;
+static msgpack_sbuffer *msgpack_buf;
+static msgpack_packer *pk;
+ 
 
 SIMPLE_THREAD_BEGIN(thread_func)
-{
+{   
    SIMPLE_THREAD_LOOP_BEGIN
    {
-      int ret = ak8975c_read(&ak8975c);
-      pthread_mutex_lock(&mutex);
-      status = ret;
-      vec_copy(&val, &ak8975c.raw);
-      pthread_mutex_unlock(&mutex);
+      float altitude;
+      float temperature;
+      int status = platform_read_baro(&altitude, &temperature);
+      msgpack_sbuffer_clear(msgpack_buf);
+      if (status == 0)
+      {
+         msgpack_pack_array(pk, 2);
+         PACKF(altitude);
+         PACKF(temperature);
+      }
+      else
+         PACKI(status);
+      scl_copy_send_dynamic(baro_raw_socket, msgpack_buf->data, msgpack_buf->size);
+      msleep(10);
    }
    SIMPLE_THREAD_LOOP_END
 }
 SIMPLE_THREAD_END
 
 
-int ak8975c_reader_init(i2c_bus_t *bus)
+int baro_emitter_start(void)
 {
    ASSERT_ONCE();
    THROW_BEGIN();
+   baro_raw_socket = scl_get_socket("baro_raw", "pub");
+   THROW_IF(baro_raw_socket == NULL, -EIO);
 
-   vec3_init(&val);
-   vec3_init(&null_val);
-   
-   pthread_mutexattr_init(&mutexattr); 
-   pthread_mutexattr_setprotocol(&mutexattr, PTHREAD_PRIO_INHERIT); 
-   pthread_mutex_init(&mutex, &mutexattr);
-   
-   THROW_ON_ERR(ak8975c_init(&ak8975c, bus));
-   
+   msgpack_buf = msgpack_sbuffer_new();
+   THROW_IF(msgpack_buf == NULL, -ENOMEM);
+   pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
+   THROW_IF(pk == NULL, -ENOMEM);
+ 
    simple_thread_start(&thread, thread_func, THREAD_NAME, THREAD_PRIORITY, NULL);
    THROW_END();
-}
-
-
-int ak8975c_reader_get(vec3_t *mag)
-{
-   pthread_mutex_lock(&mutex);
-   if (status < 0)
-      vec_copy(mag, &null_val);
-   else
-      vec_copy(mag, &val);
-   int ret = status;
-   pthread_mutex_unlock(&mutex);
-   return ret;
 }
 

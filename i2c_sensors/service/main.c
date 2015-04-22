@@ -42,9 +42,13 @@
 #include <interval.h>
 #include <logger.h>
 
+#include "platform/platform.h"
 #include "platform/exynos_quad.h"
-#include "platform/overo_quad.h"
 #include "platform/pi_quad.h"
+
+#include "emitters/baro_emitter.h"
+#include "emitters/ultra_emitter.h"
+#include "emitters/mag_emitter.h"
 
 
 #define REALTIME_PERIOD 0.005
@@ -86,14 +90,7 @@ static int _main(int argc, char *argv[])
 
    /* determine platform: */
    THROW_ON_ERR(opcd_param_get("platform", &plat_name));
-   if (strcmp(plat_name, "overo_quad") == 0)
-   {
-      if (overo_quad_init(&platform) < 0)
-      {
-         LOG(LL_ERROR, "could not initialize platform");
-      }
-   }
-   else if (strcmp(plat_name, "pi_quad") == 0)
+   if (strcmp(plat_name, "pi_quad") == 0)
    {
       if (pi_quad_init(&platform) < 0)
       {
@@ -120,29 +117,53 @@ static int _main(int argc, char *argv[])
    {
       LOG(LL_ERROR, "could not renice process");
    }
-   
-   thread->sched_param.sched_priority = 97;
+ 
+   if (platform.read_mag)
+      mag_emitter_start();
+   if (platform.read_baro)
+      baro_emitter_start();
+   if (platform.read_ultra)
+      ultra_emitter_start();
+
+   thread->sched_param.sched_priority = 99;
    pthread_setschedparam(pthread_self(), SCHED_FIFO, &thread->sched_param);
 
-   thread->name = "main_loop";
+   thread->name = "gyro_acc";
    thread->running = 1;
    thread->periodic_data.period.tv_sec = 0;
    thread->periodic_data.period.tv_nsec = NSEC_PER_SEC * REALTIME_PERIOD;
 
    PERIODIC_THREAD_LOOP_BEGIN
    {
-      marg_data_t marg_data;
-      marg_data_init(&marg_data);
-      uint8_t status = platform_read_sensors(&marg_data);
+      vec3_t gyro;
+      vec3_init(&gyro);
+      int ret = platform_read_gyro(&gyro);
       
       msgpack_sbuffer_clear(msgpack_buf);
-      msgpack_pack_array(pk, 3);
-      PACKFV(marg_data.gyro.ve, 3);
+      if (ret == 0)
+      {
+         msgpack_pack_array(pk, 3);
+         PACKFV(gyro.ve, 3);
+      }
+      else
+      {
+         PACKI(ret);
+      }
       scl_copy_send_dynamic(gyro_raw_socket, msgpack_buf->data, msgpack_buf->size);
       
+      vec3_t acc;
+      vec3_init(&acc);
+      ret = platform_read_acc(&acc);
       msgpack_sbuffer_clear(msgpack_buf);
-      msgpack_pack_array(pk, 3);
-      PACKFV(marg_data.acc.ve, 3);
+      if (ret == 0)
+      {
+         msgpack_pack_array(pk, 3);
+         PACKFV(acc.ve, 3);
+      }
+      else
+      {
+         PACKI(ret);
+      }
       scl_copy_send_dynamic(acc_raw_socket, msgpack_buf->data, msgpack_buf->size);
    }
    PERIODIC_THREAD_LOOP_END

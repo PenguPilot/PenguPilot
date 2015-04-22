@@ -70,7 +70,7 @@
 #define AK8975C_ASAZ       0x12
 
 
-static int read_raw(ak8975c_dev_t *dev)
+static int read_raw(ak8975c_t *dev)
 {
    THROW_BEGIN();
    uint8_t data[6];
@@ -91,7 +91,7 @@ static int read_raw(ak8975c_dev_t *dev)
 }
 
 
-static int self_test(ak8975c_dev_t *dev)
+static int self_test(ak8975c_t *dev)
 {
    THROW_BEGIN();
    
@@ -128,7 +128,7 @@ static int self_test(ak8975c_dev_t *dev)
 }
 
 
-int ak8975c_init(ak8975c_dev_t *dev, i2c_bus_t *bus)
+int ak8975c_init(ak8975c_t *dev, i2c_bus_t *bus)
 {
    THROW_BEGIN();
    vec3_init(&dev->raw);
@@ -142,7 +142,7 @@ int ak8975c_init(ak8975c_dev_t *dev, i2c_bus_t *bus)
 }
 
 
-int ak8975c_read(ak8975c_dev_t *dev)
+int ak8975c_read(ak8975c_t *dev)
 {
    THROW_BEGIN();
 

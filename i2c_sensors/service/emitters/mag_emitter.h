@@ -9,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- DROTEK MARG (MPU) Driver Implementation
+ Magnetometer Emitter Interface
 
- Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,26 +24,12 @@
  GNU General Public License for more details. */
 
 
-#include <util.h>
-
-#include "drotek_marg2.h"
-
-
-int drotek_marg2_init(drotek_marg2_t *marg2, i2c_bus_t *bus)
-{
-   THROW_BEGIN();
-   THROW_ON_ERR(mpu6050_init(&marg2->mpu, bus, 0x69, MPU6050_DLPF_CFG_94_98Hz, MPU6050_FS_SEL_500, MPU6050_AFS_SEL_4G));
-   THROW_ON_ERR(hmc5883_init(&marg2->hmc, bus));
-   THROW_END();
-}
+#ifndef __MAG_EMITTER_H__
+#define __MAG_EMITTER_H__
 
 
-int drotek_marg2_read(marg_data_t *data, drotek_marg2_t *marg2)
-{
-   THROW_BEGIN();
-   THROW_ON_ERR(mpu6050_read(&marg2->mpu, &data->gyro, &data->acc, NULL));
-   THROW_ON_ERR(hmc5883_read_mag(&data->mag, &marg2->hmc));
-   THROW_END();
-}
+int mag_emitter_start(void);
 
+
+#endif /* __MAG_EMITTER_H__ */
 

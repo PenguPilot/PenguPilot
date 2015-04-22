@@ -66,8 +66,10 @@ int _main(void)
    /* init scl and get sockets:: */
    void *rc_socket = scl_get_socket("rc_raw", "pub");
    THROW_IF(rc_socket == NULL, -ENODEV);
-   void *power_socket = scl_get_socket("power", "pub");
-   THROW_IF(power_socket == NULL, -ENODEV);
+   void *voltage_socket = scl_get_socket("voltage", "pub");
+   THROW_IF(voltage_socket == NULL, -ENODEV);
+   void *current_socket = scl_get_socket("current", "pub");
+   THROW_IF(current_socket == NULL, -ENODEV);
 
    /* allocate msgpack buffers: */
    msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new();
@@ -138,12 +140,17 @@ int _main(void)
          float voltage = (float)(voltage_raw) / 1000.0;
          float current = (float)(current_raw) / 1000.0;
          
-         /* send voltage / current: */
+         /* send voltage: */
          msgpack_sbuffer_clear(msgpack_buf);
-         msgpack_pack_array(pk, 2);
+         msgpack_pack_array(pk, 1);
          PACKF(voltage); /* index 0 */
-         PACKF(current); /* index 1 */
-	      scl_copy_send_dynamic(power_socket, msgpack_buf->data, msgpack_buf->size);
+	      scl_copy_send_dynamic(voltage_socket, msgpack_buf->data, msgpack_buf->size);
+         
+         /* send current: */
+         msgpack_sbuffer_clear(msgpack_buf);
+         msgpack_pack_array(pk, 1);
+         PACKF(current); /* index 0 */
+	      scl_copy_send_dynamic(current_socket, msgpack_buf->data, msgpack_buf->size);
       }
    }
    THROW_END();

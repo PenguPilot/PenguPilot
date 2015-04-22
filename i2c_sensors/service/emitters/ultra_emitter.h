@@ -9,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Gumstix Overo based Quad-Rotor Platform
+ Ultrasonic Emitter Interface
 
- Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,15 +24,12 @@
  GNU General Public License for more details. */
 
 
-#ifndef __ARCADE_QUAD_H__
-#define __ARCADE_QUAD_H__
+#ifndef __ULTRA_EMITTER_H__
+#define __ULTRA_EMITTER_H__
 
 
-#include "platform.h"
+int ultra_emitter_start(void);
 
 
-int overo_quad_init(platform_t *platform);
-
-
-#endif /* __ARCADE_QUAD_H__ */
+#endif /* __ULTRA_EMITTER_H__ */
 
