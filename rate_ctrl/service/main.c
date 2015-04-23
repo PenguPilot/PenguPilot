@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Gyro Calibration Service Implementation
+ Rate Control Service Implementation
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -23,37 +23,58 @@
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details. */
 
-
 #include <math.h>
 #include <msgpack.h>
 #include <scl.h>
-#include <interval.h>
+#include <simple_thread.h>
 #include <service.h>
 
-#include "calibration.h"
+#include "piid.h"
 
 
-#define SERVICE_NAME "gyro_cal"
+#define SERVICE_NAME "rate_ctrl"
 #define SERVICE_PRIO 99
 
 
-static void *gyro_raw_socket;
 static void *gyro_cal_socket;
-static calibration_t gyro_cal;
-static interval_t gyro_move_interval;
+static void *torques_socket;
+static float rates[3];
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+void *rates_socket;
 
 
-static bool gyro_moved(const float *gyro)
+SIMPLE_THREAD_BEGIN(rates_reader_func)
 {
-   FOR_N(i, 3)
-   {  
-      if (fabs(gyro[i]) > 0.15)
-      {  
-         return 1;
+   SIMPLE_THREAD_LOOP_BEGIN
+   {
+      char buffer[1024];
+      int ret = scl_recv_static(rates_socket, buffer, sizeof(buffer));
+      if (ret > 0)
+      {
+         msgpack_unpacked msg;
+         msgpack_unpacked_init(&msg);
+         if (msgpack_unpack_next(&msg, buffer, ret, NULL))
+         {
+            msgpack_object root = msg.data;
+            if (root.type == MSGPACK_OBJECT_ARRAY)
+            {
+               pthread_mutex_lock(&mutex);
+               FOR_N(i, 3)
+                  rates[i] = root.via.array.ptr[i].via.dec;
+               pthread_mutex_unlock(&mutex);
+            }
+         }
+         msgpack_unpacked_destroy(&msg);
+      }
+      else
+      {
+         msleep(10);   
       }
    }
-   return 0;
+   SIMPLE_THREAD_LOOP_END
 }
+SIMPLE_THREAD_END
+
 
 
 SERVICE_MAIN_BEGIN
@@ -65,49 +86,49 @@ SERVICE_MAIN_BEGIN
    THROW_IF(pk == NULL, -ENOMEM);
   
    /* initialize SCL: */
-   gyro_raw_socket = scl_get_socket("gyro_raw", "sub");
-   THROW_IF(gyro_raw_socket == NULL, -EIO);
-   gyro_cal_socket = scl_get_socket("gyro_cal", "pub");
+   gyro_cal_socket = scl_get_socket("gyro_cal", "sub");
    THROW_IF(gyro_cal_socket == NULL, -EIO);
-
-   /* init calibration data: */
-   cal_init(&gyro_cal, 3, 1000);
-   interval_init(&gyro_move_interval);
+   torques_socket = scl_get_socket("torques", "pub");
+   THROW_IF(torques_socket == NULL, -EIO);
+   rates_socket = scl_get_socket("rates", "sub");
+   THROW_IF(rates_socket == NULL, -EIO);
+   
+   /* start rates reader thread: */
+   simple_thread_t rates_reader;
+   rates_reader.running = false;
+   simple_thread_start(&rates_reader, rates_reader_func, "rates_reader", 99, NULL);
+ 
+   piid_init(0.005);
 
    while (running)
    {
       char buffer[1024];
-      int ret = scl_recv_static(gyro_raw_socket, buffer, sizeof(buffer));
+      int ret = scl_recv_static(gyro_cal_socket, buffer, sizeof(buffer));
       if (ret > 0)
       {
          msgpack_unpacked msg;
          msgpack_unpacked_init(&msg);
          if (msgpack_unpack_next(&msg, buffer, ret, NULL))
          {
-            float gyro[3];
             msgpack_object root = msg.data;
             if (root.type == MSGPACK_OBJECT_ARRAY)
             {
+               /* read gyro data: */
+               float gyro[3];
                FOR_N(i, 3)
                   gyro[i] = root.via.array.ptr[i].via.dec;
 
-               if (!cal_sample_apply(&gyro_cal, gyro))
-               {
-                  if (gyro_moved(gyro))
-                  {
-                     if (interval_measure(&gyro_move_interval) > 1.0)
-                         LOG(LL_ERROR, "gyro moved during calibration, retrying");
-                     cal_reset(&gyro_cal);
-                  }
-               }
-               else
-               {
-                  ONCE(LOG(LL_INFO, "gyro biases: %f %f %f", gyro_cal.bias[0], gyro_cal.bias[1], gyro_cal.bias[2]));
-                  msgpack_sbuffer_clear(msgpack_buf);
-                  msgpack_pack_array(pk, 3);
-                  PACKFV(gyro, 3);
-                  scl_copy_send_dynamic(gyro_cal_socket, msgpack_buf->data, msgpack_buf->size);
-               }
+               float torques[3];
+               /* run rate controller: */
+               pthread_mutex_lock(&mutex);
+               piid_run(torques, gyro, rates, 0.005);
+               pthread_mutex_unlock(&mutex);
+
+               /* send torques: */
+               msgpack_sbuffer_clear(msgpack_buf);
+               msgpack_pack_array(pk, 3);
+               PACKFV(torques, 3);
+               scl_copy_send_dynamic(torques_socket, msgpack_buf->data, msgpack_buf->size);
             }
          }
          msgpack_unpacked_destroy(&msg);

@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-"""
-  ___________________________________________________
+/*___________________________________________________
  |  _____                       _____ _ _       _    |
  | |  __ \                     |  __ (_) |     | |   |
  | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
@@ -11,9 +9,11 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Autopilot Console Logger
+ Stabilizing PIID Controller Interface
 
- Copyright (C) 2014 Tobias Simon
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2013 Alexander Barth, Control Engineering Group, TU Ilmenau
+ Copyright (C) 2013 Benjamin Jahn, Control Engineering Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -23,31 +23,26 @@
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. """
+ GNU General Public License for more details. */
 
 
-import sys
-from scl import scl_get_socket
-from os.path import basename
-from msgpack import loads
+#ifndef __PIID_H__
+#define __PIID_H__
 
 
-def logdata_2_string(log_data):
-   LOG_LEVEL_NAMES = ["ERROR", " WARN", " INFO", "DEBUG"];
-   level_name = LOG_LEVEL_NAMES[log_data[1]]
-   file = basename(log_data[2])
-   return "[%s] %s|%s,%d: %s" % (level_name, log_data[0], file, log_data[3], log_data[4])
+#define PIID_ROLL  0
+#define PIID_PITCH 1
+#define PIID_YAW   2
 
 
+void piid_init(float Ts);
 
-if __name__ == '__main__':
-   socket = scl_get_socket('log_data_pub', 'sub')
-   while True:
-      try:
-         log_data = loads(socket.recv())
-         print logdata_2_string(log_data)
-      except KeyboardInterrupt:
-         break
-      except:
-         pass
+void piid_run(float u_ctrl[3], float gyro[3], float rc[3], float dt);
+
+void piid_int_enable(int val);
+
+void piid_reset(void);
+
+
+#endif /* __PIID_H__ */
 

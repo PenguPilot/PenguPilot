@@ -24,46 +24,28 @@
  GNU General Public License for more details. */
 
 
-#include <syslog.h>
-#include <stdlib.h>
-#include <daemon.h>
-#include <stdbool.h>
 #include <msgpack.h>
 
-#include <sched.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/mman.h>
-
 #include <scl.h>
-#include <opcd_interface.h>
 #include <periodic_thread.h>
-#include <util.h>
-#include <interval.h>
 #include <logger.h>
+#include <service.h>
 
 #include "platform/platform.h"
 #include "platform/exynos_quad.h"
 #include "platform/pi_quad.h"
-
 #include "emitters/baro_emitter.h"
 #include "emitters/ultra_emitter.h"
 #include "emitters/mag_emitter.h"
 
+#define SERVICE_NAME "i2c_sensors"
+#define SERVICE_PRIO 99
 
 #define REALTIME_PERIOD 0.005
 
 
-
-static int _main(int argc, char *argv[])
+SERVICE_MAIN_BEGIN
 {
-   ASSERT_ONCE();
-   THROW_BEGIN();
-
-   struct sched_param sp;
-   sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
-   sched_setscheduler(getpid(), SCHED_FIFO, &sp);
-   
    periodic_thread_t _thread; 
    periodic_thread_t *thread = &_thread;
    char *name = "i2c_sensors";
@@ -84,13 +66,6 @@ static int _main(int argc, char *argv[])
    pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
    THROW_IF(pk == NULL, -ENOMEM);
  
-   /* init params subsystem: */
-   opcd_params_init(name, 1);
-
-   /* initialize logger: */
-   syslog(LOG_INFO, "opening logger");
-   THROW_ON_ERR(logger_open(name));
-
    /* determine platform: */
    THROW_ON_ERR(opcd_param_get("platform", &plat_name));
    if (strcmp(plat_name, "pi_quad") == 0)
@@ -112,16 +87,12 @@ static int _main(int argc, char *argv[])
       LOG(LL_ERROR, "unknown platform: %s", plat_name);
    }
 
-  
    if (platform.read_mag)
       mag_emitter_start();
    if (platform.read_baro)
       baro_emitter_start();
    if (platform.read_ultra)
       ultra_emitter_start();
-
-   thread->sched_param.sched_priority = 99;
-   pthread_setschedparam(pthread_self(), SCHED_FIFO, &thread->sched_param);
 
    thread->name = "gyro_acc";
    thread->running = 1;
@@ -130,6 +101,8 @@ static int _main(int argc, char *argv[])
 
    PERIODIC_THREAD_LOOP_BEGIN
    {
+      if (!running)
+         break;
       vec3_t gyro;
       vec3_init(&gyro);
       int ret = platform_read_gyro(&gyro);
@@ -162,28 +135,6 @@ static int _main(int argc, char *argv[])
       scl_copy_send_dynamic(acc_raw_socket, msgpack_buf->data, msgpack_buf->size);
    }
    PERIODIC_THREAD_LOOP_END
-
-   THROW_END();
 }
-
-
-void main_wrap(int argc, char *argv[])
-{
-   _main(argc, argv);  
-}
-
-
-void pp_daemonize(char *name, int argc, char *argv[])
-{
-   char pid_file[1024];
-   service_name_to_pidfile(pid_file, name);
-   daemonize(pid_file, main_wrap, die, argc, argv);
-}
-
-
-int main(int argc, char *argv[])
-{
-   pp_daemonize("i2c_sensors", argc, argv);
-   return 0;
-}
+SERVICE_MAIN_END
 

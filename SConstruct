@@ -153,6 +153,12 @@ ahrs_dir = 'ahrs/'
 ahrs_bin = env.Program('ahrs/service/ahrs', collect_files(ahrs_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
 Requires(ahrs_bin, common_libs)
 
+# Rate Control Service:
+rate_ctrl_dir = 'rate_ctrl/'
+rate_ctrl_bin = env.Program('rate_ctrl/service/rate_ctrl', collect_files(rate_ctrl_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(rate_ctrl_bin, common_libs)
+
+
 # Arduino RC / Power Publisher:
 arduino_dir = 'arduino/'
 arduino_bin = env.Program('arduino/service/arduino', collect_files(arduino_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])

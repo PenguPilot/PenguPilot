@@ -24,5 +24,6 @@ rc_cal/service/rc_cal
 acc_adc_cal/service/acc_adc_cal
 gyro_cal/service/gyro_cal
 mag_adc_cal/service/mag_adc_cal
+rate_ctrl/service/rate_ctrl
 arduino/firmware/build-uno/*
 !arduino/firmware/build-uno/firmware.hex

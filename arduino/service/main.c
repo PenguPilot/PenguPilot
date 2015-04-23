@@ -25,19 +25,11 @@
  GNU General Public License for more details. */
 
 
-#include <stdbool.h>
 #include <msgpack.h>
-#include <syslog.h>
-#include <sched.h>
-#include <unistd.h>
-
-#include <logger.h>
-#include <util.h>
 #include <serial.h>
 #include <scl.h>
-#include <opcd_interface.h>
 #include <threadsafe_types.h>
-#include <daemon.h>
+#include <service.h>
 
 #include "ppm_common.h"
 #include "ppm_parse.h"
@@ -48,27 +40,12 @@
 #define CHANNELS_MAX (16)
 
 
-static bool running = true;
-static char *name = "arduino";
+#define SERVICE_NAME "arduino"
+#define SERVICE_PRIO 99
 
 
-int _main(void)
+SERVICE_MAIN_BEGIN
 {
-   THROW_BEGIN()
-   
-   struct sched_param sp;
-   sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
-   sched_setscheduler(getpid(), SCHED_FIFO, &sp);
- 
-   syslog(LOG_INFO, "opening logger");
-   if (logger_open(name) != 0)
-   {  
-      syslog(LOG_CRIT, "could not open logger");
-      THROW(-EIO);
-   }
-   syslog(LOG_CRIT, "logger opened");
-
-   LOG(LL_INFO, "creating sockets");
    /* init scl and get sockets:: */
    void *rc_socket = scl_get_socket("rc_raw", "pub");
    THROW_IF(rc_socket == NULL, -ENODEV);
@@ -87,14 +64,8 @@ int _main(void)
    LOG(LL_INFO, "reading parameters");
    char *dev_path;
    tsint_t dev_speed;
-   opcd_params_init("exynos_quad.arduino_serial.", 0);
-   opcd_param_t params[] =
-   {
-      {"path", &dev_path},
-      {"speed", &dev_speed},
-      OPCD_PARAMS_END
-   };
-   opcd_params_apply("", params);
+   opcd_param_get("exynos_quad.arduino_serial.path", &dev_path);
+   opcd_param_get("exynos_quad.arduino_serial.speed", &dev_speed);
    
    /* open serial port: */
    LOG(LL_INFO, "opening serial port");
@@ -159,31 +130,6 @@ int _main(void)
 	      scl_copy_send_dynamic(current_socket, msgpack_buf->data, msgpack_buf->size);
       }
    }
-   THROW_END();
 }
-
-
-
-void _cleanup(void)
-{
-   running = false;
-}
-
-
-void main_wrap(int argc, char *argv[])
-{
-   (void)argc;
-   (void)argv;
-
-   exit(-_main());
-}
-
-
-int main(int argc, char *argv[])
-{
-   char pid_file[1024];
-   service_name_to_pidfile(pid_file, "arduino");
-   daemonize(pid_file, main_wrap, _cleanup, argc, argv);
-   return 0;
-}
+SERVICE_MAIN_END
 

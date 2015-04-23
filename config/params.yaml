@@ -164,6 +164,20 @@ ahrs: # attitude and heading reference system
    beta_start: 20.0
    beta_step: 10.0
 
+rate_ctrl: # basic stabilizing controller:
+   att_kd: 0.03929356367277829
+   att_ki: 5.216018377845929
+   att_kii: 1.9043325795347907
+   att_kp: 0.36397715175895795
+   yaw_kd: 0.0009970913130018957
+   yaw_ki: 3.531770730332799
+   yaw_kii: 3.8199155415521995
+   yaw_kp: 0.35127751586656414
+   filt_fg: 10.0
+   filt_d: 0.95
+   jxx_jyy: 0.0097
+   jzz: 0.0057292965
+   tmc: 0.03
 
 autopilot:
 
@@ -203,21 +217,7 @@ autopilot:
 
    controllers:
 
-      stabilizing: # basic stabilizing controller:
-         att_kd: 0.03929356367277829
-         att_ki: 5.216018377845929
-         att_kii: 1.9043325795347907
-         att_kp: 0.36397715175895795
-         yaw_kd: 0.0009970913130018957
-         yaw_ki: 3.531770730332799
-         yaw_kii: 3.8199155415521995
-         yaw_kp: 0.35127751586656414
-         filt_fg: 10.0
-         filt_d: 0.95
-         jxx_jyy: 0.0097
-         jzz: 0.0057292965
-         tmc: 0.03
-      
+     
       ne_speed: # north-east speed controller
          p: 2.581019276508608
          i: 1.827463461175307

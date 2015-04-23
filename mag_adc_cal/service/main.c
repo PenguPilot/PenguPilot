@@ -24,41 +24,27 @@
  GNU General Public License for more details. */
 
 
-#include <syslog.h>
-#include <sched.h>
-#include <unistd.h>
-
 #include <msgpack.h>
-#include <daemon.h>
-#include <util.h>
 #include <scl.h>
-#include <opcd_interface.h>
-#include <logger.h>
+#include <service.h>
 
 #include "mag_adc_cal.h"
 
 
-static int running = 1;
-static msgpack_sbuffer *msgpack_buf = NULL;
-static msgpack_packer *pk = NULL;
-static char *platform = NULL;
+#define SERVICE_NAME "mag_adc_cal"
+#define SERVICE_PRIO 99
+
+
 static void *marg_raw_socket = NULL;
 static void *marg_cal_socket = NULL;
-static char *name = "mag_adc_cal";
 
 
-int _main(void)
+SERVICE_MAIN_BEGIN
 {
-   THROW_BEGIN();
-
-   struct sched_param sp;
-   sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
-   sched_setscheduler(getpid(), SCHED_FIFO, &sp);
- 
    /* initialize msgpack buffers: */
-   msgpack_buf = msgpack_sbuffer_new();
+   msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new();
    THROW_IF(msgpack_buf == NULL, -ENOMEM);
-   pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
+   msgpack_packer *pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
    THROW_IF(pk == NULL, -ENOMEM);
   
    /* initialize SCL: */
@@ -67,22 +53,10 @@ int _main(void)
    marg_cal_socket = scl_get_socket("mag_adc_cal", "pub");
    THROW_IF(marg_cal_socket == NULL, -EIO);
 
-   /* initialize logger: */
-   syslog(LOG_INFO, "opening logger");
-   if (logger_open(name) != 0)
-   {  
-      syslog(LOG_CRIT, "could not open logger");
-      THROW(-EIO);
-   }
-   syslog(LOG_CRIT, "logger opened");
-   
-   /* init opcd: */
-   opcd_params_init(name, 1);
-   
    /* init calibration data: */
    mag_adc_cal_init();
  
-   while (1)
+   while (running)
    {
       char buffer[1024];
       int ret = scl_recv_static(marg_raw_socket, buffer, sizeof(buffer));
@@ -113,31 +87,6 @@ int _main(void)
          msleep(10);
       }
    }
-  
-   THROW_END();
 }
-
-
-void _cleanup(void)
-{
-   running = 0;
-}
-
-
-void main_wrap(int argc, char *argv[])
-{
-   (void)argc;
-   (void)argv;
-
-   exit(-_main());   
-}
-
-
-int main(int argc, char *argv[])
-{
-   char pid_file[1024];
-   service_name_to_pidfile(pid_file, name);
-   daemonize(pid_file, main_wrap, _cleanup, argc, argv);
-   return 0;
-}
+SERVICE_MAIN_END
 

@@ -24,23 +24,20 @@
  GNU General Public License for more details. */
 
 
-#include <unistd.h>
 #include <msgpack.h>
-#include <sched.h>
-
-#include <daemon.h>
-#include <util.h>
 #include <scl.h>
-#include <opcd_interface.h>
-#include <serial.h>
 #include <threadsafe_types.h>
 #include <simple_thread.h>
 #include <interval.h>
-#include <logger.h>
 #include <math/conv.h>
+#include <service.h>
 
 #include "scl_mag_decl.h"
 #include "cal_ahrs.h"
+
+
+#define SERVICE_NAME "ahrs"
+#define SERVICE_PRIO 99
 
 
 static marg_data_t marg_data;
@@ -115,19 +112,10 @@ SIMPLE_THREAD_BEGIN(mag_reader_func)
 SIMPLE_THREAD_END
 
 
-static int running = 1;
-static char *name = "ahrs";
 
 
-int _main(void)
+SERVICE_MAIN_BEGIN
 {
-   ASSERT_ONCE();
-   THROW_BEGIN();
-
-   struct sched_param sp;
-   sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
-   sched_setscheduler(getpid(), SCHED_FIFO, &sp);
- 
    /* init SCL: */
    void *gyro_socket = scl_get_socket("gyro_cal", "sub");
    THROW_IF(gyro_socket == NULL, -EIO);
@@ -138,11 +126,9 @@ int _main(void)
    void *orientation_socket = scl_get_socket("orientation", "pub");
    THROW_IF(orientation_socket == NULL, -EIO);
  
-   /* init logger: */
-   THROW_ON_ERR(logger_open(name));
-
    LOG(LL_INFO, "starting threads");
    marg_data_init(&marg_data);
+
    /* start reader threads: */
    simple_thread_t acc_reader;
    acc_reader.running = false;
@@ -154,9 +140,6 @@ int _main(void)
    /* init magnetic declination reader: */
    THROW_ON_ERR(scl_mag_decl_init());
 
-   /* init opcd: */
-   opcd_params_init(name, 1);
- 
    /* init cal ahrs:*/
    cal_ahrs_init();
 
@@ -218,37 +201,6 @@ int _main(void)
          msleep(10);   
       }
    }
- 
-   THROW_END();
 }
-
-
-void _cleanup(void)
-{
-   running = 0;
-}
-
-
-void main_wrap(int argc, char *argv[])
-{
-   (void)argc;
-   (void)argv;
-   int code = _main();
-   if (code != 0)
-   {
-      LOG(LL_ERROR, "error: %d (%s)", code, strerror(-code));
-      sleep(1);
-   }
-   exit(-code);   
-}
-
-
-
-int main(int argc, char *argv[])
-{
-   char pid_file[1024];
-   service_name_to_pidfile(pid_file, name);
-   daemonize(pid_file, main_wrap, _cleanup, argc, argv);
-   return 0;
-}
+SERVICE_MAIN_END
 
