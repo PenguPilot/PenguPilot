@@ -9,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Current Magnetometer Compensation (CMC) Interface
+ ACC ADC Calibration
 
- Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,17 +24,17 @@
  GNU General Public License for more details. */
 
 
-#ifndef __CMC_H__
-#define __CMC_H__
+#ifndef __ACC_ADC_CAL_H__
+#define __ACC_ADC_CAL_H__
 
 
 #include <math/vec3.h>
 
 
-void cmc_init(void);
+void acc_adc_cal_init(void);
 
-void cmc_apply(vec3_t *mag, const float current);
+void acc_adc_cal_apply(vec3_t *acc);
 
 
-#endif /* __CMC_H__ */
+#endif /* __ACC_ADC_CAL_H__ */
 

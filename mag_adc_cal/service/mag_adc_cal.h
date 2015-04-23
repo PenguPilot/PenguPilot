@@ -9,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Current Magnetometer Compensation (CMC) Implementation
+ MAG ADC Calibration
 
- Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,36 +24,17 @@
  GNU General Public License for more details. */
 
 
-#include <opcd_interface.h>
-#include <threadsafe_types.h>
-#include <util.h>
-
-#include "cmc.h"
+#ifndef __MAG_ADC_CAL_H__
+#define __MAG_ADC_CAL_H__
 
 
-static tsfloat_t scale[3];
-static tsfloat_t bias;
+#include <math/vec3.h>
 
 
-void cmc_init(void)
-{
-   ASSERT_ONCE();
+void mag_adc_cal_init(void);
 
-   opcd_param_t params[] =
-   {
-      {"scale_x", &scale[0]},
-      {"scale_y", &scale[1]},
-      {"scale_z", &scale[2]},
-      {"bias", &bias},
-      OPCD_PARAMS_END
-   };
-   opcd_params_apply("cmc.", params);
-}
+void mag_adc_cal_apply(vec3_t *mag);
 
 
-void cmc_apply(vec3_t *mag, const float current)
-{
-   FOR_N(i, 3)
-      mag->ve[i] -= (current - tsfloat_get(&bias)) * tsfloat_get(&scale[i]);
-}
+#endif /* __MAG_ADC_CAL_H__ */
 

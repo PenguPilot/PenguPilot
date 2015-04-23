@@ -27,8 +27,10 @@
 
 #include <stdbool.h>
 #include <msgpack.h>
-
 #include <syslog.h>
+#include <sched.h>
+#include <unistd.h>
+
 #include <logger.h>
 #include <util.h>
 #include <serial.h>
@@ -54,6 +56,10 @@ int _main(void)
 {
    THROW_BEGIN()
    
+   struct sched_param sp;
+   sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
+   sched_setscheduler(getpid(), SCHED_FIFO, &sp);
+ 
    syslog(LOG_INFO, "opening logger");
    if (logger_open(name) != 0)
    {  

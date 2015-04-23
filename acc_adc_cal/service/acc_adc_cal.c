@@ -9,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- ACC/MAG Calibration
+ MAG ADC Calibration
 
- Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,17 +24,41 @@
  GNU General Public License for more details. */
 
 
-#ifndef __ACC_MAG_CAL_H__
-#define __ACC_MAG_CAL_H__
+#include <opcd_interface.h>
+#include <threadsafe_types.h>
+#include <util.h>
+
+#include "acc_adc_cal.h"
 
 
-#include "marg_data.h"
+static tsfloat_t acc_bias[3];
+static tsfloat_t acc_scale[3];
 
 
-void acc_mag_cal_init(void);
+void acc_adc_cal_init(void)
+{
+   ASSERT_ONCE();
 
-void acc_mag_cal_apply(vec3_t *acc, vec3_t *mag);
+   /* load calibration: */
+   opcd_param_t params[] =
+   {
+      /* acc bias: */
+      {"acc_bias_x", &acc_bias[0]},
+      {"acc_bias_y", &acc_bias[1]},
+      {"acc_bias_z", &acc_bias[2]},
+      /* acc scale: */
+      {"acc_scale_x", &acc_scale[0]},
+      {"acc_scale_y", &acc_scale[1]},
+      {"acc_scale_z", &acc_scale[2]},
+      OPCD_PARAMS_END
+   };
+   opcd_params_apply(".", params);
+}
 
 
-#endif /* __ACC_MAG_CAL_H__ */
+void acc_adc_cal_apply(vec3_t *acc)
+{
+   FOR_N(i, 3)
+      acc->ve[i] =  (acc->ve[i] - tsfloat_get(&acc_bias[i])) / tsfloat_get(&acc_scale[i]);
+}
 

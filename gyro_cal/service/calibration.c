@@ -73,12 +73,6 @@ static int calibration_sample_bias(calibration_t *cal, const float *sample)
 }
 
 
-int cal_complete(calibration_t *cal)
-{
-   return cal->sample == cal->max_samples;
-}
-
-
 int cal_sample_apply(calibration_t *cal, float *vec)
 {
    if (calibration_sample_bias(cal, vec) == 1)

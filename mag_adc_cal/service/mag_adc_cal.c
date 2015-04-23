@@ -9,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Calibration Interface
+ MAG ADC Calibration
 
- Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,29 +24,41 @@
  GNU General Public License for more details. */
 
 
-#ifndef __CALIBRATION_H__
-#define __CALIBRATION_H__
+#include <opcd_interface.h>
+#include <threadsafe_types.h>
+#include <util.h>
+
+#include "mag_adc_cal.h"
 
 
-typedef struct
+static tsfloat_t mag_bias[3];
+static tsfloat_t mag_scale[3];
+
+
+void mag_adc_cal_init(void)
 {
-   size_t dim; /* dimension of the calibration data */
-   float *sum; /* sum vector */
-   float *bias; /* bias vector */
-   size_t max_samples; /* maximum number of samples */
-   size_t sample; /* current sample counter */
+   ASSERT_ONCE();
+
+   /* load calibration: */
+   opcd_param_t params[] =
+   {
+      /* mag bias: */
+      {"mag_bias_x", &mag_bias[0]},
+      {"mag_bias_y", &mag_bias[1]},
+      {"mag_bias_z", &mag_bias[2]},
+      /* mag scale: */
+      {"mag_scale_x", &mag_scale[0]},
+      {"mag_scale_y", &mag_scale[1]},
+      {"mag_scale_z", &mag_scale[2]},
+      OPCD_PARAMS_END
+   };
+   opcd_params_apply(".", params);
 }
-calibration_t;
 
 
-void cal_init(calibration_t *cal, const size_t dim, const size_t max_samples);
-
-void cal_reset(calibration_t *cal);
-
-int cal_complete(calibration_t *cal);
-
-int cal_sample_apply(calibration_t *cal, float *vec);
-
-
-#endif /* __CALIBRATION_H__ */
+void mag_adc_cal_apply(vec3_t *mag)
+{
+   FOR_N(i, 3)
+      mag->ve[i] =  (mag->ve[i] - tsfloat_get(&mag_bias[i])) / tsfloat_get(&mag_scale[i]);
+}
 

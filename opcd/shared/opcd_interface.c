@@ -39,7 +39,7 @@
 
 
 #define THREAD_NAME     "opcd_event_handler"
-#define THREAD_PRIORITY 96
+#define THREAD_PRIORITY 0
 
 
 static char *prefix = NULL;

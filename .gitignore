@@ -21,5 +21,8 @@ remote/tests/sbus_print_test
 display/shared/pyssd1306.py
 arduino/service/arduino
 rc_cal/service/rc_cal
+acc_adc_cal/service/acc_adc_cal
+gyro_cal/service/gyro_cal
+mag_adc_cal/service/mag_adc_cal
 arduino/firmware/build-uno/*
 !arduino/firmware/build-uno/firmware.hex

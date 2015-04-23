@@ -110,13 +110,15 @@ icarus:
       motors_off_z: 0.4
       z_low: 0.5
 
-marg_cal: # accelerometer and magnetometer calibration
+acc_adc_cal: # accelerometer calibration
    acc_bias_x: 0.0
    acc_bias_y: 0.0
    acc_bias_z: 0.0
    acc_scale_x: 1.0
    acc_scale_y: 1.0
    acc_scale_z: 1.0
+
+mag_adc_cal: # magnetometer calibration data
    mag_bias_x: 0.0
    mag_bias_y: 0.0
    mag_bias_z: 0.0

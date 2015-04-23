@@ -37,8 +37,8 @@
 #include "mag_emitter.h"
 
 
-#define THREAD_NAME       "ak8975c_reader"
-#define THREAD_PRIORITY   98
+#define THREAD_NAME       "mag_emitter"
+#define THREAD_PRIORITY   99
 
 
 static simple_thread_t thread;

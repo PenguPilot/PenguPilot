@@ -133,11 +133,20 @@ append_inc_lib(rc_cal_dir + 'shared')
 rc_cal_bin = env.Program('rc_cal/service/rc_cal', collect_files(rc_cal_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
 Requires(rc_cal_bin, common_libs)
 
-# MARG Data Calibration Service:
-marg_cal_dir = 'marg_cal/'
-append_inc_lib(marg_cal_dir + 'shared')
-marg_cal_bin = env.Program('marg_cal/service/marg_cal', collect_files(marg_cal_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(marg_cal_bin, common_libs)
+# Gyro Calibration Service:
+gyro_cal_dir = 'gyro_cal/'
+gyro_cal_bin = env.Program('gyro_cal/service/gyro_cal', collect_files(gyro_cal_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(gyro_cal_bin, common_libs)
+
+# MAG ADC Calibration Service:
+mag_adc_cal_dir = 'mag_adc_cal/'
+mag_adc_cal_bin = env.Program('mag_adc_cal/service/mag_adc_cal', collect_files(mag_adc_cal_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(mag_adc_cal_bin, common_libs)
+
+# ACC ADC Calibration Service:
+acc_adc_cal_dir = 'acc_adc_cal/'
+acc_adc_cal_bin = env.Program('acc_adc_cal/service/acc_adc_cal', collect_files(acc_adc_cal_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(acc_adc_cal_bin, common_libs)
 
 # AHRS Service:
 ahrs_dir = 'ahrs/'

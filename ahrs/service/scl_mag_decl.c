@@ -34,7 +34,7 @@
 #include "scl_mag_decl.h"
 
 
-#define THREAD_PRIORITY 92
+#define THREAD_PRIORITY 99
 
 
 static simple_thread_t thread;

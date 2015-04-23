@@ -11,9 +11,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
 
- Calibration Math
+ 3D Sensor ADC Calibration Math
 
- Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
  Copyright (C) 2013 Fabio Varesano <fabio at varesano dot net>
 
  This program is free software; you can redistribute it and/or modify

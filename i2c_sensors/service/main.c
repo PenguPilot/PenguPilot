@@ -61,6 +61,9 @@ static int _main(int argc, char *argv[])
    THROW_BEGIN();
 
    struct sched_param sp;
+   sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
+   sched_setscheduler(getpid(), SCHED_FIFO, &sp);
+   
    periodic_thread_t _thread; 
    periodic_thread_t *thread = &_thread;
    char *name = "i2c_sensors";
@@ -109,15 +112,7 @@ static int _main(int argc, char *argv[])
       LOG(LL_ERROR, "unknown platform: %s", plat_name);
    }
 
-   LOG(LL_INFO, "setting up real-time scheduling");
-   sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
-   sched_setscheduler(getpid(), SCHED_FIFO, &sp);
-   
-   if (nice(-20) == -1)
-   {
-      LOG(LL_ERROR, "could not renice process");
-   }
- 
+  
    if (platform.read_mag)
       mag_emitter_start();
    if (platform.read_baro)
