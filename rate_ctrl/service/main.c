@@ -40,41 +40,39 @@ static void *gyro_cal_socket;
 static void *torques_socket;
 static float rates[3];
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-void *rates_socket;
+static void *rates_socket;
+static void *inten_socket;
 
 
 SIMPLE_THREAD_BEGIN(rates_reader_func)
-{
    SIMPLE_THREAD_LOOP_BEGIN
-   {
-      char buffer[1024];
-      int ret = scl_recv_static(rates_socket, buffer, sizeof(buffer));
-      if (ret > 0)
+      MSGPACK_READER_BEGIN(rates_socket)
+      if (msg_root.type == MSGPACK_OBJECT_ARRAY)
       {
-         msgpack_unpacked msg;
-         msgpack_unpacked_init(&msg);
-         if (msgpack_unpack_next(&msg, buffer, ret, NULL))
-         {
-            msgpack_object root = msg.data;
-            if (root.type == MSGPACK_OBJECT_ARRAY)
-            {
-               pthread_mutex_lock(&mutex);
-               FOR_N(i, 3)
-                  rates[i] = root.via.array.ptr[i].via.dec;
-               pthread_mutex_unlock(&mutex);
-            }
-         }
-         msgpack_unpacked_destroy(&msg);
+         pthread_mutex_lock(&mutex);
+         FOR_N(i, 3)
+            rates[i] = msg_root.via.array.ptr[i].via.dec;
+         pthread_mutex_unlock(&mutex);
       }
-      else
-      {
-         msleep(10);   
-      }
-   }
+      MSGPACK_READER_END
    SIMPLE_THREAD_LOOP_END
-}
 SIMPLE_THREAD_END
 
+
+SIMPLE_THREAD_BEGIN(inten_reader_func)
+   SIMPLE_THREAD_LOOP_BEGIN
+      MSGPACK_READER_BEGIN(inten_socket)
+         bool inten = msg_root.via.i64;
+         static bool inten_prev = false;
+         if (inten != inten_prev)
+         {
+            LOG(LL_INFO, "new integrator enable: %d", inten);
+            piid_int_enable(inten);
+         }
+         inten_prev = inten;
+      MSGPACK_READER_END
+   SIMPLE_THREAD_LOOP_END
+SIMPLE_THREAD_END
 
 
 SERVICE_MAIN_BEGIN
@@ -92,51 +90,47 @@ SERVICE_MAIN_BEGIN
    THROW_IF(torques_socket == NULL, -EIO);
    rates_socket = scl_get_socket("rates", "sub");
    THROW_IF(rates_socket == NULL, -EIO);
+   inten_socket = scl_get_socket("inten", "sub");
+   THROW_IF(inten_socket == NULL, -EIO);
    
    /* start rates reader thread: */
    simple_thread_t rates_reader;
    rates_reader.running = false;
    simple_thread_start(&rates_reader, rates_reader_func, "rates_reader", 99, NULL);
+   simple_thread_t inten_reader;
+   inten_reader.running = false;
+   simple_thread_start(&inten_reader, inten_reader_func, "inten_reader", 99, NULL);
  
    piid_init(0.005);
+   LOG(LL_INFO, "entering main loop");
 
    while (running)
    {
-      char buffer[1024];
-      int ret = scl_recv_static(gyro_cal_socket, buffer, sizeof(buffer));
-      if (ret > 0)
+      MSGPACK_READER_BEGIN(gyro_cal_socket)
       {
-         msgpack_unpacked msg;
-         msgpack_unpacked_init(&msg);
-         if (msgpack_unpack_next(&msg, buffer, ret, NULL))
+         if (msg_root.type == MSGPACK_OBJECT_ARRAY)
          {
-            msgpack_object root = msg.data;
-            if (root.type == MSGPACK_OBJECT_ARRAY)
+            /* read gyro data: */
+            float gyro[3];
+            FOR_N(i, 3)
             {
-               /* read gyro data: */
-               float gyro[3];
-               FOR_N(i, 3)
-                  gyro[i] = root.via.array.ptr[i].via.dec;
-
-               float torques[3];
-               /* run rate controller: */
-               pthread_mutex_lock(&mutex);
-               piid_run(torques, gyro, rates, 0.005);
-               pthread_mutex_unlock(&mutex);
-
-               /* send torques: */
-               msgpack_sbuffer_clear(msgpack_buf);
-               msgpack_pack_array(pk, 3);
-               PACKFV(torques, 3);
-               scl_copy_send_dynamic(torques_socket, msgpack_buf->data, msgpack_buf->size);
+               gyro[i] = msg_root.via.array.ptr[i].via.dec;
             }
+
+            float torques[3];
+            /* run rate controller: */
+            pthread_mutex_lock(&mutex);
+            piid_run(torques, gyro, rates, 0.005);
+            pthread_mutex_unlock(&mutex);
+
+            /* send torques: */
+            msgpack_sbuffer_clear(msgpack_buf);
+            msgpack_pack_array(pk, 3);
+            PACKFV(torques, 3);
+            scl_copy_send_dynamic(torques_socket, msgpack_buf->data, msgpack_buf->size);
          }
-         msgpack_unpacked_destroy(&msg);
       }
-      else
-      {
-         msleep(10);
-      }
+      MSGPACK_READER_END
    }
 }
 SERVICE_MAIN_END

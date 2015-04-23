@@ -56,7 +56,7 @@ SERVICE_MAIN_BEGIN
    /* init calibration data: */
    acc_adc_cal_init();
  
-   while (1)
+   while (running)
    {
       char buffer[1024];
       int ret = scl_recv_static(marg_raw_socket, buffer, sizeof(buffer));
