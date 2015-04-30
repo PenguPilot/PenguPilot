@@ -25,7 +25,7 @@ Filesystem Contents
 * [main_loop](main_loop): main control flow
 * [sensors](sensors): sensor drivers
 * [filters](filters): filter code
-* [actuators](actutors): motors
+* [actuators](actuators): motors
 * [platform](platform): COM / sensor / actuator compositions
 * [control](control): speed and position controllers
 * [force_opt](force_opt): force optimizations
