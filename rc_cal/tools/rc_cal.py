@@ -27,7 +27,7 @@
 
 
 from time import sleep
-from scl import generate_map
+from scl import scl_get_socket
 from msgpack import loads
 from threading import Thread
 from copy import copy
@@ -83,7 +83,7 @@ class ChannelDetector:
 
 def remote_reader():
    try:
-      s = socket_map['rc_raw']
+      s = scl_get_socket('rc_raw', 'sub')
       global channels, channels_valid
       while True:
          data = loads(s.recv())
@@ -93,7 +93,6 @@ def remote_reader():
       killed = True
 
 try:
-   socket_map = generate_map('rc_cal_tool')
    t = Thread(target = remote_reader)
    t.daemon = True
    t.start()
@@ -133,7 +132,7 @@ try:
    if killed:
       raise Exception
    print 'writing to opcd'
-   opcd = OPCD_Interface(socket_map['opcd_ctrl'])
+   opcd = OPCD_Interface(scl_get_socket('opcd_ctrl', 'req'))
    for name, index, max, min in channel_map:
       prefix = 'rc_cal.' + name + '.'
       opcd.set(prefix + 'index', index)
