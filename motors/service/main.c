@@ -13,6 +13,46 @@
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
+ interfaces:
+ -----------
+                            _________
+                voltage -> |         | <-> opcd
+    [sum, c_0, .., c_n]    | MOTORS  | <-- flight_state: integer; 0 | 1
+                 forces -> | SERVICE | --> motors_state: integer;
+ [enable, f_0, .., f_n]    |_________|     2 | 4 | 5 | 6 | 7
+
+
+ base states:
+ ------------
+ 0 = stopped
+ 1 = starting
+ 2 = running
+ 3 = stopping
+
+ state chart:
+ ------------
+
+                 start()
+         .-> [0] ---> [1] --.
+ timer() |                  | timer()
+         `-- [3] <--- [2] <-´
+                 stop()
+
+
+ extended states:
+ ----------------
+ 2 = running, normal
+ 4 = stopped, saturated
+ 5 = starting, saturated
+ 6 = running, saturated
+ 7 = stopping, saturated
+
+ state access macros:
+ --------------------
+ #define MOTORS_CONTROLLABLE(state) ((state) == 2 || (state) == 6)
+ #define MOTORS_SATURATED(state) (((state) & 0x40) ? 1 : 0)
+
+
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation; either version 2 of the License, or
@@ -120,8 +160,6 @@ int __main(void)
    opcd_param_get(buffer_path, &driver);
    LOG(LL_INFO, "driver: %s", driver);
 
-
- 
    while (running)
    {
       char buffer[1024];
