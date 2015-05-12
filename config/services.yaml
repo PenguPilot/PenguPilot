@@ -26,6 +26,11 @@
 
 # high-priority system services:
 
+
+motors:
+   binary: 'motors/service/motors'
+   priority: sys_high
+
 i2c_sensors:
    binary: 'i2c_sensors/service/i2c_sensors'
    priority: sys_high

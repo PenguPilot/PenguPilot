@@ -41,8 +41,11 @@
 #include <logger.h>
 #include <sched.h>
 #include <opcd_interface.h>
+#include <simple_thread.h>
+#include <threadsafe_types.h>
 
 #include "force_to_esc/force_to_esc.h"
+#include "drivers/arduino_pwms/arduino_pwms.h"
 
 
 static struct sched_param sp;
@@ -52,9 +55,49 @@ static char *platform = NULL;
 static void *forces_socket = NULL;
 
 
+static simple_thread_t thread;
+static void *voltage_socket;
+static tsfloat_t voltage;
+
+
+SIMPLE_THREAD_BEGIN(thread_func)
+{
+   SIMPLE_THREAD_LOOP_BEGIN
+   {
+      char buffer[128];
+      int ret = scl_recv_static(voltage_socket, buffer, sizeof(buffer));
+      if (ret > 0)
+      {
+         msgpack_unpacked msg;
+         msgpack_unpacked_init(&msg);
+         if (msgpack_unpack_next(&msg, buffer, ret, NULL))
+         {
+            msgpack_object root = msg.data;
+            assert (root.type == MSGPACK_OBJECT_ARRAY);
+            tsfloat_set(&voltage, root.via.array.ptr[0].via.dec);
+         }
+         msgpack_unpacked_destroy(&msg);
+      }
+      else
+      {
+         sleep(1);
+         LOG(LL_ERROR, "could not read voltage");
+      }
+   }
+   SIMPLE_THREAD_LOOP_END
+}
+SIMPLE_THREAD_END
+
+
+
 int __main(void)
 {
    THROW_BEGIN();
+
+   /* start voltage reader thread: */
+   voltage_socket = scl_get_socket("voltage", "sub");
+   tsfloat_init(&voltage, 16.0);
+   simple_thread_start(&thread, thread_func, "voltage_reader", 99, NULL);
 
    /* initialize SCL: */
    forces_socket = scl_get_socket("motor_forces", "sub");
@@ -119,9 +162,13 @@ int __main(void)
    char *driver;
    opcd_param_get(buffer_path, &driver);
    LOG(LL_INFO, "driver: %s", driver);
+   int (*write_motors)(float *forces);
+   if (strcmp(driver, "arduino") == 0)
+   {
+      arduino_pwms_init();
+      write_motors = arduino_pwms_write;   
+   }
 
-
- 
    while (running)
    {
       char buffer[1024];
@@ -136,10 +183,13 @@ int __main(void)
             msgpack_object root = msg.data;
             assert (root.type == MSGPACK_OBJECT_ARRAY);
             int n_forces = root.via.array.size;
+            float ctrl[16];
             FOR_N(i, n_forces)
             {
                float force = root.via.array.ptr[i].via.dec;
+               ctrl[i] = f2e(force, tsfloat_get(&voltage));
             }
+            write_motors(ctrl);
          }
          msgpack_unpacked_destroy(&msg);
       }
