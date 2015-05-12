@@ -10,6 +10,7 @@
 *.pb-c.h
 shared/serialport.py
 motors/service/motors
+mixer/service/mixer
 ahrs/service/ahrs
 gpsp/service/gpsp
 gpstime/service/gpstime
