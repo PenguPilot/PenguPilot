@@ -208,6 +208,14 @@ motors_src =  collect_files(motors_service_dir, re_cc)
 motors_bin = env.Program(motors_dir + 'service/motors', motors_src, LIBS = common_libs + ['m', 'opcd', 'opcd_pb', 'pthread', 'msgpack', 'shared', 'scl', 'protobuf-c', 'yaml', 'zmq', 'glib-2.0', 'rt'])
 Requires(motors_bin, common_libs)
 
+# Mixer:
+mixer_dir = 'mixer/'
+mixer_service_dir = mixer_dir + '/service'
+mixer_src =  collect_files(mixer_service_dir, re_cc)
+mixer_bin = env.Program(mixer_dir + 'service/mixer', mixer_src, LIBS = common_libs + ['m', 'opcd', 'opcd_pb', 'pthread', 'msgpack', 'shared', 'scl', 'protobuf-c', 'yaml', 'zmq', 'glib-2.0', 'rt'])
+Requires(mixer_bin, common_libs)
+
+
 # HLFM:
 icarus_dir = 'icarus/'
 icarus_pb_dir = icarus_dir + 'shared/'

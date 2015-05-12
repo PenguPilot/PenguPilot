@@ -17,6 +17,7 @@ autopilot/service/autopilot
 autopilot/tools/acc_mag_cal/acc_mag_dump
 remote/service/remote
 ofs/service/ofs
+i2c_sensors/service/i2c_sensors
 remote/tests/sbus_print_test
 display/shared/pyssd1306.py
 arduino/service/arduino

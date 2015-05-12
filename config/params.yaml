@@ -164,6 +164,18 @@ ahrs: # attitude and heading reference system
    beta_start: 20.0
    beta_step: 10.0
 
+
+mixer: # enables different parts of the coupling matrix
+   gas_enabled: 1
+   pitch_enabled: 1
+   roll_enabled: 1
+   yaw_enabled: 1
+   quad_matrix: "1575696.45783,            0.0, -15562434.1515, -62229302.534,
+                 1575696.45783,            0.0,  15562434.1515, -62229302.534,
+                 1575696.45783, -15562434.1515,            0.0,  62229302.534,
+                 1575696.45783,  15562434.1515,            0.0,  62229302.534"
+                 # gas          roll             pitch           yaw
+
 rate_ctrl: # basic stabilizing controller:
    att_kd: 0.03929356367277829
    att_ki: 5.216018377845929
@@ -179,6 +191,8 @@ rate_ctrl: # basic stabilizing controller:
    jzz: 0.0057292965
    tmc: 0.03
 
+
+
 autopilot:
 
    main:
@@ -189,11 +203,6 @@ autopilot:
       scale_x: 0.0
       scale_y: 0.0
       scale_z: 0.0
-
-   inv_coupling: # enables different parts of the coupling matrix
-      pitch_enabled: 1
-      roll_enabled: 1
-      yaw_enabled: 1
 
    sticks:
       pitch_roll_speed_max: 180.0 # [deg/s]
