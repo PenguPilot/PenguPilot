@@ -9,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Timer-based Motors State Tracking
+ Timer-based Motors State Machine Implementation
 
- Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -25,65 +25,27 @@
 
 
 #include <util.h>
-#include <scl.h>
 #include <math.h>
+#include <logger.h>
 
 #include <time/etimer.h>
-#include "motors_state.h"
 
-
-/* motors state: */
-typedef enum 
-{
-   MOTORS_STOPPED =  0x01,
-   MOTORS_STOPPING = 0x02,
-   MOTORS_STARTING = 0x04,
-   MOTORS_SPINNING = 0x08
-}
-motors_state_t;
+#include "motors_state_machine.h"
 
 
 static motors_state_t state = MOTORS_STOPPED;
 static etimer_t timer;
-static void *spinning_socket = NULL;
 
 
-void motors_state_init(void)
+void motors_state_machine_init(void)
 {
    ASSERT_ONCE();
-   ASSERT_NULL(spinning_socket);
-   spinning_socket = scl_get_socket("motors_spinning", "pub");
-   scl_send_static(spinning_socket, "false", 5);
-   ASSERT_NOT_NULL(spinning_socket);
    etimer_init(&timer, 1.5);
 }
+void motors_state_machine_init(void);
 
 
-bool motors_starting(void)
-{
-   return (state & MOTORS_STARTING) ? true : false;
-}
-
-
-bool motors_output_is_disabled(void)
-{
-   return (state & (MOTORS_STOPPING | MOTORS_STOPPED)) ? true : false;
-}
-
-
-bool motors_spinning(void)
-{
-   return (state & (MOTORS_STARTING | MOTORS_SPINNING | MOTORS_STOPPING)) ? true : false;
-}
-
-
-bool motors_controllable(void)
-{
-   return (state & MOTORS_SPINNING) ? true : false;
-}
-
-
-void motors_state_update(bool flying, float dt, bool start)
+motors_state_t motors_state_machine_update(float dt, bool start)
 {
    switch (state)
    {
@@ -92,21 +54,24 @@ void motors_state_update(bool flying, float dt, bool start)
          {
             state = MOTORS_STARTING;
             etimer_reset(&timer);
+            LOG(LL_DEBUG, "MOTORS_STARTING");
          }
          break;
       
       case MOTORS_STARTING:
          if (etimer_check(&timer, dt))
          {
-            state = MOTORS_SPINNING;
+            state = MOTORS_RUNNING;
+            LOG(LL_DEBUG, "MOTORS_RUNNING");
          }
          break;
       
-      case MOTORS_SPINNING:
-         if (!start && !flying)
+      case MOTORS_RUNNING:
+         if (!start)
          {
             state = MOTORS_STOPPING;
             etimer_reset(&timer);
+            LOG(LL_DEBUG, "MOTORS_STOPPING");
          }
          break;
       
@@ -114,9 +79,10 @@ void motors_state_update(bool flying, float dt, bool start)
          if (etimer_check(&timer, dt))
          {
             state = MOTORS_STOPPED;
-            etimer_reset(&timer);
+            LOG(LL_DEBUG, "MOTORS_STOPPED");
          }
          break;
    }
+   return state;
 }
 

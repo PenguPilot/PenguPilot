@@ -83,9 +83,15 @@
 #include <opcd_interface.h>
 #include <simple_thread.h>
 #include <threadsafe_types.h>
+#include <interval.h>
+#include <math.h>
 
+#include "motors_state_machine.h"
 #include "force_to_esc/force_to_esc.h"
 #include "drivers/arduino_pwms/arduino_pwms.h"
+
+
+#define MIN_GAS 0.1f
 
 
 static struct sched_param sp;
@@ -163,11 +169,6 @@ int __main(void)
    sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
    sched_setscheduler(getpid(), SCHED_FIFO, &sp);
  
-   if (nice(-20) == -1)
-   {
-      LOG(LL_ERROR, "could not renice process");
-   }
- 
    /* initialize msgpack buffers: */
    msgpack_buf = msgpack_sbuffer_new();
    THROW_IF(msgpack_buf == NULL, -ENOMEM);
@@ -208,6 +209,9 @@ int __main(void)
       arduino_pwms_init();
       write_motors = arduino_pwms_write;   
    }
+   motors_state_machine_init();
+   interval_t interval;
+   interval_init(&interval);
 
    while (running)
    {
@@ -222,14 +226,30 @@ int __main(void)
             /* read received raw channels message: */
             msgpack_object root = msg.data;
             assert (root.type == MSGPACK_OBJECT_ARRAY);
-            int n_forces = root.via.array.size;
-            float ctrl[16];
+            int n_forces = root.via.array.size - 1;
+            int enable = root.via.array.ptr[0].via.i64;
+            float dt = interval_measure(&interval);
+            motors_state_t state = motors_state_machine_update(dt, enable);
+            float ctrls[16];
             FOR_N(i, n_forces)
             {
-               float force = root.via.array.ptr[i].via.dec;
-               ctrl[i] = f2e(force, tsfloat_get(&voltage));
+               float force = root.via.array.ptr[i + 1].via.dec;
+               switch (state)
+               {
+                  case MOTORS_RUNNING:
+                     ctrls[i] = fmax(MIN_GAS, f2e(force, tsfloat_get(&voltage)));
+                     break;
+
+                  case MOTORS_STARTING:
+                     ctrls[i] = MIN_GAS;
+                     break;
+
+                  case MOTORS_STOPPED:
+                  case MOTORS_STOPPING:
+                     ctrls[i] = 0.0f;
+               }
             }
-            write_motors(ctrl);
+            write_motors(ctrls);
          }
          msgpack_unpacked_destroy(&msg);
       }
@@ -250,7 +270,6 @@ void _main(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-   __main();
    char pid_file[1024];
    service_name_to_pidfile(pid_file, "motors");
    daemonize(pid_file, _main, NULL, argc, argv);

@@ -34,12 +34,16 @@ from msgpack import dumps
 
 socket = scl_get_socket('motor_forces', 'pub')
 
-def write_motors(val):
-   forces = [val, val, val, val]
+def write_motors(en, val):
+   forces = [en, val, val, val, val]
    socket.send(dumps(forces))
 
 
 while 1:
-   write_motors(0.0)
-   sleep(0.005)
+   for _ in range(2000):
+      write_motors(1, 0.0)
+      sleep(0.005)
+   for _ in range(2000):
+      write_motors(0, 0.0)
+      sleep(0.005)
 

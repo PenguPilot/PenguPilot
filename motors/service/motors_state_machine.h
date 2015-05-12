@@ -9,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Timer-based Motors State Tracking
+ Timer-based Motors State Machine Interface
 
- Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,36 +24,18 @@
  GNU General Public License for more details. */
 
 
-#ifndef __MOTORS_STATE_H__
-#define __MOTORS_STATE_H__
+#ifndef __MOTORS_STATE_MACHINE_H__
+#define __MOTORS_STATE_MACHINE_H__
 
 
 #include <stdbool.h>
+#include <motors_state.h>
 
 
-/* initializes motor state */
-void motors_state_init(void);
+void motors_state_machine_init(void);
+
+motors_state_t motors_state_machine_update(float dt, bool start);
 
 
-/* indicates if the motors are starting */
-bool motors_starting(void);
-
-
-/* indicates if the motor outputs should be disabled */
-bool motors_output_is_disabled(void);
-
-
-/* indicates if the motors are spinning */
-bool motors_spinning(void);
-
-
-/* indicates if the controller inputs are used  */
-bool motors_controllable(void);
-
-
-/* updates the motor state machine */
-void motors_state_update(bool flying, float dt, bool start);
-
-
-#endif /* __MOTORS_STATE_H__ */
+#endif /* __MOTORS_STATE_MACHINE_H__ */
 

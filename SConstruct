@@ -204,9 +204,11 @@ Requires(remote_bin, common_libs + [remote_lib])
 # Motors:
 motors_dir = 'motors/'
 motors_service_dir = motors_dir + '/service'
+motors_shared_dir = motors_dir + '/shared'
 motors_src =  collect_files(motors_service_dir, re_cc)
 motors_bin = env.Program(motors_dir + 'service/motors', motors_src, LIBS = common_libs + ['m', 'opcd', 'opcd_pb', 'pthread', 'msgpack', 'shared', 'scl', 'protobuf-c', 'yaml', 'zmq', 'glib-2.0', 'rt'])
 Requires(motors_bin, common_libs)
+append_inc_lib(motors_shared_dir)
 
 # Mixer:
 mixer_dir = 'mixer/'
