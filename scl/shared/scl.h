@@ -108,27 +108,6 @@ do { \
 while (0)
 
 
-#define MSGPACK_READER_BEGIN(socket) \
-   char __buffer[1024]; \
-   int __ret = scl_recv_static(socket, __buffer, sizeof(__buffer)); \
-   if (__ret > 0) \
-   { \
-      msgpack_unpacked __msg; \
-      msgpack_unpacked_init(&__msg); \
-      if (msgpack_unpack_next(&__msg, __buffer, __ret, NULL)) \
-      { \
-         msgpack_object msg_root = __msg.data;
-
-#define MSGPACK_READER_END \
-      } \
-      msgpack_unpacked_destroy(&__msg); \
-   } \
-   else \
-   { \
-      msleep(10); \
-   }
-
-
 /* set protocol buffers optional attribute (see protoc-c output for details) */
 #define PB_SET(var, attr, val) \
    var.has_##attr = 1;  \
@@ -138,6 +117,9 @@ while (0)
    #define ZMQ_SNDHWM ZMQ_HWM
    #define ZMQ_RCVHWM ZMQ_HWM
 #endif
+
+
+#include "msgpack_reader.h"
 
 
 #endif /* __SCL_H__ */
