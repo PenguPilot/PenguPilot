@@ -29,7 +29,7 @@
 #include <sys/mman.h>
 #include <msgpack.h>
 
-#include <daemon.h>
+#include <service.h>
 #include <util.h>
 #include <scl.h>
 #include <opcd_interface.h>
@@ -41,7 +41,6 @@
 #include "../shared/sbus_parser.h"
 
 
-static int running = 1;
 static msgpack_sbuffer *msgpack_buf = NULL;
 static msgpack_packer *pk = NULL;
 static char *platform = NULL;
@@ -69,7 +68,7 @@ int dsl_run(void)
    rc_dsl_t rc_dsl;
    rc_dsl_init(&rc_dsl);
 
-   while (running)
+   while (1)
    {
       int b = serial_read_char(&port);
       if (b < 0)
@@ -96,7 +95,7 @@ int sixaxis_run(void)
 {  
    THROW_BEGIN();
    THROW_ON_ERR(sixaxis_init());
-   while (running)
+   while (1)
    {
       float pitch, roll, yaw, gas, sw_l, sw_r;
       sixaxis_read(&pitch, &roll, &yaw, &gas, &sw_l, &sw_r);
@@ -135,7 +134,7 @@ int sbus_run(void)
    sbus_parser_t parser;
    sbus_parser_init(&parser);
 
-   while (running)
+   while (1)
    {
       int b = serial_read_char(&port);
       if (b < 0)
@@ -158,10 +157,8 @@ int sbus_run(void)
 }
 
 
-int _main(void)
+SERVICE_MAIN_BEGIN("remote", 99)
 {
-   THROW_BEGIN();
-
    /* initialize msgpack buffers: */
    msgpack_buf = msgpack_sbuffer_new();
    THROW_IF(msgpack_buf == NULL, -ENOMEM);
@@ -171,9 +168,6 @@ int _main(void)
    /* initialize SCL: */
    rc_socket = scl_get_socket("rc_raw", "pub");
    THROW_IF(rc_socket == NULL, -EIO);
-
-   /* init opcd and get plaform string: */
-   opcd_params_init("", 0);
    opcd_param_get("platform", &platform);
 
    /* determine the receiver type: */
@@ -195,31 +189,6 @@ int _main(void)
    }
    
    //sixaxis_run();
-
-   THROW_END();
 }
-
-
-void _cleanup(void)
-{
-   running = 0;
-}
-
-
-void main_wrap(int argc, char *argv[])
-{
-   (void)argc;
-   (void)argv;
-
-   exit(-_main());   
-}
-
-
-int main(int argc, char *argv[])
-{
-   char pid_file[1024];
-   service_name_to_pidfile(pid_file, "remote");
-   daemonize(pid_file, main_wrap, _cleanup, argc, argv);
-   return 0;
-}
+SERVICE_MAIN_END
 

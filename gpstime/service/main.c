@@ -35,7 +35,7 @@
 #include <util.h>
 #include <scl.h>
 #include <threadsafe_types.h>
-#include <daemon.h>
+#include <service.h>
 
 #include "tz_lookup.h"
 
@@ -62,28 +62,19 @@ static void linux_sys_set_timezone(float lat_dest, float lon_dest)
 }
 
 
-bool running = true;
-static msgpack_sbuffer *msgpack_buf = NULL;
-static msgpack_packer *pk = NULL;
-
-
-int _main(void)
+SERVICE_MAIN_BEGIN("gpstime", 0)
 {
-   THROW_BEGIN()
-   
    /* init msgpack buffer: */
-   ASSERT_NULL(msgpack_buf);
-   msgpack_buf = msgpack_sbuffer_new();
+   msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new();
    ASSERT_NOT_NULL(msgpack_buf);
-   ASSERT_NULL(pk);
-   pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
+   msgpack_packer *pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
+   ASSERT_NOT_NULL(pk);
 
-   /* init scl and get sockets:: */
+   /* init scl and get sockets: */
    void *gps_socket = scl_get_socket("gps", "sub");
    THROW_IF(gps_socket == NULL, -ENODEV);
    void *ts_socket = scl_get_socket("time_set", "pub");
    THROW_IF(ts_socket == NULL, -ENODEV);
-   sleep(5);
    bool set = false;
 
    while (running)
@@ -123,31 +114,6 @@ int _main(void)
          msgpack_pack_false(pk);
       scl_copy_send_dynamic(ts_socket, msgpack_buf->data, msgpack_buf->size);
    }
-   THROW_END();
 }
-
-
-
-void _cleanup(void)
-{
-   running = false;
-}
-
-
-void main_wrap(int argc, char *argv[])
-{
-   (void)argc;
-   (void)argv;
-
-   exit(-_main());
-}
-
-
-int main(int argc, char *argv[])
-{
-   char pid_file[1024];
-   service_name_to_pidfile(pid_file, "gpstime");
-   daemonize(pid_file, main_wrap, _cleanup, argc, argv);
-   return 0;
-}
+SERVICE_MAIN_END
 
