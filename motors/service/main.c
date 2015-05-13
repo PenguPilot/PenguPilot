@@ -69,22 +69,19 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdbool.h>
-#include <pthread.h>
 #include <syslog.h>
-#include <msgpack.h>
 #include <stdlib.h>
 #include <sys/mman.h>
+#include <math.h>
 
+#include <service.h>
 #include <daemon.h>
-#include <util.h>
-#include <scl.h>
 #include <logger.h>
 #include <sched.h>
 #include <opcd_interface.h>
-#include <simple_thread.h>
+#include <msgpack_reader.h>
 #include <threadsafe_types.h>
 #include <interval.h>
-#include <math.h>
 
 #include "motors_state_machine.h"
 #include "force_to_esc/force_to_esc.h"
@@ -92,83 +89,43 @@
 
 
 #define MIN_GAS 0.1f
+#define SERVICE_NAME "motors"
+#define SERVICE_PRIO 99
+
 
 
 static struct sched_param sp;
-static bool running = true;
 static msgpack_sbuffer *msgpack_buf = NULL;
 static char *platform = NULL;
 static void *forces_socket = NULL;
 
-
-static simple_thread_t thread;
-static void *voltage_socket;
 static tsfloat_t voltage;
 
 
-SIMPLE_THREAD_BEGIN(thread_func)
+/* voltage reader thread: */
+MSGPACK_READER_BEGIN(voltage_reader)
+   MSGPACK_READER_LOOP_BEGIN(voltage_reader)
+   if (root.type == MSGPACK_OBJECT_ARRAY)
+      tsfloat_set(&voltage, root.via.array.ptr[0].via.dec);
+   MSGPACK_READER_LOOP_END
+MSGPACK_READER_END
+
+
+SERVICE_MAIN_BEGIN
 {
-   SIMPLE_THREAD_LOOP_BEGIN
-   {
-      char buffer[128];
-      int ret = scl_recv_static(voltage_socket, buffer, sizeof(buffer));
-      if (ret > 0)
-      {
-         msgpack_unpacked msg;
-         msgpack_unpacked_init(&msg);
-         if (msgpack_unpack_next(&msg, buffer, ret, NULL))
-         {
-            msgpack_object root = msg.data;
-            assert (root.type == MSGPACK_OBJECT_ARRAY);
-            tsfloat_set(&voltage, root.via.array.ptr[0].via.dec);
-         }
-         msgpack_unpacked_destroy(&msg);
-      }
-      else
-      {
-         sleep(1);
-         LOG(LL_ERROR, "could not read voltage");
-      }
-   }
-   SIMPLE_THREAD_LOOP_END
-}
-SIMPLE_THREAD_END
-
-
-
-int __main(void)
-{
-   THROW_BEGIN();
-
    /* start voltage reader thread: */
-   voltage_socket = scl_get_socket("voltage", "sub");
    tsfloat_init(&voltage, 16.0);
-   simple_thread_start(&thread, thread_func, "voltage_reader", 99, NULL);
-
+   MSGPACK_READER_START(voltage_reader, "voltage", 99);
+ 
    /* initialize SCL: */
    forces_socket = scl_get_socket("motor_forces", "sub");
    THROW_IF(forces_socket == NULL, -EIO);
 
    /* init opcd: */
-   opcd_params_init("", 0);
    char *platform;
    opcd_param_get("platform", &platform);
    syslog(LOG_INFO, "platform: %s", platform);
    
-   /* initialize logger: */
-   syslog(LOG_INFO, "opening logger");
-   if (logger_open("motors") != 0)
-   {  
-      syslog(LOG_CRIT, "could not open logger");
-      THROW(-EIO);
-   }
-   syslog(LOG_INFO, "logger opened");
-
-   /* real-time stuff: */
-   LOG(LL_INFO, "setting up real-time scheduling");
-   sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
-   sched_setscheduler(getpid(), SCHED_FIFO, &sp);
- 
    /* initialize msgpack buffers: */
    msgpack_buf = msgpack_sbuffer_new();
    THROW_IF(msgpack_buf == NULL, -ENOMEM);
@@ -258,21 +215,6 @@ int __main(void)
          msleep(1);
       }
    }
-   THROW_END();
 }
-
-
-void _main(int argc, char *argv[])
-{
-   __main();
-}
-
-
-int main(int argc, char *argv[])
-{
-   char pid_file[1024];
-   service_name_to_pidfile(pid_file, "motors");
-   daemonize(pid_file, _main, NULL, argc, argv);
-   return 0;
-}
+SERVICE_MAIN_END
 

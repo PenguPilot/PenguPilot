@@ -119,7 +119,4 @@ while (0)
 #endif
 
 
-#include "msgpack_reader.h"
-
-
 #endif /* __SCL_H__ */

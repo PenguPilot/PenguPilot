@@ -2,6 +2,7 @@
 
 #include <util.h>
 #include <scl.h>
+#include <msgpack.h>
 #include <simple_thread.h>
 
 
