@@ -69,7 +69,7 @@ int cal_ahrs_update(euler_t *euler, const marg_data_t *marg_data,
 
    euler->pitch = _euler.pitch;
    euler->roll = _euler.roll;
-   euler->yaw = _euler.yaw + deg2rad(mag_decl);
+   euler->yaw = _euler.yaw + mag_decl;
    euler_normalize(euler);
    return ret;
 }

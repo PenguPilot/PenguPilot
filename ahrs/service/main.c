@@ -91,7 +91,7 @@ SERVICE_MAIN_BEGIN("ahrs", 99)
    /* start reader threads: */
    MSGPACK_READER_START(acc_reader, "acc_adc_cal", 99);
    MSGPACK_READER_START(mag_reader, "mag_adc_cal", 99);
-   MSGPACK_READER_START(decl_reader, "dec", 98);
+   MSGPACK_READER_START(decl_reader, "decl", 98);
  
    /* init cal ahrs:*/
    cal_ahrs_init();
@@ -102,59 +102,43 @@ SERVICE_MAIN_BEGIN("ahrs", 99)
    msgpack_packer *pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
    THROW_IF(pk == NULL, -ENOMEM);
  
-   /* init auxiliary data structures: */
    interval_t interval;
    interval_init(&interval);
 
    LOG(LL_INFO, "started decreasing beta gain");
-   while (running)
+   MSGPACK_READER_SIMPLE_LOOP_BEGIN(gyro)
    {
-      char buffer[1024];
-      int ret = scl_recv_static(gyro_socket, buffer, sizeof(buffer));
-      if (ret > 0)
+      if (root.type == MSGPACK_OBJECT_ARRAY)
       {
-         msgpack_unpacked msg;
-         msgpack_unpacked_init(&msg);
-         if (msgpack_unpack_next(&msg, buffer, ret, NULL))
+         float dt = interval_measure(&interval);
+         FOR_N(i, 3)
+            marg_data.gyro.ve[i] = root.via.array.ptr[i].via.dec;
+
+         euler_t euler;
+         pthread_mutex_lock(&mutex);
+         int ahrs_state = cal_ahrs_update(&euler, &marg_data, tsfloat_get(&decl), dt);
+         pthread_mutex_unlock(&mutex);
+         if (ahrs_state == 0)
          {
-            float dt = interval_measure(&interval);
-            msgpack_object root = msg.data;
-            if (root.type == MSGPACK_OBJECT_ARRAY)
-            {
-               FOR_N(i, 3)
-                  marg_data.gyro.ve[i] = root.via.array.ptr[i].via.dec;
- 
-               euler_t euler;
-               pthread_mutex_lock(&mutex);
-               int ahrs_state = cal_ahrs_update(&euler, &marg_data, tsfloat_get(&decl), dt);
-               pthread_mutex_unlock(&mutex);
-               if (ahrs_state == 0)
-               {
-                  EVERY_N_TIMES(100, LOG(LL_INFO, "intermediate orientation (y p r): %f %f %f", 
-                                         rad2deg(euler.yaw), rad2deg(euler.pitch), rad2deg(euler.roll)));
-               }
-               else if (ahrs_state == 1)
-               {
-                  ONCE(LOG(LL_INFO, "final beta gain reached, final orientation (y p r): %.1f %.1f %.1f",
-                           rad2deg(euler.yaw), rad2deg(euler.pitch), rad2deg(euler.roll)));
-                  EVERY_N_TIMES(10000, LOG(LL_INFO, "orientation (y p r): %f %f %f", 
-                                          rad2deg(euler.yaw), rad2deg(euler.pitch), rad2deg(euler.roll)));
-                  msgpack_sbuffer_clear(msgpack_buf);
-                  msgpack_pack_array(pk, 3);
-                  PACKF(euler.yaw);
-                  PACKF(euler.pitch);
-                  PACKF(euler.roll);
-                  scl_copy_send_dynamic(orientation_socket, msgpack_buf->data, msgpack_buf->size);
-               }
-            }
+            EVERY_N_TIMES(100, LOG(LL_INFO, "orientation (y p r): %f %f %f; declination: %f", 
+                                   rad2deg(euler.yaw), rad2deg(euler.pitch), rad2deg(euler.roll), deg2rad(tsfloat_get(&decl))));
          }
-         msgpack_unpacked_destroy(&msg);
-      }
-      else
-      {
-         msleep(10);   
+         else if (ahrs_state == 1)
+         {
+            ONCE(LOG(LL_INFO, "final beta gain reached, final orientation (y p r): %.1f %.1f %.1f",
+                     rad2deg(euler.yaw), rad2deg(euler.pitch), rad2deg(euler.roll)));
+            EVERY_N_TIMES(1000, LOG(LL_INFO, "orientation (y p r): %f %f %f; declination: %f", 
+                                   rad2deg(euler.yaw), rad2deg(euler.pitch), rad2deg(euler.roll), rad2deg(tsfloat_get(&decl))));
+            msgpack_sbuffer_clear(msgpack_buf);
+            msgpack_pack_array(pk, 3);
+            PACKF(euler.yaw);
+            PACKF(euler.pitch);
+            PACKF(euler.roll);
+            scl_copy_send_dynamic(orientation_socket, msgpack_buf->data, msgpack_buf->size);
+         }
       }
    }
+   MSGPACK_READER_SIMPLE_LOOP_END
 }
 SERVICE_MAIN_END
 

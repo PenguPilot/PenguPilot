@@ -34,6 +34,7 @@ from time import time
 from datetime import datetime
 from gps_msgpack import *
 from msgpack import loads, dumps
+from math import pi
 
 
 def main(name):
@@ -48,7 +49,7 @@ def main(name):
          gps = loads(raw)
          try:
             date = datetime.strptime(gps[TIME], '%Y-%m-%d %H:%M:%S').date()
-            decl = gm.GeoMag(gps[LAT], gps[LON], time = date).dec
+            decl = pi * gm.GeoMag(gps[LAT], gps[LON], time = date).dec / 180.0
             decl_socket.send(dumps(decl))
          except:
             pass
