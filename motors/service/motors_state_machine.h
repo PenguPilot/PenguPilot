@@ -11,6 +11,23 @@
   
  Timer-based Motors State Machine Interface
 
+ States:
+ ------------
+ 0 = stopped
+ 1 = starting
+ 2 = running
+ 3 = stopping
+
+ State chart:
+ ------------
+
+                 start()
+         .-> [0] ---> [1] --.
+ timer() |                  | timer()
+         `-- [3] <--- [2] <-´
+                 stop()
+
+
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify

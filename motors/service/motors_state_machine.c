@@ -10,6 +10,23 @@
  |___________________________________________________|
   
  Timer-based Motors State Machine Implementation
+ 
+ States:
+ ------------
+ 0 = stopped
+ 1 = starting
+ 2 = running
+ 3 = stopping
+
+ State chart:
+ ------------
+
+                 start()
+         .-> [0] ---> [1] --.
+ timer() |                  | timer()
+         `-- [3] <--- [2] <-´
+                 stop()
+
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -42,7 +59,6 @@ void motors_state_machine_init(void)
    ASSERT_ONCE();
    etimer_init(&timer, 1.5);
 }
-void motors_state_machine_init(void);
 
 
 motors_state_t motors_state_machine_update(float dt, bool start)

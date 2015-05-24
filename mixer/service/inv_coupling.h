@@ -42,7 +42,7 @@
  *
  * g = gas, p = pitch, r = roll, y = yaw, n = #motors
  */
-void inv_coupling_init(const size_t n_motors, const float mixer[FORCES_AND_MOMENTS][MAX_MOTORS]);
+void inv_coupling_init(size_t n_motors, float mixer[FORCES_AND_MOMENTS][MAX_MOTORS]);
 
 
 /*

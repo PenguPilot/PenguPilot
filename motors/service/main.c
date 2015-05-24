@@ -64,20 +64,10 @@
  GNU General Public License for more details. */
 
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdbool.h>
-#include <syslog.h>
-#include <stdlib.h>
-#include <sys/mman.h>
 #include <math.h>
 
 #include <service.h>
-#include <daemon.h>
 #include <logger.h>
-#include <sched.h>
 #include <opcd_interface.h>
 #include <msgpack_reader.h>
 #include <threadsafe_types.h>
@@ -88,14 +78,8 @@
 #include "drivers/arduino_pwms/arduino_pwms.h"
 
 
-#define MIN_GAS 0.1f
+#define MIN_GAS 0.1f /* 10% */
 
-
-
-static struct sched_param sp;
-static msgpack_sbuffer *msgpack_buf = NULL;
-static char *platform = NULL;
-static void *forces_socket = NULL;
 
 static tsfloat_t voltage;
 
@@ -116,16 +100,16 @@ SERVICE_MAIN_BEGIN("motors", 99)
    MSGPACK_READER_START(voltage_reader, "voltage", 99);
  
    /* initialize SCL: */
-   forces_socket = scl_get_socket("motor_forces", "sub");
+   void *forces_socket = scl_get_socket("motor_forces", "sub");
    THROW_IF(forces_socket == NULL, -EIO);
 
    /* init opcd: */
    char *platform;
    opcd_param_get("platform", &platform);
-   syslog(LOG_INFO, "platform: %s", platform);
+   LOG(LL_INFO, "platform: %s", platform);
    
    /* initialize msgpack buffers: */
-   msgpack_buf = msgpack_sbuffer_new();
+   msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new();
    THROW_IF(msgpack_buf == NULL, -ENOMEM);
 
    /* determine motor f2e: */
@@ -169,6 +153,7 @@ SERVICE_MAIN_BEGIN("motors", 99)
    interval_init(&interval);
 
    MSGPACK_READER_SIMPLE_LOOP_BEGIN(forces)
+   {
       if (root.type == MSGPACK_OBJECT_ARRAY)
       {
          int n_forces = root.via.array.size - 1;
@@ -196,6 +181,7 @@ SERVICE_MAIN_BEGIN("motors", 99)
          }
          write_motors(ctrls);
       }
+   }
    MSGPACK_READER_SIMPLE_LOOP_END
 }
 SERVICE_MAIN_END
