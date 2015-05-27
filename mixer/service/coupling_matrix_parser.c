@@ -1,18 +1,20 @@
 
 #include <stdio.h>
 #include <assert.h>
+
+#include <logger.h>
 #include <util.h>
+#include <fs_parser.h>
 
-
-#include "fs_parser.h"
 #include "coupling_matrix_parser.h"
 
 
 void coupling_matrix_print(int n_motors, float mixer[FORCES_AND_MOMENTS][MAX_MOTORS])
 {
+   LOG(LL_DEBUG, "normalized inverse coupling matrix:");
    FOR_N(i, n_motors)
    {
-      printf("%.2f\t%.2f\t%.2f\t%.2f\n", mixer[0][i], mixer[1][i], mixer[2][i], mixer[3][i]);   
+      LOG(LL_DEBUG, "%.1f\t%.1f\t%.1f\t%.1f", mixer[0][i], mixer[1][i], mixer[2][i], mixer[3][i]);
    }
 }
 

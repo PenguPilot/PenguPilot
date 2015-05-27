@@ -34,11 +34,13 @@
 #include <logger.h>
 #include <util.h>
 
+#define SERVICE_MAIN_DEBUG false
 
 #define SERVICE_MAIN_BEGIN(name, prio) \
    \
    static char *service_name = name; \
    static bool running = true; \
+   static bool debug = SERVICE_MAIN_DEBUG; \
    \
    static int _main(void) \
    { \
@@ -79,6 +81,8 @@
    \
    int main(int argc, char *argv[]) \
    { \
+      if (debug) \
+         main_wrap(argc, argv); \
       char pid_file[1024]; \
       service_name_to_pidfile(pid_file, service_name); \
       daemonize(pid_file, main_wrap, _cleanup, argc, argv); \

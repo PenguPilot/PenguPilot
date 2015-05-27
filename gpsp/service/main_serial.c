@@ -134,7 +134,7 @@ int main_serial(void)
       {
          smask |= info.smask;
          if (   (info.smask & GPGGA) /* check for new position update */
-             && (smask & (GPGSA | GPRMC))) /* go sure that we collect all sentences for first output*/
+             && (smask & (GPGSA | GPRMC))) /* go sure that we collect all sentences for first output */
          {
             /* limit sending data rate: */
             if (((count++ % 100) != 0) && convert(info.lat) == lat_prev && convert(info.lon) == lon_prev)
@@ -148,8 +148,8 @@ int main_serial(void)
             else if (info.fix == 3)
                msgpack_pack_array(pk, 9); /* 3d fix */
             else
-               msgpack_pack_array(pk, 1); /* no fix */
-            
+               continue;
+
             char time_str[TIME_STR_LEN];
             size_t len = generate_time_str(time_str, &info.utc);
             msgpack_pack_raw(pk, len);

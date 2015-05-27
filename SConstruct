@@ -143,10 +143,16 @@ mag_adc_cal_dir = 'mag_adc_cal/'
 mag_adc_cal_bin = env.Program('mag_adc_cal/service/mag_adc_cal', collect_files(mag_adc_cal_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
 Requires(mag_adc_cal_bin, common_libs)
 
+# MAG Current Calibration Service:
+cmc_dir = 'cmc/'
+cmc_bin = env.Program('cmc/service/cmc', collect_files(cmc_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(cmc_bin, common_libs)
+
+
 # ACC ADC Calibration Service:
-acc_adc_cal_dir = 'acc_adc_cal/'
-acc_adc_cal_bin = env.Program('acc_adc_cal/service/acc_adc_cal', collect_files(acc_adc_cal_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(acc_adc_cal_bin, common_libs)
+acc_cal_dir = 'acc_cal/'
+acc_cal_bin = env.Program('acc_cal/service/acc_cal', collect_files(acc_cal_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(acc_cal_bin, common_libs)
 
 # AHRS Service:
 ahrs_dir = 'ahrs/'

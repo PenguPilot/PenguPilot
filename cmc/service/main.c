@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- MAG ADC Calibration Service Implementation
+ MAG Current Calibration Service Implementation
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -27,16 +27,26 @@
 #include <msgpack.h>
 #include <scl.h>
 #include <service.h>
-
-#include "acc_adc_cal.h"
-
-
-static void *marg_raw_socket = NULL;
-static void *marg_cal_socket = NULL;
+#include <threadsafe_types.h>
+#include <msgpack_reader.h>
 
 
-SERVICE_MAIN_BEGIN("acc_adc_cal", 99)
+#include "cmc.h"
+
+
+/* current reader thread: */
+tsfloat_t current;
+MSGPACK_READER_BEGIN(current_reader)
+   MSGPACK_READER_LOOP_BEGIN(current_reader)
+   tsfloat_set(&current, root.via.dec);
+   MSGPACK_READER_LOOP_END
+MSGPACK_READER_END
+
+
+SERVICE_MAIN_BEGIN("cmc", 99)
 {
+   tsfloat_init(&current, 0.0f);
+
    /* initialize msgpack buffers: */
    msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new();
    THROW_IF(msgpack_buf == NULL, -ENOMEM);
@@ -44,18 +54,21 @@ SERVICE_MAIN_BEGIN("acc_adc_cal", 99)
    THROW_IF(pk == NULL, -ENOMEM);
   
    /* initialize SCL: */
-   marg_raw_socket = scl_get_socket("acc_raw", "sub");
-   THROW_IF(marg_raw_socket == NULL, -EIO);
-   marg_cal_socket = scl_get_socket("acc_adc_cal", "pub");
+   void *mag_adc_cal_socket = scl_get_socket("mag_adc_cal", "sub");
+   THROW_IF(mag_adc_cal_socket == NULL, -EIO);
+   void *marg_cal_socket = scl_get_socket("mag_cal", "pub");
    THROW_IF(marg_cal_socket == NULL, -EIO);
-
+   
+   /* start current reader: */
+   MSGPACK_READER_START(current_reader, "current", 99);
+ 
    /* init calibration data: */
-   acc_adc_cal_init();
+   cmc_init();
  
    while (running)
    {
       char buffer[1024];
-      int ret = scl_recv_static(marg_raw_socket, buffer, sizeof(buffer));
+      int ret = scl_recv_static(mag_adc_cal_socket, buffer, sizeof(buffer));
       if (ret > 0)
       {
          msgpack_unpacked msg;
@@ -65,14 +78,14 @@ SERVICE_MAIN_BEGIN("acc_adc_cal", 99)
             msgpack_object root = msg.data;
             if (root.type == MSGPACK_OBJECT_ARRAY)
             {
-               vec3_t acc;
-               vec3_init(&acc);
+               vec3_t mag;
+               vec3_init(&mag);
                FOR_N(i, 3)
-                  acc.ve[i] = root.via.array.ptr[i].via.dec;
-               acc_adc_cal_apply(&acc);
+                  mag.ve[i] = root.via.array.ptr[i].via.dec;
+               cmc_apply(&mag, tsfloat_get(&current));
                msgpack_sbuffer_clear(msgpack_buf);
                msgpack_pack_array(pk, 3);
-               PACKFV(acc.ve, 3);
+               PACKFV(mag.ve, 3);
                scl_copy_send_dynamic(marg_cal_socket, msgpack_buf->data, msgpack_buf->size);
             }
          }

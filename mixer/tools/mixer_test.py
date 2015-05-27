@@ -11,9 +11,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- OMAP3-PWM Motor Test Program
+ Mixer Test Utility
 
- Copyright (C) 2014 Tobias Simon
+ Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -26,12 +26,15 @@
  GNU General Public License for more details. """
 
 
-
-from time import sleep
-from sys import argv
 from scl import scl_get_socket
 from msgpack import dumps
+from time import sleep
 
-socket = scl_get_socket('mot_en', 'pub')
-sleep(1)
-socket.send(dumps(int(argv[1])))
+socket = scl_get_socket('torques', 'pub')
+while True:
+   try:
+      vec = dumps([0.0, 0.0, 0.0])
+      socket.send(vec)
+      sleep(0.005)
+   except:
+      break

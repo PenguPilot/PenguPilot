@@ -15,11 +15,12 @@
 
  interfaces:
  -----------
-                            _________
-                voltage -> |         | <-> opcd
-    [sum, c_0, .., c_n]    | MOTORS  | <-- flight_state: integer; 0 | 1
-                 forces -> | SERVICE | --> motors_state: integer;
- [enable, f_0, .., f_n]    |_________|     2 | 4 | 5 | 6 | 7
+                         _________
+             voltage -> |         |
+       motors_enable -> |         | <-> opcd
+ [sum, c_0, .., c_n]    | MOTORS  | <-- flight_state: integer; 0 | 1
+              forces -> | SERVICE | --> motors_state: integer;
+      [f_0, .., f_n]    |_________|     2 | 4 | 5 | 6 | 7
 
 
  base states:
@@ -65,6 +66,7 @@
 
 
 #include <math.h>
+#include <stdbool.h>
 
 #include <service.h>
 #include <logger.h>
@@ -72,7 +74,9 @@
 #include <msgpack_reader.h>
 #include <threadsafe_types.h>
 #include <interval.h>
+#include <motors.h>
 
+#include "motors_order_parser.h"
 #include "motors_state_machine.h"
 #include "force_to_esc/force_to_esc.h"
 #include "drivers/arduino_pwms/arduino_pwms.h"
@@ -81,11 +85,46 @@
 #define MIN_GAS 0.1f /* 10% */
 
 
-static tsfloat_t voltage;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static enum
+{
+   MOTORS_OFF,
+   MOTORS_NORMAL,
+   MOTORS_TEST
+} 
+mot_en_mode = MOTORS_OFF;
+static int mot_en_state[MAX_MOTORS];
+
+
+/* mot_en reader thread: */
+MSGPACK_READER_BEGIN(mot_en_reader)
+   MSGPACK_READER_LOOP_BEGIN(mot_en_reader)
+      pthread_mutex_lock(&mutex);
+      if (root.type == MSGPACK_OBJECT_ARRAY)
+      {
+         /* test code: */
+         int n_motors = root.via.array.size;
+         if (n_motors <= MAX_MOTORS)
+         {
+            FOR_N(i, n_motors)
+               mot_en_state[i] = root.via.array.ptr[i].via.i64;
+            mot_en_mode = MOTORS_TEST;
+         }
+      }
+      else
+      {
+         /* normal mode: */
+         mot_en_mode = root.via.i64 ? MOTORS_NORMAL : MOTORS_OFF;
+      }
+      pthread_mutex_unlock(&mutex);
+   MSGPACK_READER_LOOP_END
+MSGPACK_READER_END
 
 
 /* voltage reader thread: */
+static tsfloat_t voltage;
 MSGPACK_READER_BEGIN(voltage_reader)
+   tsfloat_init(&voltage, 16.0f);
    MSGPACK_READER_LOOP_BEGIN(voltage_reader)
    if (root.type == MSGPACK_OBJECT_ARRAY)
       tsfloat_set(&voltage, root.via.array.ptr[0].via.dec);
@@ -97,10 +136,11 @@ SERVICE_MAIN_BEGIN("motors", 99)
 {
    /* start voltage reader thread: */
    tsfloat_init(&voltage, 16.0);
+   MSGPACK_READER_START(mot_en_reader, "mot_en", 99);
    MSGPACK_READER_START(voltage_reader, "voltage", 99);
  
    /* initialize SCL: */
-   void *forces_socket = scl_get_socket("motor_forces", "sub");
+   void *forces_socket = scl_get_socket("forces", "sub");
    THROW_IF(forces_socket == NULL, -EIO);
 
    /* init opcd: */
@@ -128,13 +168,14 @@ SERVICE_MAIN_BEGIN("motors", 99)
       f2e = f2e_hexfet20_suppo221213_1045;   
    else
       THROW(-EINVAL);
- 
-   /* determine number of motors: */
+   
+   /* determine motors order: */
+   int order[MAX_MOTORS];
    strcpy(buffer_path, platform);
-   strcat(buffer_path, ".motors.n_motors");
-   int n_motors;
-   opcd_param_get(buffer_path, &n_motors);
-   LOG(LL_INFO, "number of motors: %d", n_motors);
+   strcat(buffer_path, ".motors.order");
+   char *order_string;
+   opcd_param_get(buffer_path, &order_string);
+   int n_motors = motors_order_parser_run(order_string, order);
 
    /* determine motor driver: */
    strcpy(buffer_path, platform);
@@ -142,7 +183,7 @@ SERVICE_MAIN_BEGIN("motors", 99)
    char *driver;
    opcd_param_get(buffer_path, &driver);
    LOG(LL_INFO, "driver: %s", driver);
-   int (*write_motors)(float *forces);
+   int (*write_motors)(float *);
    if (strcmp(driver, "arduino") == 0)
    {
       arduino_pwms_init();
@@ -156,29 +197,32 @@ SERVICE_MAIN_BEGIN("motors", 99)
    {
       if (root.type == MSGPACK_OBJECT_ARRAY)
       {
-         int n_forces = root.via.array.size - 1;
-         int enable = root.via.array.ptr[0].via.i64;
+         int n_forces = root.via.array.size;
          float dt = interval_measure(&interval);
-         motors_state_t state = motors_state_machine_update(dt, enable);
-         float ctrls[16];
+         pthread_mutex_lock(&mutex);
+         motors_state_t state = motors_state_machine_update(dt, mot_en_mode);
+         float ctrls[MAX_MOTORS];
          FOR_N(i, n_forces)
          {
-            float force = root.via.array.ptr[i + 1].via.dec;
+            float force = root.via.array.ptr[i].via.dec;
             switch (state)
             {
                case MOTORS_RUNNING:
-                  ctrls[i] = fmax(MIN_GAS, f2e(force, tsfloat_get(&voltage)));
+                  ctrls[order[i]] = fmax(MIN_GAS, f2e(force, tsfloat_get(&voltage)));
                   break;
 
                case MOTORS_STARTING:
-                  ctrls[i] = MIN_GAS;
+                  ctrls[order[i]] = MIN_GAS;
                   break;
 
                case MOTORS_STOPPED:
                case MOTORS_STOPPING:
-                  ctrls[i] = 0.0f;
+                  ctrls[order[i]] = 0.0f;
             }
+            if (mot_en_mode == MOTORS_TEST && !mot_en_state[i])
+               ctrls[order[i]] = 0.0f;
          }
+         pthread_mutex_unlock(&mutex);
          write_motors(ctrls);
       }
    }

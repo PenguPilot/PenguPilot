@@ -73,10 +73,7 @@ exynos_quad: # ODROID U3 based quadrotor
       driver: 'arduino'
       f2e: 'hk20_roxxy282735_1045'
       n_motors: 4
-      mot_1: 8
-      mot_2: 10
-      mot_3: 11
-      mot_4: 9
+      order: '1, 4, 3, 2'
    marg:
       rot_quat: # marg orientation with reference to uav
          x: 0.0
@@ -110,13 +107,14 @@ icarus:
       motors_off_z: 0.4
       z_low: 0.5
 
-acc_adc_cal: # accelerometer calibration
+acc_cal: # accelerometer calibration
    acc_bias_x: 0.0
    acc_bias_y: 0.0
    acc_bias_z: 0.0
    acc_scale_x: 1.0
    acc_scale_y: 1.0
    acc_scale_z: 1.0
+
 
 mag_adc_cal: # magnetometer calibration data
    mag_bias_x: 0.0
@@ -125,6 +123,13 @@ mag_adc_cal: # magnetometer calibration data
    mag_scale_x: 1.0
    mag_scale_y: 1.0
    mag_scale_z: 1.0
+
+
+cmc: # current magnetometer calibration
+   bias: 0.0
+   scale_x: 0.0
+   scale_y: 0.0
+   scale_z: 0.0
 
 
 rc_cal:
@@ -166,15 +171,15 @@ ahrs: # attitude and heading reference system
 
 
 mixer: # enables different parts of the coupling matrix
-   gas_enabled: 1
-   pitch_enabled: 1
-   roll_enabled: 1
-   yaw_enabled: 1
-   quad_matrix: "1575696.45783,            0.0, -15562434.1515, -62229302.534,
-                 1575696.45783,            0.0,  15562434.1515, -62229302.534,
-                 1575696.45783, -15562434.1515,            0.0,  62229302.534,
-                 1575696.45783,  15562434.1515,            0.0,  62229302.534"
-                 # gas          roll             pitch           yaw
+   imtx1: 1575696.45783 # gas column of matrix is multiplied with this
+   imtx2: 15562434.1515 # pitch and roll columns of matrix are multiplied with this
+   imtx3: 62229302.534  # yaw column is multiplied with this
+   f_c: 1.5866e-007
+   quad_matrix: '1.0, -1.0,   0.0, -1.0,
+                 1.0,  1.0,   0.0, -1.0,
+                 1.0,  0.0,  -1.0,  1.0,
+                 1.0,  0.0,   1.0,  1.0'
+               # gas   pitch  roll  yaw
 
 rate_ctrl: # basic stabilizing controller:
    att_kd: 0.03929356367277829

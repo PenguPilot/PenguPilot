@@ -93,7 +93,7 @@ int main_i2c(void)
       else if (fix == 3)
          msgpack_pack_array(pk, 9); /* 3d fix */
       else
-         msgpack_pack_array(pk, 1); /* no fix */
+         continue;
  
       data_w[0] = I2C_GPS_TIME;
       i2c_xfer(&device, 1, data_w, 4, data_r);

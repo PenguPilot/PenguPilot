@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-"""
-  ___________________________________________________
+/*___________________________________________________
  |  _____                       _____ _ _       _    |
  | |  __ \                     |  __ (_) |     | |   |
  | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
@@ -11,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- OMAP3-PWM Motor Test Program
+ Current Magnetometer Compensation (CMC) Implementation
 
- Copyright (C) 2014 Tobias Simon
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -23,15 +21,39 @@
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. """
+ GNU General Public License for more details. */
 
 
+#include <opcd_interface.h>
+#include <threadsafe_types.h>
+#include <util.h>
 
-from time import sleep
-from sys import argv
-from scl import scl_get_socket
-from msgpack import dumps
+#include "cmc.h"
 
-socket = scl_get_socket('mot_en', 'pub')
-sleep(1)
-socket.send(dumps(int(argv[1])))
+
+static tsfloat_t scale[3];
+static tsfloat_t bias;
+
+
+void cmc_init(void)
+{
+   ASSERT_ONCE();
+
+   opcd_param_t params[] =
+   {
+      {"scale_x", &scale[0]},
+      {"scale_y", &scale[1]},
+      {"scale_z", &scale[2]},
+      {"bias", &bias},
+      OPCD_PARAMS_END
+   };
+   opcd_params_apply(".", params);
+}
+
+
+void cmc_apply(vec3_t *mag, const float current)
+{
+   FOR_N(i, 3)
+      mag->ve[i] -= (current - tsfloat_get(&bias)) * tsfloat_get(&scale[i]);
+}
+

@@ -37,9 +37,8 @@
 VEC_DECL(4);
 
 
-void ahrs_init(ahrs_t *ahrs, ahrs_type_t type, real_t beta_start, real_t beta_step, real_t beta_end)
+void ahrs_init(ahrs_t *ahrs, real_t beta_start, real_t beta_step, real_t beta_end)
 {
-   ahrs->type = type;
    ahrs->beta = beta_start;
    ahrs->beta_step = beta_step;
    ahrs->beta_end = beta_end;
@@ -143,11 +142,8 @@ int ahrs_update(ahrs_t *ahrs, const marg_data_t *marg_data, const real_t dt)
    real_t my = marg_data->mag.y;
    real_t mz = marg_data->mag.z;
 
-   /* use IMU algorithm if magnetometer measurement invalid (avoids NaN in magnetometer normalisation)
-      or if requested upon initialization: */
-   if (((mx == REAL(0.0)) && (my == REAL(0.0)) && (mz == REAL(0.0))) || ahrs->type == AHRS_ACC)
+   if (((mx == REAL(0.0)) && (my == REAL(0.0)) && (mz == REAL(0.0))))
    {
-      ahrs_update_imu(ahrs, gx, gy, gz, ax, ay, az, dt);
       goto out;
    }
 
@@ -217,6 +213,7 @@ int ahrs_update(ahrs_t *ahrs, const marg_data_t *marg_data, const real_t dt)
       vec_sub(&qdot, &qdot, &s);
    }
 
+out:
    /* integrate rate of change to yield quaternion: */
    vec_scalar_mul(&qdot, &qdot, dt);
    
@@ -225,7 +222,6 @@ int ahrs_update(ahrs_t *ahrs, const marg_data_t *marg_data, const real_t dt)
    /* normalise quaternion: */
    quat_normalize(&ahrs->quat);
 
-out:
    return ret;
 }
 

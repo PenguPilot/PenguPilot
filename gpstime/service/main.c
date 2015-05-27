@@ -36,6 +36,7 @@
 #include <scl.h>
 #include <threadsafe_types.h>
 #include <service.h>
+#include <logger.h>
 
 #include "tz_lookup.h"
 
@@ -99,6 +100,7 @@ SERVICE_MAIN_BEGIN("gpstime", 0)
                snprintf(time_buf, root.via.array.ptr[TIME].via.raw.size, "%s", root.via.array.ptr[TIME].via.raw.ptr);
                char cmd[128];
                linux_sys_set_timezone(lat, lon);
+               LOG(LL_INFO, "setting UTC date/time to: %s", time_buf);
                sprintf(cmd, "date -u -s \"%s\"", time_buf);
                if (system(cmd)){};
                set = true;

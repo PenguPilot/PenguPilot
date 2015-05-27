@@ -45,21 +45,25 @@ mag_adc_cal:
    depends: [i2c_sensors]
    priority: sys_high
 
-acc_adc_cal:
-   binary: 'acc_adc_cal/service/acc_adc_cal'
+cmc:
+   binary: 'cmc/service/cmc'
+   depends: [arduino, twl4030_madc, ads1x15, mag_adc_cal]
+   priority: sys_high
+
+acc_cal:
+   binary: 'acc_cal/service/acc_cal'
    depends: [i2c_sensors]
    priority: sys_high
 
 ahrs:
    binary: 'ahrs/service/ahrs'
-   depends: [gyro_cal, mag_adc_cal, acc_adc_cal, geomag]
+   depends: [gyro_cal, acc_cal, cmc, geomag]
    priority: sys_high
 
 rate_ctrl:
    binary: 'rate_ctrl/service/rate_ctrl'
    depends: [ahrs]
    priority: sys_high
-
 
 autopilot:
    binary: 'autopilot/service/autopilot'
@@ -79,6 +83,11 @@ rc_cal:
 remote:
    binary: 'remote/service/remote'
    platforms: [overo_quad, pi_quad]
+   depends: [opcd]
+   priority: sys_high
+
+mixer:
+   binary: 'mixer/service/mixer'
    depends: [opcd]
    priority: sys_high
 

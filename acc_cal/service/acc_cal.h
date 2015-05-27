@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-"""
-  ___________________________________________________
+/*___________________________________________________
  |  _____                       _____ _ _       _    |
  | |  __ \                     |  __ (_) |     | |   |
  | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
@@ -11,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- OMAP3-PWM Motor Test Program
+ ACC Calibration Interface
 
- Copyright (C) 2014 Tobias Simon
+ Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -23,15 +21,20 @@
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. """
+ GNU General Public License for more details. */
 
 
+#ifndef __ACC_CAL_H__
+#define __ACC_CAL_H__
 
-from time import sleep
-from sys import argv
-from scl import scl_get_socket
-from msgpack import dumps
 
-socket = scl_get_socket('mot_en', 'pub')
-sleep(1)
-socket.send(dumps(int(argv[1])))
+#include <math/vec3.h>
+
+
+void acc_cal_init(void);
+
+void acc_cal_apply(vec3_t *acc);
+
+
+#endif /* __ACC_CAL_H__ */
+

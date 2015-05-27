@@ -1,4 +1,6 @@
-/*___________________________________________________
+#!/usr/bin/env python
+"""
+  ___________________________________________________
  |  _____                       _____ _ _       _    |
  | |  __ \                     |  __ (_) |     | |   |
  | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
@@ -9,7 +11,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- ACC ADC Calibration
+ ACC G Magnitude Verification Utility
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -21,20 +23,38 @@
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. */
+ GNU General Public License for more details. """
 
 
-#ifndef __ACC_ADC_CAL_H__
-#define __ACC_ADC_CAL_H__
+from scl import scl_get_socket
+from msgpack import loads
 
+socket = scl_get_socket('acc_cal', 'sub')
+while True:
+   try:
+      vec = loads(socket.recv())
+      points.append(vec)
+      print len(points)
+   except:
+      break
 
-#include <math/vec3.h>
+c = Calibration(points)
+cal = c.get_cal()
+names = ['acc_bias_x', 'acc_bias_y', 'acc_bias_z', 'acc_scale_x', 'acc_scale_y', 'acc_scale_z']
 
+# detect calibration failure:
+fail = False
+for i in range(len(names)):
+   val = float(cal[i])
+   if isnan(val):
+      print 'bad calibration'
+      fail = True
+      break
 
-void acc_adc_cal_init(void);
-
-void acc_adc_cal_apply(vec3_t *acc);
-
-
-#endif /* __ACC_ADC_CAL_H__ */
+# write opcd values:
+if not fail:
+   for i in range(len(names)):
+      val = float(cal[i])
+      opcd.set('acc_adc_cal.' + names[i], val)
+   print 'accelerometer calibration complete, please type persist() in pp_opcd_shell to save'
 

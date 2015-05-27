@@ -89,9 +89,9 @@ SERVICE_MAIN_BEGIN("ahrs", 99)
    marg_data_init(&marg_data);
 
    /* start reader threads: */
-   MSGPACK_READER_START(acc_reader, "acc_adc_cal", 99);
-   MSGPACK_READER_START(mag_reader, "mag_adc_cal", 99);
-   MSGPACK_READER_START(decl_reader, "decl", 98);
+   MSGPACK_READER_START(acc_reader, "acc_cal", 99);
+   MSGPACK_READER_START(mag_reader, "mag_cal", 99);
+   MSGPACK_READER_START(decl_reader, "decl", 99);
  
    /* init cal ahrs:*/
    cal_ahrs_init();
@@ -111,11 +111,10 @@ SERVICE_MAIN_BEGIN("ahrs", 99)
       if (root.type == MSGPACK_OBJECT_ARRAY)
       {
          float dt = interval_measure(&interval);
+         pthread_mutex_lock(&mutex);
          FOR_N(i, 3)
             marg_data.gyro.ve[i] = root.via.array.ptr[i].via.dec;
-
          euler_t euler;
-         pthread_mutex_lock(&mutex);
          int ahrs_state = cal_ahrs_update(&euler, &marg_data, tsfloat_get(&decl), dt);
          pthread_mutex_unlock(&mutex);
          if (ahrs_state == 0)
