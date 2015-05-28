@@ -164,6 +164,11 @@ rate_ctrl_dir = 'rate_ctrl/'
 rate_ctrl_bin = env.Program('rate_ctrl/service/rate_ctrl', collect_files(rate_ctrl_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
 Requires(rate_ctrl_bin, common_libs)
 
+# Rates Setpoint Proxy:
+rates_sp_proxy_dir = 'rates_sp_proxy/'
+rates_sp_proxy_bin = env.Program('rates_sp_proxy/service/rates_sp_proxy', collect_files(rates_sp_proxy_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(rates_sp_proxy_bin, common_libs)
+
 
 # Arduino RC / Power Publisher:
 arduino_dir = 'arduino/'

@@ -14,15 +14,16 @@
 /* thread that reads the thrust: */
 tsfloat_t thrust;
 MSGPACK_READER_BEGIN(thrust_reader)
-   tsfloat_init(&thrust, 0.0f); /* 0N forces; safe to start with */
    MSGPACK_READER_LOOP_BEGIN(thrust_reader)
-   tsfloat_set(&thrust, root.via.dec);
+      tsfloat_set(&thrust, root.via.dec);
    MSGPACK_READER_LOOP_END
 MSGPACK_READER_END
 
 
 SERVICE_MAIN_BEGIN("mixer", 99)
 {
+   tsfloat_init(&thrust, 0.0f); /* 0N forces; safe to start with */
+
    char *matrix_def;
    tsfloat_t imtx1;
    tsfloat_t imtx2;
@@ -58,15 +59,12 @@ SERVICE_MAIN_BEGIN("mixer", 99)
    void *forces_socket = scl_get_socket("forces", "pub");
    THROW_IF(forces_socket == NULL, -EIO);
    
-   /* init msgpack buffers: */
-   msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new();
-   THROW_IF(msgpack_buf == NULL, -ENOMEM);
-   msgpack_packer *pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
-   THROW_IF(pk == NULL, -ENOMEM);
-   float *forces = malloc(sizeof(float) * n_motors);
-
+   /* set-up msgpack packer: */
+   MSGPACK_PACKER_DECL_INFUNC();
+ 
    MSGPACK_READER_SIMPLE_LOOP_BEGIN(torques)
    {
+      float forces[MAX_MOTORS];
       float thrust_torques[FORCES_AND_MOMENTS] = {0.0, 0.0, 0.0, 0.0};
       if (root.type == MSGPACK_OBJECT_ARRAY)
       {

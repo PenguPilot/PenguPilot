@@ -37,6 +37,7 @@
 #include <threadsafe_types.h>
 #include <service.h>
 #include <logger.h>
+#include <msgpack_reader.h>
 
 #include "tz_lookup.h"
 
@@ -65,50 +66,36 @@ static void linux_sys_set_timezone(float lat_dest, float lon_dest)
 
 SERVICE_MAIN_BEGIN("gpstime", 0)
 {
-   /* init msgpack buffer: */
-   msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new();
-   ASSERT_NOT_NULL(msgpack_buf);
-   msgpack_packer *pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
-   ASSERT_NOT_NULL(pk);
-
+   /* set-up msgpack packer: */
+   MSGPACK_PACKER_DECL_INFUNC();
+ 
    /* init scl and get sockets: */
    void *gps_socket = scl_get_socket("gps", "sub");
    THROW_IF(gps_socket == NULL, -ENODEV);
    void *ts_socket = scl_get_socket("time_set", "pub");
    THROW_IF(ts_socket == NULL, -ENODEV);
    bool set = false;
-
-   while (running)
+   
+   MSGPACK_READER_SIMPLE_LOOP_BEGIN(gps)
    {
-      char buffer[128];
-      int ret = scl_recv_static(gps_socket, buffer, sizeof(buffer));
-      if (ret > 0 && !set)
+      if (root.type == MSGPACK_OBJECT_ARRAY)
       {
-         msgpack_unpacked msg;
-         msgpack_unpacked_init(&msg);
-         if (msgpack_unpack_next(&msg, buffer, ret, NULL))
+         int asize = root.via.array.size;
+         int fix = gps_msgpack_fix(asize);
+         if (fix >= 2)
          {
-            msgpack_object root = msg.data;
-            assert (root.type == MSGPACK_OBJECT_ARRAY);
-            int asize = root.via.array.size;
-            int fix = gps_msgpack_fix(asize);
-            if (fix >= 2)
-            {
-               float lat = root.via.array.ptr[LAT].via.dec;
-               float lon = root.via.array.ptr[LON].via.dec;
-               char time_buf[128];
-               snprintf(time_buf, root.via.array.ptr[TIME].via.raw.size, "%s", root.via.array.ptr[TIME].via.raw.ptr);
-               char cmd[128];
-               linux_sys_set_timezone(lat, lon);
-               LOG(LL_INFO, "setting UTC date/time to: %s", time_buf);
-               sprintf(cmd, "date -u -s \"%s\"", time_buf);
-               if (system(cmd)){};
-               set = true;
-            }
+            float lat = root.via.array.ptr[LAT].via.dec;
+            float lon = root.via.array.ptr[LON].via.dec;
+            char time_buf[128];
+            snprintf(time_buf, root.via.array.ptr[TIME].via.raw.size, "%s", root.via.array.ptr[TIME].via.raw.ptr);
+            char cmd[128];
+            linux_sys_set_timezone(lat, lon);
+            LOG(LL_INFO, "setting UTC date/time to: %s", time_buf);
+            sprintf(cmd, "date -u -s \"%s\"", time_buf);
+            if (system(cmd)){};
+            set = true;
          }
-         msgpack_unpacked_destroy(&msg);
       }
-
       msgpack_sbuffer_clear(msgpack_buf);
       if (set)
          msgpack_pack_true(pk);
@@ -116,6 +103,7 @@ SERVICE_MAIN_BEGIN("gpstime", 0)
          msgpack_pack_false(pk);
       scl_copy_send_dynamic(ts_socket, msgpack_buf->data, msgpack_buf->size);
    }
+   MSGPACK_READER_SIMPLE_LOOP_END
 }
 SERVICE_MAIN_END
 

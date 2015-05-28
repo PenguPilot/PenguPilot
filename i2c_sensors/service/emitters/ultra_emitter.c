@@ -41,8 +41,7 @@
 
 static simple_thread_t thread;
 static void *ultra_raw_socket;
-static msgpack_sbuffer *msgpack_buf;
-static msgpack_packer *pk;
+MSGPACK_PACKER_DECL;
  
 
 SIMPLE_THREAD_BEGIN(thread_func)
@@ -70,10 +69,7 @@ int ultra_emitter_start(void)
    THROW_BEGIN();
    ultra_raw_socket = scl_get_socket("ultra_raw", "pub");
    THROW_IF(ultra_raw_socket == NULL, -EIO);
-   msgpack_buf = msgpack_sbuffer_new();
-   THROW_IF(msgpack_buf == NULL, -ENOMEM);
-   pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
-   THROW_IF(pk == NULL, -ENOMEM);
+   MSGPACK_PACKER_INIT();
    simple_thread_start(&thread, thread_func, THREAD_NAME, THREAD_PRIORITY, NULL);
    THROW_END();
 }

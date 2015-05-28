@@ -117,11 +117,8 @@ int main_serial(void)
    double lat_prev = 0.0;
    double lon_prev = 0.0;
    unsigned int count = 0;
-   msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new();
-   THROW_IF(msgpack_buf == NULL, -ENOMEM);
-   msgpack_packer *pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
-   THROW_IF(pk == NULL, -ENOMEM);
-
+   
+   MSGPACK_PACKER_DECL_INFUNC();
   
    while (running)
    {

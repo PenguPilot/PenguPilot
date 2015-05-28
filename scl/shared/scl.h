@@ -119,4 +119,23 @@ while (0)
 #endif
 
 
+#define MSGPACK_PACKER_DECL_INFUNC() \
+   msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new(); \
+   THROW_IF(msgpack_buf == NULL, -ENOMEM); \
+   msgpack_packer *pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write); \
+   THROW_IF(pk == NULL, -ENOMEM);
+
+
+#define MSGPACK_PACKER_DECL \
+   msgpack_sbuffer *msgpack_buf; \
+   msgpack_packer *pk;
+
+
+#define MSGPACK_PACKER_INIT() \
+   msgpack_buf = msgpack_sbuffer_new(); \
+   THROW_IF(msgpack_buf == NULL, -ENOMEM); \
+   pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write); \
+   THROW_IF(pk == NULL, -ENOMEM);
+
+
 #endif /* __SCL_H__ */

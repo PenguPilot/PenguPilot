@@ -48,8 +48,6 @@ SERVICE_MAIN_BEGIN("i2c_sensors", 99)
    periodic_thread_t *thread = &_thread;
    char *name = "i2c_sensors";
    char *plat_name;
-   msgpack_sbuffer *msgpack_buf = NULL;
-   msgpack_packer *pk = NULL;
  
    /* initialize SCL: */
    syslog(LOG_INFO, "initializing scl");
@@ -59,10 +57,7 @@ SERVICE_MAIN_BEGIN("i2c_sensors", 99)
    THROW_IF(acc_raw_socket == NULL, -EIO);
 
    /* initialize msgpack buffers: */
-   msgpack_buf = msgpack_sbuffer_new();
-   THROW_IF(msgpack_buf == NULL, -ENOMEM);
-   pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
-   THROW_IF(pk == NULL, -ENOMEM);
+   MSGPACK_PACKER_DECL_INFUNC();
  
    /* determine platform: */
    THROW_ON_ERR(opcd_param_get("platform", &plat_name));

@@ -50,11 +50,8 @@ SERVICE_MAIN_BEGIN("arduino", 99)
    void *current_socket = scl_get_socket("current", "pub");
    THROW_IF(current_socket == NULL, -ENODEV);
 
-   /* allocate msgpack buffers: */
-   msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new();
-   THROW_IF(msgpack_buf == NULL, -ENOMEM);
-   msgpack_packer *pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
-   THROW_IF(pk == NULL, -ENOMEM);
+   /* set-up msgpack packer: */
+   MSGPACK_PACKER_DECL_INFUNC();
  
    /* fetch parameters: */
    LOG(LL_INFO, "reading parameters");

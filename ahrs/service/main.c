@@ -95,12 +95,9 @@ SERVICE_MAIN_BEGIN("ahrs", 99)
  
    /* init cal ahrs:*/
    cal_ahrs_init();
-
-   /* init msgpack buffers: */
-   msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new();
-   THROW_IF(msgpack_buf == NULL, -ENOMEM);
-   msgpack_packer *pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
-   THROW_IF(pk == NULL, -ENOMEM);
+   
+   /* set-up msgpack packer: */
+   MSGPACK_PACKER_DECL_INFUNC();
  
    interval_t interval;
    interval_init(&interval);

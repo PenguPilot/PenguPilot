@@ -47,13 +47,10 @@ SERVICE_MAIN_BEGIN("cmc", 99)
 {
    tsfloat_init(&current, 0.0f);
 
-   /* initialize msgpack buffers: */
-   msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new();
-   THROW_IF(msgpack_buf == NULL, -ENOMEM);
-   msgpack_packer *pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
-   THROW_IF(pk == NULL, -ENOMEM);
-  
-   /* initialize SCL: */
+   /* set-up msgpack packer: */
+   MSGPACK_PACKER_DECL_INFUNC();
+ 
+   /* open sockets: */
    void *mag_adc_cal_socket = scl_get_socket("mag_adc_cal", "sub");
    THROW_IF(mag_adc_cal_socket == NULL, -EIO);
    void *marg_cal_socket = scl_get_socket("mag_cal", "pub");
@@ -65,37 +62,22 @@ SERVICE_MAIN_BEGIN("cmc", 99)
    /* init calibration data: */
    cmc_init();
  
-   while (running)
+   MSGPACK_READER_SIMPLE_LOOP_BEGIN(mag_adc_cal)
    {
-      char buffer[1024];
-      int ret = scl_recv_static(mag_adc_cal_socket, buffer, sizeof(buffer));
-      if (ret > 0)
+      if (root.type == MSGPACK_OBJECT_ARRAY)
       {
-         msgpack_unpacked msg;
-         msgpack_unpacked_init(&msg);
-         if (msgpack_unpack_next(&msg, buffer, ret, NULL))
-         {
-            msgpack_object root = msg.data;
-            if (root.type == MSGPACK_OBJECT_ARRAY)
-            {
-               vec3_t mag;
-               vec3_init(&mag);
-               FOR_N(i, 3)
-                  mag.ve[i] = root.via.array.ptr[i].via.dec;
-               cmc_apply(&mag, tsfloat_get(&current));
-               msgpack_sbuffer_clear(msgpack_buf);
-               msgpack_pack_array(pk, 3);
-               PACKFV(mag.ve, 3);
-               scl_copy_send_dynamic(marg_cal_socket, msgpack_buf->data, msgpack_buf->size);
-            }
-         }
-         msgpack_unpacked_destroy(&msg);
-      }
-      else
-      {
-         msleep(10);
+         vec3_t mag;
+         vec3_init(&mag);
+         FOR_N(i, 3)
+            mag.ve[i] = root.via.array.ptr[i].via.dec;
+         cmc_apply(&mag, tsfloat_get(&current));
+         msgpack_sbuffer_clear(msgpack_buf);
+         msgpack_pack_array(pk, 3);
+         PACKFV(mag.ve, 3);
+         scl_copy_send_dynamic(marg_cal_socket, msgpack_buf->data, msgpack_buf->size);
       }
    }
+   MSGPACK_READER_SIMPLE_LOOP_END
 }
 SERVICE_MAIN_END
 

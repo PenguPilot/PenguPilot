@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Magnetometer Emitter Implementation
+ Rate Control Proxy Implementation
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -24,58 +24,38 @@
  GNU General Public License for more details. */
 
 
-#include <errno.h>
+#include <msgpack.h>
 
 #include <util.h>
-#include <simple_thread.h>
-#include <threadsafe_types.h>
-#include <msgpack.h>
+#include <service.h>
+#include <msgpack_reader.h>
 #include <scl.h>
-#include <math/vec3.h>
-
-#include "../platform/platform.h"
-#include "mag_emitter.h"
 
 
-#define THREAD_NAME       "mag_emitter"
-#define THREAD_PRIORITY   99
-
-
-static simple_thread_t thread;
-static void *mag_raw_socket;
-MSGPACK_PACKER_DECL;
- 
-
-SIMPLE_THREAD_BEGIN(thread_func)
+SERVICE_MAIN_BEGIN("rates_sp_proxy", 99)
 {
-   SIMPLE_THREAD_LOOP_BEGIN
+   MSGPACK_PACKER_DECL_INFUNC();
+  
+   /* open sockets: */
+   void *rates_sp_in_socket = scl_get_socket("rates_sp_in", "pull");
+   THROW_IF(rates_sp_in_socket == NULL, -EIO);
+   void *rates_sp_socket = scl_get_socket("rates_sp", "pub");
+   THROW_IF(rates_sp_socket == NULL, -EIO);
+   
+   MSGPACK_READER_SIMPLE_LOOP_BEGIN(rates_sp_in)
    {
-      vec3_t vec;
-      vec3_init(&vec);
-      msgpack_sbuffer_clear(msgpack_buf);
-      int ret = platform_read_mag(&vec);
-      if (ret == 0)
+      if (root.type == MSGPACK_OBJECT_ARRAY)
       {
+         float rates_sp[3];
+         FOR_N(i, 3)
+            rates_sp[i] = root.via.array.ptr[i].via.dec;
+         msgpack_sbuffer_clear(msgpack_buf);
          msgpack_pack_array(pk, 3);
-         PACKFV(vec.ve, 3);
+         PACKFV(rates_sp, 3);
+         scl_copy_send_dynamic(rates_sp_socket, msgpack_buf->data, msgpack_buf->size);
       }
-      else
-         PACKI(ret);
-      scl_copy_send_dynamic(mag_raw_socket, msgpack_buf->data, msgpack_buf->size);
    }
-   SIMPLE_THREAD_LOOP_END
+   MSGPACK_READER_SIMPLE_LOOP_END
 }
-SIMPLE_THREAD_END
-
-
-int mag_emitter_start(void)
-{
-   ASSERT_ONCE();
-   THROW_BEGIN();
-   mag_raw_socket = scl_get_socket("mag_raw", "pub");
-   THROW_IF(mag_raw_socket == NULL, -EIO);
-   MSGPACK_PACKER_INIT();
-   simple_thread_start(&thread, thread_func, THREAD_NAME, THREAD_PRIORITY, NULL);
-   THROW_END();
-}
+SERVICE_MAIN_END
 

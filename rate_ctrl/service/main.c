@@ -78,7 +78,7 @@ SERVICE_MAIN_BEGIN("rate_ctrl", 99)
    void *torques_socket = scl_get_socket("torques", "pub");
    THROW_IF(torques_socket == NULL, -EIO);
    
-   MSGPACK_READER_START(rates_reader, "rates", 99);
+   MSGPACK_READER_START(rates_reader, "rates_sp", 99);
    MSGPACK_READER_START(inten_reader, "inten", 99);
  
    piid_init(0.005);

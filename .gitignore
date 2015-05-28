@@ -14,6 +14,7 @@ mixer/service/mixer
 ahrs/service/ahrs
 gpsp/service/gpsp
 gpstime/service/gpstime
+rates_sp_proxy/service/rates_sp_proxy
 autopilot/service/autopilot
 autopilot/tools/acc_mag_cal/acc_mag_dump
 remote/service/remote

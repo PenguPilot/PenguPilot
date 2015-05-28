@@ -68,10 +68,7 @@ int main_i2c(void)
    }
    i2c_dev_init(&device, &bus, I2C_GPS_ADDRESS);
    
-   msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new();
-   THROW_IF(msgpack_buf == NULL, -ENOMEM);
-   msgpack_packer *pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
-   THROW_IF(pk == NULL, -ENOMEM);
+   MSGPACK_PACKER_DECL_INFUNC();
 
    while (1)
    {

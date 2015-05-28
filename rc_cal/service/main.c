@@ -23,126 +23,59 @@
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details. */
 
-#include <syslog.h>
 
 #include <msgpack.h>
-#include <daemon.h>
 #include <util.h>
 #include <scl.h>
 #include <opcd_interface.h>
-#include <serial.h>
 #include <logger.h>
+#include <msgpack_reader.h>
+#include <service.h>
 
 #include "../shared/rc_cal.h"
 #include "channels.h"
 
 
-static int running = 1;
-static msgpack_sbuffer *msgpack_buf = NULL;
-static msgpack_packer *pk = NULL;
-static char *platform = NULL;
-static void *rc_raw_socket = NULL;
-static float channels[MAX_CHANNELS];
-static void *rc_cal_socket = NULL;
 
-
-int _main(void)
+SERVICE_MAIN_BEGIN("rc_cal", 99)
 {
-   THROW_BEGIN();
-
-   /* initialize msgpack buffers: */
-   msgpack_buf = msgpack_sbuffer_new();
-   THROW_IF(msgpack_buf == NULL, -ENOMEM);
-   pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
-   THROW_IF(pk == NULL, -ENOMEM);
-  
+   /* set-up msgpack packer: */
+   MSGPACK_PACKER_DECL_INFUNC();
+ 
    /* initialize SCL: */
-   rc_raw_socket = scl_get_socket("rc_raw", "sub");
+   void *rc_raw_socket = scl_get_socket("rc_raw", "sub");
    THROW_IF(rc_raw_socket == NULL, -EIO);
-   rc_cal_socket = scl_get_socket("rc_cal", "pub");
+   void *rc_cal_socket = scl_get_socket("rc_cal", "pub");
    THROW_IF(rc_cal_socket == NULL, -EIO);
-
-
-   /* init opcd: */
-   opcd_params_init("rc_cal", 0);
-   
-   /* initialize logger: */
-   syslog(LOG_INFO, "opening logger");
-   if (logger_open("rc_cal") != 0)
-   {  
-      syslog(LOG_CRIT, "could not open logger");
-      THROW(-EIO);
-   }
-   syslog(LOG_CRIT, "logger opened");
 
    /* init channel mapping: */
    LOG(LL_INFO, "loading channels configuration");
    THROW_ON_ERR(channels_init());
-   
-   while (1)
+
+   MSGPACK_READER_SIMPLE_LOOP_BEGIN(rc_raw)
    {
-      char buffer[1024];
-      int ret = scl_recv_static(rc_raw_socket, buffer, sizeof(buffer));
-      if (ret > 0)
+      if (root.type == MSGPACK_OBJECT_ARRAY)
       {
          float channels[MAX_CHANNELS];
-         msgpack_unpacked msg;
-         msgpack_unpacked_init(&msg);
-         if (msgpack_unpack_next(&msg, buffer, ret, NULL))
-         {
-            /* read received raw channels message: */
-            msgpack_object root = msg.data;
-            assert (root.type == MSGPACK_OBJECT_ARRAY);
-            int n_channels = root.via.array.size - 1;
-            int valid = root.via.array.ptr[0].via.i64;
-            FOR_N(i, n_channels)
-               if (i < MAX_CHANNELS)
-                  channels[i] = root.via.array.ptr[1 + i].via.dec;
-            
-            /* apply permutation and calibration */
-            float cal_channels[PP_MAX_CHANNELS];
-            channels_update(cal_channels, channels);
+         int n_channels = root.via.array.size - 1;
+         int valid = root.via.array.ptr[0].via.i64;
+         FOR_N(i, n_channels)
+            if (i < MAX_CHANNELS)
+               channels[i] = root.via.array.ptr[1 + i].via.dec;
+          
+         /* apply permutation and calibration */
+         float cal_channels[PP_MAX_CHANNELS];
+         channels_update(cal_channels, channels);
 
-            /* send the channels: */
-            msgpack_sbuffer_clear(msgpack_buf);
-            msgpack_pack_array(pk, PP_MAX_CHANNELS + 1);
-            PACKI(valid);    /* index 0: valid */
-            PACKFV(cal_channels, PP_MAX_CHANNELS); /* index 1, .. : channels */
-            scl_copy_send_dynamic(rc_cal_socket, msgpack_buf->data, msgpack_buf->size);
-         }
-         msgpack_unpacked_destroy(&msg);
-      }
-      else
-      {
-         msleep(1);
+         /* send the channels: */
+         msgpack_sbuffer_clear(msgpack_buf);
+         msgpack_pack_array(pk, PP_MAX_CHANNELS + 1);
+         PACKI(valid);    /* index 0: valid */
+         PACKFV(cal_channels, PP_MAX_CHANNELS); /* index 1, .. : channels */
+         scl_copy_send_dynamic(rc_cal_socket, msgpack_buf->data, msgpack_buf->size);
       }
    }
-   printf("nrf\n");
-  
-   THROW_END();
+   MSGPACK_READER_SIMPLE_LOOP_END
 }
-
-
-void _cleanup(void)
-{
-   running = 0;
-}
-
-
-void main_wrap(int argc, char *argv[])
-{
-   (void)argc;
-   (void)argv;
-
-   exit(-_main());   
-}
-
-
-int main(int argc, char *argv[])
-{
-   char pid_file[1024];
-   service_name_to_pidfile(pid_file, "rc_cal");
-   daemonize(pid_file, main_wrap, _cleanup, argc, argv);
-   return 0;
-}
+SERVICE_MAIN_END
 

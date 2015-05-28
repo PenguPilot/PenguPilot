@@ -29,6 +29,7 @@
 #include <scl.h>
 #include <interval.h>
 #include <service.h>
+#include <msgpack_reader.h>
 
 #include "calibration.h"
 
@@ -53,13 +54,10 @@ static bool gyro_moved(const float *gyro)
 
 
 SERVICE_MAIN_BEGIN("gyro_cal", 99)
-{
-   /* initialize msgpack: */
-   msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new();
-   THROW_IF(msgpack_buf == NULL, -ENOMEM);
-   msgpack_packer *pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
-   THROW_IF(pk == NULL, -ENOMEM);
-  
+{ 
+   /* set-up msgpack packer: */
+   MSGPACK_PACKER_DECL_INFUNC();
+ 
    /* initialize SCL: */
    gyro_raw_socket = scl_get_socket("gyro_raw", "sub");
    THROW_IF(gyro_raw_socket == NULL, -EIO);
@@ -70,49 +68,34 @@ SERVICE_MAIN_BEGIN("gyro_cal", 99)
    cal_init(&gyro_cal, 3, 1000);
    interval_init(&gyro_move_interval);
 
-   while (running)
+   MSGPACK_READER_SIMPLE_LOOP_BEGIN(gyro_raw)
    {
-      char buffer[1024];
-      int ret = scl_recv_static(gyro_raw_socket, buffer, sizeof(buffer));
-      if (ret > 0)
+      if (root.type == MSGPACK_OBJECT_ARRAY)
       {
-         msgpack_unpacked msg;
-         msgpack_unpacked_init(&msg);
-         if (msgpack_unpack_next(&msg, buffer, ret, NULL))
-         {
-            float gyro[3];
-            msgpack_object root = msg.data;
-            if (root.type == MSGPACK_OBJECT_ARRAY)
-            {
-               FOR_N(i, 3)
-                  gyro[i] = root.via.array.ptr[i].via.dec;
+         float gyro[3];
+         FOR_N(i, 3)
+            gyro[i] = root.via.array.ptr[i].via.dec;
 
-               if (!cal_sample_apply(&gyro_cal, gyro))
-               {
-                  if (gyro_moved(gyro))
-                  {
-                     if (interval_measure(&gyro_move_interval) > 1.0)
-                         LOG(LL_ERROR, "gyro moved during calibration, retrying");
-                     cal_reset(&gyro_cal);
-                  }
-               }
-               else
-               {
-                  ONCE(LOG(LL_INFO, "gyro biases: %f %f %f", gyro_cal.bias[0], gyro_cal.bias[1], gyro_cal.bias[2]));
-                  msgpack_sbuffer_clear(msgpack_buf);
-                  msgpack_pack_array(pk, 3);
-                  PACKFV(gyro, 3);
-                  scl_copy_send_dynamic(gyro_cal_socket, msgpack_buf->data, msgpack_buf->size);
-               }
+         if (!cal_sample_apply(&gyro_cal, gyro))
+         {
+            if (gyro_moved(gyro))
+            {
+               if (interval_measure(&gyro_move_interval) > 1.0)
+                   LOG(LL_ERROR, "gyro moved during calibration, retrying");
+               cal_reset(&gyro_cal);
             }
          }
-         msgpack_unpacked_destroy(&msg);
-      }
-      else
-      {
-         msleep(10);
+         else
+         {
+            ONCE(LOG(LL_INFO, "gyro biases: %f %f %f", gyro_cal.bias[0], gyro_cal.bias[1], gyro_cal.bias[2]));
+            msgpack_sbuffer_clear(msgpack_buf);
+            msgpack_pack_array(pk, 3);
+            PACKFV(gyro, 3);
+            scl_copy_send_dynamic(gyro_cal_socket, msgpack_buf->data, msgpack_buf->size);
+         }
       }
    }
+   MSGPACK_READER_SIMPLE_LOOP_END
 }
 SERVICE_MAIN_END
 

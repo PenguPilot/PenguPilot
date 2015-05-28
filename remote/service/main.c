@@ -41,8 +41,7 @@
 #include "../shared/sbus_parser.h"
 
 
-static msgpack_sbuffer *msgpack_buf = NULL;
-static msgpack_packer *pk = NULL;
+MSGPACK_PACKER_DECL;
 static char *platform = NULL;
 static void *rc_socket = NULL;
 
@@ -160,10 +159,7 @@ int sbus_run(void)
 SERVICE_MAIN_BEGIN("remote", 99)
 {
    /* initialize msgpack buffers: */
-   msgpack_buf = msgpack_sbuffer_new();
-   THROW_IF(msgpack_buf == NULL, -ENOMEM);
-   pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write);
-   THROW_IF(pk == NULL, -ENOMEM);
+   MSGPACK_PACKER_INIT();
   
    /* initialize SCL: */
    rc_socket = scl_get_socket("rc_raw", "pub");
