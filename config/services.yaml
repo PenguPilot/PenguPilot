@@ -60,8 +60,8 @@ ahrs:
    depends: [gyro_cal, acc_cal, cmc, geomag]
    priority: sys_high
 
-rate_ctrl:
-   binary: 'rate_ctrl/service/rate_ctrl'
+rs_ctrl:
+   binary: 'rs_ctrl/service/rs_ctrl'
    depends: [ahrs]
    priority: sys_high
 

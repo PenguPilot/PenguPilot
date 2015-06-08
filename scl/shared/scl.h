@@ -121,9 +121,7 @@ while (0)
 
 #define MSGPACK_PACKER_DECL_INFUNC() \
    msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new(); \
-   THROW_IF(msgpack_buf == NULL, -ENOMEM); \
    msgpack_packer *pk = msgpack_packer_new(msgpack_buf, msgpack_sbuffer_write); \
-   THROW_IF(pk == NULL, -ENOMEM);
 
 
 #define MSGPACK_PACKER_DECL \

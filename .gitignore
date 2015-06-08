@@ -14,7 +14,6 @@ mixer/service/mixer
 ahrs/service/ahrs
 gpsp/service/gpsp
 gpstime/service/gpstime
-rates_sp_proxy/service/rates_sp_proxy
 autopilot/service/autopilot
 autopilot/tools/acc_mag_cal/acc_mag_dump
 remote/service/remote
@@ -28,6 +27,7 @@ acc_cal/service/acc_cal
 gyro_cal/service/gyro_cal
 mag_adc_cal/service/mag_adc_cal
 cmc/service/cmc
-rate_ctrl/service/rate_ctrl
+rs_ctrl/service/rs_ctrl
+rs_ctrl_prx/service/rs_ctrl_prx
 arduino/firmware/build-uno/*
 !arduino/firmware/build-uno/firmware.hex

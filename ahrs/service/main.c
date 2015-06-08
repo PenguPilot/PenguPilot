@@ -74,6 +74,8 @@ MSGPACK_READER_BEGIN(decl_reader)
    MSGPACK_READER_LOOP_END
 MSGPACK_READER_END
 
+//#undef SERVICE_MAIN_DEBUG
+//#define SERVICE_MAIN_DEBUG true
 
 SERVICE_MAIN_BEGIN("ahrs", 99)
 {
@@ -89,9 +91,9 @@ SERVICE_MAIN_BEGIN("ahrs", 99)
    marg_data_init(&marg_data);
 
    /* start reader threads: */
-   MSGPACK_READER_START(acc_reader, "acc_cal", 99);
-   MSGPACK_READER_START(mag_reader, "mag_cal", 99);
-   MSGPACK_READER_START(decl_reader, "decl", 99);
+   MSGPACK_READER_START(acc_reader, "acc_cal", 99, "sub");
+   MSGPACK_READER_START(mag_reader, "mag_cal", 99, "sub");
+   MSGPACK_READER_START(decl_reader, "decl", 99, "sub");
  
    /* init cal ahrs:*/
    cal_ahrs_init();

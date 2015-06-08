@@ -30,11 +30,6 @@
 #define __PIID_H__
 
 
-#define PIID_ROLL  0
-#define PIID_PITCH 1
-#define PIID_YAW   2
-
-
 void piid_init(float Ts);
 
 void piid_run(float u_ctrl[3], float gyro[3], float rc[3], float dt);

@@ -175,13 +175,13 @@ mixer: # enables different parts of the coupling matrix
    imtx2: 15562434.1515 # pitch and roll columns of matrix are multiplied with this
    imtx3: 62229302.534  # yaw column is multiplied with this
    f_c: 1.5866e-007
-   quad_matrix: '1.0, -1.0,   0.0, -1.0,
-                 1.0,  1.0,   0.0, -1.0,
-                 1.0,  0.0,  -1.0,  1.0,
-                 1.0,  0.0,   1.0,  1.0'
+   quad_matrix: '1.0,  1.0,   0.0, -1.0,
+                 1.0, -1.0,   0.0, -1.0,
+                 1.0,  0.0,   1.0,  1.0,
+                 1.0,  0.0,  -1.0,  1.0'
                # gas   pitch  roll  yaw
 
-rate_ctrl: # basic stabilizing controller:
+rs_ctrl: # basic stabilizing controller:
    att_kd: 0.03929356367277829
    att_ki: 5.216018377845929
    att_kii: 1.9043325795347907

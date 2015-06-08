@@ -57,7 +57,7 @@ SERVICE_MAIN_BEGIN("cmc", 99)
    THROW_IF(marg_cal_socket == NULL, -EIO);
    
    /* start current reader: */
-   MSGPACK_READER_START(current_reader, "current", 99);
+   MSGPACK_READER_START(current_reader, "current", 99, "sub");
  
    /* init calibration data: */
    cmc_init();

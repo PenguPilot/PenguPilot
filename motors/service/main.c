@@ -83,6 +83,7 @@
 
 
 #define MIN_GAS 0.1f /* 10% */
+#define MAX_GAS 0.8 /* 80% */
 
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -136,22 +137,24 @@ SERVICE_MAIN_BEGIN("motors", 99)
 {
    /* start voltage reader thread: */
    tsfloat_init(&voltage, 16.0);
-   MSGPACK_READER_START(mot_en_reader, "mot_en", 99);
-   MSGPACK_READER_START(voltage_reader, "voltage", 99);
+   MSGPACK_READER_START(mot_en_reader, "mot_en", 99, "sub");
+   MSGPACK_READER_START(voltage_reader, "voltage", 99, "sub");
  
    /* initialize SCL: */
    void *forces_socket = scl_get_socket("forces", "sub");
    THROW_IF(forces_socket == NULL, -EIO);
+   void *int_en_socket = scl_get_socket("int_en", "pub");
+   THROW_IF(int_en_socket == NULL, -EIO);
+   void *int_reset_socket = scl_get_socket("int_reset", "pub");
+   THROW_IF(int_reset_socket == NULL, -EIO);
+
+
 
    /* init opcd: */
    char *platform;
    opcd_param_get("platform", &platform);
    LOG(LL_INFO, "platform: %s", platform);
    
-   /* initialize msgpack buffers: */
-   msgpack_sbuffer *msgpack_buf = msgpack_sbuffer_new();
-   THROW_IF(msgpack_buf == NULL, -ENOMEM);
-
    /* determine motor f2e: */
    char buffer_path[128];
    strcpy(buffer_path, platform);
@@ -193,10 +196,15 @@ SERVICE_MAIN_BEGIN("motors", 99)
    interval_t interval;
    interval_init(&interval);
 
+   MSGPACK_PACKER_DECL_INFUNC();
+
    MSGPACK_READER_SIMPLE_LOOP_BEGIN(forces)
    {
       if (root.type == MSGPACK_OBJECT_ARRAY)
       {
+         int int_en = 0;
+         int int_reset = 1;
+
          int n_forces = root.via.array.size;
          float dt = interval_measure(&interval);
          pthread_mutex_lock(&mutex);
@@ -208,8 +216,20 @@ SERVICE_MAIN_BEGIN("motors", 99)
             switch (state)
             {
                case MOTORS_RUNNING:
-                  ctrls[order[i]] = fmax(MIN_GAS, f2e(force, tsfloat_get(&voltage)));
+               {
+                  float mot_gas = f2e(force, tsfloat_get(&voltage));
+                  if (mot_gas < MIN_GAS)
+                     mot_gas = MIN_GAS;
+                  else if (mot_gas > MAX_GAS)
+                     mot_gas = MAX_GAS;
+                  else
+                  {
+                     int_en = 1;   
+                  }
+                  ctrls[order[i]] = mot_gas;
+                  int_reset = 0;
                   break;
+               }
 
                case MOTORS_STARTING:
                   ctrls[order[i]] = MIN_GAS;
@@ -223,6 +243,15 @@ SERVICE_MAIN_BEGIN("motors", 99)
                ctrls[order[i]] = 0.0f;
          }
          pthread_mutex_unlock(&mutex);
+         
+         msgpack_sbuffer_clear(msgpack_buf);
+         PACKI(int_en);
+         scl_copy_send_dynamic(int_en_socket, msgpack_buf->data, msgpack_buf->size);
+
+         msgpack_sbuffer_clear(msgpack_buf);
+         PACKI(int_reset);
+         scl_copy_send_dynamic(int_reset_socket, msgpack_buf->data, msgpack_buf->size);
+
          write_motors(ctrls);
       }
    }

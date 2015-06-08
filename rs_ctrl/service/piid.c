@@ -219,9 +219,9 @@ void piid_run(float u_ctrl[4], float gyro[3], float rc[3], float dt)
                    + tsfloat_get(&att_kd)  * derror[i];
 
    /* yaw feedback: */
-   u_ctrl[PIID_YAW] +=   tsfloat_get(&yaw_kp)  * error[2]
-                       + tsfloat_get(&yaw_ki)  * xi_err[2]
-                       + tsfloat_get(&yaw_kii) * xii_err[2]
-                       + tsfloat_get(&yaw_kd)  * derror[2];
+   u_ctrl[2] +=   tsfloat_get(&yaw_kp)  * error[2]
+                + tsfloat_get(&yaw_ki)  * xi_err[2]
+                + tsfloat_get(&yaw_kii) * xii_err[2]
+                + tsfloat_get(&yaw_kd)  * derror[2];
 }
 

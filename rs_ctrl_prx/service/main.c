@@ -9,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Rate Control Proxy Implementation
+ Rotation Speed Control Proxy Implementation
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -32,30 +32,18 @@
 #include <scl.h>
 
 
-SERVICE_MAIN_BEGIN("rates_sp_proxy", 99)
+MSGPACK_PROXY_DECL(rs_ctrl_spp_p)
+MSGPACK_PROXY_DECL(rs_ctrl_spp_r)
+MSGPACK_PROXY_DECL(rs_ctrl_spp_y)
+
+
+SERVICE_MAIN_BEGIN("rs_ctrl_prx", 0)
 {
-   MSGPACK_PACKER_DECL_INFUNC();
-  
-   /* open sockets: */
-   void *rates_sp_in_socket = scl_get_socket("rates_sp_in", "pull");
-   THROW_IF(rates_sp_in_socket == NULL, -EIO);
-   void *rates_sp_socket = scl_get_socket("rates_sp", "pub");
-   THROW_IF(rates_sp_socket == NULL, -EIO);
+   MSGPACK_PROXY_START(rs_ctrl_spp_p, "rs_ctrl_spp_p", "pull", "rs_ctrl_sp_p", "pub", 99);
+   MSGPACK_PROXY_START(rs_ctrl_spp_r, "rs_ctrl_spp_r", "pull", "rs_ctrl_sp_r", "pub", 99);
+   MSGPACK_PROXY_START(rs_ctrl_spp_y, "rs_ctrl_spp_y", "pull", "rs_ctrl_sp_y", "pub", 99);
    
-   MSGPACK_READER_SIMPLE_LOOP_BEGIN(rates_sp_in)
-   {
-      if (root.type == MSGPACK_OBJECT_ARRAY)
-      {
-         float rates_sp[3];
-         FOR_N(i, 3)
-            rates_sp[i] = root.via.array.ptr[i].via.dec;
-         msgpack_sbuffer_clear(msgpack_buf);
-         msgpack_pack_array(pk, 3);
-         PACKFV(rates_sp, 3);
-         scl_copy_send_dynamic(rates_sp_socket, msgpack_buf->data, msgpack_buf->size);
-      }
-   }
-   MSGPACK_READER_SIMPLE_LOOP_END
+   SERVICE_MAIN_PSEUDO_LOOP();
 }
 SERVICE_MAIN_END
 

@@ -137,6 +137,8 @@ Requires(rc_cal_bin, common_libs)
 gyro_cal_dir = 'gyro_cal/'
 gyro_cal_bin = env.Program('gyro_cal/service/gyro_cal', collect_files(gyro_cal_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
 Requires(gyro_cal_bin, common_libs)
+gyro_shared_dir = gyro_cal_dir + 'shared'
+append_inc_lib(gyro_shared_dir)
 
 # MAG ADC Calibration Service:
 mag_adc_cal_dir = 'mag_adc_cal/'
@@ -160,14 +162,14 @@ ahrs_bin = env.Program('ahrs/service/ahrs', collect_files(ahrs_dir + 'service', 
 Requires(ahrs_bin, common_libs)
 
 # Rate Control Service:
-rate_ctrl_dir = 'rate_ctrl/'
-rate_ctrl_bin = env.Program('rate_ctrl/service/rate_ctrl', collect_files(rate_ctrl_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(rate_ctrl_bin, common_libs)
+rs_ctrl_dir = 'rs_ctrl/'
+rs_ctrl_bin = env.Program('rs_ctrl/service/rs_ctrl', collect_files(rs_ctrl_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(rs_ctrl_bin, common_libs)
 
 # Rates Setpoint Proxy:
-rates_sp_proxy_dir = 'rates_sp_proxy/'
-rates_sp_proxy_bin = env.Program('rates_sp_proxy/service/rates_sp_proxy', collect_files(rates_sp_proxy_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(rates_sp_proxy_bin, common_libs)
+rs_ctrl_prx_dir = 'rs_ctrl_prx/'
+rs_ctrl_prx_bin = env.Program('rs_ctrl_prx/service/rs_ctrl_prx', collect_files(rs_ctrl_prx_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(rs_ctrl_prx_bin, common_libs)
 
 
 # Arduino RC / Power Publisher:

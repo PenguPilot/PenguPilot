@@ -62,6 +62,10 @@
    opcd_params_init(name, true);
 
 
+#define SERVICE_MAIN_PSEUDO_LOOP() \
+   while (1) \
+      sleep(10000);
+
 #define SERVICE_MAIN_END \
       THROW_END(); \
    } \
