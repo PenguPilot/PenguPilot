@@ -44,6 +44,7 @@
    \
    static int _main(void) \
    { \
+      printf("a\n"); \
       THROW_BEGIN(); \
          \
          /* set up real-time scheduling: */ \
@@ -58,7 +59,10 @@
             syslog(LOG_CRIT, "could not open logger"); \
             THROW(-EIO); \
          } \
+         sleep(1); \
+         printf("b\n"); \
          LOG(LL_INFO, "starting service: %s", name); \
+         printf("c\n"); \
          opcd_params_init(name, true);
 
 

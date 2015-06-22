@@ -100,6 +100,7 @@ void *scl_get_socket(char *id, char *type_name)
       return NULL;
 
    char path[1024];
+   sprintf(path, "%s%s", pp_path, id);
 
    if (i == 2)
    {
