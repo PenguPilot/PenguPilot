@@ -127,6 +127,12 @@ gpst_dir = 'gpstime/'
 gpst_bin = env.Program('gpstime/service/gpstime', collect_files(gpst_dir + 'service', re_cc), LIBS = common_libs + ['m', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
 Requires(gpst_bin, common_libs)
 
+# Test Service:
+ts_dir = 'test_service/'
+ts_bin = env.Program('test_service/service/test_service', collect_files(ts_dir + 'service', re_cc), LIBS = common_libs + ['m', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(ts_bin, common_libs)
+
+
 # Remote Control Calibration:
 rc_cal_dir = 'rc_cal/'
 append_inc_lib(rc_cal_dir + 'shared')
