@@ -30,7 +30,6 @@ import atexit
 import os
 import readline
 from opcd_interface import OPCD_Interface
-from scl import scl_get_socket
 from misc import user_data_dir
 
 
@@ -46,7 +45,7 @@ atexit.register(_save_history)
 
 
 #initialize and define interface:
-_interface = OPCD_Interface(scl_get_socket('opcd_ctrl', 'req'))
+_interface = OPCD_Interface()
 
 
 def get(key = ''):

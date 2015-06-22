@@ -13,7 +13,7 @@
   
  OPCD Python Binding
 
- Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -26,17 +26,52 @@
  GNU General Public License for more details. """
 
 
-from opcd_pb2 import CtrlReq, CtrlRep, Value
-from threading import Lock
+from opcd_pb2 import CtrlReq, CtrlRep, Pair
+from threading import Thread, Lock
+from scl import scl_get_socket
+
+
+fields_map = {str: 'str_val', int: 'int_val', float: 'dbl_val', bool: 'bool_val'}
+
+
+def pair_get_val(pair):
+   for type in fields_map.values():
+      if pair.val.HasField(type):
+         val = getattr(pair.val, type)
+         if type == 'str_val':
+            val = val.encode('ascii')
+         return val
+
+
+class OPCD_Subscriber(Thread):
+
+   def __init__(self):
+      global subscriber
+      Thread.__init__(self)
+      self.pairs = dict(OPCD_Interface().get(''))
+      self.daemon = True
+      self.socket = scl_get_socket('opcd_event', 'sub')
+      _subscriber = self
+      self.start()
+
+
+   def run(self):
+      while True:
+         pair = Pair()
+         data = self.socket.recv()
+         pair.ParseFromString(data)
+         self.pairs[pair.id] = pair_get_val(pair)
+
+   def __getitem__(self, name):
+      return self.pairs[name]
 
 
 class OPCD_Interface:
 
 
-   def __init__(self, socket, prefix = None):
-      self.socket = socket
+   def __init__(self, prefix = None):
+      self.socket = scl_get_socket('opcd_ctrl', 'req')
       self.prefix = prefix
-      self.map = {str: 'str_val', int: 'int_val', float: 'dbl_val', bool: 'bool_val'}
       self.lock = Lock()
 
    def _send_and_recv(self, req):
@@ -59,13 +94,7 @@ class OPCD_Interface:
          raise KeyError(id)
       pairs = []
       for pair in rep.pairs:
-         for type in self.map.values():
-            if pair.val.HasField(type):
-               val = getattr(pair.val, type)
-               if type == 'str_val':
-                  val = val.encode('ascii')
-               pairs.append((pair.id.encode('ascii'), val))
-               break
+         pairs.append((pair.id.encode('ascii'), pair_get_val(pair)))
       if len(pairs) == 0:
          return
       elif len(pairs) == 1:
@@ -83,7 +112,7 @@ class OPCD_Interface:
       if self.prefix:
          id = self.prefix + '.' + id
       req.id = id
-      setattr(req.val, self.map[val.__class__], val)
+      setattr(req.val, fields_map[val.__class__], val)
       rep = self._send_and_recv(req)
       if rep.status != 0:
          raise KeyError(id)
