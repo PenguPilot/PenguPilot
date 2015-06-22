@@ -29,7 +29,17 @@
 from scl import scl_get_socket, SCL_Reader
 from msgpack import dumps, loads
 from time import sleep
-import traceback
+from opcd_interface import OPCD_Subscriber
+
+def limit(n, minn, maxn):
+   return min(max(n, minn), maxn)
+
+def sym_limit(n, m):
+   return clamp(n, -m, m)
+
+
+# start opcd subscriber:
+opcd = OPCD_Subscriber()
 
 # setpoint readers:
 sp_p = SCL_Reader('rp_ctrl_sp_p', 'sub')
@@ -49,17 +59,19 @@ orientation_socket = scl_get_socket('orientation', 'sub')
 try:
    while True:
       yaw, pitch, roll = loads(orientation_socket.recv())
+      kp = opcd['rp_ctrl.p']
+      pitch_bias = opcd['rp_ctrl.pitch_bias']
+      roll_bias = opcd['rp_ctrl.roll_bias']
+      angles_max = deg2rad(opcd['rp_ctrl.angles_max'])
 
-      kp = 6.0
-      pitch_err = pitch - sp_p.data
+      pitch_err = pitch - sym_limit(sp_p.data, angles_max) + pitch_bias
       if p_oe.data:
          spp_p_socket.send(dumps(-pitch_err * kp))
 
-      roll_err = roll - sp_r.data
+      roll_err = roll - sym_limit(sp_r.data, angles_max) + roll_bias
       if r_oe.data:
          spp_r_socket.send(dumps(-roll_err * kp))
 
-      #print rp_ctrl_sp_p.data, rp_ctrl_sp_r.data, pitch, roll, pitch_err, roll_err
 except Exception as e:
-   print traceback.format_exc()
+   print e
 

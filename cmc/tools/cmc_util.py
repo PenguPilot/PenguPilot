@@ -67,7 +67,7 @@ exit(1)
 
 
 
-opcd = OPCD_Interface(generate_map('opcd_shell')['opcd_ctrl'])
+opcd = OPCD_Interface()
 
 current = np.asarray(data[:, 0])
 mag_x = np.asarray(data[:, 1])

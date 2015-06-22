@@ -197,6 +197,14 @@ rs_ctrl: # basic stabilizing controller:
    tmc: 0.03
 
 
+rp_ctrl:
+   p: 6.226615273654109
+   pitch_bias: 0.0
+   roll_bias: 0.0
+   angles_max: 40.0 # maximal angle allowed in attitude control
+
+
+
 world_pos_est: # NEU position estimate kalman filter
    process_noise: 1.0e-6
    baro_noise: 0.01
