@@ -1,0 +1,94 @@
+/*___________________________________________________
+ |  _____                       _____ _ _       _    |
+ | |  __ \                     |  __ (_) |     | |   |
+ | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
+ | |  ___/ _ \ '_ \ / _` | | | |  ___/ | |/ _ \| __| |
+ | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
+ | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
+ |                   __/ |                           |
+ |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
+ |___________________________________________________|
+  
+ MAG Calibration Service Implementation
+
+ Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details. */
+
+
+#include <msgpack.h>
+#include <pthread.h>
+
+#include <scl.h>
+#include <service.h>
+#include <msgpack_reader.h>
+
+#include <math/euler.h>
+
+
+/* orientation reader thread: */
+euler_t euler;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+MSGPACK_READER_BEGIN(orientation_reader)
+   MSGPACK_READER_LOOP_BEGIN(orientation_reader)
+   if (root.type == MSGPACK_OBJECT_ARRAY)
+   {
+      pthread_mutex_lock(&mutex);
+      euler.yaw = root.via.array.ptr[0].via.dec;
+      euler.pitch = root.via.array.ptr[1].via.dec;
+      euler.roll = root.via.array.ptr[2].via.dec;
+      pthread_mutex_unlock(&mutex);
+   }
+   MSGPACK_READER_LOOP_END
+MSGPACK_READER_END
+
+
+
+SERVICE_MAIN_BEGIN("world_acc", 99)
+{ 
+   /* set-up msgpack packer: */
+   MSGPACK_PACKER_DECL_INFUNC();
+ 
+   /* open sockets: */
+   void *acc_cal_socket = scl_get_socket("acc_cal", "sub");
+   THROW_IF(acc_cal_socket == NULL, -EIO);
+   void *acc_world_socket = scl_get_socket("acc_world", "pub");
+   THROW_IF(acc_world_socket == NULL, -EIO);
+
+   MSGPACK_READER_START(orientation_reader, "orientation", 99, "sub");
+ 
+   MSGPACK_READER_SIMPLE_LOOP_BEGIN(acc_cal)
+   {
+      if (root.type == MSGPACK_OBJECT_ARRAY)
+      {
+         vec3_t acc;
+         vec3_init(&acc);
+         FOR_N(i, 3)
+            acc.ve[i] = root.via.array.ptr[i].via.dec;
+         
+         vec3_t world_acc;
+         vec3_init(&world_acc);
+
+         pthread_mutex_lock(&mutex);
+         body_to_neu(&world_acc, &euler, &acc);
+         pthread_mutex_unlock(&mutex);
+
+         msgpack_sbuffer_clear(msgpack_buf);
+         msgpack_pack_array(pk, 3);
+         PACKFV(world_acc.ve, 3);
+         scl_copy_send_dynamic(acc_world_socket, msgpack_buf->data, msgpack_buf->size);
+      }
+   }
+   MSGPACK_READER_SIMPLE_LOOP_END;
+}
+SERVICE_MAIN_END
+

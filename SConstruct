@@ -33,7 +33,7 @@ re_cc = re.compile('.*\.(c|cpp)$')
 re_pb = re.compile('.*\.proto$')
 
 def set_compiler_dependent_cflags():
-   cflags = '-g -D_GNU_SOURCE -pipe -fomit-frame-pointer -std=c99 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-unused-but-set-variable -Wno-error=unused-result'
+   cflags = '-g -ggdb -fstack-protector-all -D_GNU_SOURCE -std=c99 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-unused-but-set-variable -Wno-error=unused-result'
    all_info = file('/proc/cpuinfo').read()
    board = 'None'
    for line in all_info.split('\n'):
@@ -145,6 +145,23 @@ mag_adc_cal_dir = 'mag_adc_cal/'
 mag_adc_cal_bin = env.Program('mag_adc_cal/service/mag_adc_cal', collect_files(mag_adc_cal_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
 Requires(mag_adc_cal_bin, common_libs)
 
+# World ACC rotation Service:
+world_acc_dir = 'world_acc/'
+world_acc_bin = env.Program('world_acc/service/world_acc', collect_files(world_acc_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(world_acc_bin, common_libs)
+
+# World ACC LPF Service:
+world_acc_hpf_dir = 'world_acc_hpf/'
+world_acc_hpf_bin = env.Program('world_acc_hpf/service/world_acc_hpf', collect_files(world_acc_hpf_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(world_acc_hpf_bin, common_libs)
+
+# Position and Speed estimation Service:
+world_pos_est_dir = 'world_pos_est/'
+world_pos_est_bin = env.Program('world_pos_est/service/world_pos_est', collect_files(world_pos_est_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(world_pos_est_bin, common_libs)
+world_pos_est_shared_dir = world_pos_est_dir + 'shared'
+append_inc_lib(world_pos_est_shared_dir)
+
 # MAG Current Calibration Service:
 cmc_dir = 'cmc/'
 cmc_bin = env.Program('cmc/service/cmc', collect_files(cmc_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
@@ -171,7 +188,6 @@ rs_ctrl_prx_dir = 'rs_ctrl_prx/'
 rs_ctrl_prx_bin = env.Program('rs_ctrl_prx/service/rs_ctrl_prx', collect_files(rs_ctrl_prx_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
 Requires(rs_ctrl_prx_bin, common_libs)
 
-
 # Arduino RC / Power Publisher:
 arduino_dir = 'arduino/'
 arduino_bin = env.Program('arduino/service/arduino', collect_files(arduino_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
@@ -183,11 +199,11 @@ ofs_bin = env.Program(ofs_dir + 'service/ofs', collect_files(ofs_dir + 'service'
 Requires(ofs_bin, common_libs)
 
 # Autopilot:
-ap_dir = 'autopilot/'
-ap_pb_dir = ap_dir + 'shared/'
-ap_src = collect_files(ap_dir + 'service', re_cc)
-ap_pb_lib = make_proto_lib(ap_pb_dir, 'autopilot_pb')
-ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = common_libs + [ap_pb_lib] + ['m', 'rt', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
+#ap_dir = 'autopilot/'
+#ap_pb_dir = ap_dir + 'shared/'
+#ap_src = collect_files(ap_dir + 'service', re_cc)
+#ap_pb_lib = make_proto_lib(ap_pb_dir, 'autopilot_pb')
+#ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = common_libs + [ap_pb_lib] + ['m', 'rt', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
 
 # I2C Sensor Reader:
 sr_dir = 'i2c_sensors/'

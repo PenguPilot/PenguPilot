@@ -74,6 +74,7 @@ MSGPACK_READER_BEGIN(decl_reader)
    MSGPACK_READER_LOOP_END
 MSGPACK_READER_END
 
+
 //#undef SERVICE_MAIN_DEBUG
 //#define SERVICE_MAIN_DEBUG true
 
@@ -126,7 +127,7 @@ SERVICE_MAIN_BEGIN("ahrs", 99)
             ONCE(LOG(LL_INFO, "final beta gain reached, final orientation (y p r): %.1f %.1f %.1f",
                      rad2deg(euler.yaw), rad2deg(euler.pitch), rad2deg(euler.roll)));
             EVERY_N_TIMES(1000, LOG(LL_INFO, "orientation (y p r): %f %f %f; declination: %f", 
-                                   rad2deg(euler.yaw), rad2deg(euler.pitch), rad2deg(euler.roll), rad2deg(tsfloat_get(&decl))));
+                                    rad2deg(euler.yaw), rad2deg(euler.pitch), rad2deg(euler.roll), rad2deg(tsfloat_get(&decl))));
             msgpack_sbuffer_clear(msgpack_buf);
             msgpack_pack_array(pk, 3);
             PACKF(euler.yaw);

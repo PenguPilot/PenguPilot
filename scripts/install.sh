@@ -35,7 +35,7 @@ sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/shell/pilot_shell.sh pp_pilot_she
 sudo ln -f -s $PENGUPILOT_PATH/scripts/clear_pidfiles.sh pp_clear_pidfiles
 sudo ln -f -s $PENGUPILOT_PATH/svctrl/svctrl.py pp_svctrl
 sudo ln -f -s $PENGUPILOT_PATH/icarus/tools/icarus_shell.sh pp_icarus_shell
-sudo ln -f -s $PENGUPILOT_PATH/acc_adc_cal/tools/acc_adc_cal.py pp_acc_adc_cal
+sudo ln -f -s $PENGUPILOT_PATH/acc_cal/tools/acc_cal.py pp_acc_cal
 sudo ln -f -s $PENGUPILOT_PATH/mag_adc_cal/tools/mag_adc_cal.py pp_mag_adc_cal
 sudo ln -f -s $PENGUPILOT_PATH/autopilot/tools/omap3_pwm_test.py pp_omap3_pwm_test
 sudo ln -f -s $PENGUPILOT_PATH/scl/tools/scl_dump_msgpack.py pp_scl_dump_msgpack

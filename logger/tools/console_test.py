@@ -11,7 +11,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Mixer Test Utility
+ Logger Test Utility
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -27,37 +27,11 @@
 
 
 from scl import scl_get_socket
-from msgpack import dumps, loads
-from time import sleep
+from msgpack import dumps
 
-rc_socket = scl_get_socket('rc_cal', 'sub')
-rs_ctrl_sp_p_socket = scl_get_socket('rs_ctrl_sp_p', 'pub')
-rs_ctrl_sp_r_socket = scl_get_socket('rs_ctrl_sp_r', 'pub')
-rs_ctrl_sp_y_socket = scl_get_socket('rs_ctrl_sp_y', 'pub')
-thrust_socket = scl_get_socket('thrust', 'pub')
-mot_en_socket = scl_get_socket('mot_en', 'pub')
-sleep(1)
 
-try:
-   while True:
-      rc_data = loads(rc_socket.recv())
-      if rc_data[0]:
-         pitch, roll, yaw, gas, sw = rc_data[1:6]
-         if sw > 0.5:
-            mot_en_socket.send(dumps(1))
-         else:
-            mot_en_socket.send(dumps(0))
-         thrust_socket.send(dumps(10.0 * (gas + 1)))
-         if abs(pitch) < 0.05: pitch = 0.0
-         if abs(roll) < 0.05: roll = 0.0
-         if abs(yaw) < 0.05: yaw = 0.0
-         rs_ctrl_sp_p_socket.send(dumps(-1.5 * pitch))
-         rs_ctrl_sp_r_socket.send(dumps(1.5 * roll))
-         rs_ctrl_sp_y_socket.send(dumps(0.6 * yaw))
-      else:
-          mot_en_socket.send(dumps(0))
-except:
-   pass
-
-mot_en_socket.send(dumps(0))
-sleep(0.5)
+socket = scl_get_socket('log_data', 'push')
+socket.send(dumps(['component1', 0, 'file1.c', 34, 'error message text']))
+socket.send(dumps(['component2', 1, 'file2.c', 35, 'warning message text']))
+socket.send(dumps(['component3', 2, 'file3.c', 36, 'info message text']))
+socket.send(dumps(['component4', 3, 'file4.c', 37, 'debug message text']))

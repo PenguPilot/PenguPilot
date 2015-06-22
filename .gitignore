@@ -31,3 +31,6 @@ rs_ctrl/service/rs_ctrl
 rs_ctrl_prx/service/rs_ctrl_prx
 arduino/firmware/build-uno/*
 !arduino/firmware/build-uno/firmware.hex
+world_acc/service/world_acc
+world_acc_hpf/service/world_acc_hpf
+world_pos_est/service/world_pos_est

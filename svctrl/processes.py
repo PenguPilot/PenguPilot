@@ -63,7 +63,7 @@ def kill(pid):
          os.kill(pid, signal.SIGTERM)
          time.sleep(1.0)
          c += 1
-         if c == 3:
+         if c == 5:
             break
       os.kill(pid, signal.SIGKILL)
    except OSError as err:
@@ -112,7 +112,7 @@ def start(name, prio, path, args):
       if ps.returncode != 0:
          print red('[ERROR: service quit with code ' + str(ps.returncode) + ']')
       else:
-         for _ in range(30):
+         for _ in range(50):
             time.sleep(0.1)
             try:
                pid = validate(name)

@@ -30,6 +30,7 @@
 #include <zmq.h>
 #include <syslog.h>
 #include <msgpack.h>
+#include <pthread.h>
 
 #include <scl.h>
 #include <threadsafe_types.h>
@@ -40,8 +41,9 @@
 
 
 static void *log_socket = NULL;
-msgpack_sbuffer sbuf;
-msgpack_packer pk;
+static msgpack_sbuffer *sbuf;
+static msgpack_packer *pk;
+pthread_mutex_t pack_mutex = PTHREAD_MUTEX_INITIALIZER;
 size_t name_len = 0;
 const char *name = NULL;
 
@@ -51,8 +53,8 @@ int logger_open(const char *_name)
    ASSERT_ONCE();
    name = _name;
    name_len = strlen(name);
-   msgpack_sbuffer_init(&sbuf);
-   msgpack_packer_init(&pk, &sbuf, msgpack_sbuffer_write);
+   sbuf = msgpack_sbuffer_new();
+   pk = msgpack_packer_new(sbuf, msgpack_sbuffer_write);
    log_socket = scl_get_socket("log_data", "push");
    return (log_socket == NULL) ? -ENODEV : 0;
 }
@@ -62,27 +64,40 @@ void logger_write(char *file, loglevel_t level, unsigned int line, char *format,
 {
    ASSERT_NOT_NULL(log_socket);
    ASSERT_NOT_NULL(file);
-   
+
    /* set-up buffer for varg-message: */
-   char message_buffer[1024];
+   static char msg_buffer[1024];
    va_list ap;
    va_start(ap, format);
-   size_t msg_len = vsnprintf(message_buffer, sizeof(message_buffer), format, ap);
+   size_t msg_len = vsnprintf(msg_buffer, sizeof(msg_buffer), format, ap);
    va_end(ap);
 
    /* fill message: */
-   msgpack_sbuffer_clear(&sbuf);
-   msgpack_pack_array(&pk, 5); /* quintuple */
-   msgpack_pack_raw(&pk, name_len);
-   msgpack_pack_raw_body(&pk, name, name_len); /* 0: component name */
-   msgpack_pack_int(&pk, level); /* 1: level */
-   size_t file_len = strlen(file);
-   msgpack_pack_raw(&pk, file_len);
-   msgpack_pack_raw_body(&pk, file, file_len); /* 2: file */
-   msgpack_pack_int(&pk, line); /* 3: line */
-   msgpack_pack_raw(&pk, msg_len);
-   msgpack_pack_raw_body(&pk, message_buffer, msg_len); /* 4: message */
+   pthread_mutex_lock(&pack_mutex);
+   msgpack_sbuffer_clear(sbuf);
+   msgpack_pack_array(pk, 5); /* quintuple */
+   
+   /* 0: component name */
+   msgpack_pack_raw(pk, name_len);
+   msgpack_pack_raw_body(pk, name, name_len);
+   
+   /* 1: level */
+   msgpack_pack_int(pk, level);
 
-   scl_copy_send_dynamic(log_socket, sbuf.data, sbuf.size);
+   /*  2: file name */
+   size_t file_len = strlen(file);
+   msgpack_pack_raw(pk, file_len);
+   msgpack_pack_raw_body(pk, file, file_len);
+
+   /* 3: line number */
+   msgpack_pack_int(pk, line);
+
+   /* 4: formatted message */
+   msgpack_pack_raw(pk, msg_len);
+   msgpack_pack_raw_body(pk, msg_buffer, msg_len);
+   pthread_mutex_unlock(&pack_mutex);
+   
+   /* send it: */
+   scl_copy_send_dynamic(log_socket, sbuf->data, sbuf->size);
 }
 

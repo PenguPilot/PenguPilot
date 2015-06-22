@@ -51,7 +51,7 @@ loglevel_t;
 /*
  * log message "printf"-like using a cetain debug level
  */
-#define LOG(level, format, ...) logger_write(__FILE__, level, __LINE__, format, ## __VA_ARGS__)
+#define LOG(level, format, ...) do {  /*logger_write(__FILE__, level, __LINE__, format, ## __VA_ARGS__);*/ } while (0)
 
 
 /*

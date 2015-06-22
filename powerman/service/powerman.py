@@ -49,7 +49,7 @@ def warning():
 
 
 def main(name):
-   voltage_socket = scl_get_socket('power', 'sub')
+   voltage_socket = scl_get_socket('voltage', 'sub')
    powerman_socket = scl_get_socket('powerman', 'pub')
    opcd = OPCD_Interface(scl_get_socket('opcd_ctrl', 'req'))
    hysteresis = Hysteresis(opcd.get('powerman.low_voltage_hysteresis'))

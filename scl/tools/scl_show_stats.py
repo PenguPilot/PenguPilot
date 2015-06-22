@@ -75,11 +75,11 @@ while True:
             thread.cnt = 0
             a = 0.5
             if thread.filt == None:
-               thread.filt = float(cnt) / 5
+               thread.filt = float(cnt)
             else:
-               thread.filt = thread.filt * (1 - a) + float(cnt) / 5 * a
+               thread.filt = thread.filt * (1 - a) + float(cnt) * a
             print '%s: %.1f Hz' % (thread.name, thread.filt)
-      sleep(5)
+      sleep(1)
    except:
       print 'stopping'
       break

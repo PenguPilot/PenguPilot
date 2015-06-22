@@ -9,9 +9,15 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- I2CXL Reader Implementation
+ Kalman Filter based Position/Speed Estimate
+ 
+ System Model:
+
+ | 1 dt | * | p | + | 0.5 * dt ^ 2 | * | a | = | p |
+ | 0  1 | * | v |   |     dt       |   | v |
 
  Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2013 Jan Roemisch, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -24,54 +30,57 @@
  GNU General Public License for more details. */
 
 
-
-#include <simple_thread.h>
-#include <threadsafe_types.h>
-#include <scl.h>
-#include <msgpack.h>
-#include <util.h>
-
-#include "../platform/platform.h"
-#include "ultra_emitter.h"
+#ifndef __POS_H__
+#define __POS_H__
 
 
-#define THREAD_NAME       "ultra_emitter"
-#define THREAD_PRIORITY   99
+#include <math/vec2.h>
+#include <math/vec3.h>
 
 
-static simple_thread_t thread;
-static void *ultra_raw_socket;
-MSGPACK_PACKER_DECL;
- 
-
-SIMPLE_THREAD_BEGIN(thread_func)
+typedef struct
 {
-   SIMPLE_THREAD_LOOP_BEGIN
-   {
-      LOG(LL_DEBUG, "loop");
-      float altitude;
-      int status = platform_read_ultra(&altitude);
-      msgpack_sbuffer_clear(msgpack_buf);
-      if (status == 0)
-         PACKF(altitude);
-      else
-         PACKI(status);
-      scl_copy_send_dynamic(ultra_raw_socket, msgpack_buf->data, msgpack_buf->size);
-      msleep(30);
-   }
-   SIMPLE_THREAD_LOOP_END
+   float pos; /* position, in m */
+   float speed; /* in m / s */
 }
-SIMPLE_THREAD_END
+pos_speed_t;
 
 
-int ultra_emitter_start(void)
+typedef struct
 {
-   ASSERT_ONCE();
-   THROW_BEGIN();
-   ultra_raw_socket = scl_get_socket("ultra_raw", "pub");
-   THROW_IF(ultra_raw_socket == NULL, -EIO);
-   MSGPACK_PACKER_INIT();
-   simple_thread_start(&thread, thread_func, THREAD_NAME, THREAD_PRIORITY, NULL);
-   THROW_END();
+   vec2_t ne_pos; /* north-east position, in m */
+   vec2_t ne_speed; /* north-east speed, in m */
+   pos_speed_t ultra_u; /* ultrasonic altitude altitude above ground */
+   pos_speed_t baro_u; /* barometric altitude above MSL */
 }
+pos_t;
+
+
+typedef struct
+{
+   float dt;
+
+   /* positions input: */
+   float ultra_u;
+   float baro_u;
+   float pos_n;
+   float pos_e;
+   float speed_n;
+   float speed_e;
+
+   /* control acc input in NEU ground reference frame: */
+   vec3_t acc;
+}
+pos_in_t;
+
+
+/* initializes the position estimate subsystem */
+void pos_init(void);
+
+
+/* computes new position/speed estimates using the given input signals */
+void pos_update(pos_t *out, pos_in_t *in);
+
+
+#endif /* __POS_H__ */
 

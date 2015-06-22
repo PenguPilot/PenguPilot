@@ -197,6 +197,13 @@ rs_ctrl: # basic stabilizing controller:
    tmc: 0.03
 
 
+world_pos_est: # NEU position estimate kalman filter
+   process_noise: 1.0e-6
+   baro_noise: 0.01
+   ultra_noise: 0.01
+   gps_noise: 0.01
+   use_gps_speed: 0 # use gps speed to correct estimate?
+
 
 autopilot:
 
@@ -221,13 +228,6 @@ autopilot:
       gas_acc_max: 20.0 # maximum positive/negative acceleration in m/s^2
       rotation: 0.0 # 0 = "+" mode, 90 = "x mode"
       expo: 6.0
-
-   kalman_pos: # NEU position estimate kalman filter
-      process_noise: 1.0e-6
-      baro_noise: 0.01
-      ultra_noise: 0.01
-      gps_noise: 0.01
-      use_gps_speed: 0 # use gps speed to correct estimate?
 
    controllers:
 

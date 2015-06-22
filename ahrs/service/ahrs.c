@@ -142,11 +142,6 @@ int ahrs_update(ahrs_t *ahrs, const marg_data_t *marg_data, const real_t dt)
    real_t my = marg_data->mag.y;
    real_t mz = marg_data->mag.z;
 
-   if (((mx == REAL(0.0)) && (my == REAL(0.0)) && (mz == REAL(0.0))))
-   {
-      goto out;
-   }
-
    /* Rate of change of quaternion from gyroscope */
    vec4_t qdot;
    vec4_init(&qdot);
@@ -154,6 +149,12 @@ int ahrs_update(ahrs_t *ahrs, const marg_data_t *marg_data, const real_t dt)
    qdot.ve[1] = REAL(0.5) * ( ahrs->quat.q0 * gx + ahrs->quat.q2 * gz - ahrs->quat.q3 * gy);
    qdot.ve[2] = REAL(0.5) * ( ahrs->quat.q0 * gy - ahrs->quat.q1 * gz + ahrs->quat.q3 * gx);
    qdot.ve[3] = REAL(0.5) * ( ahrs->quat.q0 * gz + ahrs->quat.q1 * gy - ahrs->quat.q2 * gx);
+
+   if (((mx == REAL(0.0)) && (my == REAL(0.0)) && (mz == REAL(0.0))))
+   {
+      goto out;
+   }
+
 
    if (!((ax == REAL(0.0)) && (ay == REAL(0.0)) && (az == REAL(0.0))))
    {

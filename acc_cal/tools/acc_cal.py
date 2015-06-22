@@ -62,6 +62,6 @@ for i in range(len(names)):
 if not fail:
    for i in range(len(names)):
       val = float(cal[i])
-      opcd.set('acc_adc_cal.' + names[i], val)
+      opcd.set('acc_cal.' + names[i], val)
    print 'accelerometer calibration complete, please type persist() in pp_opcd_shell to save'
 

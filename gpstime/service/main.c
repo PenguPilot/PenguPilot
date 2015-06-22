@@ -89,11 +89,14 @@ SERVICE_MAIN_BEGIN("gpstime", 0)
             char time_buf[128];
             snprintf(time_buf, root.via.array.ptr[TIME].via.raw.size, "%s", root.via.array.ptr[TIME].via.raw.ptr);
             char cmd[128];
-            linux_sys_set_timezone(lat, lon);
-            LOG(LL_INFO, "setting UTC date/time to: %s", time_buf);
-            sprintf(cmd, "date -u -s \"%s\"", time_buf);
-            if (system(cmd)){};
-            set = true;
+            if (!set)
+            {
+               linux_sys_set_timezone(lat, lon);
+               LOG(LL_INFO, "setting UTC date/time to: %s", time_buf);
+               sprintf(cmd, "date -u -s \"%s\"", time_buf);
+               if (system(cmd)){};
+               set = true;
+            }
          }
       }
       msgpack_sbuffer_clear(msgpack_buf);

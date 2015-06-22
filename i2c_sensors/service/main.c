@@ -46,7 +46,6 @@ SERVICE_MAIN_BEGIN("i2c_sensors", 99)
 {
    periodic_thread_t _thread; 
    periodic_thread_t *thread = &_thread;
-   char *name = "i2c_sensors";
    char *plat_name;
  
    /* initialize SCL: */
@@ -94,7 +93,7 @@ SERVICE_MAIN_BEGIN("i2c_sensors", 99)
 
    PERIODIC_THREAD_LOOP_BEGIN
    {
-      if (!running)
+      if (!thread->running)
          break;
       vec3_t gyro;
       vec3_init(&gyro);

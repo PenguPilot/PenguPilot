@@ -60,10 +60,31 @@ ahrs:
    depends: [gyro_cal, acc_cal, cmc, geomag]
    priority: sys_high
 
-rs_ctrl:
-   binary: 'rs_ctrl/service/rs_ctrl'
+world_acc:
+   binary: 'world_acc/service/world_acc'
    depends: [ahrs]
    priority: sys_high
+
+world_acc_hpf:
+   binary: 'world_acc_hpf/service/world_acc_hpf'
+   depends: [world_acc]
+   priority: sys_high
+
+world_pos_est:
+   binary: 'world_pos_est/service/world_pos_est'
+   depends: [world_acc_hpf]
+   priority: sys_high
+
+rs_ctrl:
+   binary: 'rs_ctrl/service/rs_ctrl'
+   depends: [mixer]
+   priority: sys_high
+
+rs_ctrl_prx:
+   binary: 'rs_ctrl_prx/service/rs_ctrl_prx'
+   depends: [rs_ctrl]
+   priority: sys_high
+
 
 autopilot:
    binary: 'autopilot/service/autopilot'

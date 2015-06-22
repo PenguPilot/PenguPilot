@@ -11,7 +11,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Console Logger
+ Mixer Test Utility
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -26,29 +26,29 @@
  GNU General Public License for more details. """
 
 
-import sys
 from scl import scl_get_socket
-from os.path import basename
-from msgpack import loads
+from msgpack import dumps, loads
+from time import sleep
 
+rc_socket = scl_get_socket('rc_cal', 'sub')
+thrust_socket = scl_get_socket('thrust', 'pub')
+mot_en_socket = scl_get_socket('mot_en', 'pub')
+sleep(1)
 
-def logdata_2_string(log_data):
-   LOG_LEVEL_NAMES = ["ERROR", " WARN", " INFO", "DEBUG"];
-   level_name = LOG_LEVEL_NAMES[log_data[1]]
-   file = basename(log_data[2])
-   return "[%s] %s|%s,%d: %s" % (level_name, log_data[0], file, log_data[3], log_data[4])
-
-
-
-if __name__ == '__main__':
-   socket = scl_get_socket('log_data_pub', 'sub')
+try:
    while True:
-      try:
-         log_data = loads(socket.recv())
-         print log_data
-         #print logdata_2_string(log_data)
-      except KeyboardInterrupt:
-         break
-      except:
-         print 'error'
+      rc_data = loads(rc_socket.recv())
+      if rc_data[0]:
+         pitch, roll, yaw, gas, sw = rc_data[1:6]
+         if sw > 0.5:
+            mot_en_socket.send(dumps(1))
+         else:
+            mot_en_socket.send(dumps(0))
+         thrust_socket.send(dumps(10.0 * (gas + 1)))
+      else:
+          mot_en_socket.send(dumps(0))
+except:
+   pass
 
+mot_en_socket.send(dumps(0))
+sleep(0.5)

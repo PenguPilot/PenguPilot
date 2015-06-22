@@ -177,7 +177,7 @@ void piid_reset(void)
 }
 
 
-void piid_run(float u_ctrl[4], float gyro[3], float rc[3], float dt)
+void piid_run(float u_ctrl[3], float gyro[3], float rc[3], float dt)
 {
    /* run feed-forward: */
    FOR_N(i, 3)

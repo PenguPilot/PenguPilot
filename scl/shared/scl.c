@@ -30,7 +30,6 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <pthread.h>
-#include <syslog.h>
 #include <zmq.h>
 
 #include "scl.h"
@@ -101,22 +100,17 @@ void *scl_get_socket(char *id, char *type_name)
       return NULL;
 
    char path[1024];
-   sprintf(path, "%s%s", pp_path, id);
-   syslog(LOG_INFO, "path: %s, %d", path, i);
 
    if (i == 2)
    {
-      syslog(LOG_INFO, "ZMQ_SUBSCRIBE %p", socket);
       zmq_setsockopt(socket, ZMQ_SUBSCRIBE, "", 0);
    }
    if (i <= 2)
    {
-      syslog(LOG_INFO, "zmq_connect %p", socket);
       zmq_connect(socket, path);
    }
    if (i > 2)
    {
-      syslog(LOG_INFO, "zmq_bind %p", socket);
       zmq_bind(socket, path);
    }
    return socket;

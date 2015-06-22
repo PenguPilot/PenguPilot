@@ -44,22 +44,22 @@
    \
    static int _main(void) \
    { \
-   THROW_BEGIN(); \
-   \
-   /* set up real-time scheduling: */ \
-   struct sched_param __sp; \
-   __sp.sched_priority = prio; \
-   sched_setscheduler(getpid(), SCHED_FIFO, &__sp); \
-   \
-   /* initialize logger: */ \
-   syslog(LOG_INFO, "opening logger"); \
-   if (logger_open(name) != 0) \
-   {  \
-      syslog(LOG_CRIT, "could not open logger"); \
-      THROW(-EIO); \
-   } \
-   LOG(LL_INFO, "starting service: %s", name); \
-   opcd_params_init(name, true);
+      THROW_BEGIN(); \
+         \
+         /* set up real-time scheduling: */ \
+         struct sched_param __sp; \
+         __sp.sched_priority = prio; \
+         sched_setscheduler(getpid(), SCHED_FIFO, &__sp); \
+         \
+         /* initialize logger: */ \
+         syslog(LOG_INFO, "opening logger"); \
+         if (logger_open(name) != 0) \
+         {  \
+            syslog(LOG_CRIT, "could not open logger"); \
+            THROW(-EIO); \
+         } \
+         LOG(LL_INFO, "starting service: %s", name); \
+         opcd_params_init(name, true);
 
 
 #define SERVICE_MAIN_PSEUDO_LOOP() \
@@ -80,7 +80,10 @@
       (void)argc; \
       (void)argv; \
       \
-      exit(-_main()); \
+      int code = _main(); \
+      LOG(LL_DEBUG, "service exited with code: %d", code); \
+      sleep(1); \
+      exit(-code); \
    } \
    \
    int main(int argc, char *argv[]) \

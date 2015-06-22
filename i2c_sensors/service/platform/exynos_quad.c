@@ -48,7 +48,7 @@ static mpu6050_t mpu;
 static ak8975c_t ak;
 static i2cxl_t i2cxl;
 static ms5611_t ms5611;
-static float temperature;
+static float gyro_temperature;
 static vec3_t acc;
 static int ret;
 static quat_t q;
@@ -59,7 +59,7 @@ static int read_gyro(vec3_t *gyro)
    THROW_BEGIN();
    vec3_t _gyro;
    vec3_init(&_gyro);
-   ret = mpu6050_read(&mpu, &_gyro, &acc, &temperature);
+   ret = mpu6050_read(&mpu, &_gyro, &acc, &gyro_temperature);
    THROW_ON_ERR(ret);
    quat_rot_vec(gyro, &_gyro, &q);
    THROW_END();

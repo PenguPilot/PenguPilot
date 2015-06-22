@@ -11,7 +11,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Console Logger
+ Rotation Position Control
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -26,29 +26,40 @@
  GNU General Public License for more details. """
 
 
-import sys
-from scl import scl_get_socket
-from os.path import basename
-from msgpack import loads
+from scl import scl_get_socket, SCL_Reader
+from msgpack import dumps, loads
+from time import sleep
+import traceback
 
+# setpoint readers:
+sp_p = SCL_Reader('rp_ctrl_sp_p', 'sub')
+sp_r = SCL_Reader('rp_ctrl_sp_r', 'sub')
 
-def logdata_2_string(log_data):
-   LOG_LEVEL_NAMES = ["ERROR", " WARN", " INFO", "DEBUG"];
-   level_name = LOG_LEVEL_NAMES[log_data[1]]
-   file = basename(log_data[2])
-   return "[%s] %s|%s,%d: %s" % (level_name, log_data[0], file, log_data[3], log_data[4])
+# enable readers:
+p_oe = SCL_Reader('rp_ctrl_p_oe', 'pull')
+p_oe.data = 1 # enabled, if nothing received
+r_oe = SCL_Reader('rp_ctrl_r_oe', 'pull')
+r_oe.data = 1 # enabled, if nothing received
 
+# outgoing sockets:
+spp_p_socket = scl_get_socket('rs_ctrl_spp_p', 'push')
+spp_r_socket = scl_get_socket('rs_ctrl_spp_r', 'push')
 
-
-if __name__ == '__main__':
-   socket = scl_get_socket('log_data_pub', 'sub')
+orientation_socket = scl_get_socket('orientation', 'sub')
+try:
    while True:
-      try:
-         log_data = loads(socket.recv())
-         print log_data
-         #print logdata_2_string(log_data)
-      except KeyboardInterrupt:
-         break
-      except:
-         print 'error'
+      yaw, pitch, roll = loads(orientation_socket.recv())
+
+      kp = 6.0
+      pitch_err = pitch - sp_p.data
+      if p_oe.data:
+         spp_p_socket.send(dumps(-pitch_err * kp))
+
+      roll_err = roll - sp_r.data
+      if r_oe.data:
+         spp_r_socket.send(dumps(-roll_err * kp))
+
+      #print rp_ctrl_sp_p.data, rp_ctrl_sp_r.data, pitch, roll, pitch_err, roll_err
+except Exception as e:
+   print traceback.format_exc()
 

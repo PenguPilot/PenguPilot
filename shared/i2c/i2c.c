@@ -29,6 +29,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <assert.h>
+#include <string.h>
 
 #include "i2c.h"
 #include "i2c-dev.h"
@@ -69,6 +70,7 @@ int i2c_xfer(const i2c_dev_t *dev, const uint8_t len_wr, const uint8_t *wr_data,
    assert(dev);
    struct i2c_rdwr_ioctl_data msgset;
    struct i2c_msg msgs[2];
+   memset(msgs, 0, sizeof(msgs));
 
    int i = 0;
    if (wr_data)

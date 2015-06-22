@@ -25,6 +25,8 @@
 
 
 import os, zmq
+from threading import Thread
+from msgpack import loads
 
 
 try:
@@ -49,4 +51,22 @@ def scl_get_socket(id, type_name):
    else:
       raise Exception("unknown socket type: %d" % socket_type)
    return socket
+
+
+class SCL_Reader(Thread):
+
+   def __init__(self, name, type, def_data = 0.0, callback = None):
+      Thread.__init__(self)
+      self.daemon = True
+      self.socket = scl_get_socket(name, type)
+      self.callback = callback
+      self.data = def_data
+      self.start()
+
+   def run(self):
+      while True:
+          self.data = loads(self.socket.recv())
+          if self.callback:
+              self.callback(self.data)
+
 
