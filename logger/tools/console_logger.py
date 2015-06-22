@@ -45,10 +45,7 @@ if __name__ == '__main__':
    while True:
       try:
          log_data = loads(socket.recv())
-         print log_data
-         #print logdata_2_string(log_data)
+         print logdata_2_string(log_data)
       except KeyboardInterrupt:
          break
-      except:
-         print 'error'
 
