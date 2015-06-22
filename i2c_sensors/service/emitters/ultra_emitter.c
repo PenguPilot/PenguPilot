@@ -48,7 +48,6 @@ SIMPLE_THREAD_BEGIN(thread_func)
 {
    SIMPLE_THREAD_LOOP_BEGIN
    {
-      LOG(LL_DEBUG, "loop");
       float altitude;
       int status = platform_read_ultra(&altitude);
       msgpack_sbuffer_clear(msgpack_buf);

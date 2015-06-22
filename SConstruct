@@ -151,6 +151,14 @@ mag_adc_cal_dir = 'mag_adc_cal/'
 mag_adc_cal_bin = env.Program('mag_adc_cal/service/mag_adc_cal', collect_files(mag_adc_cal_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
 Requires(mag_adc_cal_bin, common_libs)
 
+
+# GPS Relative coordinatres Service:
+gps_rel_dir = 'gps_rel/'
+gps_rel_service_dir = gps_rel_dir + 'service/'
+gps_rel_bin = env.Program(gps_rel_service_dir + 'gps_rel', collect_files(gps_rel_service_dir, re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(gps_rel_bin, common_libs)
+
+
 # World ACC rotation Service:
 world_acc_dir = 'world_acc/'
 world_acc_bin = env.Program('world_acc/service/world_acc', collect_files(world_acc_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])

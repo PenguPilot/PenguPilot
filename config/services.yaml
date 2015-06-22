@@ -44,6 +44,12 @@ gyro_cal:
    depends: [i2c_sensors]
    priority: sys_high
 
+gps_rel:
+   binary: 'gps_rel/service/gps_rel'
+   depends: [gpsp]
+   priority: sys_high
+
+
 mag_adc_cal:
    binary: 'mag_adc_cal/service/mag_adc_cal'
    depends: [i2c_sensors]

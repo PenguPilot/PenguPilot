@@ -35,3 +35,4 @@ test_service/service/test_service
 world_acc/service/world_acc
 world_acc_hpf/service/world_acc_hpf
 world_pos_est/service/world_pos_est
+gps_rel/service/gps_rel

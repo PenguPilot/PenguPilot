@@ -47,7 +47,6 @@ SIMPLE_THREAD_BEGIN(thread_func)
 {
    SIMPLE_THREAD_LOOP_BEGIN
    {
-      LOG(LL_DEBUG, "loop");
       float altitude;
       float temperature;
       int status = platform_read_baro(&altitude, &temperature);
