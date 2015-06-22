@@ -1,3 +1,5 @@
+NOTE: This the Next-Generation Work-In-Progress Branch of PenguPilot. For a stable release, check the master branch!
+
 ![PenguPilot](https://raw.github.com/PenguPilot/PenguPilot/master/doc/PenguPilot.png)
 
 [![Build Status](https://travis-ci.org/PenguPilot/PenguPilot.svg?branch=master)](https://travis-ci.org/PenguPilot/PenguPilot)
