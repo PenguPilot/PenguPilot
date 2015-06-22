@@ -36,6 +36,20 @@
 #include "pos.h"
 
 
+tsfloat_t n;
+tsfloat_t vn;
+tsfloat_t e;
+tsfloat_t ve;
+MSGPACK_READER_BEGIN(gps_rel_reader)
+   MSGPACK_READER_LOOP_BEGIN(gps_rel_reader)
+      tsfloat_set(&n, root.via.array.ptr[0].via.dec);
+      tsfloat_set(&vn, root.via.array.ptr[1].via.dec);
+      tsfloat_set(&e, root.via.array.ptr[2].via.dec);
+      tsfloat_set(&ve, root.via.array.ptr[3].via.dec);
+   MSGPACK_READER_LOOP_END
+MSGPACK_READER_END
+
+
 tsfloat_t ultra;
 MSGPACK_READER_BEGIN(ultra_reader)
    MSGPACK_READER_LOOP_BEGIN(ultra_reader)
@@ -55,7 +69,12 @@ MSGPACK_READER_END
 
 SERVICE_MAIN_BEGIN("world_pos_est", 99)
 { 
+   tsfloat_init(&n, 0.0);
+   tsfloat_init(&vn, 0.0);
+   tsfloat_init(&e, 0.0);
+   tsfloat_init(&ve, 0.0);
    tsfloat_init(&ultra, 0.2);
+
    pos_init();
    /* set-up msgpack packer: */
    MSGPACK_PACKER_DECL_INFUNC();
@@ -66,6 +85,7 @@ SERVICE_MAIN_BEGIN("world_pos_est", 99)
    void *world_pos_est_socket = scl_get_socket("world_pos_est", "pub");
    THROW_IF(world_pos_est_socket == NULL, -EIO);
 
+   MSGPACK_READER_START(gps_rel_reader, "gps_rel", 99, "sub");
    MSGPACK_READER_START(ultra_reader, "ultra_raw", 99, "sub");
    MSGPACK_READER_START(baro_reader, "baro_raw", 99, "sub");
  
@@ -82,28 +102,25 @@ SERVICE_MAIN_BEGIN("world_pos_est", 99)
          pos_in.dt = interval_measure(&interval);
          pos_in.ultra_u = tsfloat_get(&ultra);
          pos_in.baro_u = tsfloat_get(&baro);
-         /*
-   float dt;
-   float ultra_u;
-   float baro_u;
-   float pos_n;
-   float pos_e;
-   float speed_n;
-   float speed_e;
-   vec3_t acc;
-          *
-          * */
+         pos_in.pos_n = tsfloat_get(&n);
+         pos_in.speed_n = tsfloat_get(&vn);
+         pos_in.pos_e = tsfloat_get(&e);
+         pos_in.speed_e = tsfloat_get(&ve);
          FOR_N(i, 3)
             pos_in.acc.ve[i] = root.via.array.ptr[i].via.dec;
          
          /* run position estimate: */
          pos_update(&pos, &pos_in);
          msgpack_sbuffer_clear(msgpack_buf);
-         msgpack_pack_array(pk, 4);
+         msgpack_pack_array(pk, 8);
          PACKF(pos.ultra_u.pos);
          PACKF(pos.ultra_u.speed);
          PACKF(pos.baro_u.pos);
          PACKF(pos.baro_u.speed);
+         PACKF(pos.ne_pos.n);
+         PACKF(pos.ne_speed.n);
+         PACKF(pos.ne_pos.e);
+         PACKF(pos.ne_speed.e);
          scl_copy_send_dynamic(world_pos_est_socket, msgpack_buf->data, msgpack_buf->size);
       }
    }
