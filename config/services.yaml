@@ -27,6 +27,10 @@
 # high-priority system services:
 
 
+test_service:
+   binary: 'test_service/service/test_service'
+   priority: sys_low
+
 motors:
    binary: 'motors/service/motors'
    priority: sys_high
