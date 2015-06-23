@@ -95,6 +95,11 @@ rs_ctrl_prx:
    depends: [rs_ctrl]
    priority: sys_high
 
+rp_ctrl:
+   binary: 'rp_ctrl/service/rp_ctrl'
+   depends: [rs_ctrl_prx]
+   priority: sys_high
+
 
 autopilot:
    binary: 'autopilot/service/autopilot'

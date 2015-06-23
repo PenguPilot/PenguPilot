@@ -198,7 +198,8 @@ rs_ctrl: # basic stabilizing controller:
 
 
 rp_ctrl:
-   p: 6.226615273654109
+   pr_p: 6.226615273654109
+   yaw_p: 4.0
    pitch_bias: 0.0
    roll_bias: 0.0
    angles_max: 40.0 # maximal angle allowed in attitude control
