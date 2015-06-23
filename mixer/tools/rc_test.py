@@ -30,7 +30,7 @@ from scl import scl_get_socket
 from msgpack import dumps, loads
 from time import sleep
 
-rc_socket = scl_get_socket('rc_cal', 'sub')
+rc_socket = scl_get_socket('rc', 'sub')
 torques_socket = scl_get_socket('torques', 'pub')
 thrust_socket = scl_get_socket('thrust', 'pub')
 while True:

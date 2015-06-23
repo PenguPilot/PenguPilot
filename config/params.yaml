@@ -91,21 +91,13 @@ aircomm:
    id: 1
    psk: "This is the PenguPilot Standard Pre-Shared Key for NRF24L01+ Communication"
 
-powerman:
-   battery_cells: 4
-   battery_low_cell_voltage_idle: 3.6 # [V]
-   battery_low_cell_voltage_load: 3.4 # [V]
-   battery_current_treshold: 3.0 # [A]
+battmon:
+   cells: 4
+   low_cell_voltage_idle: 3.6 # [V]
+   low_cell_voltage_load: 3.4 # [V]
+   current_treshold: 3.0 # [A]
    low_voltage_hysteresis: 10.0 # [s], battery needs to go below battery_low_cell_voltage for this time period in order to trigger a low power event
-   battery_capacity: 3.0 # [Ah]
  
-icarus:
-   takeoff:
-      standard_rel_z: 4.0
-
-   landing:
-      motors_off_z: 0.4
-      z_low: 0.5
 
 acc_cal: # accelerometer calibration
    acc_bias_x: 0.0
@@ -206,7 +198,7 @@ rp_ctrl:
 
 
 
-world_pos_est: # NEU position estimate kalman filter
+pos_speed_est_neu: # NEU position estimate kalman filter
    process_noise: 1.0e-6
    baro_noise: 0.01
    ultra_noise: 0.01

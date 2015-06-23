@@ -160,21 +160,21 @@ Requires(gps_rel_bin, common_libs)
 
 
 # World ACC rotation Service:
-world_acc_dir = 'world_acc/'
-world_acc_bin = env.Program('world_acc/service/world_acc', collect_files(world_acc_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(world_acc_bin, common_libs)
+acc_rot_neu_dir = 'acc_rot_neu/'
+acc_rot_neu_bin = env.Program('acc_rot_neu/service/acc_rot_neu', collect_files(acc_rot_neu_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(acc_rot_neu_bin, common_libs)
 
 # World ACC LPF Service:
-world_acc_hpf_dir = 'world_acc_hpf/'
-world_acc_hpf_bin = env.Program('world_acc_hpf/service/world_acc_hpf', collect_files(world_acc_hpf_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(world_acc_hpf_bin, common_libs)
+acc_hpf_neu_dir = 'acc_hpf_neu/'
+acc_hpf_neu_bin = env.Program('acc_hpf_neu/service/acc_hpf_neu', collect_files(acc_hpf_neu_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(acc_hpf_neu_bin, common_libs)
 
 # Position and Speed estimation Service:
-world_pos_est_dir = 'world_pos_est/'
-world_pos_est_bin = env.Program('world_pos_est/service/world_pos_est', collect_files(world_pos_est_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(world_pos_est_bin, common_libs)
-world_pos_est_shared_dir = world_pos_est_dir + 'shared'
-append_inc_lib(world_pos_est_shared_dir)
+pos_speed_est_neu_dir = 'pos_speed_est_neu/'
+pos_speed_est_neu_bin = env.Program('pos_speed_est_neu/service/pos_speed_est_neu', collect_files(pos_speed_est_neu_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(pos_speed_est_neu_bin, common_libs)
+pos_speed_est_neu_shared_dir = pos_speed_est_neu_dir + 'shared'
+append_inc_lib(pos_speed_est_neu_shared_dir)
 
 # MAG Current Calibration Service:
 cmc_dir = 'cmc/'

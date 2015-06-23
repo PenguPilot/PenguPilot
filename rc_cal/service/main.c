@@ -46,8 +46,8 @@ SERVICE_MAIN_BEGIN("rc_cal", 99)
    /* initialize SCL: */
    void *rc_raw_socket = scl_get_socket("rc_raw", "sub");
    THROW_IF(rc_raw_socket == NULL, -EIO);
-   void *rc_cal_socket = scl_get_socket("rc_cal", "pub");
-   THROW_IF(rc_cal_socket == NULL, -EIO);
+   void *rc_socket = scl_get_socket("rc", "pub");
+   THROW_IF(rc_socket == NULL, -EIO);
 
    /* init channel mapping: */
    LOG(LL_INFO, "loading channels configuration");
@@ -73,7 +73,7 @@ SERVICE_MAIN_BEGIN("rc_cal", 99)
          msgpack_pack_array(pk, PP_MAX_CHANNELS + 1);
          PACKI(valid);    /* index 0: valid */
          PACKFV(cal_channels, PP_MAX_CHANNELS); /* index 1, .. : channels */
-         scl_copy_send_dynamic(rc_cal_socket, msgpack_buf->data, msgpack_buf->size);
+         scl_copy_send_dynamic(rc_socket, msgpack_buf->data, msgpack_buf->size);
       }
    }
    MSGPACK_READER_SIMPLE_LOOP_END

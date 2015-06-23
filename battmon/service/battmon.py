@@ -11,13 +11,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- TWL4030 Power Publisher Service
- - monitors system power
- - estimates battery state of charge (SOC)
- - predicts remaining battery lifetime
- - manages main power and lights
+ Battery Monitor
 
- Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -30,15 +26,18 @@
  GNU General Public License for more details. """
 
 
-from misc import *
+from misc import Hysteresis
 from msgpack import loads, dumps
-from scl import scl_get_socket
+from scl import scl_get_socket, SCL_Reader
 from opcd_interface import OPCD_Interface
 from misc import daemonize
 from os import system
+from time import time
 
 
+current_reader = SCL_Reader('current', 'sub', [0.0])
 warning_sent = False
+
 
 def warning():
    global warning_sent
@@ -50,43 +49,35 @@ def warning():
 
 def main(name):
    voltage_socket = scl_get_socket('voltage', 'sub')
-   powerman_socket = scl_get_socket('powerman', 'pub')
-   opcd = OPCD_Interface(scl_get_socket('opcd_ctrl', 'req'))
-   hysteresis = Hysteresis(opcd.get('powerman.low_voltage_hysteresis'))
-   cells = opcd.get('powerman.battery_cells')
-   low_cell_voltage_idle = opcd.get('powerman.battery_low_cell_voltage_idle')
-   low_cell_voltage_load = opcd.get('powerman.battery_low_cell_voltage_load')
-   battery_current_treshold = opcd.get('powerman.battery_current_treshold')
-   capacity = opcd.get('powerman.battery_capacity')
-   vmin = 13.2
-   vmax = 16.4
+   battery_socket = scl_get_socket('battery', 'pub')
+   opcd = OPCD_Interface()
+   hysteresis = Hysteresis(opcd.get('battmon.low_voltage_hysteresis'))
+   cells = opcd.get('battmon.cells')
+   low_cell_voltage_idle = opcd.get('battmon.low_cell_voltage_idle')
+   low_cell_voltage_load = opcd.get('battmon.low_cell_voltage_load')
+   current_treshold = opcd.get('battmon.current_treshold')
+   vmax = cells * 4.1
    voltage = loads(voltage_socket.recv())[0]
-   current = 0.0
-   batt = min(1.0, max(0.0, (voltage - vmin) / (vmax - vmin)))
-   consumed = (1.0 - batt) * capacity
-   low_battery_voltage_idle = cells * low_cell_voltage_idle
-   low_battery_voltage_load = cells * low_cell_voltage_load
+   vmin_idle = cells * low_cell_voltage_idle
+   vmin_load = cells * low_cell_voltage_load
    time_prev = time()
    critical = False
    while True:
+      current = current_reader.data[0]
       voltage = loads(voltage_socket.recv())[0]
-      consumed += current / 3600.0 * (time() - time_prev)
       time_prev = time()
-      if voltage < low_battery_voltage_idle and current < battery_current_treshold or voltage < low_battery_voltage_load and current >= battery_current_treshold:
+      if current < current_treshold:
+          vmin = vmin_idle
+      else:
+          vmin = vmin_load
+      if voltage < vmin:
          critical = hysteresis.set()
       else:
          hysteresis.reset()
-      remaining = capacity - consumed
-      if remaining < 0:
-         remaining = 0
       if critical:
          warning()
-      state = [voltage,   # 0 [V]
-               current,   # 1 [A]
-               remaining, # 2 [Ah]
-               critical]  # 3 [Bool]
-      powerman_socket.send(dumps(state))
+      percent = min(1.0, max(0.0, (voltage - vmin) / (vmax - vmin)))
+      battery_socket.send(dumps((percent, critical)))
 
-
-daemonize('powerman', main)
+daemonize('battmon', main)
 

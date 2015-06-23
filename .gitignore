@@ -32,7 +32,7 @@ rs_ctrl_prx/service/rs_ctrl_prx
 arduino/firmware/build-uno/*
 test_service/service/test_service
 !arduino/firmware/build-uno/firmware.hex
-world_acc/service/world_acc
-world_acc_hpf/service/world_acc_hpf
-world_pos_est/service/world_pos_est
+acc_rot_neu/service/acc_rot_neu
+acc_hpf_neu/service/acc_hpf_neu
+pos_speed_est_neu/service/pos_speed_est_neu
 gps_rel/service/gps_rel

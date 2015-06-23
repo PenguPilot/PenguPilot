@@ -26,13 +26,12 @@
  GNU General Public License for more details. """
 
 
-from scl import generate_map
+from scl import scl_get_socket
 from msgpack import loads
 from misc import RateTimer
 
 try:
-   socket_map = generate_map('rc_cal_dump')
-   s = socket_map['rc_cal']
+   s = scl_get_socket('rc', 'sub')
    rt = RateTimer(2.0)
    while True:
       data = loads(s.recv())

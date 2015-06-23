@@ -70,19 +70,19 @@ ahrs:
    depends: [gyro_cal, acc_cal, cmc, geomag]
    priority: sys_high
 
-world_acc:
-   binary: 'world_acc/service/world_acc'
-   depends: [ahrs]
+acc_rot_neu:
+   binary: 'acc_rot_neu/service/acc_rot_neu'
+   depends: [ahrs, acc_cal]
    priority: sys_high
 
-world_acc_hpf:
-   binary: 'world_acc_hpf/service/world_acc_hpf'
-   depends: [world_acc]
+acc_hpf_neu:
+   binary: 'acc_hpf_neu/service/acc_hpf_neu'
+   depends: [acc_rot_neu]
    priority: sys_high
 
-world_pos_est:
-   binary: 'world_pos_est/service/world_pos_est'
-   depends: [world_acc_hpf]
+pos_speed_est_neu:
+   binary: 'pos_speed_est_neu/service/pos_speed_est_neu'
+   depends: [i2c_sensors, acc_hpf_neu, gps_rel]
    priority: sys_high
 
 rs_ctrl:
@@ -103,7 +103,7 @@ rp_ctrl:
 
 autopilot:
    binary: 'autopilot/service/autopilot'
-   depends: [gpsp, geomag, powerman, arduino, rc_cal]
+   depends: [gpsp, geomag, battmon, arduino, rc_cal]
    priority: sys_high
 
 arduino:
@@ -164,15 +164,15 @@ mavlink:
   binary: 'mavlink/service/mavlink.py'
   priority: sys_low
 
-powerman:
-  binary: 'powerman/service/powerman.py'
+battmon:
+  binary: 'battmon/service/battmon.py'
   depends: [arduino, twl4030_madc, ads1x15]
   priority: sys_low
 
 display:
   binary: 'display/service/display.py'
   platforms: [overo_quad]
-  depends: [powerman, geomag, elevmap, rc_cal]
+  depends: [battmon, geomag, elevmap, rc_cal]
   priority: sys_low
 
 emerg_kill:
@@ -189,7 +189,7 @@ aircomm:
 
 heartbeat:
   binary: 'heartbeat/service/heartbeat.py'
-  depends: [gpsp, powerman, aircomm]
+  depends: [gpsp, battmon, aircomm]
   priority: sys_low
 
 geomag:

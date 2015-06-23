@@ -67,7 +67,7 @@ MSGPACK_READER_END
 
 
 
-SERVICE_MAIN_BEGIN("world_pos_est", 99)
+SERVICE_MAIN_BEGIN("pos_speed_est_neu", 99)
 { 
    tsfloat_init(&n, 0.0);
    tsfloat_init(&vn, 0.0);
@@ -80,10 +80,10 @@ SERVICE_MAIN_BEGIN("world_pos_est", 99)
    MSGPACK_PACKER_DECL_INFUNC();
  
    /* open sockets: */
-   void *acc_world_hp_socket = scl_get_socket("acc_world_hp", "sub");
+   void *acc_world_hp_socket = scl_get_socket("acc_hp_neu", "sub");
    THROW_IF(acc_world_hp_socket == NULL, -EIO);
-   void *world_pos_est_socket = scl_get_socket("world_pos_est", "pub");
-   THROW_IF(world_pos_est_socket == NULL, -EIO);
+   void *pos_speed_est_socket = scl_get_socket("pos_speed_est_neu", "pub");
+   THROW_IF(pos_speed_est_socket == NULL, -EIO);
 
    MSGPACK_READER_START(gps_rel_reader, "gps_rel", 99, "sub");
    MSGPACK_READER_START(ultra_reader, "ultra_raw", 99, "sub");
@@ -121,7 +121,7 @@ SERVICE_MAIN_BEGIN("world_pos_est", 99)
          PACKF(pos.ne_speed.n);
          PACKF(pos.ne_pos.e);
          PACKF(pos.ne_speed.e);
-         scl_copy_send_dynamic(world_pos_est_socket, msgpack_buf->data, msgpack_buf->size);
+         scl_copy_send_dynamic(pos_speed_est_socket, msgpack_buf->data, msgpack_buf->size);
       }
    }
    MSGPACK_READER_SIMPLE_LOOP_END;

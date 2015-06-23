@@ -30,7 +30,7 @@ from scl import scl_get_socket
 from msgpack import dumps, loads
 from time import sleep
 
-rc_socket = scl_get_socket('rc_cal', 'sub')
+rc_socket = scl_get_socket('rc', 'sub')
 rs_ctrl_sp_p_socket = scl_get_socket('rs_ctrl_spp_p', 'push')
 rs_ctrl_sp_r_socket = scl_get_socket('rs_ctrl_spp_r', 'push')
 rs_ctrl_sp_y_socket = scl_get_socket('rs_ctrl_spp_y', 'push')

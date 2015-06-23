@@ -31,23 +31,23 @@
 #include <msgpack_reader.h>
 
 
-SERVICE_MAIN_BEGIN("world_acc_hpf", 99)
+SERVICE_MAIN_BEGIN("acc_hpf_neu", 99)
 { 
    /* set-up msgpack packer: */
    MSGPACK_PACKER_DECL_INFUNC();
  
    /* open sockets: */
-   void *acc_world_socket = scl_get_socket("acc_world", "sub");
-   THROW_IF(acc_world_socket == NULL, -EIO);
-   void *acc_world_hp_socket = scl_get_socket("acc_world_hp", "pub");
-   THROW_IF(acc_world_hp_socket == NULL, -EIO);
+   void *acc_neu_socket = scl_get_socket("acc_neu", "sub");
+   THROW_IF(acc_neu_socket == NULL, -EIO);
+   void *acc_hp_neu_socket = scl_get_socket("acc_hp_neu", "pub");
+   THROW_IF(acc_hp_neu_socket == NULL, -EIO);
 
    /* filter states: */
    float fs_x = 0.0;
    float fs_y = 0.0;
    float fs_z = 9.81;
 
-   MSGPACK_READER_SIMPLE_LOOP_BEGIN(acc_world)
+   MSGPACK_READER_SIMPLE_LOOP_BEGIN(acc_neu)
    {
       if (root.type == MSGPACK_OBJECT_ARRAY)
       {
@@ -71,7 +71,7 @@ SERVICE_MAIN_BEGIN("world_acc_hpf", 99)
          PACKF(x);
          PACKF(y);
          PACKF(z);
-         scl_copy_send_dynamic(acc_world_hp_socket, msgpack_buf->data, msgpack_buf->size);
+         scl_copy_send_dynamic(acc_hp_neu_socket, msgpack_buf->data, msgpack_buf->size);
       }
    }
    MSGPACK_READER_SIMPLE_LOOP_END;

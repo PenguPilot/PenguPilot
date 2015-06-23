@@ -53,7 +53,7 @@ MSGPACK_READER_END
 
 
 
-SERVICE_MAIN_BEGIN("world_acc", 99)
+SERVICE_MAIN_BEGIN("acc_rot_neu", 99)
 { 
    /* set-up msgpack packer: */
    MSGPACK_PACKER_DECL_INFUNC();
@@ -61,8 +61,8 @@ SERVICE_MAIN_BEGIN("world_acc", 99)
    /* open sockets: */
    void *acc_socket = scl_get_socket("acc", "sub");
    THROW_IF(acc_socket == NULL, -EIO);
-   void *acc_world_socket = scl_get_socket("acc_world", "pub");
-   THROW_IF(acc_world_socket == NULL, -EIO);
+   void *acc_neu_socket = scl_get_socket("acc_neu", "pub");
+   THROW_IF(acc_neu_socket == NULL, -EIO);
 
    MSGPACK_READER_START(orientation_reader, "orientation", 99, "sub");
  
@@ -75,17 +75,17 @@ SERVICE_MAIN_BEGIN("world_acc", 99)
          FOR_N(i, 3)
             acc.ve[i] = root.via.array.ptr[i].via.dec;
          
-         vec3_t world_acc;
-         vec3_init(&world_acc);
+         vec3_t acc_neu;
+         vec3_init(&acc_neu);
 
          pthread_mutex_lock(&mutex);
-         body_to_neu(&world_acc, &euler, &acc);
+         body_to_neu(&acc_neu, &euler, &acc);
          pthread_mutex_unlock(&mutex);
 
          msgpack_sbuffer_clear(msgpack_buf);
          msgpack_pack_array(pk, 3);
-         PACKFV(world_acc.ve, 3);
-         scl_copy_send_dynamic(acc_world_socket, msgpack_buf->data, msgpack_buf->size);
+         PACKFV(acc_neu.ve, 3);
+         scl_copy_send_dynamic(acc_neu_socket, msgpack_buf->data, msgpack_buf->size);
       }
    }
    MSGPACK_READER_SIMPLE_LOOP_END;

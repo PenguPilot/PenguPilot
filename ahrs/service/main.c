@@ -75,9 +75,6 @@ MSGPACK_READER_BEGIN(decl_reader)
 MSGPACK_READER_END
 
 
-//#undef SERVICE_MAIN_DEBUG
-//#define SERVICE_MAIN_DEBUG true
-
 SERVICE_MAIN_BEGIN("ahrs", 99)
 {
    tsfloat_init(&decl, 0.0f);
