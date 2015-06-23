@@ -53,8 +53,8 @@ SERVICE_MAIN_BEGIN("cmc", 99)
    /* open sockets: */
    void *mag_adc_cal_socket = scl_get_socket("mag_adc_cal", "sub");
    THROW_IF(mag_adc_cal_socket == NULL, -EIO);
-   void *marg_cal_socket = scl_get_socket("mag_cal", "pub");
-   THROW_IF(marg_cal_socket == NULL, -EIO);
+   void *mag_socket = scl_get_socket("mag", "pub");
+   THROW_IF(mag_socket == NULL, -EIO);
    
    /* start current reader: */
    MSGPACK_READER_START(current_reader, "current", 99, "sub");
@@ -74,7 +74,7 @@ SERVICE_MAIN_BEGIN("cmc", 99)
          msgpack_sbuffer_clear(msgpack_buf);
          msgpack_pack_array(pk, 3);
          PACKFV(mag.ve, 3);
-         scl_copy_send_dynamic(marg_cal_socket, msgpack_buf->data, msgpack_buf->size);
+         scl_copy_send_dynamic(mag_socket, msgpack_buf->data, msgpack_buf->size);
       }
    }
    MSGPACK_READER_SIMPLE_LOOP_END

@@ -59,14 +59,14 @@ SERVICE_MAIN_BEGIN("world_acc", 99)
    MSGPACK_PACKER_DECL_INFUNC();
  
    /* open sockets: */
-   void *acc_cal_socket = scl_get_socket("acc_cal", "sub");
-   THROW_IF(acc_cal_socket == NULL, -EIO);
+   void *acc_socket = scl_get_socket("acc", "sub");
+   THROW_IF(acc_socket == NULL, -EIO);
    void *acc_world_socket = scl_get_socket("acc_world", "pub");
    THROW_IF(acc_world_socket == NULL, -EIO);
 
    MSGPACK_READER_START(orientation_reader, "orientation", 99, "sub");
  
-   MSGPACK_READER_SIMPLE_LOOP_BEGIN(acc_cal)
+   MSGPACK_READER_SIMPLE_LOOP_BEGIN(acc)
    {
       if (root.type == MSGPACK_OBJECT_ARRAY)
       {

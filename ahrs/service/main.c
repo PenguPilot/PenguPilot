@@ -83,7 +83,7 @@ SERVICE_MAIN_BEGIN("ahrs", 99)
    tsfloat_init(&decl, 0.0f);
 
    /* init SCL: */
-   void *gyro_socket = scl_get_socket("gyro_cal", "sub");
+   void *gyro_socket = scl_get_socket("gyro", "sub");
    THROW_IF(gyro_socket == NULL, -EIO);
    void *orientation_socket = scl_get_socket("orientation", "pub");
    THROW_IF(orientation_socket == NULL, -EIO);
@@ -92,8 +92,8 @@ SERVICE_MAIN_BEGIN("ahrs", 99)
    marg_data_init(&marg_data);
 
    /* start reader threads: */
-   MSGPACK_READER_START(acc_reader, "acc_cal", 99, "sub");
-   MSGPACK_READER_START(mag_reader, "mag_cal", 99, "sub");
+   MSGPACK_READER_START(acc_reader, "acc", 99, "sub");
+   MSGPACK_READER_START(mag_reader, "mag", 99, "sub");
    MSGPACK_READER_START(decl_reader, "decl", 99, "sub");
  
    /* init cal ahrs:*/

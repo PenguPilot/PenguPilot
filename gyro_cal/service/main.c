@@ -35,7 +35,7 @@
 
 
 static void *gyro_raw_socket;
-static void *gyro_cal_socket;
+static void *gyro_socket;
 static calibration_t gyro_cal;
 static interval_t gyro_move_interval;
 
@@ -61,8 +61,8 @@ SERVICE_MAIN_BEGIN("gyro_cal", 99)
    /* initialize SCL: */
    gyro_raw_socket = scl_get_socket("gyro_raw", "sub");
    THROW_IF(gyro_raw_socket == NULL, -EIO);
-   gyro_cal_socket = scl_get_socket("gyro_cal", "pub");
-   THROW_IF(gyro_cal_socket == NULL, -EIO);
+   gyro_socket = scl_get_socket("gyro", "pub");
+   THROW_IF(gyro_socket == NULL, -EIO);
 
    /* init calibration data: */
    cal_init(&gyro_cal, 3, 1000);
@@ -91,7 +91,7 @@ SERVICE_MAIN_BEGIN("gyro_cal", 99)
             msgpack_sbuffer_clear(msgpack_buf);
             msgpack_pack_array(pk, 3);
             PACKFV(gyro, 3);
-            scl_copy_send_dynamic(gyro_cal_socket, msgpack_buf->data, msgpack_buf->size);
+            scl_copy_send_dynamic(gyro_socket, msgpack_buf->data, msgpack_buf->size);
          }
       }
    }

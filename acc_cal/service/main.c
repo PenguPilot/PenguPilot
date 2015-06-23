@@ -34,7 +34,7 @@
 
 
 static void *acc_raw_socket = NULL;
-static void *acc_cal_socket = NULL;
+static void *acc_socket = NULL;
 
 
 SERVICE_MAIN_BEGIN("acc_cal", 99)
@@ -45,8 +45,8 @@ SERVICE_MAIN_BEGIN("acc_cal", 99)
    /* open sockets: */
    acc_raw_socket = scl_get_socket("acc_raw", "sub");
    THROW_IF(acc_raw_socket == NULL, -EIO);
-   acc_cal_socket = scl_get_socket("acc_cal", "pub");
-   THROW_IF(acc_cal_socket == NULL, -EIO);
+   acc_socket = scl_get_socket("acc", "pub");
+   THROW_IF(acc_socket == NULL, -EIO);
 
    /* init calibration data: */
    acc_cal_init();
@@ -63,7 +63,7 @@ SERVICE_MAIN_BEGIN("acc_cal", 99)
          msgpack_sbuffer_clear(msgpack_buf);
          msgpack_pack_array(pk, 3);
          PACKFV(acc.ve, 3);
-         scl_copy_send_dynamic(acc_cal_socket, msgpack_buf->data, msgpack_buf->size);
+         scl_copy_send_dynamic(acc_socket, msgpack_buf->data, msgpack_buf->size);
       }
    }
    MSGPACK_READER_SIMPLE_LOOP_END;

@@ -113,8 +113,8 @@ SERVICE_MAIN_BEGIN("rs_ctrl", 99)
    THROW_IF(pk == NULL, -ENOMEM);
   
    /* initialize SCL: */
-   void *gyro_cal_socket = scl_get_socket("gyro_cal", "sub");
-   THROW_IF(gyro_cal_socket == NULL, -EIO);
+   void *gyro_socket = scl_get_socket("gyro", "sub");
+   THROW_IF(gyro_socket == NULL, -EIO);
    void *torques_socket = scl_get_socket("torques", "pub");
    THROW_IF(torques_socket == NULL, -EIO);
    
@@ -128,7 +128,7 @@ SERVICE_MAIN_BEGIN("rs_ctrl", 99)
    piid_init(0.005);
    LOG(LL_INFO, "entering main loop");
 
-   MSGPACK_READER_SIMPLE_LOOP_BEGIN(gyro_cal)
+   MSGPACK_READER_SIMPLE_LOOP_BEGIN(gyro)
    {
       if (root.type == MSGPACK_OBJECT_ARRAY)
       {
