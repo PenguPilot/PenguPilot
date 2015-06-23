@@ -96,7 +96,7 @@ rs_ctrl_prx:
    priority: sys_high
 
 rp_ctrl:
-   binary: 'rp_ctrl/service/rp_ctrl'
+   binary: 'rp_ctrl/service/rp_ctrl.py'
    depends: [rs_ctrl_prx]
    priority: sys_high
 
