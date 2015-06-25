@@ -28,9 +28,12 @@
 
 from scl import scl_get_socket
 from misc import daemonize
+from pp_prio import PP_PRIO_6
+from scheduler import sched_set_prio
 
 
 def main(name):
+   sched_set_prio(PP_PRIO_6)
    socket_in = scl_get_socket('log_data', 'pull')
    socket_out = scl_get_socket('log_data_pub', 'pub')
    while True:

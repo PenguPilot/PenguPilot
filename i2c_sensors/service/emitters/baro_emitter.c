@@ -29,13 +29,10 @@
 #include <threadsafe_types.h>
 #include <scl.h>
 #include <msgpack.h>
+#include <pp_prio.h>
 
 #include "../platform/platform.h"
 #include "baro_emitter.h"
-
-
-#define THREAD_NAME       "baro_emitter"
-#define THREAD_PRIORITY   99
 
 
 static simple_thread_t thread;
@@ -75,7 +72,7 @@ int baro_emitter_start(void)
    baro_raw_socket = scl_get_socket("baro_raw", "pub");
    THROW_IF(baro_raw_socket == NULL, -EIO);
    
-   simple_thread_start(&thread, thread_func, THREAD_NAME, THREAD_PRIORITY, NULL);
+   simple_thread_start(&thread, thread_func, "baro_emitter", PP_PRIO_3, NULL);
    THROW_END();
 }
 

@@ -75,6 +75,7 @@
 #include <threadsafe_types.h>
 #include <interval.h>
 #include <motors.h>
+#include <pp_prio.h>
 
 #include "motors_order_parser.h"
 #include "motors_state_machine.h"
@@ -133,12 +134,12 @@ MSGPACK_READER_BEGIN(voltage_reader)
 MSGPACK_READER_END
 
 
-SERVICE_MAIN_BEGIN("motors", 99)
+SERVICE_MAIN_BEGIN("motors", PP_PRIO_1)
 {
    /* start voltage reader thread: */
    tsfloat_init(&voltage, 16.0);
-   MSGPACK_READER_START(mot_en_reader, "mot_en", 99, "sub");
-   MSGPACK_READER_START(voltage_reader, "voltage", 99, "sub");
+   MSGPACK_READER_START(mot_en_reader, "mot_en", PP_PRIO_1, "sub");
+   MSGPACK_READER_START(voltage_reader, "voltage", PP_PRIO_2, "sub");
  
    /* initialize SCL: */
    void *forces_socket = scl_get_socket("forces", "sub");
@@ -147,8 +148,6 @@ SERVICE_MAIN_BEGIN("motors", 99)
    THROW_IF(int_en_socket == NULL, -EIO);
    void *int_reset_socket = scl_get_socket("int_reset", "pub");
    THROW_IF(int_reset_socket == NULL, -EIO);
-
-
 
    /* init opcd: */
    char *platform;

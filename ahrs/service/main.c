@@ -30,6 +30,7 @@
 #include <math/conv.h>
 #include <service.h>
 #include <msgpack_reader.h>
+#include <pp_prio.h>
 
 #include "cal_ahrs.h"
 
@@ -75,7 +76,7 @@ MSGPACK_READER_BEGIN(decl_reader)
 MSGPACK_READER_END
 
 
-SERVICE_MAIN_BEGIN("ahrs", 99)
+SERVICE_MAIN_BEGIN("ahrs", PP_PRIO_2)
 {
    tsfloat_init(&decl, 0.0f);
 
@@ -89,9 +90,9 @@ SERVICE_MAIN_BEGIN("ahrs", 99)
    marg_data_init(&marg_data);
 
    /* start reader threads: */
-   MSGPACK_READER_START(acc_reader, "acc", 99, "sub");
-   MSGPACK_READER_START(mag_reader, "mag", 99, "sub");
-   MSGPACK_READER_START(decl_reader, "decl", 99, "sub");
+   MSGPACK_READER_START(acc_reader, "acc", PP_PRIO_2, "sub");
+   MSGPACK_READER_START(mag_reader, "mag", PP_PRIO_2, "sub");
+   MSGPACK_READER_START(decl_reader, "decl", PP_PRIO_2, "sub");
  
    /* init cal ahrs:*/
    cal_ahrs_init();

@@ -30,6 +30,7 @@
 #include <service.h>
 #include <msgpack_reader.h>
 #include <scl.h>
+#include <pp_prio.h>
 
 
 MSGPACK_PROXY_DECL(rp_ctrl_spp_p)
@@ -39,10 +40,9 @@ MSGPACK_PROXY_DECL(rp_ctrl_spp_y)
 
 SERVICE_MAIN_BEGIN("rp_ctrl_prx", 0)
 {
-   MSGPACK_PROXY_START(rp_ctrl_spp_p, "rp_ctrl_spp_p", "pull", "rp_ctrl_sp_p", "pub", 99);
-   MSGPACK_PROXY_START(rp_ctrl_spp_r, "rp_ctrl_spp_r", "pull", "rp_ctrl_sp_r", "pub", 99);
-   MSGPACK_PROXY_START(rp_ctrl_spp_y, "rp_ctrl_spp_y", "pull", "rp_ctrl_sp_y", "pub", 99);
-   
+   MSGPACK_PROXY_START(rp_ctrl_spp_p, "rp_ctrl_spp_p", "pull", "rp_ctrl_sp_p", "pub", PP_PRIO_2);
+   MSGPACK_PROXY_START(rp_ctrl_spp_r, "rp_ctrl_spp_r", "pull", "rp_ctrl_sp_r", "pub", PP_PRIO_2);
+   MSGPACK_PROXY_START(rp_ctrl_spp_y, "rp_ctrl_spp_y", "pull", "rp_ctrl_sp_y", "pub", PP_PRIO_2);
    SERVICE_MAIN_PSEUDO_LOOP();
 }
 SERVICE_MAIN_END

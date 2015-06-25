@@ -33,6 +33,8 @@ from opcd_interface import OPCD_Interface
 from misc import daemonize
 from os import system
 from time import time
+from scheduler import sched_set_prio
+from pp_prio import PP_PRIO_6
 
 
 warning_sent = False
@@ -47,6 +49,7 @@ def warning():
 
 
 def main(name):
+   sched_set_prio(PP_PRIO_6)
    current_reader = SCL_Reader('current', 'sub', [0.0])
    voltage_socket = scl_get_socket('voltage', 'sub')
    battery_socket = scl_get_socket('battery', 'pub')

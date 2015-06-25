@@ -38,6 +38,7 @@
 #include <service.h>
 #include <logger.h>
 #include <msgpack_reader.h>
+#include <pp_prio.h>
 
 #include "tz_lookup.h"
 
@@ -64,7 +65,7 @@ static void linux_sys_set_timezone(float lat_dest, float lon_dest)
 }
 
 
-SERVICE_MAIN_BEGIN("gpstime", 0)
+SERVICE_MAIN_BEGIN("gpstime", PP_PRIO_6)
 {
    /* set-up msgpack packer: */
    MSGPACK_PACKER_DECL_INFUNC();

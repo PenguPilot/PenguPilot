@@ -30,6 +30,7 @@
 #include <scl.h>
 #include <service.h>
 #include <msgpack_reader.h>
+#include <pp_prio.h>
 
 #include <math/euler.h>
 
@@ -53,7 +54,7 @@ MSGPACK_READER_END
 
 
 
-SERVICE_MAIN_BEGIN("acc_rot_neu", 99)
+SERVICE_MAIN_BEGIN("acc_rot_neu", PP_PRIO_3)
 { 
    /* set-up msgpack packer: */
    MSGPACK_PACKER_DECL_INFUNC();
@@ -64,7 +65,7 @@ SERVICE_MAIN_BEGIN("acc_rot_neu", 99)
    void *acc_neu_socket = scl_get_socket("acc_neu", "pub");
    THROW_IF(acc_neu_socket == NULL, -EIO);
 
-   MSGPACK_READER_START(orientation_reader, "orientation", 99, "sub");
+   MSGPACK_READER_START(orientation_reader, "orientation", PP_PRIO_3, "sub");
  
    MSGPACK_READER_SIMPLE_LOOP_BEGIN(acc)
    {

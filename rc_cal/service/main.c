@@ -32,13 +32,14 @@
 #include <logger.h>
 #include <msgpack_reader.h>
 #include <service.h>
+#include <pp_prio.h>
 
 #include "../shared/rc_cal.h"
 #include "channels.h"
 
 
 
-SERVICE_MAIN_BEGIN("rc_cal", 99)
+SERVICE_MAIN_BEGIN("rc_cal", PP_PRIO_1)
 {
    /* set-up msgpack packer: */
    MSGPACK_PACKER_DECL_INFUNC();

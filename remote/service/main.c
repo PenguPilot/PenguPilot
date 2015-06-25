@@ -34,6 +34,7 @@
 #include <scl.h>
 #include <opcd_interface.h>
 #include <serial.h>
+#include <pp_prio.h>
 
 #include "../shared/remote.h"
 #include "../shared/sixaxis.h"
@@ -156,7 +157,7 @@ int sbus_run(void)
 }
 
 
-SERVICE_MAIN_BEGIN("remote", 99)
+SERVICE_MAIN_BEGIN("remote", PP_PRIO_1)
 {
    /* initialize msgpack buffers: */
    MSGPACK_PACKER_INIT();

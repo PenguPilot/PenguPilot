@@ -31,6 +31,7 @@
 #include <threadsafe_types.h>
 #include <msgpack_reader.h>
 #include <gyro.h>
+#include <pp_prio.h>
 
 #include "piid.h"
 
@@ -90,7 +91,7 @@ MSGPACK_READER_BEGIN(int_reset_reader)
 MSGPACK_READER_END
 
 
-SERVICE_MAIN_BEGIN("rs_ctrl", 99)
+SERVICE_MAIN_BEGIN("rs_ctrl", PP_PRIO_1)
 {
    /* safe initial values: */
    tsfloat_init(&rs_ctrl_sp_p, 0.0);
@@ -109,12 +110,11 @@ SERVICE_MAIN_BEGIN("rs_ctrl", 99)
    void *torques_socket = scl_get_socket("torques", "pub");
    THROW_IF(torques_socket == NULL, -EIO);
    
-   MSGPACK_READER_START(rs_ctrl_sp_p_reader, "rs_ctrl_sp_p", 99, "sub");
-   MSGPACK_READER_START(rs_ctrl_sp_r_reader, "rs_ctrl_sp_r", 99, "sub");
-   MSGPACK_READER_START(rs_ctrl_sp_y_reader, "rs_ctrl_sp_y", 99, "sub");
-
-   MSGPACK_READER_START(int_en_reader, "int_en", 99, "sub");
-   MSGPACK_READER_START(int_reset_reader, "int_reset", 99, "sub");
+   MSGPACK_READER_START(rs_ctrl_sp_p_reader, "rs_ctrl_sp_p", PP_PRIO_1, "sub");
+   MSGPACK_READER_START(rs_ctrl_sp_r_reader, "rs_ctrl_sp_r", PP_PRIO_1, "sub");
+   MSGPACK_READER_START(rs_ctrl_sp_y_reader, "rs_ctrl_sp_y", PP_PRIO_1, "sub");
+   MSGPACK_READER_START(int_en_reader, "int_en", PP_PRIO_1, "sub");
+   MSGPACK_READER_START(int_reset_reader, "int_reset", PP_PRIO_1, "sub");
  
    const float sample_dt = 0.005;
    piid_init(sample_dt);

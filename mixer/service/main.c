@@ -6,6 +6,7 @@
 #include <msgpack_reader.h>
 #include <util.h>
 #include <threadsafe_types.h>
+#include <pp_prio.h>
 
 #include "inv_coupling.h"
 #include "coupling_matrix_parser.h"
@@ -20,9 +21,9 @@ MSGPACK_READER_BEGIN(thrust_reader)
 MSGPACK_READER_END
 
 
-SERVICE_MAIN_BEGIN("mixer", 99)
+SERVICE_MAIN_BEGIN("mixer", PP_PRIO_1)
 {
-   tsfloat_init(&thrust, 0.0f); /* 0N forces; safe to start with */
+   tsfloat_init(&thrust, 0.0f); /* 0N force; safe to start with */
 
    char *matrix_def;
    tsfloat_t imtx1;
@@ -53,7 +54,7 @@ SERVICE_MAIN_BEGIN("mixer", 99)
    }
    inv_coupling_init(n_motors, mixer);
    
-   MSGPACK_READER_START(thrust_reader, "thrust", 99, "sub");
+   MSGPACK_READER_START(thrust_reader, "thrust", PP_PRIO_1, "sub");
    void *torques_socket = scl_get_socket("torques", "sub");
    THROW_IF(torques_socket == NULL, -EIO);
    void *forces_socket = scl_get_socket("forces", "pub");

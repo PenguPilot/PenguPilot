@@ -24,217 +24,165 @@
 # GNU General Public License for more details.
 
 
-# high-priority system services:
-
-
 test_service:
    binary: 'test_service/service/test_service'
-   priority: sys_low
 
 motors:
    binary: 'motors/service/motors'
-   priority: sys_high
 
 i2c_sensors:
    binary: 'i2c_sensors/service/i2c_sensors'
-   priority: sys_high
 
 gyro_cal:
    binary: 'gyro_cal/service/gyro_cal'
    depends: [i2c_sensors]
-   priority: sys_high
 
 gps_rel:
    binary: 'gps_rel/service/gps_rel'
    depends: [gpsp]
-   priority: sys_high
 
 
 mag_adc_cal:
    binary: 'mag_adc_cal/service/mag_adc_cal'
    depends: [i2c_sensors]
-   priority: sys_high
 
 cmc:
    binary: 'cmc/service/cmc'
    depends: [arduino, twl4030_madc, ads1x15, mag_adc_cal]
-   priority: sys_high
 
 acc_cal:
    binary: 'acc_cal/service/acc_cal'
    depends: [i2c_sensors]
-   priority: sys_high
 
 ahrs:
    binary: 'ahrs/service/ahrs'
    depends: [gyro_cal, acc_cal, cmc, geomag]
-   priority: sys_high
 
 acc_rot_neu:
    binary: 'acc_rot_neu/service/acc_rot_neu'
    depends: [ahrs, acc_cal]
-   priority: sys_high
 
 acc_hpf_neu:
    binary: 'acc_hpf_neu/service/acc_hpf_neu'
    depends: [acc_rot_neu]
-   priority: sys_high
 
 pos_speed_est_neu:
    binary: 'pos_speed_est_neu/service/pos_speed_est_neu'
    depends: [i2c_sensors, acc_hpf_neu, gps_rel]
-   priority: sys_high
 
 rs_ctrl:
    binary: 'rs_ctrl/service/rs_ctrl'
    depends: [mixer]
-   priority: sys_high
 
 rs_ctrl_prx:
    binary: 'rs_ctrl_prx/service/rs_ctrl_prx'
    depends: [rs_ctrl]
-   priority: sys_high
 
 rp_ctrl:
    binary: 'rp_ctrl/service/rp_ctrl.py'
    depends: [ahrs, rs_ctrl_prx]
-   priority: sys_medium
 
 rp_ctrl_prx:
    binary: 'rp_ctrl_prx/service/rp_ctrl_prx'
    depends: [rp_ctrl]
-   priority: sys_medium
 
 us_ctrl:
    binary: 'us_ctrl/service/us_ctrl'
-   priority: sys_medium
 
 
 flight_detect:
    binary: 'flight_detect/service/flight_detect.py'
    depends: [acc_rot_neu]
-   priority: sys_low
 
 arduino:
    binary: 'arduino/service/arduino'
    platforms: [exynos_quad]
-   priority: sys_high
 
 rc_cal:
    binary: 'rc_cal/service/rc_cal'
    depends: [remote, arduino]
-   priority: sys_high
 
 remote:
    binary: 'remote/service/remote'
    platforms: [overo_quad, pi_quad]
-   priority: sys_high
 
 mixer:
    binary: 'mixer/service/mixer'
-   priority: sys_high
 
-
-# medium-priority system services:
 
 ofs:
    binary: 'ofs/service/ofs'
-   priority: sys_medium
 
 ads1x15:
    binary: 'ads1x15/service/ads1x15.py'
    platforms: [pi_quad]
-   priority: sys_medium
 
 gpsp:
    binary: 'gpsp/service/gpsp'
-   priority: sys_medium
 
 twl4030_madc:
    binary: 'twl4030_madc/service/twl4030_madc.py'
    platforms: [overo_quad]
-   priority: sys_medium
 
-
-# low-priority system services:
 
 opcd:
   binary: 'opcd/service/opcd.py'
-  priority: sys_low
 
 mavlink:
   binary: 'mavlink/service/mavlink.py'
-  priority: sys_low
 
 battmon:
   binary: 'battmon/service/battmon.py'
   depends: [arduino, twl4030_madc, ads1x15]
-  priority: sys_low
 
 display:
   binary: 'display/service/display.py'
   platforms: [overo_quad]
   depends: [battmon, geomag, elevmap, rc_cal]
-  priority: sys_low
 
 emerg_kill:
   binary: 'emerg_kill/service/emerg_kill.py'
-  priority: sys_low
 
 blackbox:
   binary: 'blackbox/service/blackbox.py'
-  priority: sys_low
 
 aircomm:
   binary: 'aircomm/service/aircomm.py'
-  priority: sys_low
 
 heartbeat:
   binary: 'heartbeat/service/heartbeat.py'
   depends: [gpsp, battmon, aircomm]
-  priority: sys_low
 
 geomag:
   binary: 'geomag/service/geomag.py'
   depends: [gpsp]
-  priority: sys_low
 
 elevmap:
   binary: 'elevmap/service/elevmap.py'
   depends: [gpsp]
-  priority: sys_low
 
 teensy_taranis:
   binary: 'teensy_taranis/service/teensy_taranis.py'
-  priority: sys_low
-
-# application-level services:
 
 gpstime:
   binary: 'gpstime/service/gpstime'
   depends: [gpsp]
-  priority: app
 
 wifi_sensor:
   binary: 'wifi_sensor/service/wifi_sensor.py'
-  priority: app
 
 wifi_loc:
   binary: 'wifi_loc/service/wifi_loc.py'
   depends: [gpsp, wifi_sensor]
-  priority: app
 
 log_proxy:
   binary: 'logger/service/log_proxy.py'
-  priority: app
 
 file_logger:
   binary: 'logger/service/file_logger.py'
   depends: [log_proxy]
-  priority: app
 
 gps_logger:
   binary: 'logger/service/gps_logger.py'
   depends: [gpstime]
-  priority: app
 

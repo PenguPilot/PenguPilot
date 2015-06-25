@@ -26,7 +26,7 @@
 '''
 
 
-PP_PRIO_BASE = 50
+PP_PRIO_BASE = 49
 
 PP_PRIO_1 = PP_PRIO_BASE - 0 # rotation speed control
 PP_PRIO_2 = PP_PRIO_BASE - 1 # rotation position control

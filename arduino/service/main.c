@@ -30,6 +30,7 @@
 #include <scl.h>
 #include <threadsafe_types.h>
 #include <service.h>
+#include <pp_prio.h>
 
 #include "ppm_common.h"
 #include "ppm_parse.h"
@@ -40,7 +41,7 @@
 #define CHANNELS_MAX (16)
 
 
-SERVICE_MAIN_BEGIN("arduino", 99)
+SERVICE_MAIN_BEGIN("arduino", PP_PRIO_2)
 {
    /* init scl and get sockets:: */
    void *rc_socket = scl_get_socket("rc_raw", "pub");

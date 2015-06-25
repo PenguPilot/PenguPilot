@@ -32,13 +32,10 @@
 #include <msgpack.h>
 #include <scl.h>
 #include <math/vec3.h>
+#include <pp_prio.h>
 
 #include "../platform/platform.h"
 #include "mag_emitter.h"
-
-
-#define THREAD_NAME       "mag_emitter"
-#define THREAD_PRIORITY   99
 
 
 static simple_thread_t thread;
@@ -74,7 +71,7 @@ int mag_emitter_start(void)
    THROW_BEGIN();
    mag_raw_socket = scl_get_socket("mag_raw", "pub");
    THROW_IF(mag_raw_socket == NULL, -EIO);
-   simple_thread_start(&thread, thread_func, THREAD_NAME, THREAD_PRIORITY, NULL);
+   simple_thread_start(&thread, thread_func, "mag_emitter", PP_PRIO_2, NULL);
    THROW_END();
 }
 

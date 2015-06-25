@@ -29,7 +29,7 @@
 #include <service.h>
 #include <threadsafe_types.h>
 #include <msgpack_reader.h>
-
+#include <pp_prio.h>
 
 #include "cmc.h"
 
@@ -43,7 +43,7 @@ MSGPACK_READER_BEGIN(current_reader)
 MSGPACK_READER_END
 
 
-SERVICE_MAIN_BEGIN("cmc", 99)
+SERVICE_MAIN_BEGIN("cmc", PP_PRIO_2)
 {
    tsfloat_init(&current, 0.0f);
 
@@ -57,7 +57,7 @@ SERVICE_MAIN_BEGIN("cmc", 99)
    THROW_IF(mag_socket == NULL, -EIO);
    
    /* start current reader: */
-   MSGPACK_READER_START(current_reader, "current", 99, "sub");
+   MSGPACK_READER_START(current_reader, "current", PP_PRIO_2, "sub");
  
    /* init calibration data: */
    cmc_init();

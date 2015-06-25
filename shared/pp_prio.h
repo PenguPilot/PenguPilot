@@ -29,14 +29,14 @@
 #define __PP_PRIO_H__
 
 
-#define PP_PRIO_BASE (50)
+#define PP_PRIO_BASE (49)
 
 #define PP_PRIO_1 (PP_PRIO_BASE - 0) /* rotation speed control */
 #define PP_PRIO_2 (PP_PRIO_BASE - 1) /* rotation position control */
 #define PP_PRIO_3 (PP_PRIO_BASE - 2) /* N/E/U speed control */
 #define PP_PRIO_4 (PP_PRIO_BASE - 3) /* N/E/U position control */
 #define PP_PRIO_5 (PP_PRIO_BASE - 4) /* missions/manual control */
-#define PP_PRIO_6 (PP_PRIO_BASE - 5) /* config/time functionality */
+#define PP_PRIO_6 (PP_PRIO_BASE - 5) /* logging/config/time functionality */
 
 
 #endif /* __PP_PRIO_H__ */

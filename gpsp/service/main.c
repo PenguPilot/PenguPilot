@@ -25,32 +25,20 @@
 
 
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <util.h>
 #include <daemon.h>
+#include <service.h>
+#include <pp_prio.h>
 
 #include "main_serial.h"
 #include "main_i2c.h"
 
-#include <opcd_interface.h>
-#include <scl.h>
-#include <syslog.h>
-
-void _cleanup(void)
-{
-
-}
 
 
-void _main(int argc, char *argv[])
-{
-   (void)argc;
-   (void)argv;
-
-   opcd_params_init("", 0);
+SERVICE_MAIN_BEGIN("gpsp", PP_PRIO_3)
    char *plat = NULL;
    opcd_param_get("platform", &plat);
    if (strcmp(plat, "overo_quad") == 0 || strcmp(plat, "exynos_quad") == 0)
@@ -61,15 +49,5 @@ void _main(int argc, char *argv[])
    {
       main_i2c();   
    }
-}
-
-
-int main(int argc, char *argv[])
-{
-   char pid_file[1024];
-   service_name_to_pidfile(pid_file, "gpsp");
-   daemonize(pid_file, _main, _cleanup, argc, argv);
-   return 0;
-}
-
+SERVICE_MAIN_END
 

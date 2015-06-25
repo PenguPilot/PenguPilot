@@ -30,6 +30,7 @@
 #include <periodic_thread.h>
 #include <logger.h>
 #include <service.h>
+#include <pp_prio.h>
 
 #include "platform/platform.h"
 #include "platform/exynos_quad.h"
@@ -41,7 +42,8 @@
 
 #define REALTIME_PERIOD 0.005
 
-SERVICE_MAIN_BEGIN("i2c_sensors", 99)
+
+SERVICE_MAIN_BEGIN("i2c_sensors", PP_PRIO_1)
 {
    periodic_thread_t _thread; 
    periodic_thread_t *thread = &_thread;

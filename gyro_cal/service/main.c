@@ -30,6 +30,7 @@
 #include <interval.h>
 #include <service.h>
 #include <msgpack_reader.h>
+#include <pp_prio.h>
 
 #include "calibration.h"
 
@@ -53,7 +54,7 @@ static bool gyro_moved(const float *gyro)
 }
 
 
-SERVICE_MAIN_BEGIN("gyro_cal", 99)
+SERVICE_MAIN_BEGIN("gyro_cal", PP_PRIO_1)
 { 
    /* set-up msgpack packer: */
    MSGPACK_PACKER_DECL_INFUNC();

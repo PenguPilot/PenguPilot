@@ -32,6 +32,7 @@
 #include <msgpack_reader.h>
 #include <gps_msgpack.h>
 #include <math/conv.h>
+#include <pp_prio.h>
 
 
 static void *gps_socket = NULL;
@@ -40,7 +41,7 @@ static double start_lat = 0.0;
 static double start_lon = 0.0;
 
 
-SERVICE_MAIN_BEGIN("gps_rel", 99)
+SERVICE_MAIN_BEGIN("gps_rel", PP_PRIO_3)
 { 
    /* set-up msgpack packer: */
    MSGPACK_PACKER_DECL_INFUNC();

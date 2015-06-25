@@ -29,6 +29,7 @@
 #include <scl.h>
 #include <service.h>
 #include <msgpack_reader.h>
+#include <pp_prio.h>
 
 #include "acc_cal.h"
 
@@ -37,7 +38,7 @@ static void *acc_raw_socket = NULL;
 static void *acc_socket = NULL;
 
 
-SERVICE_MAIN_BEGIN("acc_cal", 99)
+SERVICE_MAIN_BEGIN("acc_cal", PP_PRIO_2)
 { 
    /* set-up msgpack packer: */
    MSGPACK_PACKER_DECL_INFUNC();

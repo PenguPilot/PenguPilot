@@ -32,6 +32,7 @@
 #include <msgpack_reader.h>
 #include <interval.h>
 #include <threadsafe_types.h>
+#include <pp_prio.h>
 
 #include "pos.h"
 
@@ -57,6 +58,7 @@ MSGPACK_READER_BEGIN(ultra_reader)
    MSGPACK_READER_LOOP_END
 MSGPACK_READER_END
 
+
 tsfloat_t baro;
 MSGPACK_READER_BEGIN(baro_reader)
    MSGPACK_READER_LOOP_BEGIN(baro_reader)
@@ -67,7 +69,7 @@ MSGPACK_READER_END
 
 
 
-SERVICE_MAIN_BEGIN("pos_speed_est_neu", 99)
+SERVICE_MAIN_BEGIN("pos_speed_est_neu", PP_PRIO_3)
 { 
    tsfloat_init(&n, 0.0);
    tsfloat_init(&vn, 0.0);
@@ -85,9 +87,9 @@ SERVICE_MAIN_BEGIN("pos_speed_est_neu", 99)
    void *pos_speed_est_socket = scl_get_socket("pos_speed_est_neu", "pub");
    THROW_IF(pos_speed_est_socket == NULL, -EIO);
 
-   MSGPACK_READER_START(gps_rel_reader, "gps_rel", 99, "sub");
-   MSGPACK_READER_START(ultra_reader, "ultra_raw", 99, "sub");
-   MSGPACK_READER_START(baro_reader, "baro_raw", 99, "sub");
+   MSGPACK_READER_START(gps_rel_reader, "gps_rel", PP_PRIO_3, "sub");
+   MSGPACK_READER_START(ultra_reader, "ultra_raw", PP_PRIO_3, "sub");
+   MSGPACK_READER_START(baro_reader, "baro_raw", PP_PRIO_3, "sub");
  
    interval_t interval;
    interval_init(&interval);

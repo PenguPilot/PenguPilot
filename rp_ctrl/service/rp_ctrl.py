@@ -32,9 +32,13 @@ from time import sleep
 from opcd_interface import OPCD_Subscriber
 from geomath import deg2rad, sym_limit, angles_diff
 from misc import daemonize
+from pp_prio import PP_PRIO_2
+from scheduler import sched_set_prio
 
 
 def main(name):
+   sched_set_prio(PP_PRIO_2)
+
    # start opcd subscriber:
    opcd = OPCD_Subscriber()
 
@@ -84,5 +88,6 @@ def main(name):
       yaw_err = angles_diff(yaw, sp_y.data)
       if y_oe.data:
          spp_y_socket.send(dumps(yaw_err * yaw_p))
+
 
 daemonize('rp_ctrl', main)

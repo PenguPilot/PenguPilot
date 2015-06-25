@@ -29,9 +29,10 @@
 #include <scl.h>
 #include <service.h>
 #include <msgpack_reader.h>
+#include <pp_prio.h>
 
 
-SERVICE_MAIN_BEGIN("acc_hpf_neu", 99)
+SERVICE_MAIN_BEGIN("acc_hpf_neu", PP_PRIO_2)
 { 
    /* set-up msgpack packer: */
    MSGPACK_PACKER_DECL_INFUNC();

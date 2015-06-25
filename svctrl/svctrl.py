@@ -90,7 +90,6 @@ def read_config():
          
          # get service binary:
          binary = comp_base + os.sep + os.path.expandvars(service['binary'])
-         prio = service['priority']
 
          # retrieve and check arguments:
          try:
@@ -116,15 +115,15 @@ def read_config():
          if name != 'log_proxy':
             depends += ['log_proxy']
          # insert the service:
-         config[name] = (cmd, depends, prio)
+         config[name] = (cmd, depends)
          count += 1
 
       filt_config = {}
       for name in config:
          if service_available[name]:
-            cmd, depends, prio = config[name]
+            cmd, depends = config[name]
             depends = filter(lambda x : service_available[x], depends)
-            filt_config[name] = cmd, depends, prio
+            filt_config[name] = cmd, depends
 
       return filt_config
 
@@ -243,7 +242,7 @@ try:
          name_len = len(name)
          if name_len > max_name_len:
             max_name_len = name_len
-      for name, (path, _, _) in config.items():
+      for name, (path, _) in config.items():
          skip = ' ' * (max_name_len - len(name))
          pid = validate(name)
          if pid:
@@ -266,7 +265,7 @@ try:
             if len(names) > 1:
                print 'dependency resolution order:', names
             for name in names:
-               start(name, config[name][2], config[name][0], args[2])
+               start(name, config[name][0], args[2])
          else:
             running = running_processes()
             names = []
@@ -306,7 +305,7 @@ try:
       if len(names) > 1:
          print 'start resolution order:', names
       for name in names:
-         start(name, config[name][2], config[name][0], args[2])
+         start(name, config[name][0], args[2])
 
 except KeyboardInterrupt:
    print red('NOTE:'), 'operation canceled by user'

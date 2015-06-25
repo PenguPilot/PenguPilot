@@ -34,6 +34,8 @@ from sys import argv
 from re import match
 from time import sleep
 from pylogger import *
+from pp_prio import PP_PRIO_6
+from scheduler import sched_set_prio
 
 
 class OPCD:
@@ -125,6 +127,7 @@ class OPCD:
 
 
 def main(name):
+   sched_set_prio(PP_PRIO_6)
    opcd = OPCD(name)
    opcd.run()
 
