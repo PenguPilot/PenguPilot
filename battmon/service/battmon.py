@@ -35,7 +35,6 @@ from os import system
 from time import time
 
 
-current_reader = SCL_Reader('current', 'sub', [0.0])
 warning_sent = False
 
 
@@ -48,6 +47,7 @@ def warning():
 
 
 def main(name):
+   current_reader = SCL_Reader('current', 'sub', [0.0])
    voltage_socket = scl_get_socket('voltage', 'sub')
    battery_socket = scl_get_socket('battery', 'pub')
    opcd = OPCD_Interface()
@@ -78,6 +78,7 @@ def main(name):
          warning()
       percent = min(1.0, max(0.0, (voltage - vmin) / (vmax - vmin)))
       battery_socket.send(dumps((percent, critical)))
+
 
 daemonize('battmon', main)
 
