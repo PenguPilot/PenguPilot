@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
   ___________________________________________________
  |  _____                       _____ _ _       _    |
@@ -10,10 +11,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Process Scheduler Configuration Library
+ Scheduler Interface for current Process
 
- Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
- Inspired by the PsychoPy library Copyright (C) 2009 Jonathan Peirce
+ Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -26,4 +26,20 @@
  GNU General Public License for more details. """
 
 
+import os
+import ctypes, ctypes.util as util
+
+
+def sched_set_prio(prio):
+   _SCHED_FIFO = 1
+   libc = ctypes.cdll.LoadLibrary(util.find_library('c'))
+   if prio > libc.sched_get_priority_max(_SCHED_FIFO):
+      raise ValueError('priority too high: %d' % prio)
+   elif prio < libc.sched_get_priority_min(_SCHED_FIFO):
+      raise ValueError('priority too high: %d' % prio)
+   class _SchedParams(ctypes.Structure):
+      _fields_ = [('sched_priority', ctypes.c_int)]
+   schedParams = _SchedParams()
+   schedParams.sched_priority = prio
+   libc.sched_setscheduler(os.getpid(), _SCHED_FIFO, ctypes.byref(schedParams))
 
