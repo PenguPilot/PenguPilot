@@ -95,9 +95,9 @@ void logger_write(char *file, loglevel_t level, unsigned int line, char *format,
    /* 4: formatted message */
    msgpack_pack_raw(pk, msg_len);
    msgpack_pack_raw_body(pk, msg_buffer, msg_len);
-   pthread_mutex_unlock(&pack_mutex);
    
    /* send it: */
    scl_copy_send_dynamic(log_socket, sbuf->data, sbuf->size);
+   pthread_mutex_unlock(&pack_mutex);
 }
 

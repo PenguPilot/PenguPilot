@@ -43,11 +43,11 @@
 
 static simple_thread_t thread;
 static void *mag_raw_socket;
-MSGPACK_PACKER_DECL;
  
 
 SIMPLE_THREAD_BEGIN(thread_func)
 {
+   MSGPACK_PACKER_DECL_INFUNC();
    SIMPLE_THREAD_LOOP_BEGIN
    {
       vec3_t vec;
@@ -74,7 +74,6 @@ int mag_emitter_start(void)
    THROW_BEGIN();
    mag_raw_socket = scl_get_socket("mag_raw", "pub");
    THROW_IF(mag_raw_socket == NULL, -EIO);
-   MSGPACK_PACKER_INIT();
    simple_thread_start(&thread, thread_func, THREAD_NAME, THREAD_PRIORITY, NULL);
    THROW_END();
 }

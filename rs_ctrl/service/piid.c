@@ -172,8 +172,11 @@ void piid_int_enable(int val)
 void piid_reset(void)
 {
    int_enable = 0;
-   adams5_reset(&int_err1);
-   adams5_reset(&int_err2);
+   FOR_N(i, 3)
+   {
+      xi_err[i] = 0.0f;
+      xii_err[i] = 0.0f;
+   }
 }
 
 

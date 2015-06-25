@@ -11,7 +11,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- ACC G Magnitude Verification Utility
+ Flight State Detector based on N/E Accelerations
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -26,16 +26,38 @@
  GNU General Public License for more details. """
 
 
+from misc import daemonize
 from scl import scl_get_socket
-from msgpack import loads
-from numpy.linalg import norm
+from msgpack import loads, dumps
+from numpy import var
 
 
-socket = scl_get_socket('acc', 'sub')
-while True:
-   try:
-      vec = loads(socket.recv())
-      print 'acc g vector magnitude:', norm(vec)
-   except:
-      break
+def main(name):
+   acc_socket = scl_get_socket('acc_neu', 'sub')
+   flying_socket = scl_get_socket('flying', 'pub')
+   acc_vec = loads(acc_socket.recv())
 
+   size = 40
+   histn = [acc_vec[0]] * size
+   histe = [acc_vec[1]] * size
+   s = sp = 0
+
+   i = 0
+   while True:
+      acc_vec = loads(acc_socket.recv())
+      i += 1
+      if i < 4:
+         continue
+      i = 0
+      histn = histn[1:] + [acc_vec[0]]
+      histe = histe[1:] + [acc_vec[1]]
+      v = var(histn) + var(histe)
+      if v > 20:
+         s = 1
+      else:
+         s = 0
+      if s != sp:
+         flying_socket.send(dumps(s))
+      sp = s
+
+daemonize('flight_detect', main)

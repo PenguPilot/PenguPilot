@@ -110,7 +110,6 @@ void quat_to_euler(euler_t *euler, const quat_t *quat)
  
    /* fix for new AHRS code: */
    euler->pitch *= -1.0f;
-   euler->yaw *= -1.0f;
    if (euler->roll < 0)
       euler->roll += M_PI;
    else

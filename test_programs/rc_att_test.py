@@ -32,10 +32,10 @@ from time import sleep
 
 rc_socket = scl_get_socket('rc', 'sub')
 
-rs_ctrl_sp_p_socket = scl_get_socket('rp_ctrl_sp_p', 'pub')
-rs_ctrl_sp_r_socket = scl_get_socket('rp_ctrl_sp_r', 'pub')
+pitch_socket = scl_get_socket('rp_ctrl_spp_p', 'push')
+roll_socket = scl_get_socket('rp_ctrl_spp_r', 'push')
+yaw_speed_socket = scl_get_socket('rs_ctrl_spp_y', 'push')
 
-rs_ctrl_sp_y_socket = scl_get_socket('rs_ctrl_spp_y', 'push')
 thrust_socket = scl_get_socket('thrust', 'pub')
 mot_en_socket = scl_get_socket('mot_en', 'pub')
 sleep(1)
@@ -58,9 +58,9 @@ try:
          if abs(roll) < 0.05: roll = 0.0
          if abs(yaw) < 0.05: yaw = 0.0
 
-         rs_ctrl_sp_p_socket.send(dumps(-0.35 * pitch))
-         rs_ctrl_sp_r_socket.send(dumps(0.35 * roll))
-         rs_ctrl_sp_y_socket.send(dumps(0.6 * yaw))
+         pitch_socket.send(dumps(-0.35 * pitch))
+         roll_socket.send(dumps(0.35 * roll))
+         yaw_speed_socket.send(dumps(0.6 * yaw))
       else:
           mot_en_socket.send(dumps(0))
 except:

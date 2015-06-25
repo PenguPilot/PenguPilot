@@ -34,7 +34,7 @@ from geomath import deg2rad, sym_limit, angles_diff
 from misc import daemonize
 
 
-def main():
+def main(name):
    # start opcd subscriber:
    opcd = OPCD_Subscriber()
 
@@ -62,31 +62,27 @@ def main():
 
 
    orientation_socket = scl_get_socket('orientation', 'sub')
-   try:
-      while True:
-         yaw, pitch, roll = loads(orientation_socket.recv())
-         pr_p = opcd['rp_ctrl.pr_p']
-         yaw_p = opcd['rp_ctrl.yaw_p']
-         pitch_bias = opcd['rp_ctrl.pitch_bias']
-         roll_bias = opcd['rp_ctrl.roll_bias']
-         angles_max = deg2rad(opcd['rp_ctrl.angles_max'])
+   while True:
+      yaw, pitch, roll = loads(orientation_socket.recv())[0:3]
+      pr_p = opcd['rp_ctrl.pr_p']
+      yaw_p = opcd['rp_ctrl.yaw_p']
+      pitch_bias = deg2rad(opcd['rp_ctrl.pitch_bias'])
+      roll_bias = deg2rad(opcd['rp_ctrl.roll_bias'])
+      angles_max = deg2rad(opcd['rp_ctrl.angles_max'])
 
-         # pitch position control:
-         pitch_err = pitch - sym_limit(sp_p.data, angles_max) + pitch_bias
-         if p_oe.data:
-            spp_p_socket.send(dumps(-pitch_err * pr_p))
+      # pitch position control:
+      pitch_err = pitch - sym_limit(sp_p.data, angles_max) + pitch_bias
+      if p_oe.data:
+         spp_p_socket.send(dumps(-pitch_err * pr_p))
 
-         # roll position control:
-         roll_err = roll - sym_limit(sp_r.data, angles_max) + roll_bias
-         if r_oe.data:
-            spp_r_socket.send(dumps(-roll_err * pr_p))
+      # roll position control:
+      roll_err = roll - sym_limit(sp_r.data, angles_max) + roll_bias
+      if r_oe.data:
+         spp_r_socket.send(dumps(-roll_err * pr_p))
           
-         # yaw position control:
-         yaw_err = angles_diff(yaw, sp_y.data)
-         if y_oe.data:
-            spp_y_socket.send(dumps(-yaw_err * yaw_p))
-
-   except Exception as e:
-      print e
+      # yaw position control:
+      yaw_err = angles_diff(yaw, sp_y.data)
+      if y_oe.data:
+         spp_y_socket.send(dumps(yaw_err * yaw_p))
 
 daemonize('rp_ctrl', main)

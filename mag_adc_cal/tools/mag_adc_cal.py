@@ -32,7 +32,7 @@ from cal_math import Calibration
 from opcd_interface import OPCD_Interface
 from math import isnan
 
-opcd = OPCD_Interface(scl_get_socket('opcd_ctrl', 'req'))
+opcd = OPCD_Interface()
 points = []
 
 print 'collecting magnetometer data .. press ctrl+c when finished'

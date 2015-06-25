@@ -42,11 +42,7 @@ adams5_t;
 
 int adams5_init(adams5_t *a, const size_t dim);
 
-void adams5_reset(adams5_t *a);
-
 void adams5_run(adams5_t *a, float *out, float *in, float ts, int enabled);
-
-void adams5_term(adams5_t *a);
 
 
 #endif /* __ADAMS5_H__ */

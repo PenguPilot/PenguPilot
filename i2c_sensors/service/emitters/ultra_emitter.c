@@ -41,11 +41,11 @@
 
 static simple_thread_t thread;
 static void *ultra_raw_socket;
-MSGPACK_PACKER_DECL;
  
 
 SIMPLE_THREAD_BEGIN(thread_func)
 {
+   MSGPACK_PACKER_DECL_INFUNC();
    SIMPLE_THREAD_LOOP_BEGIN
    {
       float altitude;
@@ -69,7 +69,6 @@ int ultra_emitter_start(void)
    THROW_BEGIN();
    ultra_raw_socket = scl_get_socket("ultra_raw", "pub");
    THROW_IF(ultra_raw_socket == NULL, -EIO);
-   MSGPACK_PACKER_INIT();
    simple_thread_start(&thread, thread_func, THREAD_NAME, THREAD_PRIORITY, NULL);
    THROW_END();
 }

@@ -11,7 +11,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- ACC G Magnitude Verification Utility
+ Mixer Test Utility
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -26,16 +26,11 @@
  GNU General Public License for more details. """
 
 
+from sys import argv
 from scl import scl_get_socket
-from msgpack import loads
-from numpy.linalg import norm
+from msgpack import dumps
+from time import sleep
 
-
-socket = scl_get_socket('acc', 'sub')
-while True:
-   try:
-      vec = loads(socket.recv())
-      print 'acc g vector magnitude:', norm(vec)
-   except:
-      break
-
+socket = scl_get_socket('mot_en', 'pub')
+sleep(1)
+socket.send(dumps(int(argv[1])))

@@ -203,7 +203,7 @@ SERVICE_MAIN_BEGIN("motors", 99)
       if (root.type == MSGPACK_OBJECT_ARRAY)
       {
          int int_en = 0;
-         int int_reset = 1;
+         int int_res = 1;
 
          int n_forces = root.via.array.size;
          float dt = interval_measure(&interval);
@@ -227,7 +227,7 @@ SERVICE_MAIN_BEGIN("motors", 99)
                      int_en = 1;   
                   }
                   ctrls[order[i]] = mot_gas;
-                  int_reset = 0;
+                  int_res = 0;
                   break;
                }
 
@@ -243,13 +243,27 @@ SERVICE_MAIN_BEGIN("motors", 99)
                ctrls[order[i]] = 0.0f;
          }
          pthread_mutex_unlock(&mutex);
+          
+         static int int_en_prev = 0;
+         if (int_en_prev != int_en)
+         {
+            int_en_prev = int_en;
+            LOG(LL_DEBUG, "enable integrator = %d", int_en);
+         }
+ 
+         static int int_res_prev = 1;
+         if (int_res_prev != int_res)
+         {
+            int_res_prev = int_res;
+            LOG(LL_DEBUG, "reset integrator = %d", int_res);
+         }
          
          msgpack_sbuffer_clear(msgpack_buf);
          PACKI(int_en);
          scl_copy_send_dynamic(int_en_socket, msgpack_buf->data, msgpack_buf->size);
 
          msgpack_sbuffer_clear(msgpack_buf);
-         PACKI(int_reset);
+         PACKI(int_res);
          scl_copy_send_dynamic(int_reset_socket, msgpack_buf->data, msgpack_buf->size);
 
          write_motors(ctrls);

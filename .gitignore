@@ -36,3 +36,4 @@ acc_rot_neu/service/acc_rot_neu
 acc_hpf_neu/service/acc_hpf_neu
 pos_speed_est_neu/service/pos_speed_est_neu
 gps_rel/service/gps_rel
+rp_ctrl_prx/service/rp_ctrl_prx

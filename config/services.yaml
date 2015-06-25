@@ -97,14 +97,19 @@ rs_ctrl_prx:
 
 rp_ctrl:
    binary: 'rp_ctrl/service/rp_ctrl.py'
-   depends: [rs_ctrl_prx]
-   priority: sys_high
+   depends: [ahrs, rs_ctrl_prx]
+   priority: sys_med
 
+rp_ctrl_prx:
+   binary: 'rp_ctrl_prx/service/rp_ctrl_prx'
+   depends: [rp_ctrl]
+   priority: sys_med
 
-autopilot:
-   binary: 'autopilot/service/autopilot'
-   depends: [gpsp, geomag, battmon, arduino, rc_cal]
-   priority: sys_high
+flight_detect:
+   binary: 'flight_detect/service/flight_detect.py'
+   depends: [acc_rot_neu]
+   priority: sys_low
+
 
 arduino:
    binary: 'arduino/service/arduino'
@@ -132,11 +137,6 @@ mixer:
 
 ofs:
    binary: 'ofs/service/ofs'
-   priority: sys_medium
-
-icarus:
-   binary: 'icarus/service/icarus.py'
-   depends: [autopilot]
    priority: sys_medium
 
 ads1x15:

@@ -11,7 +11,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- ACC G Magnitude Verification Utility
+ Up Speed Control
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -26,16 +26,25 @@
  GNU General Public License for more details. """
 
 
-from scl import scl_get_socket
-from msgpack import loads
-from numpy.linalg import norm
+from scl import scl_get_socket, SCL_Reader
+from msgpack import dumps, loads
+from time import sleep
+from opcd_interface import OPCD_Subscriber
+from geomath import deg2rad, sym_limit, angles_diff
+from misc import daemonize
 
 
-socket = scl_get_socket('acc', 'sub')
-while True:
-   try:
-      vec = loads(socket.recv())
-      print 'acc g vector magnitude:', norm(vec)
-   except:
-      break
+def main(name):
+   speed_setpoint = SCL_Reader('u_spd_ctrl', 'sub', -1.0)
+   thrust_socket = scl_get_socket('thrust', 'pub')
 
+   pos_speed_est = scl_get_socket('pos_speed_est_neu', 'sub')
+   while True:
+      u_speed = loads(pos_speed_est.recv())[3]
+      err = speed_setpoint.data - u_speed
+      print err
+      thrust = 11.0 + err * 4.0
+      thrust_socket.send(dumps(thrust))
+
+main('')
+daemonize('rp_ctrl', main)

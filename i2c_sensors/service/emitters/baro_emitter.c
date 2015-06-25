@@ -40,11 +40,11 @@
 
 static simple_thread_t thread;
 static void *baro_raw_socket;
-MSGPACK_PACKER_DECL;
 
 
 SIMPLE_THREAD_BEGIN(thread_func)
 {
+   MSGPACK_PACKER_DECL_INFUNC();
    SIMPLE_THREAD_LOOP_BEGIN
    {
       float altitude;
@@ -71,8 +71,6 @@ int baro_emitter_start(void)
 {
    ASSERT_ONCE();
    THROW_BEGIN();
-   
-   MSGPACK_PACKER_INIT();
    
    baro_raw_socket = scl_get_socket("baro_raw", "pub");
    THROW_IF(baro_raw_socket == NULL, -EIO);

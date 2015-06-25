@@ -202,6 +202,12 @@ rs_ctrl_prx_dir = 'rs_ctrl_prx/'
 rs_ctrl_prx_bin = env.Program('rs_ctrl_prx/service/rs_ctrl_prx', collect_files(rs_ctrl_prx_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
 Requires(rs_ctrl_prx_bin, common_libs)
 
+# Position Setpoint Proxy:
+rp_ctrl_prx_dir = 'rp_ctrl_prx/'
+rp_ctrl_prx_bin = env.Program('rp_ctrl_prx/service/rp_ctrl_prx', collect_files(rp_ctrl_prx_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+Requires(rp_ctrl_prx_bin, common_libs)
+
+
 # Arduino RC / Power Publisher:
 arduino_dir = 'arduino/'
 arduino_bin = env.Program('arduino/service/arduino', collect_files(arduino_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])

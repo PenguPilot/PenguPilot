@@ -41,7 +41,6 @@
 
 #define REALTIME_PERIOD 0.005
 
-
 SERVICE_MAIN_BEGIN("i2c_sensors", 99)
 {
    periodic_thread_t _thread; 

@@ -41,8 +41,9 @@ try:
       raw = socket.recv()
       try:
          print loads(raw)
-      except:
-         print raw
+      except Exception, e:
+         print e
+         print len(raw), raw
 except:
    print 'canceled by user'
 

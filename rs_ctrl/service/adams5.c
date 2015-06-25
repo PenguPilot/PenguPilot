@@ -38,24 +38,10 @@ int adams5_init(adams5_t *a, const size_t dim)
    a->f = (float **)malloc(5 * sizeof(float *));
    FOR_N(i, 5)
       a->f[i] = (float *)malloc((dim + 1) * sizeof(float));
-   adams5_reset(a);
-   return 1;
-}
-
-
-void adams5_reset(adams5_t *a)
-{
-   FOR_N(d, a->dim + 1)
-      FOR_N(c, 5)
-         a->f[c][d] = 0.0;
-}
-
-
-void adams5_term(adams5_t *a)
-{
    FOR_N(c, 5)
-      free(a->f[c]);
-   free(a->f);
+      FOR_N(d, a->dim + 1)
+         a->f[c][d] = 0.0;
+   return 1;
 }
 
 

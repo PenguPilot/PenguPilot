@@ -39,6 +39,7 @@
 #define RATE_CTRL_YAW   2
 
 
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static tsfloat_t rs_ctrl_sp_p;
 static tsfloat_t rs_ctrl_sp_r;
 static tsfloat_t rs_ctrl_sp_y;
@@ -71,14 +72,7 @@ MSGPACK_READER_END
 /* thread that reads the desired integrator status: */
 MSGPACK_READER_BEGIN(int_en_reader)
    MSGPACK_READER_LOOP_BEGIN(int_en_reader)
-   int int_en = root.via.i64;
-   static int int_en_prev = 0;
-   if (int_en != int_en_prev)
-   {
-      LOG(LL_INFO, "new integrator enable: %d", int_en);
-      piid_int_enable(int_en);
-   }
-   int_en_prev = int_en;
+   piid_int_enable(root.via.i64);
    MSGPACK_READER_LOOP_END
 MSGPACK_READER_END
 
@@ -86,15 +80,12 @@ MSGPACK_READER_END
 /* thread that reads the desired integrator status: */
 MSGPACK_READER_BEGIN(int_reset_reader)
    MSGPACK_READER_LOOP_BEGIN(int_reset_reader)
-   int int_reset = root.via.i64;
-   static int int_reset_prev = 0;
-   if (int_reset != int_reset_prev)
+   if (root.via.i64)
    {
-      LOG(LL_INFO, "new integrator reset: %d", int_reset);
-      if (int_reset)
-         piid_reset();
+      pthread_mutex_lock(&mutex);
+      piid_reset();
+      pthread_mutex_unlock(&mutex);
    }
-   int_reset_prev = int_reset;
    MSGPACK_READER_LOOP_END
 MSGPACK_READER_END
 
@@ -125,7 +116,8 @@ SERVICE_MAIN_BEGIN("rs_ctrl", 99)
    MSGPACK_READER_START(int_en_reader, "int_en", 99, "sub");
    MSGPACK_READER_START(int_reset_reader, "int_reset", 99, "sub");
  
-   piid_init(0.005);
+   const float sample_dt = 0.005;
+   piid_init(sample_dt);
    LOG(LL_INFO, "entering main loop");
 
    MSGPACK_READER_SIMPLE_LOOP_BEGIN(gyro)
@@ -145,7 +137,9 @@ SERVICE_MAIN_BEGIN("rs_ctrl", 99)
          
          /* run rate controller: */
          float torques[3];
-         piid_run(torques, gyro, rates, 0.005);
+         pthread_mutex_lock(&mutex);
+         piid_run(torques, gyro, rates, sample_dt);
+         pthread_mutex_unlock(&mutex);
 
          /* send synchronous torques: */
          msgpack_sbuffer_clear(msgpack_buf);
