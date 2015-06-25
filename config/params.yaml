@@ -25,6 +25,7 @@
 
 
 overo_quad: # Gumstix Overo based quadrotor
+   mass: 1.1
    motors:
       driver: 'omap3_pwm'
       f2e: 'hk20_roxxy282735_1045'
@@ -49,6 +50,7 @@ overo_quad: # Gumstix Overo based quadrotor
    nrf_serial: "/dev/ttyACM0"
 
 pi_quad: # Raspberry PI based quadrotor
+   mass: 1.1
    voltage_channel: 0 # currently ignored
    current_channel: 1 # currently ignored
    adc_to_voltage: 'lambda x : x * 0.003 * 3.6045'
@@ -61,6 +63,7 @@ pi_quad: # Raspberry PI based quadrotor
 
 
 exynos_quad: # ODROID U3 based quadrotor
+   mass: 1.1
    rx_type: 'dsl'
    arduino_serial: # U3 IO shield serial interface
       path: '/dev/ttySAC0'
@@ -197,6 +200,9 @@ rp_ctrl:
    angles_max: 40.0 # maximal angle allowed in attitude control
 
 
+us_ctrl:
+   p: 4.0
+   i: 1.0
 
 pos_speed_est_neu: # NEU position estimate kalman filter
    process_noise: 1.0e-6

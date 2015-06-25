@@ -1,4 +1,5 @@
-/*___________________________________________________
+'''
+  ___________________________________________________
  |  _____                       _____ _ _       _    |
  | |  __ \                     |  __ (_) |     | |   |
  | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
@@ -8,42 +9,30 @@
  |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
-  
- Rotation Position Control Proxy Implementation
+ 
+ PenguPilot Priority Class Definitions for C/C++
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either verpion 2 of the License, or
- (at your option) any later verpion.
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
 
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. */
+ GNU General Public License for more details.
+'''
 
 
-#include <msgpack.h>
+PP_PRIO_BASE = 50
 
-#include <util.h>
-#include <service.h>
-#include <msgpack_reader.h>
-#include <scl.h>
+PP_PRIO_1 = PP_PRIO_BASE - 0 # rotation speed control
+PP_PRIO_2 = PP_PRIO_BASE - 1 # rotation position control
+PP_PRIO_3 = PP_PRIO_BASE - 2 # N/E/U speed control
+PP_PRIO_4 = PP_PRIO_BASE - 3 # N/E/U position control
+PP_PRIO_5 = PP_PRIO_BASE - 4 # missions/manual control
+PP_PRIO_6 = PP_PRIO_BASE - 5 # config/time functionality
 
-
-MSGPACK_PROXY_DECL(rp_ctrl_spp_p)
-MSGPACK_PROXY_DECL(rp_ctrl_spp_r)
-MSGPACK_PROXY_DECL(rp_ctrl_spp_y)
-
-
-SERVICE_MAIN_BEGIN("rp_ctrl_prx", 0)
-{
-   MSGPACK_PROXY_START(rp_ctrl_spp_p, "rp_ctrl_spp_p", "pull", "rp_ctrl_sp_p", "pub", 99);
-   MSGPACK_PROXY_START(rp_ctrl_spp_r, "rp_ctrl_spp_r", "pull", "rp_ctrl_sp_r", "pub", 99);
-   MSGPACK_PROXY_START(rp_ctrl_spp_y, "rp_ctrl_spp_y", "pull", "rp_ctrl_sp_y", "pub", 99);
-   
-   SERVICE_MAIN_PSEUDO_LOOP();
-}
-SERVICE_MAIN_END
 

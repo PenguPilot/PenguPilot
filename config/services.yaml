@@ -98,18 +98,22 @@ rs_ctrl_prx:
 rp_ctrl:
    binary: 'rp_ctrl/service/rp_ctrl.py'
    depends: [ahrs, rs_ctrl_prx]
-   priority: sys_med
+   priority: sys_medium
 
 rp_ctrl_prx:
    binary: 'rp_ctrl_prx/service/rp_ctrl_prx'
    depends: [rp_ctrl]
-   priority: sys_med
+   priority: sys_medium
+
+us_ctrl:
+   binary: 'us_ctrl/service/us_ctrl'
+   priority: sys_medium
+
 
 flight_detect:
    binary: 'flight_detect/service/flight_detect.py'
    depends: [acc_rot_neu]
    priority: sys_low
-
 
 arduino:
    binary: 'arduino/service/arduino'
@@ -124,12 +128,10 @@ rc_cal:
 remote:
    binary: 'remote/service/remote'
    platforms: [overo_quad, pi_quad]
-   depends: [opcd]
    priority: sys_high
 
 mixer:
    binary: 'mixer/service/mixer'
-   depends: [opcd]
    priority: sys_high
 
 
