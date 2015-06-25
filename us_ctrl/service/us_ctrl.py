@@ -31,9 +31,12 @@ from msgpack import dumps, loads
 from opcd_interface import OPCD_Subscriber
 from geomath import deg2rad, sym_limit, angles_diff
 from misc import daemonize
+from pp_prio import PP_PRIO_3
+from scheduler import sched_set_prio
 
 
 def main(name):
+   sched_set_prio(PP_PRIO_3)
    pid = PID()
    opcd = OPCD_Subscriber()
    platform = opcd['platform']
@@ -52,4 +55,4 @@ def main(name):
       thrust_socket.send(dumps(thrust))
 
 
-daemonize('u_spd_ctrl', main)
+daemonize('us_ctrl', main)

@@ -87,7 +87,7 @@ rp_ctrl_prx:
    depends: [rp_ctrl]
 
 us_ctrl:
-   binary: 'us_ctrl/service/us_ctrl'
+   binary: 'us_ctrl/service/us_ctrl.py'
 
 
 flight_detect:
