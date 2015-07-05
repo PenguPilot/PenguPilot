@@ -10,10 +10,7 @@
  | Signaling and Communication Link |
  |__________________________________|
 
- SCL Live Dump of Msgpack Subscriptions
- the argument is: "/tmp/scl_[socket_name]"
-
- Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -26,22 +23,12 @@
  GNU General Public License for more details. """
 
 
-from sys import argv
-from msgpack import loads
-from scl import scl_get_socket
+from tabulate import tabulate
+from misc import user_data_dir
+from os import listdir
+from os.path import isfile, join
 
 
-assert len(argv) == 2
-socket = scl_get_socket(argv[1], 'sub')
-
-try:
-   while True:
-      raw = socket.recv()
-      try:
-         print loads(raw)
-      except Exception, e:
-         print e
-         print len(raw), raw
-except:
-   print 'canceled by user'
-
+path = join(user_data_dir, 'ipc')
+files = listdir(path)
+print tabulate([files + files + files], tablefmt='plain')
