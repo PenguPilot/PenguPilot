@@ -70,3 +70,16 @@ class SCL_Reader(Thread):
               self.callback(self.data)
 
 
+class SCL_Proxy(Thread):
+
+   def __init__(self, in_name, in_type, out_name, out_type):
+      Thread.__init__(self)
+      self.in_socket = scl_get_socket(in_name, in_type)
+      self.out_socket = scl_get_socket(out_name, out_type)
+      self.start()
+
+   def run(self):
+      while True:
+          self.out_socket.send(self.in_socket.recv())
+
+

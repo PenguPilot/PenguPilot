@@ -83,12 +83,19 @@ def sym_limit(n, m):
    return limit(n, -m, m)
 
 
-def angles_diff(a, b):
-  d = b - a
-  if d <= -pi:
-     d += 2.0 * pi
-  if d >= pi:
-     d -= 2.0 * pi
-  return d
+def circle_err(b, a):
+   d = b - a
+   if d <= -pi:
+      d += 2.0 * pi
+   if d >= pi:
+      d -= 2.0 * pi
+   return d
 
+
+def vec2_rot(v, angle):
+   sa = sin(angle)
+   ca = cos(angle)
+   x = v[0] * ca - v[1] * sa
+   y = v[0] * sa + v[1] * ca
+   return x, y
 

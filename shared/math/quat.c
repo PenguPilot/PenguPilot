@@ -114,6 +114,8 @@ void quat_to_euler(euler_t *euler, const quat_t *quat)
       euler->roll += M_PI;
    else
       euler->roll -= M_PI;
+   euler->yaw *= -1;
+   euler->yaw = norm_angle_0_2pi(euler->yaw);
 }
 
 

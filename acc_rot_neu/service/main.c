@@ -33,10 +33,12 @@
 #include <pp_prio.h>
 
 #include <math/euler.h>
+#include <math/quat.h>
 
 
 /* orientation reader thread: */
 euler_t euler;
+quat_t quat;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 MSGPACK_READER_BEGIN(orientation_reader)
@@ -47,6 +49,8 @@ MSGPACK_READER_BEGIN(orientation_reader)
       euler.yaw = root.via.array.ptr[0].via.dec;
       euler.pitch = root.via.array.ptr[1].via.dec;
       euler.roll = root.via.array.ptr[2].via.dec;
+      FOR_N(i, 4)
+         quat.ve[i] = root.via.array.ptr[3 + i].via.dec;
       pthread_mutex_unlock(&mutex);
    }
    MSGPACK_READER_LOOP_END
@@ -56,6 +60,8 @@ MSGPACK_READER_END
 
 SERVICE_MAIN_BEGIN("acc_rot_neu", PP_PRIO_3)
 { 
+   quat_init(&quat);
+
    /* set-up msgpack packer: */
    MSGPACK_PACKER_DECL_INFUNC();
  
@@ -78,9 +84,12 @@ SERVICE_MAIN_BEGIN("acc_rot_neu", PP_PRIO_3)
          
          vec3_t acc_neu;
          vec3_init(&acc_neu);
+         vec3_t acc_neu2;
+         vec3_init(&acc_neu2);
 
          pthread_mutex_lock(&mutex);
          body_to_neu(&acc_neu, &euler, &acc);
+         quat_rot_vec(&acc_neu2, &acc, &quat);
          pthread_mutex_unlock(&mutex);
 
          msgpack_sbuffer_clear(msgpack_buf);

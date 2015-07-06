@@ -11,7 +11,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Elevation Map Service
+ Horizontal Speed Control Setpoints Proxy
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -26,22 +26,14 @@
  GNU General Public License for more details. """
 
 
-from scl import scl_get_socket
-from misc import daemonize, RateTimer
-from gps_msgpack import *
-from msgpack import loads, dumps
-from srtm import SrtmElevMap
+from scl import SCL_Proxy
+from misc import daemonize
 
 
 def main(name):
-   elev_map = SrtmElevMap()
-   gps_socket = scl_get_socket('gps', 'sub')
-   elev_socket = scl_get_socket('elev', 'pub')
-   rt = RateTimer(0.5)
-   while True:
-      gps = loads(gps_socket.recv())
-      if rt.expired():
-         elev = elev_map.lookup((gps[LON], gps[LAT]))
-         elev_socket.send(dumps(elev))
+   n_proxy = SCL_Proxy('hs_ctrl_spp_n', 'pull', 'hs_ctrl_sp_n', 'pub')
+   e_proxy = SCL_Proxy('hs_ctrl_spp_e', 'pull', 'hs_ctrl_sp_e', 'pub')
 
-daemonize('elevmap', main)
+
+daemonize('hs_ctrl_prx', main)
+
