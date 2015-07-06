@@ -44,6 +44,7 @@ SIMPLE_THREAD_BEGIN(thread_func)
    MSGPACK_PACKER_DECL_INFUNC();
    SIMPLE_THREAD_LOOP_BEGIN
    {
+      msleep(10);
       float altitude;
       float temperature;
       int status = platform_read_baro(&altitude, &temperature);
@@ -55,9 +56,8 @@ SIMPLE_THREAD_BEGIN(thread_func)
          PACKF(temperature);
       }
       else
-         PACKI(status);
+         continue;
       scl_copy_send_dynamic(baro_raw_socket, msgpack_buf->data, msgpack_buf->size);
-      msleep(10);
    }
    SIMPLE_THREAD_LOOP_END
 }

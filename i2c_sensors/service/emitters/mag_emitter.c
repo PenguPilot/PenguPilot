@@ -57,7 +57,7 @@ SIMPLE_THREAD_BEGIN(thread_func)
          PACKFV(vec.ve, 3);
       }
       else
-         PACKI(ret);
+         continue;
       scl_copy_send_dynamic(mag_raw_socket, msgpack_buf->data, msgpack_buf->size);
    }
    SIMPLE_THREAD_LOOP_END

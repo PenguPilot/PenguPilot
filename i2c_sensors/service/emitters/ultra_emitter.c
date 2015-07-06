@@ -45,15 +45,15 @@ SIMPLE_THREAD_BEGIN(thread_func)
    MSGPACK_PACKER_DECL_INFUNC();
    SIMPLE_THREAD_LOOP_BEGIN
    {
+      msleep(30);
       float altitude;
       int status = platform_read_ultra(&altitude);
       msgpack_sbuffer_clear(msgpack_buf);
       if (status == 0)
          PACKF(altitude);
       else
-         PACKI(status);
+         continue;
       scl_copy_send_dynamic(ultra_raw_socket, msgpack_buf->data, msgpack_buf->size);
-      msleep(30);
    }
    SIMPLE_THREAD_LOOP_END
 }

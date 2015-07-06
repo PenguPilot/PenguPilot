@@ -11,7 +11,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Horizontal Speed Control Setpoints Proxy
+ Horizontal Position Control Setpoints Proxy
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -28,14 +28,14 @@
 
 from scl import SCL_Proxy
 from misc import daemonize
-from pp_prio import PP_PRIO_4
+from pp_prio import PP_PRIO_5
 from scheduler import sched_set_prio
 
 
 def main(name):
-   sched_set_prio(PP_PRIO_4)
-   n_proxy = SCL_Proxy('hs_ctrl_spp_n', 'pull', 'hs_ctrl_sp_n', 'pub')
-   e_proxy = SCL_Proxy('hs_ctrl_spp_e', 'pull', 'hs_ctrl_sp_e', 'pub')
+   sched_set_prio(PP_PRIO_5)
+   n_proxy = SCL_Proxy('hp_ctrl_spp_n', 'pull', 'hp_ctrl_sp_n', 'pub')
+   e_proxy = SCL_Proxy('hp_ctrl_spp_e', 'pull', 'hp_ctrl_sp_e', 'pub')
 
 
-daemonize('hs_ctrl_prx', main)
+daemonize('hp_ctrl_prx', main)

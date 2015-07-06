@@ -34,7 +34,7 @@ from misc import daemonize
 from pp_prio import PP_PRIO_5
 from scheduler import sched_set_prio
 from math import sin, cos
-from pos_speed_est_neu import N_SPEED, E_SPEED
+from pos_speed_est_neu import N_POS, E_POS
 
 
 def main(name):
@@ -64,5 +64,6 @@ def main(name):
          hs_spp_n.send(dumps(ne_ctrl[0]))
       if e_oe.data:
          hs_spp_e.send(dumps(ne_ctrl[1]))
+
 
 daemonize('hp_ctrl', main)

@@ -23,7 +23,6 @@
  GNU General Public License for more details. """
 
 
-from tabulate import tabulate
 from misc import user_data_dir
 from os import listdir
 from os.path import isfile, join
@@ -31,4 +30,4 @@ from os.path import isfile, join
 
 path = join(user_data_dir, 'ipc')
 files = listdir(path)
-print tabulate([files + files + files], tablefmt='plain')
+print ' '.join(files)

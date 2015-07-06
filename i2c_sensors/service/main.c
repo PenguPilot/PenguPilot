@@ -99,19 +99,14 @@ SERVICE_MAIN_BEGIN("i2c_sensors", PP_PRIO_1)
       vec3_t gyro;
       vec3_init(&gyro);
       int ret = platform_read_gyro(&gyro);
-      
       msgpack_sbuffer_clear(msgpack_buf);
       if (ret == 0)
       {
          msgpack_pack_array(pk, 3);
          PACKFV(gyro.ve, 3);
+         scl_copy_send_dynamic(gyro_raw_socket, msgpack_buf->data, msgpack_buf->size);
       }
-      else
-      {
-         PACKI(ret);
-      }
-      scl_copy_send_dynamic(gyro_raw_socket, msgpack_buf->data, msgpack_buf->size);
-      
+
       vec3_t acc;
       vec3_init(&acc);
       ret = platform_read_acc(&acc);
@@ -120,12 +115,8 @@ SERVICE_MAIN_BEGIN("i2c_sensors", PP_PRIO_1)
       {
          msgpack_pack_array(pk, 3);
          PACKFV(acc.ve, 3);
+         scl_copy_send_dynamic(acc_raw_socket, msgpack_buf->data, msgpack_buf->size);
       }
-      else
-      {
-         PACKI(ret);
-      }
-      scl_copy_send_dynamic(acc_raw_socket, msgpack_buf->data, msgpack_buf->size);
    }
    PERIODIC_THREAD_LOOP_END
 }

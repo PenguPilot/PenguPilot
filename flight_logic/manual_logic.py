@@ -31,7 +31,7 @@ from msgpack import dumps, loads
 from time import sleep
 from geomath import vec2_rot
 from control_api import *
-
+from gps_msgpack import fix
 
 
 def channel_to_mode(sw):
@@ -50,15 +50,16 @@ rc_socket = scl_get_socket('rc', 'sub')
 rs_sp_y = scl_get_socket('rs_ctrl_spp_y', 'push')
 thrust_socket = scl_get_socket('thrust', 'pub')
 mot_en_socket = scl_get_socket('mot_en', 'pub')
-
+gps = SCL_Reader('gps', 'sub', [0])
 
 sleep(1)
 try:
+   mode_prev = None
    while True:
       rc_data = loads(rc_socket.recv())
       if rc_data[0]:
          pitch_stick, roll_stick, yaw_stick, gas_stick, kill_switch, mode_switch = rc_data[1:7]
-         
+
          if abs(pitch_stick) < 0.05: pitch_stick = 0.0
          if abs(roll_stick) < 0.05: roll_stick = 0.0
          if abs(yaw_stick) < 0.05: yaw_stick = 0.0
@@ -70,12 +71,17 @@ try:
 
          # send gas and yaw value:
          thrust_socket.send(dumps(10.0 * (gas_stick + 1.0)))
-         rs_sp_y.send(dumps(0.6 * yaw))
+         rs_sp_y.send(dumps(0.6 * yaw_stick))
 
          mode = channel_to_mode(mode_switch)
+         if mode == 'gps' and fix(gps.data) < 2:
+            mode = 'acc'
+         if mode_prev != mode:
+            print 'new mode:', mode
+         mode_prev = mode
          if mode == 'gps':
             scale = 3.0
-            v_local = [scale * pitch, scale * roll]
+            v_local = [scale * pitch_stick, scale * roll_stick]
             v_global = vec2_rot(v_local, orientation.data[0])
             set_hs(v_global)
          elif mode == 'acc':
@@ -86,8 +92,8 @@ try:
             set_rs([-scale * pitch_stick, scale * roll_stick])
       else:
          mot_en_socket.send(dumps(0))
-except:
-   pass
+except Exception, e:
+   print e
 
 mot_en_socket.send(dumps(0))
 sleep(0.5)

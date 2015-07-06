@@ -94,6 +94,14 @@ hs_ctrl_prx:
    binary: 'hs_ctrl_prx/service/hs_ctrl_prx.py'
    depends: [hs_ctrl]
 
+hp_ctrl:
+   binary: 'hp_ctrl/service/hp_ctrl.py'
+   depends: [hs_ctrl_prx]
+
+hp_ctrl_prx:
+   binary: 'hp_ctrl_prx/service/hp_ctrl_prx.py'
+   depends: [hp_ctrl]
+
 vs_ctrl:
    binary: 'vs_ctrl/service/vs_ctrl.py'
    depends: [mixer, pos_speed_est_neu]

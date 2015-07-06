@@ -33,7 +33,7 @@ from msgpack import dumps
 class _OutputEnable:
 
    def __init__(self, sockets):
-      self.socket = sockets
+      self.sockets = sockets
       self.prev_state = None
 
    def set(self, state):
@@ -65,20 +65,37 @@ _rp_oe = _OutputEnable([_rp_p_oe, _rp_r_oe])
 _rp_sp_p = scl_get_socket('rp_ctrl_spp_p', 'push')
 _rp_sp_r = scl_get_socket('rp_ctrl_spp_r', 'push')
 
-def set_rp_pos(vec):
+# rotation speed control:
+_rs_p_oe = scl_get_socket('rs_ctrl_p_oe', 'push')
+_rs_r_oe = scl_get_socket('rs_ctrl_r_oe', 'push')
+_rs_oe = _OutputEnable([_rs_p_oe, _rs_r_oe])
+_rs_sp_p = scl_get_socket('rs_ctrl_spp_p', 'push')
+_rs_sp_r = scl_get_socket('rs_ctrl_spp_r', 'push')
+
+
+def set_rs(vec):
+   _rs_oe.set(1)
+   _rp_oe.set(0)
+   _rs_sp_p.send(dumps(vec[0]))
+   _rs_sp_r.send(dumps(vec[1]))
+ 
+def set_rp(vec):
+   _rs_oe.set(1)
    _rp_oe.set(1)
    _hs_oe.set(0)
    _rp_sp_p.send(dumps(vec[0]))
    _rp_sp_r.send(dumps(vec[1]))
  
-def set_ne_speed(vec):
+def set_hs(vec):
+   _rs_oe.set(1)
    _rp_oe.set(1)
    _hs_oe.set(1)
    _hp_oe.set(0)
    _hs_sp_n.send(dumps(vec[0]))
    _hs_sp_e.send(dumps(vec[1]))
  
-def set_ne_pos(vec):
+def set_hp(vec):
+   _rs_oe.set(1)
    _rp_oe.set(1)
    _hs_oe.set(1)
    _hp_oe.set(1)

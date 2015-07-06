@@ -82,11 +82,13 @@ SERVICE_MAIN_BEGIN("gps_rel", PP_PRIO_3)
 
             /* send data: */
             msgpack_sbuffer_clear(msgpack_buf);
-            msgpack_pack_array(pk, 4);
+            msgpack_pack_array(pk, 6);
             PACKF(x);
             PACKF(vx);
             PACKF(y);
             PACKF(vy);
+            PACKD(start_lat);
+            PACKD(start_lon);
             scl_copy_send_dynamic(gps_rel_socket, msgpack_buf->data, msgpack_buf->size);
          }
       }
