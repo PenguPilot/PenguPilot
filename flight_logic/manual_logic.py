@@ -26,6 +26,7 @@
  GNU General Public License for more details. """
 
 
+from sticks import sticks_expo
 from scl import scl_get_socket, SCL_Reader
 from msgpack import dumps, loads
 from time import sleep

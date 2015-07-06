@@ -205,6 +205,7 @@ rp_ctrl:
    angles_max: 40.0 # maximal angle allowed in attitude control
 
 vs_ctrl: # vertical speed control
+   max_speed: 3.0
    p: 4.0
    i: 2.0
    max_sum_err: 2.0
@@ -217,6 +218,20 @@ hs_ctrl: # horizontal speed control
 
 hp_ctrl: # horizontal position control
    p: 0.1
+
+
+sticks:
+   pitch_roll_speed_max: 180.0 # [deg/s]
+   pitch_roll_angle_max: 35.0 # [deg]
+   vert_speed_max: 1.5
+   horiz_speed_max: 5.0 # maximal horizontal speed
+   horiz_deadzone: 0.05 # deadzone for angle and gps control
+   vert_deadzone: 0.15 # if magnitude of centered gas stick is lower than this value, altitude is locked
+   yaw_speed_max: 90.0 # maximum yaw rotation speed [deg/s]
+   yaw_deadzone: 0.02 # yaw deadzone
+   gas_acc_max: 20.0 # maximum positive/negative acceleration in m/s^2
+   rotation: 0.0 # 0 = "+" mode, 90 = "x mode"
+   expo: 6.0
 
 
 pos_speed_est_neu: # NEU position estimate kalman filter
