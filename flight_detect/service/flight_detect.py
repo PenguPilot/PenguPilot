@@ -37,7 +37,7 @@ def main(name):
    flying_socket = scl_get_socket('flying', 'pub')
    acc_vec = loads(acc_socket.recv())
 
-   size = 40
+   size = 80
    histn = [acc_vec[0]] * size
    histe = [acc_vec[1]] * size
    s = sp = 0
@@ -52,7 +52,7 @@ def main(name):
       histn = histn[1:] + [acc_vec[0]]
       histe = histe[1:] + [acc_vec[1]]
       v = var(histn) + var(histe)
-      if v > 20:
+      if v > 15:
          s = 1
       else:
          s = 0

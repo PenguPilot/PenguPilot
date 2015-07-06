@@ -73,6 +73,7 @@ def _main_wrapper(name, main):
    main(name)
    pause()
 
+from pylogger import *
 
 def daemonize(name, main):
    run_dir = user_data_dir + sep + 'run'

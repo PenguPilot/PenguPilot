@@ -83,7 +83,7 @@
 #include "drivers/arduino_pwms/arduino_pwms.h"
 
 
-#define MIN_GAS 0.1f /* 10% */
+#define MIN_GAS 0.1 /* 10% */
 #define MAX_GAS 0.8 /* 80% */
 
 

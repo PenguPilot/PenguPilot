@@ -1,4 +1,0 @@
-
-ULTRA_POS  = 0
-ULTRA_SPEED = 1
-

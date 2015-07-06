@@ -58,11 +58,11 @@ try:
          if abs(roll) < 0.05: roll = 0.0
          if abs(yaw) < 0.05: yaw = 0.0
 
-         pitch_socket.send(dumps(-0.35 * pitch))
-         roll_socket.send(dumps(0.35 * roll))
+         pitch_socket.send(dumps(-0.45 * pitch))
+         roll_socket.send(dumps(0.45 * roll))
          yaw_speed_socket.send(dumps(0.6 * yaw))
       else:
-          mot_en_socket.send(dumps(0))
+         mot_en_socket.send(dumps(0))
 except:
    pass
 

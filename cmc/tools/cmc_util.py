@@ -70,8 +70,8 @@ try:
       meas.append([curr.data[0]] + mag.data)
       sleep(0.01)
       print 'error:', rad2deg(o_start - orientation.data[0])
-      if not int_en.data:
-          break
+      #if not int_en.data:
+      #    break
 finally:
    mot_en_socket.send(dumps(0))
 

@@ -27,27 +27,10 @@
 
 
 from sys import argv
-from msgpack import loads
-from zmq import Context, SUB, SUBSCRIBE
+from msgpack import dumps
+from scl import scl_get_socket
 
-assert len(argv) >= 2
-context = Context()
-socket = context.socket(SUB)
-socket.connect("ipc://" + argv[1])
-socket.setsockopt(SUBSCRIBE, '')
-try:
-   while True:
-      raw = socket.recv()
-      try:
-         data = loads(raw)
-         if len(argv) >= 3:
-            data = data[int(argv[2]):]
-         if len(argv) == 4:
-            data = data[0:int(argv[3])]
-         print data
-      except Exception, e:
-         print e
-         print len(raw), raw
-except:
-   print 'canceled by user'
+assert len(argv) == 3
+s = scl_get_socket(argv[1], 'push')
+s.send(dumps(eval(argv[2])))
 

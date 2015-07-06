@@ -31,8 +31,7 @@
 #include <service.h>
 #include <msgpack_reader.h>
 #include <pp_prio.h>
-
-#include "cal_ahrs.h"
+#include <marg_data.h>
 
 
 static marg_data_t marg_data;
@@ -76,6 +75,9 @@ MSGPACK_READER_BEGIN(decl_reader)
 MSGPACK_READER_END
 
 
+#include "mahony_ahrs.h"
+
+
 SERVICE_MAIN_BEGIN("ahrs", PP_PRIO_2)
 {
    tsfloat_init(&decl, 0.0f);
@@ -94,43 +96,87 @@ SERVICE_MAIN_BEGIN("ahrs", PP_PRIO_2)
    MSGPACK_READER_START(mag_reader, "mag", PP_PRIO_2, "sub");
    MSGPACK_READER_START(decl_reader, "decl", PP_PRIO_2, "sub");
  
-   /* init cal ahrs:*/
-   cal_ahrs_init();
-   
    /* set-up msgpack packer: */
    MSGPACK_PACKER_DECL_INFUNC();
  
    interval_t interval;
    interval_init(&interval);
 
+
+   float init = false;
+   tsfloat_t p_end;
+   tsfloat_t p_start;
+   tsfloat_t p_step;
+   tsfloat_t i_end;
+   
+   /* read configuration: */
+   opcd_param_t params[] =
+   {
+      {"p_start", &p_start},
+      {"p_step", &p_step},
+      {"p_end", &p_end},
+      {"i", &i_end},
+      OPCD_PARAMS_END
+   };
+   opcd_params_apply(".", params);
+
+   mahony_ahrs_t ahrs;
+   mahony_ahrs_init(&ahrs, tsfloat_get(&p_start), tsfloat_get(&i_end));
+   
    LOG(LL_INFO, "started decreasing beta gain");
    MSGPACK_READER_SIMPLE_LOOP_BEGIN(gyro)
    {
       if (root.type == MSGPACK_OBJECT_ARRAY)
       {
+         ahrs.twoKi = tsfloat_get(&i_end);
+         ahrs.twoKp -= tsfloat_get(&p_step);
+         if (ahrs.twoKp < tsfloat_get(&p_end) || init)
+         {
+            init = true;
+            ahrs.twoKp = tsfloat_get(&p_end);
+         }
          float dt = interval_measure(&interval);
          pthread_mutex_lock(&mutex);
          FOR_N(i, 3)
             marg_data.gyro.ve[i] = root.via.array.ptr[i].via.dec;
+         
+         mahony_ahrs_update(&ahrs, marg_data.gyro.x,
+                            marg_data.gyro.y,
+                            marg_data.gyro.z,
+                            marg_data.acc.x,
+                            marg_data.acc.y,
+                            marg_data.acc.z,
+                            marg_data.mag.x,
+                            marg_data.mag.y,
+                            marg_data.mag.z, dt);
+
+         quat_t rot_quat;
+         quat_init_axis(&rot_quat, 0, 0, -1.0, tsfloat_get(&decl));
+         quat_t quat;
+         quat_init(&quat);
+         quat_mul(&quat, &ahrs.quat, &rot_quat);
+
          euler_t euler;
-         int ahrs_state = cal_ahrs_update(&euler, &marg_data, tsfloat_get(&decl), dt);
+         quat_to_euler(&euler, &quat);
+         
          pthread_mutex_unlock(&mutex);
-         if (ahrs_state == 0)
+         if (!init)
          {
-            EVERY_N_TIMES(100, LOG(LL_INFO, "orientation (y p r): %f %f %f; declination: %f", 
+            EVERY_N_TIMES(1000, LOG(LL_INFO, "orientation (y p r): %f %f %f; declination: %f", 
                                    rad2deg(euler.yaw), rad2deg(euler.pitch), rad2deg(euler.roll), deg2rad(tsfloat_get(&decl))));
          }
-         else if (ahrs_state == 1)
+         else
          {
             ONCE(LOG(LL_INFO, "final beta gain reached, final orientation (y p r): %.1f %.1f %.1f",
                      rad2deg(euler.yaw), rad2deg(euler.pitch), rad2deg(euler.roll)));
-            EVERY_N_TIMES(1000, LOG(LL_INFO, "orientation (y p r): %f %f %f; declination: %f", 
+            EVERY_N_TIMES(100, LOG(LL_INFO, "orientation (y p r): %f %f %f; declination: %f", 
                                     rad2deg(euler.yaw), rad2deg(euler.pitch), rad2deg(euler.roll), rad2deg(tsfloat_get(&decl))));
             msgpack_sbuffer_clear(msgpack_buf);
-            msgpack_pack_array(pk, 3);
+            msgpack_pack_array(pk, 7);
             PACKF(euler.yaw);
             PACKF(euler.pitch);
             PACKF(euler.roll);
+            PACKFV(quat.ve, 4);
             scl_copy_send_dynamic(orientation_socket, msgpack_buf->data, msgpack_buf->size);
          }
       }

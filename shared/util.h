@@ -202,7 +202,7 @@ int binsearch(int x, const int v[], int n);
    if (err < 0) \
    { \
       fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, err, errno); \
-      LOG(LL_ERROR, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, err, errno); \
+      LOG(LL_ERROR, "error in file %s line %d: %d, errno: %d", __FILE__, __LINE__, err, errno); \
    } \
    return err;
 
@@ -211,7 +211,7 @@ int binsearch(int x, const int v[], int n);
    if (___return_code < 0 && ___return_code != -EAGAIN) \
    { \
       fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, ___return_code, errno); \
-      LOG(LL_ERROR, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, ___return_code, errno); \
+      LOG(LL_ERROR, "error in file %s line %d: %d, errno: %d", __FILE__, __LINE__, ___return_code, errno); \
       goto __catch_label; \
    }
 
@@ -220,7 +220,7 @@ int binsearch(int x, const int v[], int n);
    if ((___return_code < 0) && (___return_code != code)) \
    { \
       fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, ___return_code, errno); \
-      LOG(LL_ERROR, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, ___return_code, errno); \
+      LOG(LL_ERROR, "error in file %s line %d: %d, errno: %d", __FILE__, __LINE__, ___return_code, errno); \
       goto __catch_label; \
    }
    
@@ -234,7 +234,7 @@ int binsearch(int x, const int v[], int n);
       if ((___return_code < 0) && (___return_code != -EAGAIN)) \
       { \
          fprintf(stderr, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, code, errno); \
-         LOG(LL_ERROR, "error in file %s line %d: %d, errno: %d\n", __FILE__, __LINE__, code, errno); \
+         LOG(LL_ERROR, "error in file %s line %d: %d, errno: %d", __FILE__, __LINE__, code, errno); \
       } \
       goto __catch_label; \
    }

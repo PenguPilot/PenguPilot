@@ -86,9 +86,21 @@ rp_ctrl_prx:
    binary: 'rp_ctrl_prx/service/rp_ctrl_prx'
    depends: [rp_ctrl]
 
-us_ctrl:
-   binary: 'us_ctrl/service/us_ctrl.py'
+hs_ctrl:
+   binary: 'hs_ctrl/service/hs_ctrl.py'
+   depends: [rp_ctrl_prx]
 
+hs_ctrl_prx:
+   binary: 'hs_ctrl_prx/service/hs_ctrl_prx.py'
+   depends: [hs_ctrl]
+
+vs_ctrl:
+   binary: 'vs_ctrl/service/vs_ctrl.py'
+   depends: [mixer]
+
+elev_baro:
+   binary: 'elev_baro/service/elev_baro.py'
+   depends: [elevmap, pos_speed_est_neu]
 
 flight_detect:
    binary: 'flight_detect/service/flight_detect.py'
