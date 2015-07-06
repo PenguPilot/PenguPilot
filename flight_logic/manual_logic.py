@@ -11,7 +11,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Mixer Test Utility
+ Manual Flight Logic
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -30,44 +30,60 @@ from scl import scl_get_socket, SCL_Reader
 from msgpack import dumps, loads
 from time import sleep
 from geomath import vec2_rot
+from control_api import *
+
+
+
+def channel_to_mode(sw):
+   a = 1.0 / 3.0
+   b = 2.0 / 3.0
+   if sw <= a:
+      return 'gyro'   
+   elif sw > a and sw < b:
+      return 'acc'
+   return 'gps'
+
 
 orientation = SCL_Reader('orientation', 'sub', [0.0])
 rc_socket = scl_get_socket('rc', 'sub')
-
-n_socket = scl_get_socket('hs_ctrl_spp_n', 'push')
-e_socket = scl_get_socket('hs_ctrl_spp_e', 'push')
-yaw_speed_socket = scl_get_socket('rs_ctrl_spp_y', 'push')
-
+# rotation speed control:
+rs_sp_y = scl_get_socket('rs_ctrl_spp_y', 'push')
 thrust_socket = scl_get_socket('thrust', 'pub')
 mot_en_socket = scl_get_socket('mot_en', 'pub')
-sleep(1)
 
+
+sleep(1)
 try:
    while True:
       rc_data = loads(rc_socket.recv())
       if rc_data[0]:
-         pitch, roll, yaw, gas, sw = rc_data[1:6]
-         if sw > 0.5:
+         pitch_stick, roll_stick, yaw_stick, gas_stick, kill_switch, mode_switch = rc_data[1:7]
+         
+         if abs(pitch_stick) < 0.05: pitch_stick = 0.0
+         if abs(roll_stick) < 0.05: roll_stick = 0.0
+         if abs(yaw_stick) < 0.05: yaw_stick = 0.0
+         
+         if kill_switch > 0.5:
             mot_en_socket.send(dumps(1))
          else:
             mot_en_socket.send(dumps(0))
-         
-         # send gas value:
-         thrust_socket.send(dumps(10.0 * (gas + 1)))
-        
-         # deadzone for setpoints:
-         if abs(pitch) < 0.05: pitch = 0.0
-         if abs(roll) < 0.05: roll = 0.0
-         if abs(yaw) < 0.05: yaw = 0.0
 
-         # rotate setpoints:
-         v_local = [3.0 * pitch, 3.0 * roll]
-         v_global = vec2_rot(v_local, orientation.data[0])
-         
-         # send global speed setpoints:
-         n_socket.send(dumps(v_global[0]))
-         e_socket.send(dumps(v_global[1]))
-         yaw_speed_socket.send(dumps(0.6 * yaw))
+         # send gas and yaw value:
+         thrust_socket.send(dumps(10.0 * (gas_stick + 1.0)))
+         rs_sp_y.send(dumps(0.6 * yaw))
+
+         mode = channel_to_mode(mode_switch)
+         if mode == 'gps':
+            scale = 3.0
+            v_local = [scale * pitch, scale * roll]
+            v_global = vec2_rot(v_local, orientation.data[0])
+            set_hs(v_global)
+         elif mode == 'acc':
+            scale = 0.45
+            set_rp([-scale * pitch_stick, scale * roll_stick])
+         else: # gyro
+            scale = 1.0
+            set_rs([-scale * pitch_stick, scale * roll_stick])
       else:
          mot_en_socket.send(dumps(0))
 except:

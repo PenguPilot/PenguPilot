@@ -88,7 +88,7 @@ rp_ctrl_prx:
 
 hs_ctrl:
    binary: 'hs_ctrl/service/hs_ctrl.py'
-   depends: [rp_ctrl_prx]
+   depends: [rp_ctrl_prx, pos_speed_est_neu]
 
 hs_ctrl_prx:
    binary: 'hs_ctrl_prx/service/hs_ctrl_prx.py'
@@ -96,7 +96,7 @@ hs_ctrl_prx:
 
 vs_ctrl:
    binary: 'vs_ctrl/service/vs_ctrl.py'
-   depends: [mixer]
+   depends: [mixer, pos_speed_est_neu]
 
 elev_baro:
    binary: 'elev_baro/service/elev_baro.py'

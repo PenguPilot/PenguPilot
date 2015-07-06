@@ -204,17 +204,20 @@ rp_ctrl:
    roll_bias: 0.0
    angles_max: 40.0 # maximal angle allowed in attitude control
 
-
-vs_ctrl:
+vs_ctrl: # vertical speed control
    p: 4.0
    i: 2.0
    max_sum_err: 2.0
 
-hs_ctrl:
+hs_ctrl: # horizontal speed control
    p: 0.3
    i: 0.2
    max_sum_err: 2.0
    angles_max: 15.0
+
+hp_ctrl: # horizontal position control
+   p: 0.1
+
 
 pos_speed_est_neu: # NEU position estimate kalman filter
    process_noise: 1.0e-6

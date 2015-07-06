@@ -28,9 +28,11 @@
 
 from scl import SCL_Proxy
 from misc import daemonize
+from pp_prio import PP_PRIO_4
 
 
 def main(name):
+   sched_set_prio(PP_PRIO_4)
    n_proxy = SCL_Proxy('hs_ctrl_spp_n', 'pull', 'hs_ctrl_sp_n', 'pub')
    e_proxy = SCL_Proxy('hs_ctrl_spp_e', 'pull', 'hs_ctrl_sp_e', 'pub')
 
