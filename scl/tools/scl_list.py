@@ -30,4 +30,4 @@ from os.path import isfile, join
 
 path = join(user_data_dir, 'ipc')
 files = listdir(path)
-print ' '.join(files)
+print '\n'.join(files)

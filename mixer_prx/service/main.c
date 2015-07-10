@@ -32,12 +32,14 @@
 
 MSGPACK_PROXY_DECL(torques)
 MSGPACK_PROXY_DECL(thrust)
+MSGPACK_PROXY_DECL(thrust_max)
 
 
 SERVICE_MAIN_BEGIN("mixer_prx", 0)
 {
    MSGPACK_PROXY_START(torques, "torques_p", "pull", "torques", "pub", PP_PRIO_1);
    MSGPACK_PROXY_START(thrust, "thrust_p", "pull", "thrust", "pub", PP_PRIO_1);
+   MSGPACK_PROXY_START(thrust_max, "thrust_maxp", "pull", "thrust_max", "pub", PP_PRIO_1);
    SERVICE_MAIN_PSEUDO_LOOP();
 }
 SERVICE_MAIN_END

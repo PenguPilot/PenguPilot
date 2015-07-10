@@ -7,6 +7,8 @@
 #include <util.h>
 #include <threadsafe_types.h>
 #include <pp_prio.h>
+#include <float.h>
+#include <math.h>
 
 #include "inv_coupling.h"
 #include "coupling_matrix_parser.h"
@@ -20,10 +22,19 @@ MSGPACK_READER_BEGIN(thrust_reader)
    MSGPACK_READER_LOOP_END
 MSGPACK_READER_END
 
+/* thread that reads the thrust maximum: */
+tsfloat_t thrust_max;
+MSGPACK_READER_BEGIN(thrust_max_reader)
+   MSGPACK_READER_LOOP_BEGIN(thrust_reader)
+      tsfloat_set(&thrust_max, root.via.dec);
+   MSGPACK_READER_LOOP_END
+MSGPACK_READER_END
+
 
 SERVICE_MAIN_BEGIN("mixer", PP_PRIO_1)
 {
    tsfloat_init(&thrust, 0.0f); /* 0N force; safe to start with */
+   tsfloat_init(&thrust_max, FLT_MAX); /* 0N force; safe to start with */
 
    char *matrix_def;
    tsfloat_t imtx1;
@@ -69,7 +80,7 @@ SERVICE_MAIN_BEGIN("mixer", PP_PRIO_1)
       float thrust_torques[FORCES_AND_MOMENTS] = {0.0, 0.0, 0.0, 0.0};
       if (root.type == MSGPACK_OBJECT_ARRAY)
       {
-         thrust_torques[0] = tsfloat_get(&thrust);
+         thrust_torques[0] = fmin(tsfloat_get(&thrust_max), tsfloat_get(&thrust));
          FOR_N(i, 3)
             thrust_torques[i + 1] = root.via.array.ptr[i].via.dec;
       
