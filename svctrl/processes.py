@@ -40,13 +40,8 @@ def pidfile_from_name(name):
 
 def kill(pid):
    try:
-      c = 0
-      while True:
-         os.kill(pid, signal.SIGTERM)
-         time.sleep(1.0)
-         c += 1
-         if c == 5:
-            break
+      os.kill(pid, signal.SIGTERM)
+      time.sleep(0.2)
       os.kill(pid, signal.SIGKILL)
    except OSError as err:
       err = str(err)
@@ -92,7 +87,8 @@ def start(name, path, args):
             time.sleep(0.1)
             try:
                pid = validate(name)
-               break
+               if pid:
+                   break
             except:
                pass
          if not pid:

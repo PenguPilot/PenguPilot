@@ -35,7 +35,6 @@ from scheduler import sched_set_prio
 def main(name):
    sched_set_prio(PP_PRIO_3)
    proxy = SCL_Proxy('vs_ctrl_spp', 'pull', 'vs_ctrl_sp', 'pub')
+   proxy.join()
 
-
-main('vs_ctrl_prx')
 daemonize('vs_ctrl_prx', main)
