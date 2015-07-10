@@ -37,7 +37,7 @@ def main(name):
    elev_map = SrtmElevMap()
    gps_socket = scl_get_socket('gps', 'sub')
    elev_socket = scl_get_socket('elev', 'pub')
-   rt = RateTimer(0.5)
+   rt = RateTimer(2.0)
    while True:
       gps = loads(gps_socket.recv())
       if rt.expired():

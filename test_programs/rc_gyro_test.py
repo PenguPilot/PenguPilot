@@ -35,7 +35,7 @@ rs_ctrl_sp_p_socket = scl_get_socket('rs_ctrl_spp_p', 'push')
 rs_ctrl_sp_r_socket = scl_get_socket('rs_ctrl_spp_r', 'push')
 rs_ctrl_sp_y_socket = scl_get_socket('rs_ctrl_spp_y', 'push')
 thrust_socket = scl_get_socket('thrust', 'pub')
-mot_en_socket = scl_get_socket('mot_en', 'pub')
+mot_en_socket = scl_get_socket('mot_en', 'push')
 sleep(1)
 
 try:

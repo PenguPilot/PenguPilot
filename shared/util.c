@@ -146,8 +146,7 @@ void die(void)
    if (!killing)
    {
       killing = 1;
-      fprintf(stderr, "killed\n");
-      sleep(1);
+      msleep(200);
       kill(0, 9);
    }
 }

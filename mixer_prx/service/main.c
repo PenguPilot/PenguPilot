@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-"""
-  ___________________________________________________
+/*___________________________________________________
  |  _____                       _____ _ _       _    |
  | |  __ \                     |  __ (_) |     | |   |
  | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
@@ -11,7 +9,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Barometer Elevation based on Barometer Service
+ Mixer Input Proxy Implementation
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -23,25 +21,24 @@
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. """
+ GNU General Public License for more details. */
 
 
-from scl import scl_get_socket, SCL_Reader
-from misc import daemonize
-from msgpack import loads, dumps
+#include <util.h>
+#include <service.h>
+#include <msgpack_reader.h>
+#include <pp_prio.h>
 
 
-def main(name):
-   elev = SCL_Reader('elev', 'sub', None)
-   baro_pos_speed_socket = scl_get_socket('pos_speed_est_neu', 'sub')
-   elev_baro_socket = scl_get_socket('baro_elev', 'pub')
-   start_pos = None
-   while True:
-      pos, speed = loads(baro_pos_speed_socket.recv())[2:4]
-      if not start_pos:
-         start_pos = pos
-      if not elev.data:
-         continue
-      elev_baro_socket.send(dumps((pos - start_pos + elev.data, speed)))
+MSGPACK_PROXY_DECL(torques)
+MSGPACK_PROXY_DECL(thrust)
 
-daemonize('elev_baro', main)
+
+SERVICE_MAIN_BEGIN("mixer_prx", 0)
+{
+   MSGPACK_PROXY_START(torques, "torques_p", "pull", "torques", "pub", PP_PRIO_1);
+   MSGPACK_PROXY_START(thrust, "thrust_p", "pull", "thrust", "pub", PP_PRIO_1);
+   SERVICE_MAIN_PSEUDO_LOOP();
+}
+SERVICE_MAIN_END
+

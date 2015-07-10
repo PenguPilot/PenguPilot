@@ -14,6 +14,7 @@ class PID_Ctrl:
       self.prev_err = 0.0
       self.int_en = False
       self.prevtm = time()
+      self.err = 0.0
       self.alt_err_func = alt_err_func
 
    def control(self, pv, sp, sp_deriv = None):
@@ -23,6 +24,7 @@ class PID_Ctrl:
          err = self.alt_err_func(sp, pv)
       else:
          err = sp - pv
+      self.err = err
       ctrl = self.p * err
       if self.int_en:
          self.sum_err += err * dt

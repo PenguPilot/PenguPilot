@@ -46,6 +46,7 @@ def main(name):
    sp_n = SCL_Reader(name + '_sp_n', 'sub', 0.0)
    sp_e = SCL_Reader(name + '_sp_e', 'sub', 0.0)
    sp = [sp_n, sp_e]
+   err = scl_get_socket(name + '_err', 'pub')
    p_oe = SCL_Reader(name + '_p_oe', 'pull', 1)
    r_oe = SCL_Reader(name + '_r_oe', 'pull', 1)
    pitch_socket = scl_get_socket('rp_ctrl_spp_p', 'push')
@@ -65,6 +66,7 @@ def main(name):
             if int_res.data:
                ctrls[c].reset()
             ne_ctrl[c] = ctrls[c].control(sp[c].data, ne_speed[c])
+         err.send(dumps([ctrls[0].err, ctrls[1].err]))
       except:
          pass
 

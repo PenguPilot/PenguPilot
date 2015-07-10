@@ -66,7 +66,7 @@ int ultra_emitter_start(void)
    THROW_BEGIN();
    ultra_raw_socket = scl_get_socket("ultra_raw", "pub");
    THROW_IF(ultra_raw_socket == NULL, -EIO);
-   simple_thread_start(&thread, thread_func, "ultra_emitter", PP_PRIO_3, NULL);
+   simple_thread_start(&thread, thread_func, "ultra_emitter", PP_PRIO_1, NULL);
    THROW_END();
 }
 

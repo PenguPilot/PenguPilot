@@ -32,7 +32,7 @@ from time import sleep
 
 rc_socket = scl_get_socket('rc', 'sub')
 thrust_socket = scl_get_socket('thrust', 'pub')
-mot_en_socket = scl_get_socket('mot_en', 'pub')
+mot_en_socket = scl_get_socket('mot_en', 'push')
 sleep(1)
 
 try:

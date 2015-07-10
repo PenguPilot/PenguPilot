@@ -44,6 +44,14 @@ static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 static tsfloat_t rs_ctrl_sp_p;
 static tsfloat_t rs_ctrl_sp_r;
 static tsfloat_t rs_ctrl_sp_y;
+static int oe = 1;
+
+/* reads desired pitch rate: */
+MSGPACK_READER_BEGIN(rs_ctrl_oe_reader)
+   MSGPACK_READER_LOOP_BEGIN(rs_ctrl_oe_reader)
+      oe = root.via.i64;
+   MSGPACK_READER_LOOP_END
+MSGPACK_READER_END
 
 
 /* reads desired pitch rate: */
@@ -107,9 +115,10 @@ SERVICE_MAIN_BEGIN("rs_ctrl", PP_PRIO_1)
    /* initialize SCL: */
    void *gyro_socket = scl_get_socket("gyro", "sub");
    THROW_IF(gyro_socket == NULL, -EIO);
-   void *torques_socket = scl_get_socket("torques", "pub");
+   void *torques_socket = scl_get_socket("torques_p", "push");
    THROW_IF(torques_socket == NULL, -EIO);
    
+   MSGPACK_READER_START(rs_ctrl_oe_reader, "rs_ctrl_oe", PP_PRIO_1, "pull");
    MSGPACK_READER_START(rs_ctrl_sp_p_reader, "rs_ctrl_sp_p", PP_PRIO_1, "sub");
    MSGPACK_READER_START(rs_ctrl_sp_r_reader, "rs_ctrl_sp_r", PP_PRIO_1, "sub");
    MSGPACK_READER_START(rs_ctrl_sp_y_reader, "rs_ctrl_sp_y", PP_PRIO_1, "sub");
@@ -142,10 +151,13 @@ SERVICE_MAIN_BEGIN("rs_ctrl", PP_PRIO_1)
          pthread_mutex_unlock(&mutex);
 
          /* send synchronous torques: */
-         msgpack_sbuffer_clear(msgpack_buf);
-         msgpack_pack_array(pk, 3);
-         PACKFV(torques, 3);
-         scl_copy_send_dynamic(torques_socket, msgpack_buf->data, msgpack_buf->size);
+         if (oe)
+         {
+            msgpack_sbuffer_clear(msgpack_buf);
+            msgpack_pack_array(pk, 3);
+            PACKFV(torques, 3);
+            scl_copy_send_dynamic(torques_socket, msgpack_buf->data, msgpack_buf->size);
+         }
       }
    }
    MSGPACK_READER_SIMPLE_LOOP_END

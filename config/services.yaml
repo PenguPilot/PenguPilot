@@ -72,7 +72,7 @@ pos_speed_est_neu:
 
 rs_ctrl:
    binary: 'rs_ctrl/service/rs_ctrl'
-   depends: [mixer]
+   depends: [mixer_prx]
 
 rs_ctrl_prx:
    binary: 'rs_ctrl_prx/service/rs_ctrl_prx'
@@ -104,11 +104,20 @@ hp_ctrl_prx:
 
 vs_ctrl:
    binary: 'vs_ctrl/service/vs_ctrl.py'
-   depends: [mixer, pos_speed_est_neu]
+   depends: [mixer_prx, pos_speed_est_neu]
 
-elev_baro:
-   binary: 'elev_baro/service/elev_baro.py'
-   depends: [elevmap, pos_speed_est_neu]
+vs_ctrl_prx:
+   binary: 'vs_ctrl_prx/service/vs_ctrl_prx.py'
+   depends: [vs_ctrl]
+
+vp_ctrl:
+   binary: 'vp_ctrl/service/vp_ctrl.py'
+   depends: [vs_ctrl_prx, elevmap]
+
+vp_ctrl_prx:
+   binary: 'vp_ctrl_prx/service/vp_ctrl_prx.py'
+   depends: [vp_ctrl]
+
 
 flight_detect:
    binary: 'flight_detect/service/flight_detect.py'
@@ -126,9 +135,13 @@ remote:
    binary: 'remote/service/remote'
    platforms: [overo_quad, pi_quad]
 
+
 mixer:
    binary: 'mixer/service/mixer'
 
+mixer_prx:
+   binary: 'mixer_prx/service/mixer_prx'
+   depends: [mixer]
 
 ofs:
    binary: 'ofs/service/ofs'

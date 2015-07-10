@@ -50,6 +50,7 @@ static void term_handler(int sig)
 }
 
 
+
 static void daemon_main(int argc, char *argv[])
 {
    struct sigaction new, old;

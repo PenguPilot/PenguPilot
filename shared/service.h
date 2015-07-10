@@ -38,13 +38,12 @@
 
 #define SERVICE_MAIN_BEGIN(name, prio) \
    \
-   static char *service_name = name; \
+   static const char *service_name = name; \
    static bool running = true; \
    static bool debug = SERVICE_MAIN_DEBUG; \
    \
    static int _main(void) \
    { \
-      printf("a\n"); \
       THROW_BEGIN(); \
          \
          /* set up real-time scheduling: */ \
@@ -60,9 +59,7 @@
             THROW(-EIO); \
          } \
          sleep(1); \
-         printf("b\n"); \
          LOG(LL_INFO, "starting service: %s", name); \
-         printf("c\n"); \
          opcd_params_init(name, true);
 
 
@@ -90,11 +87,12 @@
       exit(-code); \
    } \
    \
+   static char pid_file[1024]; \
+   \
    int main(int argc, char *argv[]) \
    { \
       if (debug) \
          main_wrap(argc, argv); \
-      char pid_file[1024]; \
       service_name_to_pidfile(pid_file, service_name); \
       daemonize(pid_file, main_wrap, _cleanup, argc, argv); \
       return 0; \

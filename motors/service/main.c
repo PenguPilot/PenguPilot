@@ -40,14 +40,6 @@
                  stop()
 
 
- extended states:
- ----------------
- 2 = running, normal
- 4 = stopped, saturated
- 5 = starting, saturated
- 6 = running, saturated
- 7 = stopping, saturated
-
  state access macros:
  --------------------
  #define MOTORS_CONTROLLABLE(state) ((state) == 2 || (state) == 6)
@@ -109,11 +101,14 @@ MSGPACK_READER_BEGIN(mot_en_reader)
          if (n_motors <= MAX_MOTORS)
          {
             FOR_N(i, n_motors)
+            if (root.via.array.ptr[i].type == MSGPACK_OBJECT_POSITIVE_INTEGER)
+            {
                mot_en_state[i] = root.via.array.ptr[i].via.i64;
+            }
             mot_en_mode = MOTORS_TEST;
          }
       }
-      else
+      else if (root.type == MSGPACK_OBJECT_POSITIVE_INTEGER)
       {
          /* normal mode: */
          mot_en_mode = root.via.i64 ? MOTORS_NORMAL : MOTORS_OFF;
@@ -138,7 +133,7 @@ SERVICE_MAIN_BEGIN("motors", PP_PRIO_1)
 {
    /* start voltage reader thread: */
    tsfloat_init(&voltage, 16.0);
-   MSGPACK_READER_START(mot_en_reader, "mot_en", PP_PRIO_1, "sub");
+   MSGPACK_READER_START(mot_en_reader, "mot_en", PP_PRIO_2, "pull");
    MSGPACK_READER_START(voltage_reader, "voltage", PP_PRIO_2, "sub");
  
    /* initialize SCL: */

@@ -210,6 +210,10 @@ vs_ctrl: # vertical speed control
    i: 2.0
    max_sum_err: 2.0
 
+vp_ctrl: # vertical position control
+   p: 1.0
+
+
 hs_ctrl: # horizontal speed control
    p: 0.3
    i: 0.2

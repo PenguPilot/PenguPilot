@@ -39,7 +39,7 @@ e_socket = scl_get_socket('hs_ctrl_spp_e', 'push')
 yaw_speed_socket = scl_get_socket('rs_ctrl_spp_y', 'push')
 
 thrust_socket = scl_get_socket('thrust', 'pub')
-mot_en_socket = scl_get_socket('mot_en', 'pub')
+mot_en_socket = scl_get_socket('mot_en', 'push')
 sleep(1)
 
 try:

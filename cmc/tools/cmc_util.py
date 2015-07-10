@@ -40,7 +40,7 @@ from msgpack import loads, dumps
 
 thrust_socket = scl_get_socket('thrust', 'pub')
 torques_socket = scl_get_socket('torques', 'pub')
-mot_en_socket = scl_get_socket('mot_en', 'pub')
+mot_en_socket = scl_get_socket('mot_en', 'push')
 mag = SCL_Reader('mag_adc_cal', 'sub', [0.0, 0.0, 0.0])
 curr = SCL_Reader('current', 'sub', [0.0])
 int_en = SCL_Reader('int_en', 'sub', 1)

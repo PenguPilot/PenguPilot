@@ -11,7 +11,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Horizontal Position Control (using GPS)
+ Vertical Position Control (using Ultrasonic, Barometer, Elevation Map)
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -30,42 +30,59 @@ from pid_ctrl import PID_Ctrl
 from scl import scl_get_socket, SCL_Reader
 from msgpack import dumps, loads
 from opcd_interface import OPCD_Subscriber
+from physics import G_CONSTANT
 from misc import daemonize
-from pp_prio import PP_PRIO_5
+from pp_prio import PP_PRIO_3
 from scheduler import sched_set_prio
-from math import sin, cos
-from pos_speed_est_neu import N_POS, E_POS
+from pylogger import *
+from pos_speed_est_neu import BARO_POS, ULTRA_POS
+
+
+# ['ultra', 1.0] # relative to ground, ultrasonic sensor or laser/radar altimeter
+# ['baro_rel', 10.0] # relative to initial baro value
+# ['baro_abs', 590.0] # absolute position above MSL (baro)
+# ['elev', 10.0] # relative to elevation map, 10m safety distance
 
 
 def main(name):
-   sched_set_prio(PP_PRIO_5)
+   sched_set_prio(PP_PRIO_3)
+   pid = PID_Ctrl()
    opcd = OPCD_Subscriber()
-   sp_n = SCL_Reader(name + '_sp_n', 'sub', 0.0)
-   sp_e = SCL_Reader(name + '_sp_e', 'sub', 0.0)
-   n_oe = SCL_Reader(name + '_n_oe', 'pull', 1)
-   e_oe = SCL_Reader(name + '_e_oe', 'pull', 1)
-   sp = [sp_n, sp_e]
+   elev = SCL_Reader('elev', 'sub', None)
+   pos_mode_sp = SCL_Reader(name + '_sp', 'sub', ['ultra', -10.0])
+   pos_oe = SCL_Reader(name + '_oe', 'pull', 1)
+   vs_ctrl_spp = scl_get_socket('vs_ctrl_spp', 'push')
    err = scl_get_socket(name + '_err', 'pub')
-   hs_spp_n = scl_get_socket('hs_ctrl_spp_n', 'push')
-   hs_spp_e = scl_get_socket('hs_ctrl_spp_e', 'push')
-   ctrls = [PID_Ctrl(), PID_Ctrl()]
+   baro_pos_start = None
+   elev_start = None
    pos_speed_est = scl_get_socket('pos_speed_est_neu', 'sub')
    while True:
       est = loads(pos_speed_est.recv())
-      ne_pos = [est[N_POS], est[E_POS]]
-
-      ne_ctrl = [0.0, 0.0]
+      ultra_pos, baro_pos = est[ULTRA_POS], est[BARO_POS]
+      if not baro_pos_start:
+         baro_pos_start = baro_pos
       try:
-         for c in range(2):
-            ctrls[c].p = opcd[name + '.p']
-            ne_ctrl[c] = ctrls[c].control(sp[c].data, ne_pos[c])
-         err.send(dumps([ctrls[0].err, ctrls[1].err]))
+         if not elev_start:
+            elev_start = elev.data
       except:
-         pass
-      if n_oe.data:
-         hs_spp_n.send(dumps(ne_ctrl[0]))
-      if e_oe.data:
-         hs_spp_e.send(dumps(ne_ctrl[1]))
+         print 'x'
+         continue
+      pid.p = opcd[name + '.p']
+      mode, sp = pos_mode_sp.data
+      print mode
+      if mode == 'ultra':
+         ctrl = pid.control(ultra_pos, sp)
+      elif mode == 'baro_rel':
+         ctrl = pid.control(baro_pos - baro_pos_start, sp)
+      elif mode == 'baro_abs':
+         ctrl = pid.control(baro_pos, sp)
+      else: # elev
+         elev_rel = elev_start - elev.data
+         baro_rel = baro_pos - baro_pos_start
+         ctrl = pid.control(baro_rel, elev_rel + sp)
+      err.send(dumps(pid.err))
+      if pos_oe.data:
+         vs_ctrl_spp.send(dumps(ctrl))
 
 
-daemonize('hp_ctrl', main)
+daemonize('vp_ctrl', main)

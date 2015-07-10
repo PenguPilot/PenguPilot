@@ -105,15 +105,6 @@ int write_pid(char *pidfile)
       return 0;
    }
 
-   if (flock(fd, LOCK_EX | LOCK_NB) == -1)
-   {
-      int status = fscanf(f, "%d", &pid);
-      (void)status;
-      fclose(f);
-      printf("Can't lock, lock is held by pid %d.\n", pid);
-      return 0;
-   }
-
    pid = getpid();
    if (!fprintf(f, "%d\n", pid))
    {
@@ -123,12 +114,6 @@ int write_pid(char *pidfile)
    }
    fflush(f);
 
-   if (flock(fd, LOCK_UN) == -1)
-   {
-      printf("Can't unlock pidfile %s, %s.\n", pidfile, strerror(errno));
-      close(fd);
-      return 0;
-   }
    close(fd);
    return pid;
 }

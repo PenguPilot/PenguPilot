@@ -50,7 +50,7 @@ rc_socket = scl_get_socket('rc', 'sub')
 # rotation speed control:
 rs_sp_y = scl_get_socket('rs_ctrl_spp_y', 'push')
 thrust_socket = scl_get_socket('thrust', 'pub')
-mot_en_socket = scl_get_socket('mot_en', 'pub')
+mot_en_socket = scl_get_socket('mot_en', 'push')
 gps = SCL_Reader('gps', 'sub', [0])
 
 sleep(1)

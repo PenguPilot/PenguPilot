@@ -40,7 +40,8 @@
 
 #define CHANNELS_MAX (16)
 
-
+//#undef SERVICE_MAIN_DEBUG
+//#define SERVICE_MAIN_DEBUG 1
 SERVICE_MAIN_BEGIN("arduino", PP_PRIO_2)
 {
    /* init scl and get sockets:: */

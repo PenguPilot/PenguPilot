@@ -71,7 +71,7 @@ int mag_emitter_start(void)
    THROW_BEGIN();
    mag_raw_socket = scl_get_socket("mag_raw", "pub");
    THROW_IF(mag_raw_socket == NULL, -EIO);
-   simple_thread_start(&thread, thread_func, "mag_emitter", PP_PRIO_2, NULL);
+   simple_thread_start(&thread, thread_func, "mag_emitter", PP_PRIO_1, NULL);
    THROW_END();
 }
 

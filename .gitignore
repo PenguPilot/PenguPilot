@@ -11,6 +11,7 @@
 shared/serialport.py
 motors/service/motors
 mixer/service/mixer
+mixer_prx/service/mixer_prx
 ahrs/service/ahrs
 gpsp/service/gpsp
 gpstime/service/gpstime

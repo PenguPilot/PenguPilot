@@ -11,7 +11,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Vertical Speed Control (using Barometer)
+ Vertical Position Control Setpoints Proxy
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -26,11 +26,7 @@
  GNU General Public License for more details. """
 
 
-from pid_ctrl import PID_Ctrl
-from scl import scl_get_socket, SCL_Reader
-from msgpack import dumps, loads
-from opcd_interface import OPCD_Subscriber
-from physics import G_CONSTANT
+from scl import SCL_Proxy
 from misc import daemonize
 from pp_prio import PP_PRIO_3
 from scheduler import sched_set_prio
@@ -38,30 +34,7 @@ from scheduler import sched_set_prio
 
 def main(name):
    sched_set_prio(PP_PRIO_3)
-   pid = PID_Ctrl()
-   opcd = OPCD_Subscriber()
-   platform = opcd['platform']
-   neutral_thrust = G_CONSTANT * opcd[platform + '.mass']
-   thrust_max = opcd[platform + '.thrust_max']
-   speed_setpoint = SCL_Reader(name + '_sp', 'sub', -1.0)
-   oe = SCL_Reader(name + '_oe', 'pull', 1)
-   err = scl_get_socket(name + '_err', 'pub')
-   int_res = SCL_Reader('int_res', 'sub', 1)
-   thrust_socket = scl_get_socket('thrust_p', 'push')
+   proxy = SCL_Proxy('vp_ctrl_spp', 'pull', 'vp_ctrl_sp', 'pub')
 
-   pos_speed_est = scl_get_socket('pos_speed_est_neu', 'sub')
-   while True:
-      u_speed = loads(pos_speed_est.recv())[3]
-      max_speed = opcd[name + '.max_speed']
-      pid.p = opcd[name + '.p']
-      pid.i = opcd[name + '.i']
-      pid.max_sum_err = opcd[name + '.max_sum_err']
-      err.send(dumps(pid.err))
-      if int_res.data or not oe.data:
-         pid.reset()
-      thrust = neutral_thrust + pid.control(u_speed, min(max_speed, speed_setpoint.data))
-      pid.int_en = thrust < 0.0 or thrust > thrust_max
-      if oe.data:
-         thrust_socket.send(dumps(thrust))
 
-daemonize('vs_ctrl', main)
+daemonize('vp_ctrl_prx', main)

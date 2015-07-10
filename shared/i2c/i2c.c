@@ -30,9 +30,13 @@
 #include <errno.h>
 #include <assert.h>
 #include <string.h>
+#include <pthread.h>
 
 #include "i2c.h"
 #include "i2c-dev.h"
+
+
+pthread_mutex_t _mutex = PTHREAD_MUTEX_INITIALIZER;
 
 
 int i2c_bus_open(i2c_bus_t *bus, const char *path)
@@ -94,7 +98,10 @@ int i2c_xfer(const i2c_dev_t *dev, const uint8_t len_wr, const uint8_t *wr_data,
    msgset.nmsgs = i;
    msgset.msgs = msgs;
 
-   return ioctl(*dev->bus, I2C_RDWR, &msgset) == i ? 0 : -EIO;
+   pthread_mutex_lock(&_mutex);
+   int ret = ioctl(*dev->bus, I2C_RDWR, &msgset) == i ? 0 : -EIO;
+   pthread_mutex_unlock(&_mutex);
+   return ret;
 }
 
 

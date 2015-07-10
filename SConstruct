@@ -33,7 +33,7 @@ re_cc = re.compile('.*\.(c|cpp)$')
 re_pb = re.compile('.*\.proto$')
 
 def set_compiler_dependent_cflags():
-   cflags = '-g -ggdb -fstack-protector-all -D_GNU_SOURCE -std=c99 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-unused-but-set-variable -Wno-error=unused-result'
+   cflags = '-O3 -D_GNU_SOURCE -std=c99 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-unused-but-set-variable -Wno-error=unused-result'
    all_info = file('/proc/cpuinfo').read()
    board = 'None'
    for line in all_info.split('\n'):
@@ -41,11 +41,11 @@ def set_compiler_dependent_cflags():
          board = re.sub( ".*Hardware.*: ", "", line, 1)
    print 'scons: Optimization for board: ' + board
    if board == 'ODROID-U2/U3':
-      cflags += ' -ffast-math -mcpu=cortex-a9 -mfpu=neon-fp16 -mfloat-abi=hard'
+      cflags += ' -mcpu=cortex-a9 -mfpu=neon-fp16 -mfloat-abi=hard'
    elif board == 'Gumstix Overo':
-      cflags += ' -ffast-math -march=armv7-a -mtune=cortex-a8 -mfpu=vfpv3-d16 -mfloat-abi=hard'
+      cflags += ' -march=armv7-a -mtune=cortex-a8 -mfpu=vfpv3-d16 -mfloat-abi=hard'
    elif board == 'BCM2708':
-	   cflags += ' -ffast-math -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard'
+	   cflags += ' -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard'
    env['CFLAGS'] = cflags
    env['CXXFLAGS'] = cflags + ' -Wno-error'
 
@@ -115,120 +115,33 @@ Requires(opcd_lib, scl_lib + opcd_pb_lib)
 
 common_libs = logger_lib + opcd_lib + opcd_pb_lib + scl_lib + shared_lib
 
-# GPS Publisher:
+def build_service(name, extra_libs = []):
+   append_inc_lib(name + '/shared')
+   dir = 'service'
+   bin = env.Program(name + '/' + dir + '/' + name, collect_files(name + '/' + dir, re_cc), LIBS = extra_libs + common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
+
 append_inc_lib('gpsp/service/nmealib')
-gpsp_dir = 'gpsp/'
-append_inc_lib(gpsp_dir + 'shared')
-gpsp_bin = env.Program('gpsp/service/gpsp', collect_files(gpsp_dir + 'service', re_cc), LIBS = common_libs + ['rt', 'm', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(gpsp_bin, common_libs)
 
-# GPS Time:
-gpst_dir = 'gpstime/'
-gpst_bin = env.Program('gpstime/service/gpstime', collect_files(gpst_dir + 'service', re_cc), LIBS = common_libs + ['m', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(gpst_bin, common_libs)
-
-# Test Service:
-ts_dir = 'test_service/'
-ts_bin = env.Program('test_service/service/test_service', collect_files(ts_dir + 'service', re_cc), LIBS = common_libs + ['m', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(ts_bin, common_libs)
-
-
-# Remote Control Calibration:
-rc_cal_dir = 'rc_cal/'
-append_inc_lib(rc_cal_dir + 'shared')
-rc_cal_bin = env.Program('rc_cal/service/rc_cal', collect_files(rc_cal_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(rc_cal_bin, common_libs)
-
-# Gyro Calibration Service:
-gyro_cal_dir = 'gyro_cal/'
-gyro_cal_bin = env.Program('gyro_cal/service/gyro_cal', collect_files(gyro_cal_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(gyro_cal_bin, common_libs)
-gyro_shared_dir = gyro_cal_dir + 'shared'
-append_inc_lib(gyro_shared_dir)
-
-# MAG ADC Calibration Service:
-mag_adc_cal_dir = 'mag_adc_cal/'
-mag_adc_cal_bin = env.Program('mag_adc_cal/service/mag_adc_cal', collect_files(mag_adc_cal_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(mag_adc_cal_bin, common_libs)
-
-
-# GPS Relative coordinatres Service:
-gps_rel_dir = 'gps_rel/'
-gps_rel_service_dir = gps_rel_dir + 'service/'
-gps_rel_bin = env.Program(gps_rel_service_dir + 'gps_rel', collect_files(gps_rel_service_dir, re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(gps_rel_bin, common_libs)
-
-
-# World ACC rotation Service:
-acc_rot_neu_dir = 'acc_rot_neu/'
-acc_rot_neu_bin = env.Program('acc_rot_neu/service/acc_rot_neu', collect_files(acc_rot_neu_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(acc_rot_neu_bin, common_libs)
-
-# World ACC LPF Service:
-acc_hpf_neu_dir = 'acc_hpf_neu/'
-acc_hpf_neu_bin = env.Program('acc_hpf_neu/service/acc_hpf_neu', collect_files(acc_hpf_neu_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(acc_hpf_neu_bin, common_libs)
-
-# Position and Speed estimation Service:
-pos_speed_est_neu_dir = 'pos_speed_est_neu/'
-pos_speed_est_neu_bin = env.Program('pos_speed_est_neu/service/pos_speed_est_neu', collect_files(pos_speed_est_neu_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(pos_speed_est_neu_bin, common_libs)
-pos_speed_est_neu_shared_dir = pos_speed_est_neu_dir + 'shared'
-append_inc_lib(pos_speed_est_neu_shared_dir)
-
-# MAG Current Calibration Service:
-cmc_dir = 'cmc/'
-cmc_bin = env.Program('cmc/service/cmc', collect_files(cmc_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(cmc_bin, common_libs)
-
-
-# ACC ADC Calibration Service:
-acc_cal_dir = 'acc_cal/'
-acc_cal_bin = env.Program('acc_cal/service/acc_cal', collect_files(acc_cal_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(acc_cal_bin, common_libs)
-
-# AHRS Service:
-ahrs_dir = 'ahrs/'
-ahrs_bin = env.Program('ahrs/service/ahrs', collect_files(ahrs_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(ahrs_bin, common_libs)
-
-# Rate Control Service:
-rs_ctrl_dir = 'rs_ctrl/'
-rs_ctrl_bin = env.Program('rs_ctrl/service/rs_ctrl', collect_files(rs_ctrl_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(rs_ctrl_bin, common_libs)
-
-# Rates Setpoint Proxy:
-rs_ctrl_prx_dir = 'rs_ctrl_prx/'
-rs_ctrl_prx_bin = env.Program('rs_ctrl_prx/service/rs_ctrl_prx', collect_files(rs_ctrl_prx_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(rs_ctrl_prx_bin, common_libs)
-
-# Position Setpoint Proxy:
-rp_ctrl_prx_dir = 'rp_ctrl_prx/'
-rp_ctrl_prx_bin = env.Program('rp_ctrl_prx/service/rp_ctrl_prx', collect_files(rp_ctrl_prx_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c', 'msgpack'])
-Requires(rp_ctrl_prx_bin, common_libs)
-
-
-# Arduino RC / Power Publisher:
-arduino_dir = 'arduino/'
-arduino_bin = env.Program('arduino/service/arduino', collect_files(arduino_dir + 'service', re_cc), LIBS = common_libs + ['m', 'rt', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
-Requires(arduino_bin, common_libs)
-
-# Optical Flow Sensor:
-ofs_dir = 'ofs/'
-ofs_bin = env.Program(ofs_dir + 'service/ofs', collect_files(ofs_dir + 'service', re_cc), LIBS = common_libs + ['m', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
-Requires(ofs_bin, common_libs)
-
-# Autopilot:
-#ap_dir = 'autopilot/'
-#ap_pb_dir = ap_dir + 'shared/'
-#ap_src = collect_files(ap_dir + 'service', re_cc)
-#ap_pb_lib = make_proto_lib(ap_pb_dir, 'autopilot_pb')
-#ap_bin = env.Program(ap_dir + 'service/autopilot', ap_src, LIBS = common_libs + [ap_pb_lib] + ['m', 'rt', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
-
-# I2C Sensor Reader:
-sr_dir = 'i2c_sensors/'
-sr_src = collect_files(sr_dir + 'service', re_cc)
-sr_bin = env.Program(sr_dir + 'service/i2c_sensors', sr_src, LIBS = common_libs + ['m', 'rt', 'msgpack', 'pthread', 'yaml', 'zmq', 'glib-2.0', 'protobuf-c'])
+build_service('gpsp')
+build_service('test_service')
+build_service('gpstime')
+build_service('rc_cal')
+build_service('gyro_cal')
+build_service('mag_adc_cal')
+build_service('gps_rel')
+build_service('acc_rot_neu')
+build_service('acc_hpf_neu')
+build_service('pos_speed_est_neu')
+build_service('cmc')
+build_service('acc_cal')
+build_service('ahrs')
+build_service('rs_ctrl')
+build_service('rs_ctrl_prx')
+build_service('rp_ctrl_prx')
+build_service('arduino')
+build_service('ofs')
+build_service('i2c_sensors')
+build_service('mixer_prx')
 
 # Display:
 display_src = map(lambda x: 'display/shared/' + x, ['pyssd1306.c', 'pyssd1306.i', 'ssd1306.c']) + ['shared/i2c/i2c.c']
@@ -245,30 +158,7 @@ remote_shared_dir = remote_dir + 'shared/'
 remote_lib = env.Library(remote_shared_dir + 'remote', collect_files(remote_shared_dir, re_cc), LIBS = common_libs + ['m', 'remote', 'opcd', 'opcd_pb', 'pthread', 'shared', 'scl', 'protobuf-c', 'yaml', 'zmq', 'glib-2.0', 'rt'])
 append_inc_lib(remote_shared_dir)
 
-# Service:
-remote_src = remote_dir + 'service/main.c'
-remote_bin = env.Program(remote_dir + 'service/remote', remote_src, LIBS = common_libs + ['m', 'remote', 'opcd', 'opcd_pb', 'pthread', 'shared', 'scl', 'protobuf-c', 'yaml', 'zmq', 'glib-2.0', 'rt'])
-Requires(remote_bin, common_libs + [remote_lib])
-
-# Motors:
-motors_dir = 'motors/'
-motors_service_dir = motors_dir + '/service'
-motors_shared_dir = motors_dir + '/shared'
-motors_src =  collect_files(motors_service_dir, re_cc)
-motors_bin = env.Program(motors_dir + 'service/motors', motors_src, LIBS = common_libs + ['m', 'opcd', 'opcd_pb', 'pthread', 'msgpack', 'shared', 'scl', 'protobuf-c', 'yaml', 'zmq', 'glib-2.0', 'rt'])
-Requires(motors_bin, common_libs)
-append_inc_lib(motors_shared_dir)
-
-# Mixer:
-mixer_dir = 'mixer/'
-mixer_service_dir = mixer_dir + '/service'
-mixer_src =  collect_files(mixer_service_dir, re_cc)
-mixer_bin = env.Program(mixer_dir + 'service/mixer', mixer_src, LIBS = common_libs + ['m', 'opcd', 'opcd_pb', 'pthread', 'msgpack', 'shared', 'scl', 'protobuf-c', 'yaml', 'zmq', 'glib-2.0', 'rt'])
-Requires(mixer_bin, common_libs)
-
-
-# HLFM:
-icarus_dir = 'icarus/'
-icarus_pb_dir = icarus_dir + 'shared/'
-icarus_pb_lib = make_proto_lib(icarus_pb_dir, 'icarus_pb')
+build_service('remote', [remote_lib])
+build_service('motors')
+build_service('mixer')
 

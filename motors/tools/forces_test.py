@@ -32,7 +32,7 @@ from sys import argv
 from scl import scl_get_socket
 from msgpack import dumps
 
-socket = scl_get_socket('mot_en', 'pub')
+socket = scl_get_socket('mot_en', 'push')
 socket2 = scl_get_socket('int_en', 'pub')
 sleep(1)
 socket.send(dumps(int(argv[1])))
