@@ -118,6 +118,10 @@ vp_ctrl_prx:
    binary: 'vp_ctrl_prx/service/vp_ctrl_prx.py'
    depends: [vp_ctrl]
 
+rc_gestures:
+   binary: 'rc_gestures/service/rc_gestures.py'
+   depends: [rc_cal]
+
 
 flight_detect:
    binary: 'flight_detect/service/flight_detect.py'

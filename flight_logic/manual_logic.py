@@ -46,9 +46,18 @@ def channel_to_mode(sw):
    return 'gps'
 
 
+def mot_en_cb(gesture):
+   if gesture[0]: # start
+      mot_en(True)
+      print 'start'
+   if gesture[1]: # stop
+      mot_en(False)
+      print 'stop'
+
 orientation = SCL_Reader('orientation', 'sub', [0.0])
 rc_socket = scl_get_socket('rc', 'sub')
 gps = SCL_Reader('gps', 'sub', [0])
+SCL_Reader('rc_gestures', 'sub', callback = mot_en_cb)
 
 init(OPCD_Subscriber())
 sleep(1)
@@ -58,10 +67,9 @@ try:
    while True:
       rc_data = loads(rc_socket.recv())
       if rc_data[0]:
-         pitch_stick, roll_stick, yaw_stick, gas_stick, kill_switch, mode_switch = rc_data[1:7]
+         pitch_stick, roll_stick, yaw_stick, gas_stick, _, mode_switch = rc_data[1:7]
          pr_sticks = [pitch_stick, roll_stick]
 
-         mot_en(kill_switch > 0.5)
          set_thrust(10.0 * (gas_stick + 1.0))
          set_ys(0.6 * yaw_stick)
 
@@ -85,9 +93,9 @@ try:
             vals = map(pitch_roll_speed_func, pr_sticks)
             set_rs([-vals[0], vals[1]])
       else:
-         mot_en_socket.send(dumps(0))
-except Exception, e:
-   print e
+         mot_en(False)
+except:
+   pass
 
 mot_en(False)
 sleep(0.5)
