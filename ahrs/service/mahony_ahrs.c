@@ -31,7 +31,7 @@ void mahony_ahrs_init(mahony_ahrs_t *ahrs, float Kp, float Ki)
 }
 
 
-static void mahony_ahrs_update_imu(mahony_ahrs_t *ahrs, 
+void mahony_ahrs_update_imu(mahony_ahrs_t *ahrs, 
                                    float gx, float gy, float gz,
                                    float ax, float ay, float az, float dt)
 {

@@ -122,24 +122,33 @@ SERVICE_MAIN_BEGIN("ahrs", PP_PRIO_2)
 
    mahony_ahrs_t ahrs;
    mahony_ahrs_init(&ahrs, tsfloat_get(&p_start), tsfloat_get(&i_end));
+   mahony_ahrs_t imu;
+   mahony_ahrs_init(&imu, tsfloat_get(&p_start), tsfloat_get(&i_end));
    
    LOG(LL_INFO, "started decreasing beta gain");
    MSGPACK_READER_SIMPLE_LOOP_BEGIN(gyro)
    {
       if (root.type == MSGPACK_OBJECT_ARRAY)
       {
-         ahrs.twoKi = tsfloat_get(&i_end);
+         ahrs.twoKi = imu.twoKi = tsfloat_get(&i_end);
          ahrs.twoKp -= tsfloat_get(&p_step);
          if (ahrs.twoKp < tsfloat_get(&p_end) || init)
          {
             init = true;
-            ahrs.twoKp = tsfloat_get(&p_end);
+            ahrs.twoKp = imu.twoKp = tsfloat_get(&p_end);
          }
          float dt = interval_measure(&interval);
          pthread_mutex_lock(&mutex);
          FOR_N(i, 3)
             marg_data.gyro.ve[i] = root.via.array.ptr[i].via.dec;
          
+         mahony_ahrs_update_imu(&imu, marg_data.gyro.x,
+                            marg_data.gyro.y,
+                            marg_data.gyro.z,
+                            marg_data.acc.x,
+                            marg_data.acc.y,
+                            marg_data.acc.z, dt);
+        
          mahony_ahrs_update(&ahrs, marg_data.gyro.x,
                             marg_data.gyro.y,
                             marg_data.gyro.z,
@@ -156,8 +165,16 @@ SERVICE_MAIN_BEGIN("ahrs", PP_PRIO_2)
          quat_init(&quat);
          quat_mul(&quat, &ahrs.quat, &rot_quat);
 
+         euler_t ahrs_euler;
+         quat_to_euler(&ahrs_euler, &quat);
+         
+         euler_t imu_euler;
+         quat_to_euler(&imu_euler, &imu.quat);
+
          euler_t euler;
-         quat_to_euler(&euler, &quat);
+         euler.pitch = imu_euler.pitch;
+         euler.roll = imu_euler.roll;
+         euler.yaw = ahrs_euler.yaw;
          
          pthread_mutex_unlock(&mutex);
          if (!init)
