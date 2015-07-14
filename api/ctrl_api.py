@@ -98,50 +98,66 @@ _torques = scl_get_socket('torques_p', 'push')
 _mot_en = scl_get_socket('mot_en', 'push')
  
 
+###################
 ### PUBLIC API: ###
+###################
+
 
 def mot_en(val):
+   """enables (True) or disables (False) the motors"""
    _mot_en.send(dumps(int(val)))
 
 
 def set_ys(val):
+   """sets the yaw speed in rad/s"""
    _rp_y_oe.set(0)
    _rs_sp_y.send(dumps(float(val)))
 
 
 def set_yp(val):
+   """sets yaw position in rad, North direction is 0, rotating right positive"""
    _rp_y_oe.set(1)
    _rp_sp_y.send(dumps(float(val)))
 
 
 def set_thrust(val):
+   """sets the overall thrust value in Newtons"""
    _vs_oe.set(0)
    _thrust.send(dumps(float(val)))
 
 
 def set_thrust_max(val):
+   """sets upper thrust limit, used as a safety feature in autonomous flight"""
    _thrust_max.send(dumps(float(val)))
 
 
 def set_vs(val):
+   """sets vertical speed based on barometer speed estimate"""
    _vs_oe.set(1)
    _vp_oe.set(0)
    _vs_sp.send(dumps(float(val)))
 
 
 def set_vp(val, mode = 'ultra'):
+   """sets the vertical position with mode in:
+      - ultra: ultrasonic height above ground
+      - baro_abs: baro above MSL
+      - baro_rel: baro relative to power-up starting value
+      - evel: baro control accoding to SRTM elevation map (val: safety distance)"""
    _vs_oe.set(1)
    _vp_oe.set(1)
    _vp_sp.send(dumps([str(mode), float(val)]))
 
 
 def set_torques(vec):
+   """sets 3D torques directly, without control; this is intended for debugging or calibration, not for flying!"""
    _rs_oe.set(0)
    vec = map(float, vec)
    _torques.send(dumps(vec))
 
 
 def set_rs(vec):
+   """sets the rotation speed of pitch and roll"""
    _rs_oe.set(1)
    _rp_oe.set(0)
    _rs_sp_p.send(dumps(float(vec[0])))
@@ -149,6 +165,7 @@ def set_rs(vec):
 
 
 def set_rp(vec):
+   """sets the rotation position of pitch and roll"""
    _rs_oe.set(1)
    _rp_oe.set(1)
    _hs_oe.set(0)
@@ -157,6 +174,7 @@ def set_rp(vec):
 
 
 def set_hs(vec):
+   """sets horizontal speed in north/east direction in meters per second"""
    _rs_oe.set(1)
    _rp_oe.set(1)
    _hs_oe.set(1)
@@ -166,6 +184,7 @@ def set_hs(vec):
 
 
 def set_hp(vec):
+   """sets horizontal position in north/east direction in meters (relative coordinates according to first GPS fix)"""
    _rs_oe.set(1)
    _rp_oe.set(1)
    _hs_oe.set(1)
