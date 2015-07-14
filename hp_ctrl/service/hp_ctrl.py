@@ -53,12 +53,12 @@ def main(name):
    while True:
       est = loads(pos_speed_est.recv())
       ne_pos = [est[N_POS], est[E_POS]]
-
+      setpoints = [sp_n.data, sp_e.data]
       ne_ctrl = [0.0, 0.0]
       try:
          for c in range(2):
             ctrls[c].p = opcd[name + '.p']
-            ne_ctrl[c] = ctrls[c].control(sp[c].data, ne_pos[c])
+            ne_ctrl[c] = ctrls[c].control(ne_pos[c], setpoints[c])
          err.send(dumps([ctrls[0].err, ctrls[1].err]))
       except:
          pass

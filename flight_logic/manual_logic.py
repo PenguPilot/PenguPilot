@@ -55,23 +55,40 @@ def mot_en_cb(gesture):
       print 'stop'
 
 orientation = SCL_Reader('orientation', 'sub', [0.0])
+pse = SCL_Reader('pos_speed_est_neu', 'sub')
+flying = SCL_Reader('flying', 'sub', 0)
 rc_socket = scl_get_socket('rc', 'sub')
 gps = SCL_Reader('gps', 'sub', [0])
-SCL_Reader('rc_gestures', 'sub', callback = mot_en_cb)
+#SCL_Reader('rc_gestures', 'sub', callback = mot_en_cb)
 
 init(OPCD_Subscriber())
 sleep(1)
 set_thrust_max(1000.0)
 try:
    mode_prev = None
+   hold_baro = None
+   pos_locked = None
    while True:
       rc_data = loads(rc_socket.recv())
       if rc_data[0]:
-         pitch_stick, roll_stick, yaw_stick, gas_stick, _, mode_switch = rc_data[1:7]
+         pitch_stick, roll_stick, yaw_stick, gas_stick, on_switch, mode_switch = rc_data[1:7]
+         mot_en(on_switch > 0.5)
          pr_sticks = [pitch_stick, roll_stick]
 
+         #if (abs(gas_stick) > 0.1):
+         #   set_vs(gas_stick * 2.0)
+         #   hold_baro = None
+         #else:
+         #   if not pse.data:
+         #      set_vs(gas_stick * 2.0)
+         #   if not hold_baro:
+         #      hold_baro = pse.data[0]
+         #      print 'setting', hold_baro
+         #      set_vp(hold_baro, 'ultra')
+
          set_thrust(10.0 * (gas_stick + 1.0))
-         set_ys(0.6 * yaw_stick)
+         if flying.data:
+            set_ys(0.6 * yaw_stick)
 
          mode = channel_to_mode(mode_switch)
          if mode == 'gps' and fix(gps.data) < 2:
@@ -82,10 +99,17 @@ try:
          
          # evaluate input based on mode:
          if mode == 'gps':
-            scale = 3.0
-            v_local = [scale * pitch_stick, scale * roll_stick]
-            v_global = vec2_rot(v_local, orientation.data[0])
-            set_hs(v_global)
+            if abs(pitch_stick) < 0.06 and abs(roll_stick) < 0.06: # centered
+               if not pos_locked:
+                  pos_locked = pse.data[4], pse.data[6]
+                  print 'locking:', pos_locked
+                  set_hp(pos_locked)
+            else:
+               pos_locked = None
+               scale = 3.0
+               v_local = [scale * pitch_stick, scale * roll_stick]
+               v_global = vec2_rot(v_local, orientation.data[0])
+               set_hs(v_global)
          elif mode == 'acc':
             vals = map(pitch_roll_angle_func, pr_sticks)
             set_rp([-vals[0], vals[1]])
@@ -94,8 +118,8 @@ try:
             set_rs([-vals[0], vals[1]])
       else:
          mot_en(False)
-except:
-   pass
+except Exception, e:
+   print e
 
 mot_en(False)
 sleep(0.5)
