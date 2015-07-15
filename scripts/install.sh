@@ -32,7 +32,7 @@ sudo ln -f -s $PENGUPILOT_PATH/svctrl/svctrl.py pp_svctrl
 sudo ln -f -s $PENGUPILOT_PATH/acc_cal/tools/acc_cal.py pp_acc_cal
 sudo ln -f -s $PENGUPILOT_PATH/acc_cal/tools/acc_magnitude.py pp_acc_magnitude
 sudo ln -f -s $PENGUPILOT_PATH/mag_adc_cal/tools/mag_adc_cal.py pp_mag_adc_cal
-sudo ln -f -s $PENGUPILOT_PATH/scl/tools/scl_dump_msgpack.py pp_scl_dump_msgpack
+sudo ln -f -s $PENGUPILOT_PATH/scl/tools/scl_dump.py pp_scl_dump
 sudo ln -f -s $PENGUPILOT_PATH/scl/tools/scl_list.py pp_scl_list
 sudo ln -f -s $PENGUPILOT_PATH/scl/tools/scl_show_stats.py pp_scl_show_stats
 sudo ln -f -s $PENGUPILOT_PATH/rc_cal/tools/rc_cal.py pp_rc_cal

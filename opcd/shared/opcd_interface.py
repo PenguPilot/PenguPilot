@@ -58,7 +58,7 @@ class OPCD_Subscriber(Thread):
    def run(self):
       while True:
          pair = Pair()
-         data = self.socket.recv()
+         data = self.socket.zmq_socket.recv()
          pair.ParseFromString(data)
          self.pairs[pair.id] = pair_get_val(pair)
 
@@ -76,9 +76,9 @@ class OPCD_Interface:
 
    def _send_and_recv(self, req):
       self.lock.acquire()
-      self.socket.send(req.SerializeToString())
+      self.socket.zmq_socket.send(req.SerializeToString())
       rep = CtrlRep()
-      rep.ParseFromString(self.socket.recv())
+      rep.ParseFromString(self.socket.zmq_socket.recv())
       self.lock.release()
       return rep
 

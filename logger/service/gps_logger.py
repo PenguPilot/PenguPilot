@@ -27,17 +27,16 @@
 
 
 from os import sep
-from scl import generate_map
+from scl import scl_get_socket
 from misc import daemonize, user_data_dir
 from msgpack import loads
 from datetime import datetime
 
 
 def main(name):
-   map = generate_map(name)
-   gps_socket = map['gps']
-   ts_socket = map['time_set']
-   while not loads(ts_socket.recv()):
+   gps_socket = scl_get_socket('gps', 'sub')
+   ts_socket = scl_get_socket('time_set', 'sub')
+   while not ts_socket.recv():
       pass
    now = datetime.today().isoformat().replace(':', '')
    prefix = user_data_dir + sep + 'log' + sep

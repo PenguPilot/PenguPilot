@@ -35,7 +35,7 @@ assert len(argv) >= 2
 socket = scl_get_socket(argv[1], 'sub')
 try:
    while True:
-      raw = socket.recv()
+      raw = socket.zmq_socket.recv()
       try:
          data = loads(raw)
          if len(argv) >= 3:
