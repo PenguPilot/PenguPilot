@@ -19,6 +19,6 @@ Assume that there is a linear function f, which works as follows:
 mag_compensated = f(mag_raw, current)
 
 In order to determine function f, the MAV needs to be mounted stationary,
-while its moters are activated and driven between minimum and maximum thrust.
+while its motors are activated and driven from minimum to maximum thrust.
 During this sequence, current and magnetometer readings are collected and stored.
 Using numpy least-squares fitting, offset and scale coefficients are computed.
