@@ -36,16 +36,6 @@ from gps_msgpack import fix
 from opcd_interface import OPCD_Subscriber
 
 
-def channel_to_mode(sw):
-   a = 1.0 / 3.0
-   b = 2.0 / 3.0
-   if sw <= a:
-      return 'gyro'   
-   elif sw > a and sw < b:
-      return 'acc'
-   return 'gps'
-
-
 def mot_en_cb(gesture):
    if gesture[0]: # start
       mot_en(True)
@@ -99,7 +89,7 @@ try:
          
          # evaluate input based on mode:
          if mode == 'gps':
-            if abs(pitch_stick) < 0.06 and abs(roll_stick) < 0.06: # centered
+            if pitch_roll_in_deadzone(pitch_stick, roll_stick):
                if not pos_locked:
                   pos_locked = pse.data[4], pse.data[6]
                   print 'locking:', pos_locked

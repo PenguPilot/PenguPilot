@@ -26,7 +26,8 @@
 
 import os, zmq
 from threading import Thread
-from msgpack import loads
+from msgpack import loads, dumps
+import types
 
 
 try:
@@ -42,6 +43,16 @@ def scl_get_socket(id, type_name):
    socket_type = map[type_name]
    socket_path = pp_path + id
    socket = context.socket(socket_type)
+
+   def send_msgpack(self, data):
+      self.send(dumps(data))
+   
+   def recv_msgpack(self):
+      return loads(self.recv())
+
+   socket.send_msgpack = types.MethodType(send_msgpack, socket)
+   socket.recv_msgpack = types.MethodType(recv_msgpack, socket)
+
    if socket_type in [zmq.SUB, zmq.REQ, zmq.PUSH]:
       socket.setsockopt(zmq.RCVHWM, 1)
       if socket_type == zmq.SUB:

@@ -123,3 +123,13 @@ def gas_speed_deadzone(gas):
 def yaw_speed_deadzone(yaw):
    return stick_dz(yaw, yaw_deadzone() * yaw_speed_max())
 
+
+def channel_to_mode(sw):
+   a = 1.0 / 3.0
+   b = 2.0 / 3.0
+   if sw <= a:
+      return 'gyro'   
+   elif sw > a and sw < b:
+      return 'acc'
+   return 'gps'
+
