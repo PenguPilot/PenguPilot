@@ -28,7 +28,6 @@
 
 from pid_ctrl import PID_Ctrl
 from scl import scl_get_socket, SCL_Reader
-from msgpack import dumps, loads
 from opcd_interface import OPCD_Subscriber
 from misc import daemonize
 from pp_prio import PP_PRIO_5
@@ -59,13 +58,13 @@ def main(name):
          for c in range(2):
             ctrls[c].p = opcd[name + '.p']
             ne_ctrl[c] = ctrls[c].control(ne_pos[c], setpoints[c])
-         err.send(dumps([ctrls[0].err, ctrls[1].err]))
+         err.send([ctrls[0].err, ctrls[1].err])
       except:
          pass
       if n_oe.data:
-         hs_spp_n.send(dumps(ne_ctrl[0]))
+         hs_spp_n.send(ne_ctrl[0])
       if e_oe.data:
-         hs_spp_e.send(dumps(ne_ctrl[1]))
+         hs_spp_e.send(ne_ctrl[1])
 
 
 daemonize('hp_ctrl', main)

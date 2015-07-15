@@ -27,7 +27,7 @@
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details. """
 
-
+from ctrl_api import *
 from geomath import rad2deg
 from numpy import array
 import numpy as np
@@ -35,12 +35,8 @@ from scl import scl_get_socket, SCL_Reader
 from opcd_interface import OPCD_Interface
 from time import sleep
 from threading import Thread
-from msgpack import loads, dumps
 
 
-thrust_socket = scl_get_socket('thrust', 'pub')
-torques_socket = scl_get_socket('torques', 'pub')
-mot_en_socket = scl_get_socket('mot_en', 'push')
 mag = SCL_Reader('mag_adc_cal', 'sub', [0.0, 0.0, 0.0])
 curr = SCL_Reader('current', 'sub', [0.0])
 int_en = SCL_Reader('int_en', 'sub', 1)
@@ -53,10 +49,10 @@ print 'starting calibration sweep'
 
 # start motors:
 sleep(1)
-mot_en_socket.send(dumps(1))
+mot_en(True)
 for i in range(10000):
-   thrust_socket.send(dumps(0.0))
-   torques_socket.send(dumps([0.0, 0.0, 0.0]))
+   set_thrust(0.0)
+   set_torques([0.0, 0.0, 0.0])
 
 # increase gas and store measurements:
 o_start = orientation.data[0]
@@ -65,15 +61,15 @@ try:
    thrust = 0.0
    while True:
       thrust += 0.01
-      thrust_socket.send(dumps(thrust))
-      torques_socket.send(dumps([0.0, 0.0, 0.0]))
+      set_thrust(thrust)
+      set_torques([0.0, 0.0, 0.0])
       meas.append([curr.data[0]] + mag.data)
       sleep(0.01)
       print 'error:', rad2deg(o_start - orientation.data[0])
       #if not int_en.data:
       #    break
 finally:
-   mot_en_socket.send(dumps(0))
+   mot_en(False)
 
 opcd = OPCD_Interface()
 

@@ -37,8 +37,8 @@ def main(name):
    socket_in = scl_get_socket('log_data', 'pull')
    socket_out = scl_get_socket('log_data_pub', 'pub')
    while True:
-      data = socket_in.recv()
-      socket_out.send(data)
+      data = socket_in.zmq_socket.recv()
+      socket_out.zmq_socket.send(data)
 
 daemonize('log_proxy', main)
 

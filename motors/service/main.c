@@ -240,17 +240,11 @@ SERVICE_MAIN_BEGIN("motors", PP_PRIO_1)
           
          static int int_en_prev = 0;
          if (int_en_prev != int_en)
-         {
             int_en_prev = int_en;
-            LOG(LL_DEBUG, "enable integrator = %d", int_en);
-         }
  
          static int int_res_prev = 1;
          if (int_res_prev != int_res)
-         {
             int_res_prev = int_res;
-            LOG(LL_DEBUG, "reset integrator = %d", int_res);
-         }
          
          msgpack_sbuffer_clear(msgpack_buf);
          PACKI(int_en);

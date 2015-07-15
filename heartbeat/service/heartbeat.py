@@ -32,7 +32,6 @@ from threading import Thread, Lock
 from scl import generate_map
 from math import sin, cos, pi
 from misc import daemonize, RateTimer
-from msgpack import loads, dumps
 from aircomm_shared import BCAST_NOFW, HEARTBEAT
 from gps_msgpack import *
 
@@ -45,11 +44,8 @@ critical = False
 def gps_reader():
    global gps
    socket = socket_map['gps']
-   rt = RateTimer(1)
    while True:
-      data = socket.recv()
-      if rt.expired():
-         gps = loads(data)
+      gps = socket.recv()
 
 
 def cpu_reader():
@@ -67,7 +63,7 @@ def pm_reader():
    s = socket_map['powerman']
    global voltage, current, critical
    while True:
-      _voltage, _current, _, critical = loads(s.recv())
+      _voltage, _current, _, critical = s.recv()
       if voltage is None:
          voltage = _voltage
       else:
@@ -109,7 +105,7 @@ def main(name):
             data += [gps[LAT], gps[LON]]
          except:
             pass
-         socket.send(dumps(data))
+         socket.send(data)
       except Exception, e:
          print e
       sleep(1.0)

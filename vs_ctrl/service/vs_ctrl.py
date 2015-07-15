@@ -28,7 +28,6 @@
 
 from pid_ctrl import PID_Ctrl
 from scl import scl_get_socket, SCL_Reader
-from msgpack import dumps, loads
 from opcd_interface import OPCD_Subscriber
 from physics import G_CONSTANT
 from misc import daemonize
@@ -51,17 +50,17 @@ def main(name):
 
    pos_speed_est = scl_get_socket('pos_speed_est_neu', 'sub')
    while True:
-      u_speed = loads(pos_speed_est.recv())[3]
+      u_speed = pos_speed_est.recv()[3]
       max_speed = opcd[name + '.max_speed']
       pid.p = opcd[name + '.p']
       pid.i = opcd[name + '.i']
       pid.max_sum_err = opcd[name + '.max_sum_err']
-      err.send(dumps(pid.err))
+      err.send(pid.err)
       if int_res.data or not oe.data:
          pid.reset()
       thrust = neutral_thrust + pid.control(u_speed, min(max_speed, speed_setpoint.data))
       pid.int_en = thrust < 0.0 or thrust > thrust_max
       if oe.data:
-         thrust_socket.send(dumps(thrust))
+         thrust_socket.send(thrust)
 
 daemonize('vs_ctrl', main)

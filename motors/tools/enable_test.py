@@ -30,7 +30,6 @@
 from time import sleep
 from sys import argv
 from scl import scl_get_socket
-from msgpack import dumps
 
 socket = scl_get_socket('mot_en', 'push')
 sleep(0.5)
@@ -38,4 +37,4 @@ m1 = int(argv[1])
 m2 = int(argv[2])
 m3 = int(argv[3])
 m4 = int(argv[4])
-socket.send(dumps([m1, m2, m3, m4]))
+socket.send([m1, m2, m3, m4])

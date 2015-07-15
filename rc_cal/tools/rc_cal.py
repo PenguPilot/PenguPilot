@@ -28,7 +28,6 @@
 
 from time import sleep
 from scl import scl_get_socket
-from msgpack import loads
 from threading import Thread
 from copy import copy
 from opcd_interface import OPCD_Interface
@@ -86,7 +85,7 @@ def remote_reader():
       s = scl_get_socket('rc_raw', 'sub')
       global channels, channels_valid
       while True:
-         data = loads(s.recv())
+         data = s.recv()
          channels_valid = bool(data[0])
          channels = data[1:]
    except:

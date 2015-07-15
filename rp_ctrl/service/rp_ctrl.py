@@ -27,7 +27,6 @@
 
 
 from scl import scl_get_socket, SCL_Reader
-from msgpack import dumps, loads
 from time import sleep
 from opcd_interface import OPCD_Subscriber
 from geomath import deg2rad, sym_limit, circle_err
@@ -74,7 +73,7 @@ def main(name):
    pid_y = PID_Ctrl(circle_err) # special error computation function
 
    while True:
-      yaw, pitch, roll = loads(orientation_socket.recv())[0:3]
+      yaw, pitch, roll = orientation_socket.recv()
       pid_p.p = pid_r.p = opcd[name + '.pr_p']
       pid_p.d = pid_r.d = opcd[name + '.pr_d']
       pid_y.p = opcd[name + '.yaw_p']
@@ -85,16 +84,16 @@ def main(name):
       # pitch position control:
       ctrl_p = pid_p.control(pitch, sym_limit(sp_p.data, angles_max) + pitch_bias, gyro.data[1])
       if p_oe.data:
-         spp_p_socket.send(dumps(ctrl_p))
+         spp_p_socket.send(ctrl_p)
       
       # roll position control:
       ctrl_r = pid_r.control(roll, sym_limit(sp_r.data, angles_max) + roll_bias, gyro.data[0])
       if r_oe.data:
-         spp_r_socket.send(dumps(ctrl_r))
+         spp_r_socket.send(ctrl_r)
 
       # yaw position control:
       ctrl_y = pid_y.control(yaw, sp_y.data)
       if y_oe.data:
-         spp_y_socket.send(dumps(ctrl_y))
+         spp_y_socket.send(ctrl_y)
 
 daemonize('rp_ctrl', main)

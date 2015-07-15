@@ -28,7 +28,6 @@
 
 from misc import daemonize, Hysteresis
 from scl import scl_get_socket
-from msgpack import dumps, loads
 from time import time
 
 
@@ -44,7 +43,7 @@ def main(name):
    while True:
       start_motors = False
       stop_motors = False
-      rc_data = loads(rc_socket.recv())
+      rc_data = rc_socket.recv()
 
       # evaluate signal validity:
       if rc_data[0]:
@@ -70,7 +69,7 @@ def main(name):
 
       # send gesture detection results:
       if start_motors != start_motors_prev or stop_motors != stop_motors_prev:
-         rc_gestures_socket.send(dumps([start_motors, stop_motors]))
+         rc_gestures_socket.send([start_motors, stop_motors])
       start_motors_prev = start_motors
       stop_motors_prev = stop_motors
 

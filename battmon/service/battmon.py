@@ -27,7 +27,6 @@
 
 
 from misc import Hysteresis
-from msgpack import loads, dumps
 from scl import scl_get_socket, SCL_Reader
 from opcd_interface import OPCD_Interface
 from misc import daemonize
@@ -60,14 +59,14 @@ def main(name):
    low_cell_voltage_load = opcd.get('battmon.low_cell_voltage_load')
    current_treshold = opcd.get('battmon.current_treshold')
    vmax = cells * 4.1
-   voltage = loads(voltage_socket.recv())[0]
+   voltage = voltage_socket.recv()[0]
    vmin_idle = cells * low_cell_voltage_idle
    vmin_load = cells * low_cell_voltage_load
    time_prev = time()
    critical = False
    while True:
       current = current_reader.data[0]
-      voltage = loads(voltage_socket.recv())[0]
+      voltage = voltage_socket.recv()[0]
       time_prev = time()
       if current < current_treshold:
           vmin = vmin_idle
@@ -80,7 +79,7 @@ def main(name):
       if critical:
          warning()
       percent = min(1.0, max(0.0, (voltage - vmin) / (vmax - vmin)))
-      battery_socket.send(dumps((percent, critical)))
+      battery_socket.send([percent, critical])
 
 
 daemonize('battmon', main)

@@ -27,10 +27,9 @@
 
 
 from sys import argv
-from msgpack import dumps
 from scl import scl_get_socket
 
 assert len(argv) == 3
 s = scl_get_socket(argv[1], 'push')
-s.send(dumps(eval(argv[2])))
+s.send(eval(argv[2]))
 

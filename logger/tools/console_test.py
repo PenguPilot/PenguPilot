@@ -27,11 +27,9 @@
 
 
 from scl import scl_get_socket
-from msgpack import dumps
-
 
 socket = scl_get_socket('log_data', 'push')
-socket.send(dumps(['component1', 0, 'file1.c', 34, 'error message text']))
-socket.send(dumps(['component2', 1, 'file2.c', 35, 'warning message text']))
-socket.send(dumps(['component3', 2, 'file3.c', 36, 'info message text']))
-socket.send(dumps(['component4', 3, 'file4.c', 37, 'debug message text']))
+socket.send(['component1', 0, 'file1.c', 34, 'error message text'])
+socket.send(['component2', 1, 'file2.c', 35, 'warning message text'])
+socket.send(['component3', 2, 'file3.c', 36, 'info message text'])
+socket.send(['component4', 3, 'file4.c', 37, 'debug message text'])

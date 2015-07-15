@@ -1,7 +1,6 @@
 
 
 import inspect
-from msgpack import dumps
 
 
 LL_ERROR =   0 
@@ -19,5 +18,5 @@ def logger_init(name, socket):
 def log(level, msg):
    frame = inspect.stack()[1][0]
    info = inspect.getframeinfo(frame)
-   _socket.send(dumps([_name, level, info.filename, int(info.lineno), msg]))
+   _socket.send([_name, level, info.filename, int(info.lineno), msg])
 

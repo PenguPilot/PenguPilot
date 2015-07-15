@@ -29,7 +29,6 @@
 from scl import scl_get_socket
 from misc import daemonize, RateTimer
 from gps_msgpack import *
-from msgpack import loads, dumps
 from srtm import SrtmElevMap
 
 
@@ -39,9 +38,10 @@ def main(name):
    elev_socket = scl_get_socket('elev', 'pub')
    rt = RateTimer(2.0)
    while True:
-      gps = loads(gps_socket.recv())
+      gps = gps_socket.recv()
       if rt.expired():
          elev = elev_map.lookup((gps[LON], gps[LAT]))
-         elev_socket.send(dumps(elev))
+         elev_socket.send(elev)
+
 
 daemonize('elevmap', main)

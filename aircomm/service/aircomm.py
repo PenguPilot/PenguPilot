@@ -72,7 +72,7 @@ class ACIReader(Thread):
                addr = msg[0]
                # if message is meant for us, forward to application(s):
                if addr in [THIS_SYS_ID, BCAST, BCAST_NOFW]:
-                  msg_scl = dumps(msg[1:]) # strip the type and pack again
+                  msg_scl = msg[1:] # strip the type
                   self.scl_socket.send(msg_scl)
 
                # if the message (a) is not meant for us or (b) is NOFW, re-broadcast:
@@ -105,7 +105,7 @@ def main(name):
 
    # read from SCL in socket and send data via NRF
    while True:
-      data = loads(in_socket.recv())
+      data = in_socket.recv()
       if len(data) == 2:
          msg = [data[0], THIS_SYS_ID, data[1]]
       elif len(data) > 2:

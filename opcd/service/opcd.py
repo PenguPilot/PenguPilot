@@ -67,7 +67,7 @@ class OPCD:
          # read and parse request:
          req = CtrlReq()
          try:
-            req.ParseFromString(self.ctrl_socket.recv())
+            req.ParseFromString(self.ctrl_socket.zmq_socket.recv())
          except Exception, e:
             log(LL_ERROR, 'could not receive request: %s' % str(e))
             sleep(1)
@@ -106,7 +106,7 @@ class OPCD:
                         self.conf.set(req.id.encode('ascii'), type(val))
                         break
                   pair = Pair(id = req.id, val = req.val)
-                  self.event_socket.send(pair.SerializeToString())
+                  self.event_socket.zmq_socket.send(pair.SerializeToString())
                except ConfigError, e:
                   log(LL_ERROR, 'key not found: %s' % req.id)
                   rep.status = CtrlRep.PARAM_UNKNOWN
@@ -123,13 +123,14 @@ class OPCD:
          except:
             rep.status = CtrlRep.PARAM_UNKNOWN
          # send reply:
-         self.ctrl_socket.send(rep.SerializeToString())
+         self.ctrl_socket.zmq_socket.send(rep.SerializeToString())
 
 
 def main(name):
    sched_set_prio(PP_PRIO_6)
    opcd = OPCD(name)
    opcd.run()
+
 
 daemonize('opcd', main)
 

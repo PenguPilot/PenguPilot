@@ -33,7 +33,6 @@ import os
 from time import time
 from datetime import datetime
 from gps_msgpack import *
-from msgpack import loads, dumps
 from math import pi
 
 
@@ -44,13 +43,12 @@ def main(name):
    decl_socket = scl_get_socket('decl', 'pub')
    rt = RateTimer(1)
    while True:
-      raw = gps_socket.recv()
+      gps = gps_socket.recv()
       if rt.expired():
-         gps = loads(raw)
          try:
             date = datetime.strptime(gps[TIME], '%Y-%m-%d %H:%M:%S').date()
             decl = pi * gm.GeoMag(gps[LAT], gps[LON], time = date).dec / 180.0
-            decl_socket.send(dumps(decl))
+            decl_socket.send(decl)
          except:
             pass
 

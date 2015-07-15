@@ -27,18 +27,17 @@
 
 
 from os import sep
-from scl import generate_map
+from scl import scl_get_socket
 from misc import daemonize, user_data_dir
 
 
 def main(name):
-   map = generate_map(name)
-   socket = map['log_data_pub']
+   socket = scl_get_socket('log_data_pub', 'sub')
    prefix = user_data_dir + sep + 'log' + sep
    new_file = prefix + 'session.log'
    f = open(new_file, "wb")
    while True:
-      data = socket_in.recv()
+      data = socket.recv()
       f.write(data)
       f.flush()
 

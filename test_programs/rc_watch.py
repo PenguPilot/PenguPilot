@@ -1,6 +1,5 @@
 from scl import SCL_Reader, scl_get_socket
 from time import time, sleep
-from msgpack import dumps
 
 ts = time()
 def cb(data):
@@ -17,6 +16,6 @@ while True:
       state = 0
    if state_prev != state:
       print state
-      rc_valid.send(dumps(state))
+      rc_valid.send(state)
       state_prev = state
    sleep(0.1)

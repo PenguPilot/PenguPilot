@@ -31,7 +31,6 @@ from subprocess import Popen, PIPE
 from scl import generate_map
 from time import sleep
 from misc import daemonize
-from msgpack import dumps
 
 
 def main(name):
@@ -46,7 +45,7 @@ def main(name):
             except:
                sig = int(cell['Signal'][0:-4])
             pair = [cell['Address'] + '_' + cell['Name'], sig]
-            socket.send(dumps(pair))
+            socket.send(pair)
          sleep(1.0)
       except:
          pass

@@ -28,7 +28,6 @@
 
 from pid_ctrl import PID_Ctrl
 from scl import scl_get_socket, SCL_Reader
-from msgpack import dumps, loads
 from opcd_interface import OPCD_Subscriber
 from physics import G_CONSTANT
 from misc import daemonize
@@ -57,7 +56,7 @@ def main(name):
    elev_start = None
    pos_speed_est = scl_get_socket('pos_speed_est_neu', 'sub')
    while True:
-      est = loads(pos_speed_est.recv())
+      est = pos_speed_est.recv()
       ultra_pos, baro_pos = est[ULTRA_POS], est[BARO_POS]
       if not baro_pos_start:
          baro_pos_start = baro_pos
@@ -80,9 +79,9 @@ def main(name):
          elev_rel = elev_start - elev.data
          baro_rel = baro_pos - baro_pos_start
          ctrl = pid.control(baro_rel, elev_rel + sp)
-      err.send(dumps(pid.err))
+      err.send(pid.err)
       if pos_oe.data:
-         vs_ctrl_spp.send(dumps(ctrl))
+         vs_ctrl_spp.send(ctrl)
 
 
 daemonize('vp_ctrl', main)

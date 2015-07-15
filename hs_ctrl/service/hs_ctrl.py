@@ -28,7 +28,6 @@
 
 from pid_ctrl import PID_Ctrl
 from scl import scl_get_socket, SCL_Reader
-from msgpack import dumps, loads
 from opcd_interface import OPCD_Subscriber
 from misc import daemonize
 from geomath import deg2rad, sym_limit, vec2_rot
@@ -54,7 +53,7 @@ def main(name):
    ctrls = [PID_Ctrl(), PID_Ctrl()]
    pos_speed_est = scl_get_socket('pos_speed_est_neu', 'sub')
    while True:
-      est = loads(pos_speed_est.recv())
+      est = pos_speed_est.recv()
       ne_speed = [est[N_SPEED], est[E_SPEED]]
 
       ne_ctrl = [0.0, 0.0]
@@ -66,7 +65,7 @@ def main(name):
             if int_res.data:
                ctrls[c].reset()
             ne_ctrl[c] = ctrls[c].control(sp[c].data, ne_speed[c])
-         err.send(dumps([ctrls[0].err, ctrls[1].err]))
+         err.send([ctrls[0].err, ctrls[1].err])
       except:
          pass
 
@@ -78,8 +77,8 @@ def main(name):
       
       angles_max = deg2rad(opcd[name + '.angles_max'])
       if p_oe.data:
-         pitch_socket.send(dumps(sym_limit(pr_ctrl[0], angles_max)))
+         pitch_socket.send(sym_limit(pr_ctrl[0], angles_max))
       if r_oe.data:
-         roll_socket.send(dumps(sym_limit(-pr_ctrl[1], angles_max)))
+         roll_socket.send(sym_limit(-pr_ctrl[1], angles_max))
 
 daemonize('hs_ctrl', main)

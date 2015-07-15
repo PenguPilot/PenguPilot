@@ -27,14 +27,13 @@
 
 
 from scl import scl_get_socket
-from msgpack import loads
 from misc import RateTimer
 
 try:
    s = scl_get_socket('rc', 'sub')
    rt = RateTimer(2.0)
    while True:
-      data = loads(s.recv())
+      data = s.recv()
       valid = bool(data[0])
       c = data[1:]
       if valid:

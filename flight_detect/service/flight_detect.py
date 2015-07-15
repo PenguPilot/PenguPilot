@@ -28,14 +28,13 @@
 
 from misc import daemonize
 from scl import scl_get_socket
-from msgpack import loads, dumps
 from numpy import var
 
 
 def main(name):
    acc_socket = scl_get_socket('acc_neu', 'sub')
    flying_socket = scl_get_socket('flying', 'pub')
-   acc_vec = loads(acc_socket.recv())
+   acc_vec = acc_socket.recv()
 
    size = 80
    histn = [acc_vec[0]] * size
@@ -44,7 +43,7 @@ def main(name):
 
    i = 0
    while True:
-      acc_vec = loads(acc_socket.recv())
+      acc_vec = acc_socket.recv()
       i += 1
       if i < 4:
          continue
@@ -57,7 +56,7 @@ def main(name):
       else:
          s = 0
       if s != sp:
-         flying_socket.send(dumps(s))
+         flying_socket.send(s)
       sp = s
 
 daemonize('flight_detect', main)

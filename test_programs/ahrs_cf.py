@@ -1,5 +1,4 @@
 from scl import scl_get_socket, SCL_Reader
-from msgpack import loads, dumps
 from math import *
 
 
@@ -31,7 +30,7 @@ while True:
       kp -= 0.002
    if kp < 0.001:
       kp = 0.002
-   gyro = loads(s.recv())
+   gyro = s.recv()
    roll = atan2(-acc.data[1], -acc.data[2]);
    roll_est += gyro[0] * 0.005
    roll_err = roll_est - roll
@@ -56,4 +55,4 @@ while True:
    yaw_err = angles_err(yaw_est, yaw)
    yaw_est -= 0.1 * kp * yaw_err
 
-   o.send(dumps([yaw_est, pitch_est, roll_est]))
+   o.send([yaw_est, pitch_est, roll_est])

@@ -28,7 +28,6 @@
 
 from sticks import *
 from scl import scl_get_socket, SCL_Reader
-from msgpack import dumps, loads
 from time import sleep
 from geomath import vec2_rot
 from ctrl_api import *
@@ -59,7 +58,7 @@ try:
    hold_baro = None
    pos_locked = None
    while True:
-      rc_data = loads(rc_socket.recv())
+      rc_data = rc_socket.recv()
       if rc_data[0]:
          pitch_stick, roll_stick, yaw_stick, gas_stick, on_switch, mode_switch = rc_data[1:7]
          mot_en(on_switch > 0.5)

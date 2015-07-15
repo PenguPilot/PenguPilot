@@ -27,7 +27,6 @@
 
 
 from scl import scl_get_socket
-from msgpack import dumps
 
 
 ### PRIVATE API: ###
@@ -42,7 +41,7 @@ class _OutputEnable:
       assert state == 0 or state == 1
       if self.prev_state != state:
          for s in self.sockets:
-            s.send(dumps(state))
+            s.send(state)
       self.prev_state = state
 
 
@@ -105,37 +104,37 @@ _mot_en = scl_get_socket('mot_en', 'push')
 
 def mot_en(val):
    """enables (True) or disables (False) the motors"""
-   _mot_en.send(dumps(int(val)))
+   _mot_en.send(int(val))
 
 
 def set_ys(val):
    """sets the yaw speed in rad/s"""
    _rp_y_oe.set(0)
-   _rs_sp_y.send(dumps(float(val)))
+   _rs_sp_y.send(float(val))
 
 
 def set_yp(val):
    """sets yaw position in rad, North direction is 0, rotating right positive"""
    _rp_y_oe.set(1)
-   _rp_sp_y.send(dumps(float(val)))
+   _rp_sp_y.send(float(val))
 
 
 def set_thrust(val):
    """sets the overall thrust value in Newtons"""
    _vs_oe.set(0)
-   _thrust.send(dumps(float(val)))
+   _thrust.send(float(val))
 
 
 def set_thrust_max(val):
    """sets upper thrust limit, used as a safety feature in autonomous flight"""
-   _thrust_max.send(dumps(float(val)))
+   _thrust_max.send(float(val))
 
 
 def set_vs(val):
    """sets vertical speed based on barometer speed estimate"""
    _vs_oe.set(1)
    _vp_oe.set(0)
-   _vs_sp.send(dumps(float(val)))
+   _vs_sp.send(float(val))
 
 
 def set_vp(val, mode = 'ultra'):
@@ -146,22 +145,22 @@ def set_vp(val, mode = 'ultra'):
       - evel: baro control accoding to SRTM elevation map (val: safety distance)"""
    _vs_oe.set(1)
    _vp_oe.set(1)
-   _vp_sp.send(dumps([str(mode), float(val)]))
+   _vp_sp.send([str(mode), float(val)])
 
 
 def set_torques(vec):
    """sets 3D torques directly, without control; this is intended for debugging or calibration, not for flying!"""
    _rs_oe.set(0)
    vec = map(float, vec)
-   _torques.send(dumps(vec))
+   _torques.send(vec)
 
 
 def set_rs(vec):
    """sets the rotation speed of pitch and roll"""
    _rs_oe.set(1)
    _rp_oe.set(0)
-   _rs_sp_p.send(dumps(float(vec[0])))
-   _rs_sp_r.send(dumps(float(vec[1])))
+   _rs_sp_p.send(float(vec[0]))
+   _rs_sp_r.send(float(vec[1]))
 
 
 def set_rp(vec):
@@ -169,8 +168,8 @@ def set_rp(vec):
    _rs_oe.set(1)
    _rp_oe.set(1)
    _hs_oe.set(0)
-   _rp_sp_p.send(dumps(float(vec[0])))
-   _rp_sp_r.send(dumps(float(vec[1])))
+   _rp_sp_p.send(float(vec[0]))
+   _rp_sp_r.send(float(vec[1]))
 
 
 def set_hs(vec):
@@ -179,8 +178,8 @@ def set_hs(vec):
    _rp_oe.set(1)
    _hs_oe.set(1)
    _hp_oe.set(0)
-   _hs_sp_n.send(dumps(float(vec[0])))
-   _hs_sp_e.send(dumps(float(vec[1])))
+   _hs_sp_n.send(float(vec[0]))
+   _hs_sp_e.send(float(vec[1]))
 
 
 def set_hp(vec):
@@ -189,8 +188,8 @@ def set_hp(vec):
    _rp_oe.set(1)
    _hs_oe.set(1)
    _hp_oe.set(1)
-   _hp_sp_n.send(dumps(float(vec[0])))
-   _hp_sp_e.send(dumps(float(vec[1])))
+   _hp_sp_n.send(float(vec[0]))
+   _hp_sp_e.send(float(vec[1]))
 
 
 if __name__ == '__main__':

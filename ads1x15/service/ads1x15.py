@@ -28,8 +28,7 @@
  GNU General Public License for more details. """
 
 
-from msgpack import dumps
-from scl import generate_map
+from scl import scl_get_socket
 from opcd_interface import OPCD_Interface
 from misc import daemonize
 from time import sleep
@@ -47,20 +46,14 @@ class ADS1x15_ADC:
 
 
 def main(name):
-   map = generate_map(name)
-   socket = map['power']
+   socket = scl_get_socket('voltage', 'pub')
    opcd = OPCD_Interface(map['opcd_ctrl'], 'pi_quad')
    voltage_adc = ADS1x15_ADC(opcd.get('voltage_channel'))
-   #current_adc = ADS1x15_ADC(opcd.get('current_channel'))
    voltage_lambda = eval(opcd.get('adc_to_voltage'))
-   #current_lambda = eval(opcd.get('adc_to_current'))
    while True:
       sleep(0.2)
       voltage = voltage_lambda(voltage_adc.read())  
-      #current = current_lambda(current_adc.read())
-      state = [voltage,  # 0 [V]
-               0.4]      # 1 [A]
-      socket.send(dumps(state))
+      socket.send([voltage])
 
 
 daemonize('ads1x15', main)

@@ -27,7 +27,6 @@
 import os, zmq
 from threading import Thread
 from msgpack import loads, dumps
-import types
 
 
 try:
@@ -37,22 +36,24 @@ except:
 context = zmq.Context()
 
 
+class SCL_Socket:
+
+   def __init__(self, zmq_socket):
+      self.zmq_socket = zmq_socket
+
+   def send(self, data):
+      self.zmq_socket.send(dumps(data))
+   
+   def recv(self):
+      return loads(self.zmq_socket.recv())
+
+
 def scl_get_socket(id, type_name):
    map = {"sub": zmq.SUB, "req": zmq.REQ, "push": zmq.PUSH,
           "pub": zmq.PUB, "rep": zmq.REP, "pull": zmq.PULL}
    socket_type = map[type_name]
    socket_path = pp_path + id
    socket = context.socket(socket_type)
-
-   def send_msgpack(self, data):
-      self.send(dumps(data))
-   
-   def recv_msgpack(self):
-      return loads(self.recv())
-
-   socket.send_msgpack = types.MethodType(send_msgpack, socket)
-   socket.recv_msgpack = types.MethodType(recv_msgpack, socket)
-
    if socket_type in [zmq.SUB, zmq.REQ, zmq.PUSH]:
       socket.setsockopt(zmq.RCVHWM, 1)
       if socket_type == zmq.SUB:
@@ -63,7 +64,7 @@ def scl_get_socket(id, type_name):
       socket.bind(socket_path)
    else:
       raise Exception("unknown socket type: %d" % socket_type)
-   return socket
+   return SCL_Socket(socket)
 
 
 class SCL_Reader(Thread):

@@ -27,15 +27,15 @@
 
 
 from scl import scl_get_socket
-from msgpack import dumps, loads
 from time import sleep
+
 
 rc_socket = scl_get_socket('rc', 'sub')
 torques_socket = scl_get_socket('torques', 'pub')
 thrust_socket = scl_get_socket('thrust', 'pub')
 while True:
-   rc_data = loads(rc_socket.recv())
+   rc_data = rc_socket.recv()
    if rc_data[0]:
       pitch, roll, yaw, gas = rc_data[1:5]
-      thrust_socket.send(dumps(gas))
-      torques_socket.send(dumps([pitch, roll, yaw]))
+      thrust_socket.send(gas)
+      torques_socket.send([pitch, roll, yaw])
