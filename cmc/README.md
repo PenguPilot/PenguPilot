@@ -10,11 +10,15 @@
     |___________________________________________________|
 
 
-Remote Control Channel Permutation and Calibration Service
-==========================================================
+Current Magnetometer Compensation
+=================================
 
-- subscribes to raw remote control channel inputs (socket: rc\_raw)
-- applies channel permutation and scaling based on calibration
-- publishes calibrated remote control channel inputs (socket: rc\_cal)
+This service compensates motor current effects on the magnetometer using linear regression.
+Assume that there is a linear function f, which works as follows:
 
-For the calibration precedure itself, the interactive utility program "pp_rc_cal" is used.
+mag_compensated = f(mag_raw, current)
+
+In order to determine function f, the MAV needs to be mounted stationary,
+while its moters are activated and driven between minimum and maximum thrust.
+During this sequence, current and magnetometer readings are collected and stored.
+Using numpy least-squares fitting, offset and scale coefficients are computed.
