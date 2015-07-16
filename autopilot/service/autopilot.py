@@ -31,6 +31,8 @@ from activities.stop import StopActivity
 from activities.dummy import DummyActivity
 from flightsm import FlightSM
 from scl import scl_get_socket, SCL_Reader
+from pylogger import *
+from misc import daemonize
 
 
 class Autopilot:
@@ -45,54 +47,66 @@ class Autopilot:
 
 
    def error(self, state, event):
-      msg = 'in state: %s, could not handle event: %s' % (state, event)
+      msg = 'invalid event "%s" in state "%s"' % (event, state)
+      log(LL_ERROR, msg)
       raise Exception(msg)
 
 
    def broadcast(self, state):
+      log(LL_INFO, 'new state: %s' % state)
       self.state_socket.send(state)
 
 
    def takeoff(self):
+      log(LL_INFO, 'takeoff')
       self.act.cancel_and_join()
       self.act = TakeoffActivity(self.fsm, self)
       self.act.start()
 
 
    def land(self):
+      log(LL_INFO, 'land')
       self.act.cancel_and_join()
       self.act = LandActivity(self)
       self.act.start()
 
 
    def move(self):
+      log(LL_INFO, 'move')
       self.act.cancel_and_join()
       self.act = MoveActivity(self)
       self.act.start()
 
 
    def stop(self):
+      log(LL_INFO, 'stop')
       self.act.cancel_and_join()
       self.act = StopActivity(self)
       self.act.start()
 
 
-def main(name):
-   ap = Autopilot()
-   socket = scl_get_socket('ap_ctrl', 'sub')
-   while True:
-      cmd = socket.recv()
-      print cmd
+   def handle(self, cmd):
       if isinstance(cmd, str):
          arg = None
       else:
          arg = cmd[1:]
          cmd = cmd[0]
-      print cmd, arg
-      ap.arg = arg
-      getattr(ap, cmd)()
+      self.arg = arg
+      self.fsm.handle(cmd)
 
 
-main('autopilot')
-#daemonize('autopilot', main)
+def main(name):
+   ap = Autopilot()
+   ap.motors_state = scl_get_socket('motors_state', 'sub')
+   ap_ctrl = scl_get_socket('ap_ctrl', 'rep')
+   while True:
+      cmd = ap_ctrl.recv()
+      try:
+         ap.handle(cmd)
+         ap_ctrl.send([True])
+      except Exception, e:
+         ap_ctrl.send([False, str(e)])
+
+
+daemonize('autopilot', main, fg = False)
 

@@ -79,7 +79,7 @@ class SCL_Reader(Thread):
 
    def run(self):
       while True:
-          self.data = loads(self.socket.recv())
+          self.data = self.socket.recv()
           if self.callback:
               self.callback(self.data)
 

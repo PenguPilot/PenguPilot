@@ -27,23 +27,23 @@
 
 from time import sleep
 from activity import Activity
+from ctrl_api import mot_en, set_vp
 
 
 class LandActivity(Activity):
 
-   MIN_HOVERING_ALT = 0.57
-
-   def __init__(self, icarus):
-      Activity.__init__(self, icarus)
+   def __init__(self, autopilot):
+      Activity.__init__(self, autopilot)
 
    def run(self):
-      pilot = self.icarus.pilot
-      mon_data = self.icarus.mon_data
-      fsm = self.icarus.fsm
-      
-      pilot.set_ctrl_param(POS_Z_GROUND, self.MIN_HOVERING_ALT / 3.0)
-      while mon_data.z_ground > self.MIN_HOVERING_ALT:
-         sleep(self.POLLING_TIMEOUT)
-      pilot.stop_motors()
-      fsm.handle('done')
+      ap = self.autopilot
+      fsm = self.autopilot.fsm
+      ultra_vp = ap.pse.data[0]
+      vp = min(ultra_vp, 2.0)
+      while vp > -1.0:
+         vp -= 0.05
+         set_vp(vp)
+         sleep(0.1)
+      mot_en(False)
+      ap.fsm.handle('done')
 

@@ -50,7 +50,7 @@ def main(name):
    ctrls = [PID_Ctrl(), PID_Ctrl()]
    pos_speed_est = scl_get_socket('pos_speed_est_neu', 'sub')
    while True:
-      est = loads(pos_speed_est.recv())
+      est = pos_speed_est.recv()
       ne_pos = [est[N_POS], est[E_POS]]
       setpoints = [sp_n.data, sp_e.data]
       ne_ctrl = [0.0, 0.0]

@@ -1,5 +1,5 @@
 
-
+from scl import scl_get_socket
 import inspect
 
 
@@ -9,10 +9,10 @@ LL_INFO =    2
 LL_DEBUG =   3
 
 
-def logger_init(name, socket):
+def logger_init(name):
    global _name, _socket
    _name = name
-   _socket = socket
+   _socket = scl_get_socket('log_data', 'push')
 
 
 def log(level, msg):

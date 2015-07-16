@@ -186,14 +186,13 @@ SERVICE_MAIN_BEGIN("ahrs", PP_PRIO_2)
          {
             ONCE(LOG(LL_INFO, "final beta gain reached, final orientation (y p r): %.1f %.1f %.1f",
                      rad2deg(euler.yaw), rad2deg(euler.pitch), rad2deg(euler.roll)));
-            EVERY_N_TIMES(100, LOG(LL_INFO, "orientation (y p r): %f %f %f; declination: %f", 
+            EVERY_N_TIMES(1000, LOG(LL_INFO, "orientation (y p r): %f %f %f; declination: %f", 
                                     rad2deg(euler.yaw), rad2deg(euler.pitch), rad2deg(euler.roll), rad2deg(tsfloat_get(&decl))));
             msgpack_sbuffer_clear(msgpack_buf);
-            msgpack_pack_array(pk, 7);
+            msgpack_pack_array(pk, 3);
             PACKF(euler.yaw);
             PACKF(euler.pitch);
             PACKF(euler.roll);
-            PACKFV(quat.ve, 4);
             scl_copy_send_dynamic(orientation_socket, msgpack_buf->data, msgpack_buf->size);
          }
       }

@@ -95,7 +95,7 @@ _torques = scl_get_socket('torques_p', 'push')
 
 # motor enable:
 _mot_en = scl_get_socket('mot_en', 'push')
- 
+
 
 ###################
 ### PUBLIC API: ###

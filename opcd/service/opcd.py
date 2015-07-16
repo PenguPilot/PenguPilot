@@ -44,7 +44,6 @@ class OPCD:
    def __init__(self, name):
       self.ctrl_socket = scl_get_socket('opcd_ctrl', 'rep')
       self.event_socket = scl_get_socket('opcd_event', 'pub')
-      logger_init('opcd', scl_get_socket('log_data', 'push'))
       self.conf = Config()
       self.map = {str: 'str_val', int: 'int_val', float: 'dbl_val', bool: 'bool_val'}
 

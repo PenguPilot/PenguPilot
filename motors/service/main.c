@@ -248,6 +248,10 @@ SERVICE_MAIN_BEGIN("motors", PP_PRIO_1)
          PACKI(int_res);
          scl_copy_send_dynamic(int_reset_socket, msgpack_buf->data, msgpack_buf->size);
 
+         ctrls[0] = 0;
+         ctrls[1] = 0;
+         ctrls[2] = 0;
+         ctrls[3] = 0;
          write_motors(ctrls);
       }
    }

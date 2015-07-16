@@ -28,8 +28,9 @@
 
 from sys import argv
 from scl import scl_get_socket
+from time import sleep
 
 assert len(argv) == 3
-s = scl_get_socket(argv[1], 'push')
-s.send(eval(argv[2]))
-
+s = scl_get_socket(argv[1], 'pub')
+sleep(1)
+s.send(argv[2])

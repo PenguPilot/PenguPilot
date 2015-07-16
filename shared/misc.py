@@ -27,6 +27,7 @@
  GNU General Public License for more details. """
 
 
+import sys
 from sys import exit
 from signal import pause
 from daemon import DaemonContext
@@ -39,6 +40,7 @@ from os import getenv, sep
 import errno
 from time import time
 import ctypes, ctypes.util
+from pylogger import *
 
 
 # user data directory:
@@ -70,22 +72,31 @@ class Hysteresis:
 # process and thread daemonization:
 
 def _main_wrapper(name, main):
-   main(name)
+   if name != 'log_proxy':
+      logger_init(name)
+      log(LL_INFO, 'starting service: %s' % name)
+   try:
+      main(name)
+   except Exception, e:
+      import traceback
+      log(LL_ERROR, '%s' % str(traceback.format_exc()))
    pause()
 
-from pylogger import *
 
-def daemonize(name, main):
-   run_dir = user_data_dir + sep + 'run'
-   pidf = pidlockfile.PIDLockFile(run_dir + sep + name + '.pid')
-   try:
-      pidf.acquire(timeout = 1.0)
-   except:
-      pidf.break_lock()
-      pidf.acquire(timeout = 1.0)
-   pidf.release()
-   with DaemonContext(pidfile = pidf):
+def daemonize(name, main, fg = False):
+   if fg:
       _main_wrapper(name, main)
+   else:
+      run_dir = user_data_dir + sep + 'run'
+      pidf = pidlockfile.PIDLockFile(run_dir + sep + name + '.pid')
+      try:
+         pidf.acquire(timeout = 1.0)
+      except:
+         pidf.break_lock()
+         pidf.acquire(timeout = 1.0)
+      pidf.release()
+      with DaemonContext(pidfile = pidf):
+         _main_wrapper(name, main)
 
 
 def start_daemon_thread(target):

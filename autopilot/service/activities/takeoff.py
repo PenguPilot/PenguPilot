@@ -7,7 +7,7 @@
  | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
  | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
  |                   __/ |                           |
- |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
+ |  GNU/Linux based |___/  Multi-Rotor UAV Autoap |
  |___________________________________________________|
  
  Takeoff Activity Class
@@ -34,8 +34,8 @@ from ctrl_api import *
 class TakeoffActivity(Activity, StabMixIn):
 
 
-   def __init__(self, fsm, autopilot):
-      Activity.__init__(self, autopilot)
+   def __init__(self, fsm, autoap):
+      Activity.__init__(self, autoap)
       self.canceled = False
       self.fsm = fsm
 
@@ -45,36 +45,33 @@ class TakeoffActivity(Activity, StabMixIn):
 
 
    def run(self):
-      pilot = self.autopilot
-      arg = pilot.arg
+      ap = self.autopilot
+      arg = ap.arg
       if arg:
-         u_max = 3.5
-         if arg > u_max:
-            u_setpoint = u_max
-         else:
-            u_setpoint = arg
+         vp_max = 4.0
+         vp_target = min(vp_max, arg)
       else:
-         u_setpoint = 1.0
+         vp_target = 1.0
 
+      # start motors and wait for
       mot_en(True)
-
-      if self.canceled:
-         pilot.stop_motors()
-         log_error('take-off canceled');
-         return
+      while ap.motors_state.recv() != 2:
+         if self.canceled:
+            mot_en(False)
+            return
 
       # "point of no return":
-      pilot.start_pos = [pilot.pse.data[4], pilot.pse.data[6]]
-      set_hp(pilot.start_pos)
+      ap.home_pos = [ap.pse.data[4], ap.pse.data[6]]
+      set_hp(ap.home_pos)
       set_ys(0.0)
 
-      # set new altitude setpoint and stabilize:
-      u_setp = -1.0
-      while u_setp < u_setpoint:
-         set_vp(u_setp)
-         u_setp += 0.05
+      # increase altitude setpoint:
+      vp = -1.0
+      while vp < vp_target:
+         set_vp(vp)
+         vp += 0.05
          sleep(0.1)
-      pilot.set_ctrl_param(u_setpoint)
+      set_vp(vp_target)
       #self.stabilize()
       self.fsm.handle('done')
 
