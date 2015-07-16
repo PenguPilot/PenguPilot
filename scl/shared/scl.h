@@ -27,6 +27,7 @@
 #define __SCL_H__
 
 
+#include <msgpack.h>
 #include <malloc.h>
 #include <zmq.h>
 

@@ -20,10 +20,10 @@
        motors_enable -> |         | <-> opcd
  [sum, c_0, .., c_n]    | MOTORS  | <-- flight_state: integer; 0 | 1
               forces -> | SERVICE | --> motors_state: integer;
-      [f_0, .., f_n]    |_________|     2 | 4 | 5 | 6 | 7
+      [f_0, .., f_n]    |_________|     0 | 1 | 2 | 3
 
 
- base states:
+ states:
  ------------
  0 = stopped
  1 = starting
@@ -38,12 +38,6 @@
  timer() |                  | timer()
          `-- [3] <--- [2] <-´
                  stop()
-
-
- state access macros:
- --------------------
- #define MOTORS_CONTROLLABLE(state) ((state) == 2 || (state) == 6)
- #define MOTORS_SATURATED(state) (((state) & 0x40) ? 1 : 0)
 
 
  This program is free software; you can redistribute it and/or modify
@@ -186,7 +180,7 @@ SERVICE_MAIN_BEGIN("motors", PP_PRIO_1)
       arduino_pwms_init();
       write_motors = arduino_pwms_write;   
    }
-   motors_state_machine_init();
+   THROW_ON_ERR(motors_state_machine_init());
    interval_t interval;
    interval_init(&interval);
 

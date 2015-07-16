@@ -1,4 +1,5 @@
-/*___________________________________________________
+"""
+  ___________________________________________________
  |  _____                       _____ _ _       _    |
  | |  __ \                     |  __ (_) |     | |   |
  | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
@@ -8,27 +9,10 @@
  |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
-  
- Timer-based Motors State Machine Interface
+ 
+ Dummy Activity Class
 
- States:
- ------------
- 0 = stopped
- 1 = starting
- 2 = running
- 3 = stopping
-
- State chart:
- ------------
-
-                 start()
-         .-> [0] ---> [1] --.
- timer() |                  | timer()
-         `-- [3] <--- [2] <-´
-                 stop()
-
-
- Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -38,21 +22,17 @@
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. */
+ GNU General Public License for more details. """
 
 
-#ifndef __MOTORS_STATE_MACHINE_H__
-#define __MOTORS_STATE_MACHINE_H__
+from activity import Activity
 
 
-#include <stdbool.h>
-#include <motors_state.h>
+class DummyActivity(Activity):
 
+   def __init__(self):
+      Activity.__init__(self, None)
 
-int motors_state_machine_init(void);
-
-motors_state_t motors_state_machine_update(float dt, bool start);
-
-
-#endif /* __MOTORS_STATE_MACHINE_H__ */
+   def run(self):
+      pass
 
