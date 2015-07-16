@@ -30,17 +30,17 @@ from sticks import *
 from scl import scl_get_socket, SCL_Reader
 from time import sleep
 from geomath import vec2_rot
-from ctrl_api import *
+from ctrl_api import CtrlAPI
 from gps_msgpack import fix
 from opcd_interface import OPCD_Subscriber
 
 
 def mot_en_cb(gesture):
    if gesture[0]: # start
-      mot_en(True)
+      api.mot_en(True)
       print 'start'
    if gesture[1]: # stop
-      mot_en(False)
+      api.mot_en(False)
       print 'stop'
 
 orientation = SCL_Reader('orientation', 'sub', [0.0])
@@ -52,7 +52,8 @@ gps = SCL_Reader('gps', 'sub', [0])
 
 init(OPCD_Subscriber())
 sleep(1)
-set_thrust_max(1000.0)
+api = CtrlAPI()
+api.set_thrust_max(1000.0)
 try:
    mode_prev = None
    hold_baro = None
@@ -61,23 +62,23 @@ try:
       rc_data = rc_socket.recv()
       if rc_data[0]:
          pitch_stick, roll_stick, yaw_stick, gas_stick, on_switch, mode_switch = rc_data[1:7]
-         mot_en(on_switch > 0.5)
+         api.mot_en(on_switch > 0.5)
          pr_sticks = [pitch_stick, roll_stick]
 
          #if (abs(gas_stick) > 0.1):
-         #   set_vs(gas_stick * 2.0)
+         #   api.set_vs(gas_stick * 2.0)
          #   hold_baro = None
          #else:
          #   if not pse.data:
-         #      set_vs(gas_stick * 2.0)
+         #      api.set_vs(gas_stick * 2.0)
          #   if not hold_baro:
          #      hold_baro = pse.data[0]
          #      print 'setting', hold_baro
-         #      set_vp(hold_baro, 'ultra')
+         #      api.set_vp(hold_baro, 'ultra')
 
-         set_thrust(10.0 * (gas_stick + 1.0))
+         api.set_thrust(10.0 * (gas_stick + 1.0))
          if flying.data:
-            set_ys(0.6 * yaw_stick)
+            api.set_ys(0.6 * yaw_stick)
 
          mode = channel_to_mode(mode_switch)
          if mode == 'gps' and fix(gps.data) < 2:
@@ -92,23 +93,23 @@ try:
                if not pos_locked:
                   pos_locked = pse.data[4], pse.data[6]
                   print 'locking:', pos_locked
-                  set_hp(pos_locked)
+                  api.set_hp(pos_locked)
             else:
                pos_locked = None
                scale = 3.0
                v_local = [scale * pitch_stick, scale * roll_stick]
                v_global = vec2_rot(v_local, orientation.data[0])
-               set_hs(v_global)
+               api.set_hs(v_global)
          elif mode == 'acc':
             vals = map(pitch_roll_angle_func, pr_sticks)
-            set_rp([-vals[0], vals[1]])
+            api.set_rp([-vals[0], vals[1]])
          else: # gyro
             vals = map(pitch_roll_speed_func, pr_sticks)
-            set_rs([-vals[0], vals[1]])
+            api.set_rs([-vals[0], vals[1]])
       else:
-         mot_en(False)
+         api.mot_en(False)
 except Exception, e:
    print e
 
-mot_en(False)
+api.mot_en(False)
 sleep(0.5)

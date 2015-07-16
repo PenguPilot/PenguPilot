@@ -27,7 +27,6 @@
 
 from time import sleep
 from activity import Activity
-from ctrl_api import mot_en, set_vp
 
 
 class LandActivity(Activity):
@@ -36,14 +35,14 @@ class LandActivity(Activity):
       Activity.__init__(self, autopilot)
 
    def run(self):
-      ap = self.autopilot
+      api = self.autopilot.api
       fsm = self.autopilot.fsm
       ultra_vp = ap.pse.data[0]
       vp = min(ultra_vp, 2.0)
       while vp > -1.0:
          vp -= 0.05
-         set_vp(vp)
+         api.set_vp(vp)
          sleep(0.1)
-      mot_en(False)
+      api.mot_en(False)
       ap.fsm.handle('done')
 

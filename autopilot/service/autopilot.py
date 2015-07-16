@@ -33,11 +33,12 @@ from flightsm import FlightSM
 from scl import scl_get_socket, SCL_Reader
 from pylogger import *
 from misc import daemonize
-
+from ctrl_api import CtrlAPI
 
 class Autopilot:
 
    def __init__(self):
+      self.api = CtrlAPI()
       self.fsm = FlightSM(self.error, self.broadcast, self.takeoff, self.land, self.move, self.stop)
       self.orientation = SCL_Reader('orientation', 'sub', [0.0] * 3)
       self.pse = SCL_Reader('pos_speed_est_neu', 'sub', [0.0] * 8)
