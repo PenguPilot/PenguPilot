@@ -39,7 +39,7 @@ print 'collecting magnetometer data .. press ctrl+c when finished'
 socket = scl_get_socket('mag_raw', 'sub')
 while True:
    try:
-      vec = loads(socket.recv())
+      vec = socket.recv()
       points.append(vec)
    except:
       break
