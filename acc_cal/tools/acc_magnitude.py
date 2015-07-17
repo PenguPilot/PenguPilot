@@ -34,7 +34,7 @@ from numpy.linalg import norm
 socket = scl_get_socket('acc', 'sub')
 while True:
    try:
-      vec = loads(socket.recv())
+      vec = socket.recv()
       print 'acc vector magnitude:', norm(vec)
    except:
       break
