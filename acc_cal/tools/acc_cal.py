@@ -32,14 +32,14 @@ from cal_math import Calibration
 from opcd_interface import OPCD_Interface
 from math import isnan
 
-opcd = OPCD_Interface(scl_get_socket('opcd_ctrl', 'req'))
+opcd = OPCD_Interface()
 points = []
 
 print 'collecting accelerometer data .. press ctrl+c when finished'
 socket = scl_get_socket('acc_raw', 'sub')
 while True:
    try:
-      vec = loads(socket.recv())
+      vec = socket.recv()
       points.append(vec)
       print len(points)
    except:
