@@ -1,7 +1,7 @@
 Elevation Map Service
 =====================
 
-Subscribes GPS position (latitude, longitude) and published elevation data based on SRTM files.
+Subscribes GPS position (latitude, longitude) and publishes corresponding elevation data based on SRTM files.
 
 Please download the corresponding SRTM files from: [http://dds.cr.usgs.gov/srtm/version2_1/SRTM3](http://dds.cr.usgs.gov/srtm/version2_1/SRTM3).
 
