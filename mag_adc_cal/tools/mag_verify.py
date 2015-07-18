@@ -27,7 +27,6 @@
 
 
 from scl import scl_get_socket
-from msgpack import loads
 from numpy.linalg import norm
 
 
