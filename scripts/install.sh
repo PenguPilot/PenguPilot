@@ -27,6 +27,7 @@
 
 cd /usr/local/bin
 sudo ln -f -s $PENGUPILOT_PATH/opcd/tools/opcd_shell.sh pp_opcd_shell
+sudo ln -f -s $PENGUPILOT_PATH/ahrs/tools/print_ypr.py pp_print_ypr
 sudo ln -f -s $PENGUPILOT_PATH/scripts/clear_pidfiles.sh pp_clear_pidfiles
 sudo ln -f -s $PENGUPILOT_PATH/svctrl/svctrl.py pp_svctrl
 sudo ln -f -s $PENGUPILOT_PATH/acc_cal/tools/acc_cal.py pp_acc_cal
