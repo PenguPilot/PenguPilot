@@ -4,6 +4,6 @@ from geomath import rad2deg
 
 s = scl_get_socket('orientation', 'sub')
 while True:
-   y, p, r = map(rad2deg, loads(s.recv())[0:3])
+   y, p, r = map(rad2deg, s.recv())
    print 'Euler (y, p, r) =', y, p, r
 
