@@ -24,3 +24,5 @@ Python Autopilot Implementation
   - subscribes to sockets "orientation", "pos_speed_est_neu"
   - publishes state machine state updates to socket "ap_state"
   - uses the "[Control System API](../api/ctrl_api.py)" to interact with the controller services
+- [tools/ap_test.py](tools/ap_test.py):
+  - test program that sends commands to the autopilot
