@@ -14,5 +14,6 @@ Gyroscope Calibration Service
 =============================
 
 - subscribes to socket "gyro_raw"
-- samples gyroscope measurements when the device is stationary
-- publishes calibrated gyroscope measurements to socket "gyro"
+- operates in two phases:
+  - start-up phase: samples gyroscope measurements when the device is stationary
+  - calibration phase: publishes calibrated gyroscope measurements to socket "gyro"
