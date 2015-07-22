@@ -13,7 +13,7 @@
 Global Accelerations High-Pass Filter
 =====================================
 
-- [service/acc_hpf_neu](service):
-  - implements a simple first-order iir high-pass filter
+- [service/acc_hpf_neu](service/main.c):
+  - implements a simple first-order [IIR](https://en.wikipedia.org/wiki/Infinite_impulse_response) high-pass filter
   - subscribes to socket "acc_neu"
   - publishes to socket "acc_hp_neu"
