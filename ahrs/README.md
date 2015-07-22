@@ -15,5 +15,5 @@ Attitude and Heading Reference System
 
 - [service/ahrs](ahrs):
   - subscribes to sockets "gyro", "acc", "mag", and "decl" (magnetic declination)
-  - uses Quaternion implementation of the ![Mahony DCM](https://gentlenav.googlecode.com/files/MahonyPapers.zip)
+  - uses Quaternion implementation of the [Mahony DCM](https://gentlenav.googlecode.com/files/MahonyPapers.zip)
   - publishes Euler Angles as an array (yaw, pitch, roll) on socket "orientation"
