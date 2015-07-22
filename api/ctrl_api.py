@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 """
-  self.___________________________________________________
- |  self._____                       self._____ self._ self._       self._    |
- | |  self.__ \                     |  self.__ (_) |     | |   |
- | | |__) |__ self._ self.__   self.__ self._ self._   self._| |__) || | self.___ | |_  |
- | |  self.___/ self._ \ '_ \ / self._` | | | |  self.___/ | |/ self._ \| self.__| |
- | | |  |  self.__/ | | | (_| | |_| | |   | | | (_) | |_  |
+  ___________________________________________________
+ |  _____                       _____ _ _       _    |
+ | |  __ \                     |  __ (_) |     | |   |
+ | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
+ | |  ___/ _ \ '_ \ / _` | | | |  ___/ | |/ _ \| __| |
+ | | |  |  __/ | | | (_| | |_| | |   | | | (_) | |_  |
  | |_|   \___|_| |_|\__, |\__,_|_|   |_|_|\___/ \__| |
- |                   self.__/ |                           |
+ |                   __/ |                           |
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
-  
+
+ 
  Control System API
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
@@ -46,7 +47,7 @@ class _OutputEnable:
 
 class CtrlAPI:
 
-   def ___init__(self):
+   def __init__(self):
       # thrust and thrust maximum:
       self._thrust = scl_get_socket('thrust_p', 'push')
       self._thrust_max = scl_get_socket('thrust_maxp', 'push')
