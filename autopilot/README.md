@@ -23,4 +23,4 @@ Python Autopilot Implementation
   - implements a flight state machine in [service/flightsm.py](service/flightsm.py)
   - subscribes to sockets "orientation", "pos_speed_est_neu"
   - publishes state machine state updates to socket "ap_state"
-  - uses the [control API](../api/ctrl_api.py)
+  - uses the "[Control System API](../api/ctrl_api.py) to interact with the controller services
