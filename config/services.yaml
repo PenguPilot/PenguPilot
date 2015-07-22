@@ -148,6 +148,7 @@ remote:
 
 mixer:
    binary: 'mixer/service/mixer'
+   depends: [motors]
 
 mixer_prx:
    binary: 'mixer_prx/service/mixer_prx'
