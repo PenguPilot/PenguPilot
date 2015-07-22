@@ -1,4 +1,5 @@
-/*___________________________________________________
+"""
+  ___________________________________________________
  |  _____                       _____ _ _       _    |
  | |  __ \                     |  __ (_) |     | |   |
  | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
@@ -9,26 +10,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Timer-based Motors State Machine Interface
+ Motors State Interface
 
- States:
- ------------
- 0 = stopped
- 1 = starting
- 2 = running
- 3 = stopping
-
- State chart:
- ------------
-
-                 start()
-         .-> [0] ---> [1] --.
- timer() |                  | timer()
-         `-- [3] <--- [2] <-´
-                 stop()
-
-
- Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2015 Tobias Simon
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -38,21 +22,11 @@
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. */
+ GNU General Public License for more details. """
 
 
-#ifndef __MOTORS_STATE_MACHINE_H__
-#define __MOTORS_STATE_MACHINE_H__
-
-
-#include <stdbool.h>
-#include <motors_state.h>
-
-
-int motors_state_machine_init(void);
-
-motors_state_t motors_state_machine_update(float dt, bool start);
-
-
-#endif /* __MOTORS_STATE_MACHINE_H__ */
+STOPPED =  0
+STARTING = 1
+RUNNING =  2
+STOPPING = 3
 

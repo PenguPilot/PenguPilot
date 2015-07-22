@@ -11,9 +11,12 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Flight State Detector based on N/E Accelerations
+ Flight State Detector based on
+ - N/E accelerations variance
+ - motors state
+ - ultrasonic height
 
- Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2015 Tobias Simon
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -27,11 +30,15 @@
 
 
 from misc import daemonize
-from scl import scl_get_socket
+from scl import scl_get_socket, SCL_Reader
+from mot_state import STOPPED, RUNNING
 from numpy import var
+from time import sleep
 
 
 def main(name):
+   ms = SCL_Reader('mot_state', 'sub', STOPPED)
+   ultra = SCL_Reader('ultra', 'sub', 0.0)
    acc_socket = scl_get_socket('acc_neu', 'sub')
    flying_socket = scl_get_socket('flying', 'pub')
    acc_vec = acc_socket.recv()
@@ -39,9 +46,10 @@ def main(name):
    size = 80
    histn = [acc_vec[0]] * size
    histe = [acc_vec[1]] * size
-   s = sp = 0
-
+   s = 0
+   sp = 1
    i = 0
+   sleep(1)
    while True:
       acc_vec = acc_socket.recv()
       i += 1
@@ -51,7 +59,7 @@ def main(name):
       histn = histn[1:] + [acc_vec[0]]
       histe = histe[1:] + [acc_vec[1]]
       v = var(histn) + var(histe)
-      if v > 15:
+      if v > 15 and ms.data == RUNNING and ultra.data > 0.5:
          s = 1
       else:
          s = 0

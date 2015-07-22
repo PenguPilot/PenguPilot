@@ -35,13 +35,14 @@ from pp_prio import PP_PRIO_3
 from scheduler import sched_set_prio
 from math import sin, cos
 from pos_speed_est_neu import N_SPEED, E_SPEED
+from mot_state import STOPPED, RUNNING
 
 
 def main(name):
    sched_set_prio(PP_PRIO_3)
    opcd = OPCD_Subscriber()
    orientation = SCL_Reader('orientation', 'sub')
-   int_res = SCL_Reader('int_res', 'sub', 0)
+   ms = SCL_Reader('mot_state', 'sub', STOPPED)
    sp_n = SCL_Reader(name + '_sp_n', 'sub', 0.0)
    sp_e = SCL_Reader(name + '_sp_e', 'sub', 0.0)
    sp = [sp_n, sp_e]
@@ -62,7 +63,7 @@ def main(name):
             ctrls[c].p = opcd[name + '.p']
             ctrls[c].i = opcd[name + '.i']
             ctrls[c].max_sum_err = opcd[name + '.max_sum_err']
-            if int_res.data:
+            if ms.data != RUNNING:
                ctrls[c].reset()
             ne_ctrl[c] = ctrls[c].control(sp[c].data, ne_speed[c])
          err.send([ctrls[0].err, ctrls[1].err])

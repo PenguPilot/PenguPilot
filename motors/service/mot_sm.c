@@ -28,6 +28,9 @@
                  stop()
 
 
+ Upon each state update, the state value is published
+ using socket "mot_state".
+
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
@@ -45,26 +48,25 @@
 #include <math.h>
 #include <logger.h>
 #include <scl.h>
-
 #include <time/etimer.h>
 
-#include "motors_state_machine.h"
+#include "mot_sm.h"
 
 
-static motors_state_t state = MOTORS_STOPPED;
+static mot_state_t state = MOTORS_STOPPED;
 static etimer_t timer;
 MSGPACK_PACKER_DECL;
-static void *motors_state_socket;
+static void *mot_state_socket;
 
 
-int motors_state_machine_init(void)
+int mot_sm_init(void)
 {
    ASSERT_ONCE();
    THROW_BEGIN();
    etimer_init(&timer, 1.5);
    MSGPACK_PACKER_INIT();
-   motors_state_socket = scl_get_socket("motors_state", "pub");
-   THROW_IF(motors_state_socket == NULL, -EIO);
+   mot_state_socket = scl_get_socket("mot_state", "pub");
+   THROW_IF(mot_state_socket == NULL, -EIO);
    THROW_END();
 }
 
@@ -73,11 +75,11 @@ static void publish_state_update(int new_state)
 {
    msgpack_sbuffer_clear(msgpack_buf);
    PACKI(new_state);
-   scl_copy_send_dynamic(motors_state_socket, msgpack_buf->data, msgpack_buf->size);
+   scl_copy_send_dynamic(mot_state_socket, msgpack_buf->data, msgpack_buf->size);
 }
 
 
-motors_state_t motors_state_machine_update(float dt, bool start)
+mot_state_t mot_sm_update(float dt, bool start)
 {
    switch (state)
    {

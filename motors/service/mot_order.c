@@ -1,5 +1,4 @@
-"""
-  ___________________________________________________
+/*___________________________________________________
  |  _____                       _____ _ _       _    |
  | |  __ \                     |  __ (_) |     | |   |
  | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
@@ -10,9 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Scheduler Interface for current Process
+ Motors Order Parser Implementation
 
- Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2015 Tobias Simon
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -22,23 +21,42 @@
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. """
+ GNU General Public License for more details. */
 
 
-import os
-import ctypes, ctypes.util as util
+#include <stdio.h>
+#include <assert.h>
+#include <util.h>
+#include <is_parser.h>
+
+#include "mot_order.h"
 
 
-def sched_set_prio(prio):
-   _SCHED_FIFO = 1
-   libc = ctypes.cdll.LoadLibrary(util.find_library('c'))
-   if prio > libc.sched_get_priority_max(_SCHED_FIFO):
-      raise ValueError('priority too high: %d' % prio)
-   elif prio < libc.sched_get_priority_min(_SCHED_FIFO):
-      raise ValueError('priority too high: %d' % prio)
-   class _SchedParams(ctypes.Structure):
-      _fields_ = [('sched_priority', ctypes.c_int)]
-   schedParams = _SchedParams()
-   schedParams.sched_priority = prio
-   libc.sched_setscheduler(os.getpid(), _SCHED_FIFO, ctypes.byref(schedParams))
+void mot_order_print(int n_motors, int order[MAX_MOTORS])
+{
+   FOR_N(i, n_motors)
+   {
+      printf("%d\n", order[i]);   
+   }
+}
+
+
+int mot_order_run(char *buffer, int order[MAX_MOTORS])
+{
+   is_parser_t parser;
+   is_parser_init(&parser);
+   unsigned int motors = is_parser_count(&parser, buffer);
+   assert(motors < MAX_MOTORS);
+   FOR_N(i, motors)
+   {
+       while (1)
+       {
+          is_parser_run(&parser, *buffer++);
+          if (is_parser_ready(&parser))
+             break;
+       }
+       order[i] = is_parser_val(&parser) - 1;
+   }
+   return motors;
+}
 

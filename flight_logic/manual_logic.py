@@ -33,7 +33,7 @@ from geomath import vec2_rot
 from ctrl_api import CtrlAPI
 from gps_msgpack import fix
 from opcd_interface import OPCD_Subscriber
-
+from pos_speed_est_neu import N_POS, E_POS
 
 def mot_en_cb(gesture):
    if gesture[0]: # start
@@ -62,6 +62,7 @@ try:
       rc_data = rc_socket.recv()
       if rc_data[0]:
          pitch_stick, roll_stick, yaw_stick, gas_stick, on_switch, mode_switch = rc_data[1:7]
+         mot_en_state = on_switch > 0.5
          api.mot_en(on_switch > 0.5)
          pr_sticks = [pitch_stick, roll_stick]
 
@@ -85,13 +86,14 @@ try:
             mode = 'acc'
          if mode_prev != mode:
             print 'new mode:', mode
-         mode_prev = mode
          
          # evaluate input based on mode:
          if mode == 'gps':
+            if not mot_en_state or mode_prev != mode: # invalidate position lock
+               pos_locked = None
             if pitch_roll_in_deadzone(pitch_stick, roll_stick):
                if not pos_locked:
-                  pos_locked = pse.data[4], pse.data[6]
+                  pos_locked = pse.data[N_POS], pse.data[E_POS]
                   print 'locking:', pos_locked
                   api.set_hp(pos_locked)
             else:
@@ -106,6 +108,8 @@ try:
          else: # gyro
             vals = map(pitch_roll_speed_func, pr_sticks)
             api.set_rs([-vals[0], vals[1]])
+      
+         mode_prev = mode
       else:
          api.mot_en(False)
 except Exception, e:
