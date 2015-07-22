@@ -10,11 +10,9 @@
     |___________________________________________________|
 
 
-Remote Control Channel Permutation and Calibration Service
-==========================================================
+Gyroscope Calibration Service
+=============================
 
-- subscribes to raw remote control channel inputs (socket: rc\_raw)
-- applies channel permutation and scaling based on calibration
-- publishes calibrated remote control channel inputs (socket: rc\_cal)
-
-For the calibration precedure itself, the interactive utility program "pp_rc_cal" is used.
+- subscribes to socket "gyro_raw"
+- samples gyroscope measurements when the device is stationary
+- publishes calibrated gyroscope measurements to socket "gyro"
