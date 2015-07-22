@@ -14,10 +14,10 @@ Accelerometer Calibration Subsystem
 ===================================
 
 - service:
-  - subscribes to socket acc\_raw
-  - publishes on socket acc
+  - subscribes to socket "acc\_raw"
+  - publishes on socket "acc"
 - tools/acc\_cal.py:
   - computes calibration coefficients after rotating the device in arbitrary directions
-  - stores coefficients in opcd
+  - stores coefficients in [opcd](../opcd)
 - tools/acc\_magnitude.py:
   - prints acc vector magnitude to verify calibration
