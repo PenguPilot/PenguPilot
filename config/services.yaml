@@ -125,7 +125,7 @@ rc_gestures:
 
 flight_detect:
    binary: 'flight_detect/service/flight_detect.py'
-   depends: [acc_rot_neu]
+   depends: [i2c_sensors, acc_rot_neu, motors]
 
 
 autopilot:

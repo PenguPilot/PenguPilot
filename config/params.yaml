@@ -24,46 +24,6 @@
 # GNU General Public License for more details.
 
 
-overo_quad: # Gumstix Overo based quadrotor
-   mass: 1.1 # Kg
-   thrust_max: 40.0 # N
-   motors:
-      driver: 'omap3_pwm'
-      f2e: 'hk20_roxxy282735_1045'
-      n_motors: 4
-      mot_1: 8
-      mot_2: 10
-      mot_3: 11
-      mot_4: 9
-   voltage_channel: 7 # TWL4030_MADC
-   current_channel: 2 # TWL4030_MADC
-   adc_to_voltage: 'lambda x: (x + 27.0951) / 117.1319'
-   adc_to_current: 'lambda x: 0.0303 * (2500 - x) + 0.4'
-   rx_type: 'sbus' # 'sbus' or 'dsl'
-   sbus_serial: # taranis sbus
-      path: '/dev/ttyO0'
-   dsl_serial: # ACT dsl
-      path: '/dev/ttyO0'
-      speed: 38400
-   gpsp_serial: # GPS publisher
-      path: "/dev/ttyO2"
-      speed: 115200
-   nrf_serial: "/dev/ttyACM0"
-
-pi_quad: # Raspberry PI based quadrotor
-   mass: 1.1 # Kg
-   thrust_max: 40.0 # N
-   voltage_channel: 0 # currently ignored
-   current_channel: 1 # currently ignored
-   adc_to_voltage: 'lambda x : x * 0.003 * 3.6045'
-   adc_to_current: 'lambda x : x'
-   rx_type: 'dsl'
-   dsl_serial: # ACT DSL
-      path: '/dev/ttyAMA0'
-      speed: 38400
-   nrf_serial: "/dev/ttyACM0"
-
-
 exynos_quad: # ODROID U3 based quadrotor
    mass: 1.1
    thrust_max: 40.0 # N
@@ -183,17 +143,11 @@ mixer: # enables different parts of the coupling matrix
 rs_ctrl: # basic stabilizing controller:
    att_kd: 0.03929356367277829
    att_ki: 5.216018377845929
-   att_kii: 1.9043325795347907
    att_kp: 0.36397715175895795
    yaw_kd: 0.0009970913130018957
    yaw_ki: 3.531770730332799
-   yaw_kii: 3.8199155415521995
    yaw_kp: 0.35127751586656414
-   filt_fg: 10.0
    filt_d: 0.95
-   jxx_jyy: 0.0097
-   jzz: 0.0057292965
-   tmc: 0.03
 
 
 rp_ctrl:

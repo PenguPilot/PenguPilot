@@ -33,6 +33,7 @@ from physics import G_CONSTANT
 from misc import daemonize
 from pp_prio import PP_PRIO_3
 from scheduler import sched_set_prio
+from mot_state import STOPPED, RUNNING
 
 
 def main(name):
@@ -45,7 +46,7 @@ def main(name):
    speed_setpoint = SCL_Reader(name + '_sp', 'sub', -1.0)
    oe = SCL_Reader(name + '_oe', 'pull', 1)
    err = scl_get_socket(name + '_err', 'pub')
-   int_res = SCL_Reader('int_res', 'sub', 1)
+   ms = SCL_Reader('mot_state', 'sub', STOPPED)
    thrust_socket = scl_get_socket('thrust_p', 'push')
 
    pos_speed_est = scl_get_socket('pos_speed_est_neu', 'sub')
@@ -56,7 +57,7 @@ def main(name):
       pid.i = opcd[name + '.i']
       pid.max_sum_err = opcd[name + '.max_sum_err']
       err.send(pid.err)
-      if int_res.data or not oe.data:
+      if ms.data != RUNNING or not oe.data:
          pid.reset()
       thrust = neutral_thrust + pid.control(u_speed, min(max_speed, speed_setpoint.data))
       pid.int_en = thrust < 0.0 or thrust > thrust_max

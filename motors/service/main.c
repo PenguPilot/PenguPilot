@@ -13,17 +13,17 @@
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
- interfaces:
+ Interfaces:
  -----------
-                         _________
-             voltage -> |         |
-       motors_enable -> |         | <-> opcd
- [sum, c_0, .., c_n]    | MOTORS  | <-- flight_state: integer; 0 | 1
-              forces -> | SERVICE | --> motors_state: integer;
-      [f_0, .., f_n]    |_________|     0 | 1 | 2 | 3
+                          __________
+             voltage --> |          |
+              mot_en --> | MOTORS   | <-> opcd
+ [sum, c_0, .., c_n]     | SERVICE  | --> int_en: integer
+              forces --> | n motors | --> mot_state: integer
+      [f_0, .., f_n]     |__________|
 
 
- states:
+ States:
  ------------
  0 = stopped
  1 = starting
@@ -63,14 +63,14 @@
 #include <motors.h>
 #include <pp_prio.h>
 
-#include "motors_order_parser.h"
-#include "motors_state_machine.h"
+#include "mot_order.h"
+#include "mot_sm.h"
 #include "force_to_esc/force_to_esc.h"
 #include "drivers/arduino_pwms/arduino_pwms.h"
 
 
-#define MIN_GAS 0.1 /* 10% */
-#define MAX_GAS 0.8 /* 80% */
+#define MIN_GAS 0.15 /* 10% */
+#define MAX_GAS 1.0 /* 80% */
 
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -135,8 +135,6 @@ SERVICE_MAIN_BEGIN("motors", PP_PRIO_1)
    THROW_IF(forces_socket == NULL, -EIO);
    void *int_en_socket = scl_get_socket("int_en", "pub");
    THROW_IF(int_en_socket == NULL, -EIO);
-   void *int_reset_socket = scl_get_socket("int_reset", "pub");
-   THROW_IF(int_reset_socket == NULL, -EIO);
 
    /* init opcd: */
    char *platform;
@@ -166,7 +164,7 @@ SERVICE_MAIN_BEGIN("motors", PP_PRIO_1)
    strcat(buffer_path, ".motors.order");
    char *order_string;
    opcd_param_get(buffer_path, &order_string);
-   int n_motors = motors_order_parser_run(order_string, order);
+   int n_motors = mot_order_run(order_string, order);
 
    /* determine motor driver: */
    strcpy(buffer_path, platform);
@@ -180,7 +178,7 @@ SERVICE_MAIN_BEGIN("motors", PP_PRIO_1)
       arduino_pwms_init();
       write_motors = arduino_pwms_write;   
    }
-   THROW_ON_ERR(motors_state_machine_init());
+   THROW_ON_ERR(mot_sm_init());
    interval_t interval;
    interval_init(&interval);
 
@@ -191,12 +189,10 @@ SERVICE_MAIN_BEGIN("motors", PP_PRIO_1)
       if (root.type == MSGPACK_OBJECT_ARRAY)
       {
          int int_en = 0;
-         int int_res = 1;
-
          int n_forces = root.via.array.size;
          float dt = interval_measure(&interval);
          pthread_mutex_lock(&mutex);
-         motors_state_t state = motors_state_machine_update(dt, mot_en_mode);
+         mot_state_t state = mot_sm_update(dt, mot_en_mode);
          float ctrls[MAX_MOTORS];
          FOR_N(i, n_forces)
          {
@@ -215,7 +211,6 @@ SERVICE_MAIN_BEGIN("motors", PP_PRIO_1)
                      int_en = 1;   
                   }
                   ctrls[order[i]] = mot_gas;
-                  int_res = 0;
                   break;
                }
 
@@ -234,24 +229,13 @@ SERVICE_MAIN_BEGIN("motors", PP_PRIO_1)
           
          static int int_en_prev = 0;
          if (int_en_prev != int_en)
+         {
             int_en_prev = int_en;
- 
-         static int int_res_prev = 1;
-         if (int_res_prev != int_res)
-            int_res_prev = int_res;
-         
-         msgpack_sbuffer_clear(msgpack_buf);
-         PACKI(int_en);
-         scl_copy_send_dynamic(int_en_socket, msgpack_buf->data, msgpack_buf->size);
+            msgpack_sbuffer_clear(msgpack_buf);
+            PACKI(int_en);
+            scl_copy_send_dynamic(int_en_socket, msgpack_buf->data, msgpack_buf->size);
+         }
 
-         msgpack_sbuffer_clear(msgpack_buf);
-         PACKI(int_res);
-         scl_copy_send_dynamic(int_reset_socket, msgpack_buf->data, msgpack_buf->size);
-
-         ctrls[0] = 0;
-         ctrls[1] = 0;
-         ctrls[2] = 0;
-         ctrls[3] = 0;
          write_motors(ctrls);
       }
    }

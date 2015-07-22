@@ -9,10 +9,9 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- 5-Step Adams-Bashforth Integrator Interface
+ Motors Order Parser Interface
 
- Copyright (C) 2013 Alexander Barth, Control Engineering Group, TU Ilmenau
- Copyright (C) 2014 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2015 Tobias Simon
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -25,25 +24,17 @@
  GNU General Public License for more details. */
 
 
-#ifndef __ADAMS5_H__
-#define __ADAMS5_H__
+#ifndef __MOT_ORDER_H__
+#define __MOT_ORDER_H__
 
 
-#include <stddef.h>
+#include <motors.h>
 
 
-typedef struct 
-{
-   size_t dim;
-   float **f;
-}
-adams5_t;
+void mot_order_print(int n_motors, int order[MAX_MOTORS]);
+
+int mot_order_run(char *definition, int order[MAX_MOTORS]);
 
 
-int adams5_init(adams5_t *a, const size_t dim);
-
-void adams5_run(adams5_t *a, float *out, float *in, float ts, int enabled);
-
-
-#endif /* __ADAMS5_H__ */
+#endif /* __MOT_ORDER_H__ */
 

@@ -32,6 +32,8 @@
 #include <msgpack_reader.h>
 #include <gyro.h>
 #include <pp_prio.h>
+#include <pid.h>
+#include <mot_state.h>
 
 #include "piid.h"
 
@@ -46,7 +48,7 @@ static tsfloat_t rs_ctrl_sp_r;
 static tsfloat_t rs_ctrl_sp_y;
 static int oe = 1;
 
-/* reads desired pitch rate: */
+/* reads output enable: */
 MSGPACK_READER_BEGIN(rs_ctrl_oe_reader)
    MSGPACK_READER_LOOP_BEGIN(rs_ctrl_oe_reader)
       oe = root.via.i64;
@@ -78,7 +80,7 @@ MSGPACK_READER_BEGIN(rs_ctrl_sp_y_reader)
 MSGPACK_READER_END
 
 
-/* thread that reads the desired integrator status: */
+/* thread that reads the integrator enable: */
 MSGPACK_READER_BEGIN(int_en_reader)
    MSGPACK_READER_LOOP_BEGIN(int_en_reader)
    piid_int_enable(root.via.i64);
@@ -86,10 +88,10 @@ MSGPACK_READER_BEGIN(int_en_reader)
 MSGPACK_READER_END
 
 
-/* thread that reads the desired integrator status: */
-MSGPACK_READER_BEGIN(int_reset_reader)
-   MSGPACK_READER_LOOP_BEGIN(int_reset_reader)
-   if (root.via.i64)
+/* thread that reads the motor state for integrator reset: */
+MSGPACK_READER_BEGIN(mot_state_reader)
+   MSGPACK_READER_LOOP_BEGIN(mot_state_reader)
+   if (root.via.i64 != MOTORS_RUNNING)
    {
       pthread_mutex_lock(&mutex);
       piid_reset();
@@ -117,13 +119,15 @@ SERVICE_MAIN_BEGIN("rs_ctrl", PP_PRIO_1)
    THROW_IF(gyro_socket == NULL, -EIO);
    void *torques_socket = scl_get_socket("torques_p", "push");
    THROW_IF(torques_socket == NULL, -EIO);
+   void *err_socket = scl_get_socket("rs_ctrl_err", "pub");
+   THROW_IF(err_socket == NULL, -EIO);
    
    MSGPACK_READER_START(rs_ctrl_oe_reader, "rs_ctrl_oe", PP_PRIO_1, "pull");
    MSGPACK_READER_START(rs_ctrl_sp_p_reader, "rs_ctrl_sp_p", PP_PRIO_1, "sub");
    MSGPACK_READER_START(rs_ctrl_sp_r_reader, "rs_ctrl_sp_r", PP_PRIO_1, "sub");
    MSGPACK_READER_START(rs_ctrl_sp_y_reader, "rs_ctrl_sp_y", PP_PRIO_1, "sub");
    MSGPACK_READER_START(int_en_reader, "int_en", PP_PRIO_1, "sub");
-   MSGPACK_READER_START(int_reset_reader, "int_reset", PP_PRIO_1, "sub");
+   MSGPACK_READER_START(mot_state_reader, "mot_state", PP_PRIO_1, "sub");
  
    const float sample_dt = 0.005;
    piid_init(sample_dt);
@@ -157,6 +161,13 @@ SERVICE_MAIN_BEGIN("rs_ctrl", PP_PRIO_1)
             msgpack_pack_array(pk, 3);
             PACKFV(torques, 3);
             scl_copy_send_dynamic(torques_socket, msgpack_buf->data, msgpack_buf->size);
+            
+            msgpack_sbuffer_clear(msgpack_buf);
+            msgpack_pack_array(pk, 3);
+            FOR_N(i, 3)
+               PACKF(rates[i] - gyro[i]);
+            scl_copy_send_dynamic(err_socket, msgpack_buf->data, msgpack_buf->size);
+ 
          }
       }
    }
