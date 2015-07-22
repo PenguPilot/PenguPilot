@@ -18,4 +18,4 @@ Attitude and Heading Reference System
   - uses Quaternion implementation of the [Mahony DCM](https://gentlenav.googlecode.com/files/MahonyPapers.zip)
   - publishes Euler Angles as an array of radians (yaw, pitch, roll) on socket "orientation"
 - [ahrs/tools/print_ypr.py](ahrs/tools/print_ypr.py):
-  - prints the orientation in degrees on the console
+  - prints the orientation in degrees to the console
