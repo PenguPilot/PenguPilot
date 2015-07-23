@@ -30,12 +30,6 @@ The whole flight infrastructure is based on Linux (PREEMPT/PREEMPT_RT) user-spac
 - platform-neutral code without low-level interrupt and timer programming
 
 
-**Currently, PenguPilot supports the following computer-on-modues**:
-
-- Gumstix Overo (custom Gentoo Linux)
-- Raspberry Pi (Raspbian)
-- Odroid U3 (custom Gentoo Linux)
-
 What's different compared to other Approaches?
 ---------------------------------------------------------------------
 
@@ -72,13 +66,22 @@ Filesystem Contents
 
 Flight Infrastructure:
 
-- [autopilot](autopilot): real-time control running at 200Hz
-- [icarus](icarus): high-level flight management service (10Hz)
-- [blackbox](blackbox): subscribes to autopilot log data and writes it to sd card
-- [powerman](powerman): power management and monitoring service; warns the user when the battery is low
+- [autopilot](autopilot): automatic flight code with/without remote control based safery
+- [i2c_sensors](i2c_sensors): ready gyro, acc, mag, baro, and ultrasonic sensors
+- [gyro_cal](gyro_cal): gyroscope calibration
+- [acc_cal](acc_cal): accelerometer calibration
+- [mag_adc_cal](mag_adc_cal): magnetometer calibration
+- [cmc](cmc): current magnetometer calibration
+- [rs_ctrl](rs_ctrl): rotation speed control for stabilizing the UAV
+- [rp_ctrl](rp_ctrl): rotation position control
+- [vs_ctrl](vs_ctrl): vertical speed control using barometer
+- [vp_ctrl](vp_ctrl): vertical position control using barometer/ultrasonic/elevation map
+- [hs_ctrl](hs_ctrl): horizontal speed control
+- [hp_ctrl](hp_ctrl): horizontal position control
+- [battmon](battmon): battery monitor; warns the user when the battery is low
 - [gpsp](gpsp): gps publisher, similar to gpsd but much simpler; uses [NMEALib](https://github.com/AHR-Project/nmealib)
 - [remote](remote): remote control channels publisher
-- [rc_cal](rc_cal): remote control channel permutation and calibration service
+- [rc_cal](rc_cal): remote control channel calibration service
 - [geomag](geomag): subscribes to gps position and date/time; publishes magnetic declination in degrees
 - [elevmap](elevmap): subscribes to gps position; publishes SRTM3 elevation data
 - [ads1x15](ads1x15): Raspberry PI I2C ADC voltage/current publisher
