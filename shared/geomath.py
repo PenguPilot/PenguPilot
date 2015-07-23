@@ -69,6 +69,10 @@ def gps_add_meters((lat, lon), (dx, dy)):
    return transform(_aeqd, _gps, y, x)
 
 
+def gps_offset:
+   x = (lat - start_lat) / 8.983152841195214e-06
+   y = (lon - start_lon) / 8.983152841195214e-06 * cos(M_PI / 180.0f * start_lat);
+
 def gps_meters_offset((lat1, lon1), (lat2, lon2)):
    y1, x1 = transform(_gps, _aeqd, lat1, lon1)
    y2, x2 = transform(_gps, _aeqd, lat2, lon2)
