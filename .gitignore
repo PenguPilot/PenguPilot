@@ -9,6 +9,7 @@
 *.pb-c.c
 *.pb-c.h
 shared/serialport.py
+penguio_mw/service/penguio_mw
 motors/service/motors
 mixer/service/mixer
 mixer_prx/service/mixer_prx

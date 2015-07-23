@@ -30,12 +30,17 @@ test_service:
 motors:
    binary: 'motors/service/motors'
 
+penguio_mw:
+   binary: 'penguio_mw/service/penguio_mw'
+   platforms: [u3_penguio_mw]
+
 i2c_sensors:
    binary: 'i2c_sensors/service/i2c_sensors'
+   platforms: [u3_bitbang_arduino]
 
 gyro_cal:
    binary: 'gyro_cal/service/gyro_cal'
-   depends: [i2c_sensors]
+   depends: [penguio_mw, i2c_sensors]
 
 gps_rel:
    binary: 'gps_rel/service/gps_rel'
@@ -44,7 +49,7 @@ gps_rel:
 
 mag_adc_cal:
    binary: 'mag_adc_cal/service/mag_adc_cal'
-   depends: [i2c_sensors]
+   depends: [penguio_mw, i2c_sensors]
 
 cmc:
    binary: 'cmc/service/cmc'
@@ -52,7 +57,7 @@ cmc:
 
 acc_cal:
    binary: 'acc_cal/service/acc_cal'
-   depends: [i2c_sensors]
+   depends: [penguio_mw, i2c_sensors]
 
 ahrs:
    binary: 'ahrs/service/ahrs'
@@ -68,7 +73,7 @@ acc_hpf_neu:
 
 pos_speed_est_neu:
    binary: 'pos_speed_est_neu/service/pos_speed_est_neu'
-   depends: [i2c_sensors, acc_hpf_neu, gps_rel]
+   depends: [acc_hpf_neu, gps_rel]
 
 rs_ctrl:
    binary: 'rs_ctrl/service/rs_ctrl'
@@ -125,7 +130,7 @@ rc_gestures:
 
 flight_detect:
    binary: 'flight_detect/service/flight_detect.py'
-   depends: [i2c_sensors, acc_rot_neu, motors]
+   depends: [acc_rot_neu, motors]
 
 
 autopilot:
@@ -135,7 +140,7 @@ autopilot:
 
 arduino:
    binary: 'arduino/service/arduino'
-   platforms: [exynos_quad]
+   platforms: [u3_bitbang_arduino]
 
 rc_cal:
    binary: 'rc_cal/service/rc_cal'
@@ -143,7 +148,7 @@ rc_cal:
 
 remote:
    binary: 'remote/service/remote'
-   platforms: [overo_quad, pi_quad]
+   platforms: [overo, pi]
 
 
 mixer:
@@ -159,14 +164,14 @@ ofs:
 
 ads1x15:
    binary: 'ads1x15/service/ads1x15.py'
-   platforms: [pi_quad]
+   platforms: [pi]
 
 gpsp:
    binary: 'gpsp/service/gpsp'
 
 twl4030_madc:
    binary: 'twl4030_madc/service/twl4030_madc.py'
-   platforms: [overo_quad]
+   platforms: [overo]
 
 
 opcd:
@@ -181,7 +186,7 @@ battmon:
 
 display:
   binary: 'display/service/display.py'
-  platforms: [overo_quad]
+  platforms: [overo]
   depends: [battmon, geomag, elevmap, rc_cal]
 
 emerg_kill:

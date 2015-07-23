@@ -33,7 +33,7 @@ re_cc = re.compile('.*\.(c|cpp)$')
 re_pb = re.compile('.*\.proto$')
 
 def set_compiler_dependent_cflags():
-   cflags = '-O3 -D_GNU_SOURCE -std=c99 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-unused-but-set-variable -Wno-error=unused-result'
+   cflags = '-O3 -D_GNU_SOURCE -std=c99 -Wall -Wextra -Werror -Wno-strict-aliasing -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-unused-but-set-variable -Wno-error=unused-result'
    all_info = file('/proc/cpuinfo').read()
    board = 'None'
    for line in all_info.split('\n'):
@@ -123,6 +123,7 @@ def build_service(name, extra_libs = []):
 append_inc_lib('gpsp/service/nmealib')
 
 build_service('gpsp')
+build_service('penguio_mw')
 build_service('test_service')
 build_service('gpstime')
 build_service('rc_cal')
