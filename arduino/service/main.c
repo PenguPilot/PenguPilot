@@ -59,6 +59,7 @@ SERVICE_MAIN_BEGIN("arduino", PP_PRIO_2)
    LOG(LL_INFO, "reading parameters");
    char *dev_path;
    tsint_t dev_speed;
+   tsint_init(&dev_speed, 0);
    opcd_param_get("exynos_quad.arduino_serial.path", &dev_path);
    opcd_param_get("exynos_quad.arduino_serial.speed", &dev_speed);
    
