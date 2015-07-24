@@ -10,10 +10,11 @@
     |___________________________________________________|
 
 
-Gyroscope Calibration Service
-=============================
+Sets the System Time to GPS Time
+================================
 
-- subscribes to socket "gyro_raw"
-- operates in two phases:
-  - start-up phase: samples gyroscope measurements when the device is stationary
-  - calibration phase: publishes calibrated gyroscope measurements to socket "gyro"
+- [service/gpstime](service):
+  - subscribes to sockets "gps"
+  - sets the system time (UTC)
+  - sets up time zone information based on lat/lon timezone lookup
+  - pubslishes binary status on socket "time_set"

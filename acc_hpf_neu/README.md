@@ -10,10 +10,10 @@
     |___________________________________________________|
 
 
-Gyroscope Calibration Service
-=============================
+Global Accelerations High-Pass Filter
+=====================================
 
-- subscribes to socket "gyro_raw"
-- operates in two phases:
-  - start-up phase: samples gyroscope measurements when the device is stationary
-  - calibration phase: publishes calibrated gyroscope measurements to socket "gyro"
+- [service/acc_hpf_neu](service/main.c):
+  - implements a simple first-order [IIR](https://en.wikipedia.org/wiki/Infinite_impulse_response) high-pass filter
+  - subscribes to socket "acc_neu"
+  - publishes to socket "acc_hp_neu"

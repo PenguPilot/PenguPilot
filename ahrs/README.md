@@ -10,10 +10,12 @@
     |___________________________________________________|
 
 
-Gyroscope Calibration Service
-=============================
+Attitude and Heading Reference System
+=====================================
 
-- subscribes to socket "gyro_raw"
-- operates in two phases:
-  - start-up phase: samples gyroscope measurements when the device is stationary
-  - calibration phase: publishes calibrated gyroscope measurements to socket "gyro"
+- [service/ahrs](service):
+  - subscribes to sockets "gyro", "acc", "mag", and "decl" (magnetic declination)
+  - uses Quaternion implementation of the [Mahony DCM](https://gentlenav.googlecode.com/files/MahonyPapers.zip)
+  - publishes Euler Angles as an array of radians (yaw, pitch, roll) on socket "orientation"
+- [tools/print_ypr.py](tools/print_ypr.py):
+  - prints the orientation in degrees to the console

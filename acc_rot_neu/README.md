@@ -10,10 +10,10 @@
     |___________________________________________________|
 
 
-Gyroscope Calibration Service
-=============================
+Local to Global Accelerations Rotation
+======================================
 
-- subscribes to socket "gyro_raw"
-- operates in two phases:
-  - start-up phase: samples gyroscope measurements when the device is stationary
-  - calibration phase: publishes calibrated gyroscope measurements to socket "gyro"
+- [service/acc_rot_neu](service/main.c):
+  - rotates local accelerations to NEU frame
+  - subscribes to sockets "acc" and "orientation"
+  - publishes to socket "acc_neu" at the same rate it reads from "acc"

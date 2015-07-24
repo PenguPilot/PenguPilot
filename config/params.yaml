@@ -24,8 +24,37 @@
 # GNU General Public License for more details.
 
 
-exynos_quad: # ODROID U3 based quadrotor
-   mass: 1.1
+u3_penguio_mw: # ODROID U3 with multiwii nano as io board
+   mass: 1.1 # Kg
+   thrust_max: 40.0 # N
+   rx_type: 'dsl'
+   arduino_serial: # U3 IO shield serial interface
+      path: '/dev/ttyACM0'
+      speed: 115200
+   gpsp_serial: # GPS publisher
+      path: "/dev/gps0" # created by udev rule
+      speed: 115200
+   nrf_serial: "/dev/nrf0" # created by udev rule
+   motors:
+      driver: 'arduino'
+      f2e: 'hk20_roxxy282735_1045'
+      n_motors: 4
+      order: '1, 4, 3, 2'
+   marg:
+      rot_quat: # marg orientation with reference to uav
+         x: 0.0
+         y: 0.0
+         z: 1.0
+         w: 135.0 # degrees
+      mag:
+         rot_quat: # magnetometer orientation with reference to marg platform
+            x: 0.0
+            y: 0.0
+            z: 1.0
+            w: 0.0
+ 
+u3_bitbang_arduino: # ODROID U3 with raw i2c sensors and arduino for PWM / ADC
+   mass: 1.1 # Kg
    thrust_max: 40.0 # N
    rx_type: 'dsl'
    arduino_serial: # U3 IO shield serial interface

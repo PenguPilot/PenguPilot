@@ -10,10 +10,10 @@
     |___________________________________________________|
 
 
-Gyroscope Calibration Service
-=============================
+Magnetic Declination Service
+============================
 
-- subscribes to socket "gyro_raw"
-- operates in two phases:
-  - start-up phase: samples gyroscope measurements when the device is stationary
-  - calibration phase: publishes calibrated gyroscope measurements to socket "gyro"
+- [service/geomag.py](service/geomag.py):
+  - subscribes to socket "gps"
+  - looks up magnetic declination based on date/time, latitude and longitude
+  - publishes declination float value in radians on socket "decl"

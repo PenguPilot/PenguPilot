@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-"""
-  ___________________________________________________
+/*___________________________________________________
  |  _____                       _____ _ _       _    |
  | |  __ \                     |  __ (_) |     | |   |
  | | |__) |__ _ __   __ _ _   _| |__) || | ___ | |_  |
@@ -11,24 +9,24 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autopilot |
  |___________________________________________________|
   
- Orientation Output Utility
+ Arduino Power Protocol Common Interface
 
- Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
+ Copyright (C) 2014 Jan Roemisch, Integrated Communication Systems Group, TU Ilmenau
 
  This program is free software; you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation; either version 2 of the License, or
  (at your option) any later version.
+
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details. """
+ GNU General Public License for more details. */
 
-from scl import scl_get_socket
-from geomath import rad2deg
 
-s = scl_get_socket('orientation', 'sub')
-while True:
-   y, p, r = map(rad2deg, s.recv())
-   print 'Euler (y, p, r) =', y, p, r
+#ifndef __POWER_COMMON_H__
+#define __POWER_COMMON_H__
 
+#define POWER_PREAMBLE	0xAB56
+
+#endif /* __POWER_COMMON_H__ */

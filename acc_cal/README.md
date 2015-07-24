@@ -13,11 +13,17 @@
 Accelerometer Calibration Subsystem
 ===================================
 
-- service:
-  - subscribes to socket acc\_raw
-  - publishes on socket acc
-- tools/acc\_cal.py:
+- [service/acc_cal.py](service/acc_cal.py):
+  - subscribes to socket "acc\_raw"
+  - publishes on socket "acc"
+- [tools/acc_cal.py](tools/acc_cal.py):
   - computes calibration coefficients after rotating the device in arbitrary directions
-  - stores coefficients in opcd
-- tools/acc\_magnitude.py:
-  - prints acc vector magnitude to verify calibration
+  - stores coefficients via [opcd](../opcd), section acc_cal:
+    - acc_bias_x
+    - acc_bias_y
+    - acc_bias_z
+    - acc_scale_x
+    - acc_scale_y
+    - acc_scale_z
+- [tools/acc_magnitude.py](tools/acc_magnitude.py):
+  - prints acc vector magnitude to verify calibration - this should always print values close to 9.81 (1G)

@@ -78,9 +78,12 @@ def read_config():
       service_available = {}
       config = {}
       for name, service in services.items():
+         plat_match = False
          try:
             plat_list = service['platforms']
-            plat_match = platform in plat_list
+            for candidate in plat_list:
+               if platform.startswith(candidate):
+                  plat_match = True
          except:
             plat_match = True
          service_available[name] = plat_match

@@ -10,10 +10,10 @@
     |___________________________________________________|
 
 
-Gyroscope Calibration Service
-=============================
+Battery Monitor
+===============
 
-- subscribes to socket "gyro_raw"
-- operates in two phases:
-  - start-up phase: samples gyroscope measurements when the device is stationary
-  - calibration phase: publishes calibrated gyroscope measurements to socket "gyro"
+- [service/battmon.py](service/battmon.py):
+  - subscribes to socket "voltage", reads array element 0 (total battery voltage, float)
+  - publishes remaining battery capacity (in percent) and a critical flag to socket "battery"
+  - sends a console warning via "wall" to all consoles if the battery is low

@@ -47,8 +47,16 @@ int arduino_pwms_init(void)
 {
    ASSERT_ONCE();
    THROW_BEGIN();
-   opcd_param_get("exynos_quad.arduino_serial.path", &dev_path);
-   opcd_param_get("exynos_quad.arduino_serial.speed", &dev_speed);
+   char *platform;
+   opcd_param_get("platform", &platform);
+   LOG(LL_INFO, "platform: %s", platform);
+   char buffer_path[128];
+   strcpy(buffer_path, platform);
+   strcat(buffer_path, ".arduino_serial.path");
+   opcd_param_get(buffer_path, &dev_path);
+   strcpy(buffer_path, platform);
+   strcat(buffer_path, ".arduino_serial.speed");
+   opcd_param_get(buffer_path, &dev_speed);
    THROW_ON_ERR(serial_open(&port, dev_path, dev_speed, O_WRONLY, 0));
    THROW_END();
 }

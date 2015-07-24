@@ -131,7 +131,7 @@ try:
    if killed:
       raise Exception
    print 'writing to opcd'
-   opcd = OPCD_Interface(scl_get_socket('opcd_ctrl', 'req'))
+   opcd = OPCD_Interface()
    for name, index, max, min in channel_map:
       prefix = 'rc_cal.' + name + '.'
       opcd.set(prefix + 'index', index)
