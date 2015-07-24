@@ -78,8 +78,7 @@ try:
          #      api.set_vp(hold_baro, 'ultra')
 
          api.set_thrust(10.0 * (gas_stick + 1.0))
-         if flying.data:
-            api.set_ys(0.6 * yaw_stick)
+         api.set_ys(0.6 * yaw_stick)
 
          mode = channel_to_mode(mode_switch)
          if mode == 'gps' and fix(gps.data) < 2:

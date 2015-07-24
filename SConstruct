@@ -122,6 +122,7 @@ def build_service(name, extra_libs = []):
 
 append_inc_lib('gpsp/service/nmealib')
 
+build_service('mwio')
 build_service('gpsp')
 build_service('test_service')
 build_service('gpstime')

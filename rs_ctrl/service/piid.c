@@ -46,11 +46,7 @@ static tsfloat_t att_kd;
 static tsfloat_t yaw_kp;
 static tsfloat_t yaw_ki;
 static tsfloat_t yaw_kd;
-static tsfloat_t filt_fg;
 static tsfloat_t filt_d;
-static tsfloat_t jxx_jyy;
-static tsfloat_t jzz;
-static tsfloat_t tmc;
 
 
 static pid_controller_t ctrl[3];
@@ -98,6 +94,5 @@ void piid_run(float u_ctrl[3], float gyro[3], float rc[3], float dt)
 {
    FOR_N(i, 3)
       u_ctrl[i] = pid_control(&ctrl[i], rc[i] - gyro[i], 0.0, dt);
-   u_ctrl[2] = 0.0;
 }
 
