@@ -170,13 +170,13 @@ mixer: # enables different parts of the coupling matrix
                # gas   pitch  roll  yaw
 
 rs_ctrl: # basic stabilizing controller:
-   att_kd: 0.03929356367277829
-   att_ki: 5.216018377845929
-   att_kp: 0.36397715175895795
-   yaw_kd: 0.0009970913130018957
+   att_kd: 0.04
+   att_ki: 8.28
+   att_kp: 0.28
+   yaw_kd: 0.0
    yaw_ki: 3.531770730332799
    yaw_kp: 0.35127751586656414
-   filt_d: 0.95
+   filt_d: 0.15
 
 
 rp_ctrl:
