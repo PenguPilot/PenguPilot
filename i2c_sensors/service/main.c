@@ -68,7 +68,7 @@ SERVICE_MAIN_BEGIN("i2c_sensors", PP_PRIO_1)
          LOG(LL_ERROR, "could not initialize platform");
       }
    }
-   else if (strcmp(plat_name, "exynos_quad") == 0)
+   else if (strcmp(plat_name, "u3_bitbang_arduino") == 0)
    {
       if (exynos_quad_init(&platform) < 0)
       {

@@ -58,8 +58,8 @@ SERVICE_MAIN_BEGIN("arduino", PP_PRIO_2)
    LOG(LL_INFO, "reading parameters");
    char *dev_path;
    int dev_speed;
-   opcd_param_get("exynos_quad.arduino_serial.path", &dev_path);
-   opcd_param_get("exynos_quad.arduino_serial.speed", &dev_speed);
+   opcd_param_get("u3_bitbang_arduino.arduino_serial.path", &dev_path);
+   opcd_param_get("u3_bitbang_arduino.arduino_serial.speed", &dev_speed);
    
    /* open serial port: */
    LOG(LL_INFO, "opening serial port");
