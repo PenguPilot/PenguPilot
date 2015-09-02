@@ -41,7 +41,7 @@
 SERVICE_MAIN_BEGIN("gpsp", PP_PRIO_3)
    char *plat = NULL;
    opcd_param_get("platform", &plat);
-   if (strcmp(plat, "overo_quad") == 0 || strcmp(plat, "exynos_quad") == 0)
+   if (strcmp(plat, "overo_quad") == 0 || strcmp(plat, "exynos_quad") == 0 || strcmp(plat, "u3_bitbang_arduino") == 0)
    {
       main_serial();
    }
