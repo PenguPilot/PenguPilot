@@ -33,7 +33,7 @@
 
 
 void periodic_thread_start(periodic_thread_t *thread, void *(*func)(void *),
-                           const char *name, int priority, struct timespec period, void *private)
+                           const char *name, int priority, struct timespec period, void *priv)
 {
    ASSERT_NOT_NULL(thread);
    ASSERT_NOT_NULL(func);
@@ -44,7 +44,7 @@ void periodic_thread_start(periodic_thread_t *thread, void *(*func)(void *),
    pthread_attr_init(&attr);
    pthread_attr_setstacksize(&attr, 4096 * 16);
    thread->name = name;
-   thread->private = private;
+   thread->priv = priv;
    thread->periodic_data.period = period;
    thread->running = 1;
    pthread_create(&thread->handle, &attr, func, thread);
