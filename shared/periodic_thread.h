@@ -51,7 +51,7 @@ typedef struct
    volatile int running;
    pthread_attr_t attr;
    struct sched_param sched_param;
-   void *private;
+   void *priv;
 }
 periodic_thread_t;
 
@@ -77,7 +77,7 @@ periodic_thread_t;
 
 
 void periodic_thread_start(periodic_thread_t *thread, void *(*func)(void *),
-                           const char *name, int priority, struct timespec period, void *private);
+                           const char *name, int priority, struct timespec period, void *priv);
 
 void periodic_thread_stop(periodic_thread_t *thread);
 
