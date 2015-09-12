@@ -40,7 +40,7 @@ typedef struct
    pthread_t handle;
    volatile int running;
    struct sched_param sched_param;
-   void *private;
+   void *priv;
 }
 simple_thread_t;
 
@@ -64,7 +64,7 @@ simple_thread_t;
 
 
 void simple_thread_start(simple_thread_t *thread, void *(*func)(void *),
-                         char *name, int priority, void *private);
+                         char *name, int priority, void *priv);
 
 void simple_thread_stop(simple_thread_t *thread);
 
