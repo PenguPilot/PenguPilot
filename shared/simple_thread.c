@@ -32,7 +32,7 @@
 
 
 void simple_thread_start(simple_thread_t *thread, void *(*func)(void *),
-                         char *name, int priority, void *private)
+                         char *name, int priority, void *priv)
 {
    ASSERT_NOT_NULL(thread);
    ASSERT_NOT_NULL(func);
@@ -43,7 +43,7 @@ void simple_thread_start(simple_thread_t *thread, void *(*func)(void *),
    pthread_attr_init(&attr);
    pthread_attr_setstacksize(&attr, 4096 * 16);
    thread->name = name;
-   thread->private = private;
+   thread->priv = priv;
    thread->running = 1;
    pthread_create(&thread->handle, &attr, func, thread);
    thread->sched_param.sched_priority = priority;
