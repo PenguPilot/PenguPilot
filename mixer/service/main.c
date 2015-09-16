@@ -25,7 +25,7 @@ MSGPACK_READER_END
 /* thread that reads the thrust maximum: */
 tsfloat_t thrust_max;
 MSGPACK_READER_BEGIN(thrust_max_reader)
-   MSGPACK_READER_LOOP_BEGIN(thrust_reader)
+   MSGPACK_READER_LOOP_BEGIN(thrust_max_reader)
       tsfloat_set(&thrust_max, root.via.dec);
    MSGPACK_READER_LOOP_END
 MSGPACK_READER_END
