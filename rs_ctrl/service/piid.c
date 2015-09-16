@@ -94,5 +94,14 @@ void piid_run(float u_ctrl[3], float gyro[3], float rc[3], float dt)
 {
    FOR_N(i, 3)
       u_ctrl[i] = pid_control(&ctrl[i], rc[i] - gyro[i], 0.0, dt);
+   
+   //workaround allowing quadcopter to be stable on the ground
+   double gyro_noise_value = 0.0005; //must be set very carefully  
+      
+   if ((abs(rc[0]-gyro[0]) < gyro_noise_value) && (abs(rc[1]-gyro[1]) < gyro_noise_value))
+    {
+     tsfloat_set(&ctrl[0].sum_error, 0.0);
+     tsfloat_set(&ctrl[1].sum_error, 0.0);
+    }
 }
 
