@@ -34,7 +34,7 @@ MSGPACK_READER_END
 SERVICE_MAIN_BEGIN("mixer", PP_PRIO_1)
 {
    tsfloat_init(&thrust, 0.0f); /* 0N force; safe to start with */
-   tsfloat_init(&thrust_max, FLT_MAX); /* 0N force; safe to start with */
+   tsfloat_init(&thrust_max, FLT_MAX); /* allow maximum thrust, can be limited later on */
 
    char *matrix_def;
    tsfloat_t imtx1;
@@ -66,6 +66,7 @@ SERVICE_MAIN_BEGIN("mixer", PP_PRIO_1)
    inv_coupling_init(n_motors, mixer);
    
    MSGPACK_READER_START(thrust_reader, "thrust", PP_PRIO_1, "sub");
+   MSGPACK_READER_START(thrust_max_reader, "thrust_max", PP_PRIO_3, "sub");
    void *torques_socket = scl_get_socket("torques", "sub");
    THROW_IF(torques_socket == NULL, -EIO);
    void *forces_socket = scl_get_socket("forces", "pub");
