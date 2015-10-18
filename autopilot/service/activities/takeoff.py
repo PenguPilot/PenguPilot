@@ -44,6 +44,7 @@ class TakeoffActivity(Activity, StabMixIn):
 
 
    def run(self):
+      ap = self.autopilot.api
       api = self.autopilot.api
       arg = self.autopilot.arg
       if arg:
