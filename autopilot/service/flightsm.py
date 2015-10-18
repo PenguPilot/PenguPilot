@@ -77,7 +77,10 @@ class FlightSM:
          return False
       if len(new_state) == 2:
          new_state, exit_func = new_state
-         exit_func()
+         self.state = new_state
+         self.entry(self.state)
+         return exit_func()
+         
       self.state = new_state
       self.entry(self.state)
       return True
