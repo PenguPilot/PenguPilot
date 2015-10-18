@@ -62,28 +62,28 @@ class Autopilot:
       log(LL_INFO, 'takeoff')
       self.act.cancel_and_join()
       self.act = TakeoffActivity(self.fsm, self)
-      self.act.start()
+      self.act.run()
 
 
    def land(self):
       log(LL_INFO, 'land')
       self.act.cancel_and_join()
       self.act = LandActivity(self)
-      self.act.start()
+      self.act.run()
 
 
    def move(self):
       log(LL_INFO, 'move')
       self.act.cancel_and_join()
       self.act = MoveActivity(self)
-      self.act.start()
+      self.act.run()
 
 
    def stop(self):
       log(LL_INFO, 'stop')
       self.act.cancel_and_join()
       self.act = StopActivity(self)
-      self.act.start()
+      self.act.run()
 
 
    def handle(self, cmd):
@@ -94,11 +94,14 @@ class Autopilot:
          cmd = cmd[0]
       self.arg = arg
       self.fsm.handle(cmd)
+      #after execution, DummyActivity needs to be started again
+      self.act = DummyActivity()
+      self.act.start()
 
 
 def main(name):
    ap = Autopilot()
-   ap.motors_state = scl_get_socket('motors_state', 'sub')
+   ap.motors_state = scl_get_socket('mot_state', 'sub')
    ap_ctrl = scl_get_socket('ap_ctrl', 'rep')
    while True:
       cmd = ap_ctrl.recv()
