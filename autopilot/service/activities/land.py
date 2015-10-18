@@ -35,6 +35,7 @@ class LandActivity(Activity):
       Activity.__init__(self, autopilot)
 
    def run(self):
+      ap = self.autopilot
       api = self.autopilot.api
       fsm = self.autopilot.fsm
       ultra_vp = ap.pse.data[0]
@@ -44,5 +45,5 @@ class LandActivity(Activity):
          api.set_vp(vp)
          sleep(0.1)
       api.mot_en(False)
-      ap.fsm.handle('done')
+      fsm.handle('done')
 
