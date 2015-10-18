@@ -44,3 +44,5 @@ for cmd in cmds:
       print rep[1]
    while state.recv() not in ['hovering', 'standing']:
        pass
+     
+print "Autopilot test is finished."
