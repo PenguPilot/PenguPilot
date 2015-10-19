@@ -54,7 +54,7 @@ u3_penguio_mw: # ODROID U3 with multiwii nano as io board
             w: 0.0
  
 u3_bitbang_arduino: # ODROID U3 with raw i2c sensors and arduino for PWM / ADC
-   mass: 1.1 # Kg
+   mass: 1.5 # Kg
    thrust_max: 40.0 # N
    rx_type: 'dsl'
    arduino_serial: # U3 IO shield serial interface
