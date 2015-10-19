@@ -28,7 +28,7 @@
 
 class FlightSM:
 
-   def __init__(self, error, entry, takeoff, land, move, stop):
+   def __init__(self, error, entry, takeoff, land, move, stop, kill):
       self.error = error
       self.entry = entry
       self.state = 'standing'
@@ -43,28 +43,37 @@ class FlightSM:
             'taking_off': {
                'map': {
                   'cancel': 'landing',
-                  'done': 'hovering'
+                  'done': 'hovering',
+                  'kill': ('killing', kill)
                }
             },
             'hovering': {
                'map': {
                   'move': ('moving', move),
-                  'land': ('landing', land)
+                  'land': ('landing', land),
+                  'kill': ('killing', kill)
                }
             },
             'landing': {
                'map': {
-                  'done': 'standing'
+                  'done': 'standing',
+                  'kill': ('killing', kill)
                }
             },
             'moving': {
                'map': {'done': 'hovering',
                        'move': ('moving', move),
                        'stop': ('stopping', stop)
+                       'kill': ('killing', kill)
                }
             },
             'stopping': {
-               'map': {'done': 'hovering'}
+               'map': {'done': 'hovering',
+               'kill': ('killing', kill)
+              }
+            },
+            'killing' : {
+               'map': {'done': 'standing'}
             }
          }
       }
