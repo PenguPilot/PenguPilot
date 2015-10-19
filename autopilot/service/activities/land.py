@@ -38,12 +38,13 @@ class LandActivity(Activity):
       ap = self.autopilot
       api = self.autopilot.api
       fsm = self.autopilot.fsm
-      ultra_vp = ap.pse.data[0]
+      ultra_vp = ap.pse.data[0] + 0.5
       vp = min(ultra_vp, 2.0)
+      api.set_vp(vp)
       while vp > -1.0:
-         vp -= 0.05
+         vp -= 0.025
          api.set_vp(vp)
-         sleep(0.1)
+         sleep(0.4)
       api.mot_en(False)
       fsm.handle('done')
 
