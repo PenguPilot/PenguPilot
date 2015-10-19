@@ -29,6 +29,7 @@ from activities.land import LandActivity
 from activities.move import MoveActivity
 from activities.stop import StopActivity
 from activities.dummy import DummyActivity
+from activities.kill import KillActivity
 from flightsm import FlightSM
 from scl import scl_get_socket, SCL_Reader
 from pylogger import *
@@ -39,7 +40,7 @@ class Autopilot:
 
    def __init__(self):
       self.api = CtrlAPI()
-      self.fsm = FlightSM(self.error, self.broadcast, self.takeoff, self.land, self.move, self.stop)
+      self.fsm = FlightSM(self.error, self.broadcast, self.takeoff, self.land, self.move, self.stop, self.kill)
       self.orientation = SCL_Reader('orientation', 'sub', [0.0] * 3)
       self.pse = SCL_Reader('pos_speed_est_neu', 'sub', [0.0] * 8)
       self.state_socket = scl_get_socket('ap_state', 'pub')
@@ -85,6 +86,12 @@ class Autopilot:
       self.act = StopActivity(self)
       self.act.run()
 
+   def kill(self):
+      log(LL_INFO, 'kill')
+      self.act.cancel_and_join()
+      self.act = KillActivity(self)
+      self.act.run()
+      log(LL_ERROR, 'autopilot was killed')
 
    def handle(self, cmd):
       if isinstance(cmd, str):
