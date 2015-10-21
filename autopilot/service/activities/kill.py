@@ -10,7 +10,7 @@
  |  GNU/Linux based |___/  Multi-Rotor UAV Autoap |
  |___________________________________________________|
  
- Takeoff Activity Class
+ Kill Activity Class
 
  Copyright (C) 2015 Tobias Simon, Integrated Communication Systems Group, TU Ilmenau
 
@@ -30,48 +30,26 @@ from time import sleep
 from logging import debug as log_debug, info as log_info, warning as log_warn, error as log_err
 
 
-class TakeoffActivity(Activity, StabMixIn):
+class KillActivity(Activity, StabMixIn):
 
 
-   def __init__(self, fsm, autoap):
-      Activity.__init__(self, autoap)
+   def __init__(self, autopilot):
+      Activity.__init__(self, autopilot)
       self.canceled = False
-      self.fsm = fsm
-
 
    def _cancel(self):
       self.canceled = True
 
-
    def run(self):
-      ap = self.autopilot.api
+      ap = self.autopilot
       api = self.autopilot.api
-      arg = self.autopilot.arg
-      if arg:
-         vp_max = 4.0
-         vp_target = min(vp_max, arg)
-      else:
-         vp_target = 1.0
-
-      # start motors and wait for
-      api.mot_en(True)
-      while ap.motors_state.recv() != 2:
-         if self.canceled:
-            api.mot_en(False)
-            return
-
-      # "point of no return":
-      ap.home_pos = [ap.pse.data[4], ap.pse.data[6]]
-      api.set_hp(ap.home_pos)
+      fsm = self.autopilot.fsm
+      #take care of all controlles - use safe values (in standing mode)
+      current_pos = [ap.pse.data[4], ap.pse.data[6]]
+      api.set_hp(current_pos)
       api.set_ys(0.0)
-
-      # increase altitude setpoint:
-      vp = -1.0
-      while vp < vp_target:
-         api.set_vp(vp)
-         vp += 0.1
-         sleep(0.7)
-      api.set_vp(vp_target)
-      #self.stabilize()
-      self.fsm.handle('done')
-
+      #api.set_hs(0.0)
+      api.set_vp(-1.0)
+      # stop motors
+      api.mot_en(False)
+      fsm.handle('done')

@@ -29,6 +29,7 @@ from activities.land import LandActivity
 from activities.move import MoveActivity
 from activities.stop import StopActivity
 from activities.dummy import DummyActivity
+from activities.kill import KillActivity
 from flightsm import FlightSM
 from scl import scl_get_socket, SCL_Reader
 from pylogger import *
@@ -39,7 +40,7 @@ class Autopilot:
 
    def __init__(self):
       self.api = CtrlAPI()
-      self.fsm = FlightSM(self.error, self.broadcast, self.takeoff, self.land, self.move, self.stop)
+      self.fsm = FlightSM(self.error, self.broadcast, self.takeoff, self.land, self.move, self.stop, self.kill)
       self.orientation = SCL_Reader('orientation', 'sub', [0.0] * 3)
       self.pse = SCL_Reader('pos_speed_est_neu', 'sub', [0.0] * 8)
       self.state_socket = scl_get_socket('ap_state', 'pub')
@@ -62,29 +63,35 @@ class Autopilot:
       log(LL_INFO, 'takeoff')
       self.act.cancel_and_join()
       self.act = TakeoffActivity(self.fsm, self)
-      self.act.start()
+      self.act.run()
 
 
    def land(self):
       log(LL_INFO, 'land')
       self.act.cancel_and_join()
       self.act = LandActivity(self)
-      self.act.start()
+      self.act.run()
 
 
    def move(self):
       log(LL_INFO, 'move')
       self.act.cancel_and_join()
       self.act = MoveActivity(self)
-      self.act.start()
+      self.act.run()
 
 
    def stop(self):
       log(LL_INFO, 'stop')
       self.act.cancel_and_join()
       self.act = StopActivity(self)
-      self.act.start()
+      self.act.run()
 
+   def kill(self):
+      log(LL_INFO, 'kill')
+      self.act.cancel_and_join()
+      self.act = KillActivity(self)
+      self.act.run()
+      log(LL_ERROR, 'autopilot was killed')
 
    def handle(self, cmd):
       if isinstance(cmd, str):
@@ -94,11 +101,14 @@ class Autopilot:
          cmd = cmd[0]
       self.arg = arg
       self.fsm.handle(cmd)
+      #after execution, DummyActivity needs to be started again
+      self.act = DummyActivity()
+      self.act.start()
 
 
 def main(name):
    ap = Autopilot()
-   ap.motors_state = scl_get_socket('motors_state', 'sub')
+   ap.motors_state = scl_get_socket('mot_state', 'sub')
    ap_ctrl = scl_get_socket('ap_ctrl', 'rep')
    while True:
       cmd = ap_ctrl.recv()

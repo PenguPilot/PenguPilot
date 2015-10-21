@@ -30,7 +30,6 @@ from time import sleep
 from geomath import LinearInterpolation, gps_add_meters, gps_meters_offset
 from numpy import array, zeros
 from activity import Activity, StabMixIn
-from ctrl_api import set_hp
 
 class MoveActivity(Activity, StabMixIn):
 
@@ -39,12 +38,12 @@ class MoveActivity(Activity, StabMixIn):
       Activity.__init__(self, autopilot)
       self.canceled = False
 
-
    def run(self):
       type, x, y = self.autopilot.arg
       ap = self.autopilot
       if type == 'spr': # starting point relative
-         set_hp([x - ap.start_pos[0], y - ap.start_pos[1]])
+         ap.start_pos = [ap.pse.data[4], ap.pse.data[6]]
+         ap.api.set_hp([x - ap.start_pos[0], y - ap.start_pos[1]])
  
       #self.stabilize()
       
