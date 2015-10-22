@@ -166,6 +166,7 @@ class CtrlAPI:
       self._rs_oe.set(1)
       self._rp_oe.set(1)
       self._hs_oe.set(0)
+      self._hp_oe.set(0)
       self._rp_sp_p.send(float(vec[0]))
       self._rp_sp_r.send(float(vec[1]))
 
