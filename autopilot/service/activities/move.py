@@ -51,7 +51,7 @@ class MoveActivity(Activity, StabMixIn):
          current_pos = [ap.pse.data[4], ap.pse.data[6]]
          ap.api.set_hp([current_pos[0] + x, current_pos[1] + y])
       if type == 'spr': #starting point relative
-        move_pos = [x + ap.start_pos[0], y + ap.start_pos[1]]
+        move_pos = [x + ap.home_pos[0], y + ap.home_pos[1]]
         ap.api.set_hp(move_pos)
 
       sleep(0.1)
