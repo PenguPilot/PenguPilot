@@ -47,10 +47,13 @@ class MoveActivity(Activity, StabMixIn):
       hp_err = SCL_Reader('hp_ctrl_err', 'sub')
       sleep(0.1)
       
-      if type == 'spr': # starting point relative
+      if type == 'cpr': # current point relative
          ap.start_pos = [ap.pse.data[4], ap.pse.data[6]]
          ap.api.set_hp([ap.start_pos[0] + x, ap.start_pos[1] + y])
-      
+      if type == 'spr': #starting point relative
+        move_pos = [x + ap.start_pos[0], y + ap.start_pos[1]]
+        ap.api.set_hp(move_pos)
+
       sleep(0.1)
       
       start_time = time()
