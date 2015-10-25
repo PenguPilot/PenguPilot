@@ -35,6 +35,8 @@ class LandActivity(Activity):
       Activity.__init__(self, autopilot)
 
    def run(self):
+      copter_height = 0.3
+     
       ap = self.autopilot
       api = self.autopilot.api
       fsm = self.autopilot.fsm
@@ -45,6 +47,11 @@ class LandActivity(Activity):
          vp -= 0.025
          api.set_vp(vp)
          sleep(0.4)
+         if ap.pse.data[0] < copter_height:
+            vp = -1.0
+      #disable ctrl outputs
+      api.set_rp([0, 0])
+      api.set_thrust(-10)
       api.mot_en(False)
       fsm.handle('done')
 
