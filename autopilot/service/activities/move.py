@@ -26,10 +26,11 @@
 
 
 from math import hypot
-from time import sleep
+from time import sleep, time
 from geomath import LinearInterpolation, gps_add_meters, gps_meters_offset
 from numpy import array, zeros
 from activity import Activity, StabMixIn
+from pylogger import *
 
 class MoveActivity(Activity, StabMixIn):
 
@@ -41,10 +42,34 @@ class MoveActivity(Activity, StabMixIn):
    def run(self):
       type, x, y = self.autopilot.arg
       ap = self.autopilot
-      if type == 'spr': # starting point relative
-         ap.start_pos = [ap.pse.data[4], ap.pse.data[6]]
-         ap.api.set_hp([x - ap.start_pos[0], y - ap.start_pos[1]])
- 
+      MOV_ACCURACY = 0.15
+      MOV_TIMEOUT = 15
+
+      err = SCL_Reader('hp_ctrl_err', 'sub')
+      sleep(0.1)
+
+      if type == 'cpr': # current point relative
+        current_pos = [ap.pse.data[4], ap.pse.data[6]]
+        ap.api.set_hp([current_pos[0]+x, current_pos[1]+y])
+      if type == 'spr': #starting point relative
+        move_pos = [x + ap.home_pos[0], y + ap.home_pos[1]]
+        ap.api.set_hp(move_pos)
+     
+      if type == 'global':
+        start_pos = [ap.pse.data[4], ap.pse.data[6]]
+        dest_pos  = [x, y]
+        offset = gps_meters_offset(start_pos, dest_pos)
+        ap.api.set_hp([start_pos[0]+offset[0], start_pos[1]+offset[1]])
+
+      sleep(0.05)
+      start_time = time.time()
+      timer = 0
+      while (abs(err.data[0]) > MOV_ACCURACY or abs(err.data[1]) > MOV_ACCURACY) and timer < MOV_TIMEOUT:
+        timer = time.time() - start_time
+        sleep(0.01)
+      if timer > MOV_TIMEOUT:
+          log(LL_INFO, 'move timeout')
+
       #self.stabilize()
       
       if not self.canceled:
