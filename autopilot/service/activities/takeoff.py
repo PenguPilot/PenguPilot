@@ -70,7 +70,7 @@ class TakeoffActivity(Activity, StabMixIn):
       while vp < vp_target:
          api.set_vp(vp)
          vp += 0.1
-         sleep(0.7)
+         sleep(0.05)
       api.set_vp(vp_target)
       #self.stabilize()
       self.fsm.handle('done')
