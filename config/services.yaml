@@ -137,6 +137,9 @@ autopilot:
    binary: 'autopilot/service/autopilot.py'
    depends: [vp_ctrl_prx, hp_ctrl_prx]
 
+autopilot_prx:
+   binary: 'autopilot_prx/service/autopilot_prx.py'
+   depends: [autopilot]
 
 arduino:
    binary: 'arduino/service/arduino'
