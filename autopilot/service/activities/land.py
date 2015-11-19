@@ -46,9 +46,9 @@ class LandActivity(Activity):
       while vp > -1.0:
          vp -= 0.025
          api.set_vp(vp)
-         sleep(0.4)
+         sleep(0.2)
          if ap.pse.data[0] < copter_height:
-            vp = -1.0
+            vp = -1.2
       #disable ctrl outputs
       api.set_rp([0, 0])
       api.set_thrust(-10)
